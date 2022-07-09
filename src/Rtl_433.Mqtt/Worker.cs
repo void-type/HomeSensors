@@ -1,6 +1,8 @@
 using MQTTnet;
 using MQTTnet.Client;
 using Newtonsoft.Json;
+using MQTTnet.Extensions.ManagedClient;
+using MQTTnet.Packets;
 
 namespace Rtl_433.Mqtt;
 
@@ -19,39 +21,18 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var mqttClient = _mqttFactory.CreateMqttClient();
+        using var client = _mqttFactory.CreateManagedMqttClient();
 
-        _logger.LogInformation("Subscribing MQTT client.");
+        _logger.LogInformation("Connecting Managed MQTT client.");
 
-        var mqttClientOptionBuilder = new MqttClientOptionsBuilder();
-        mqttClientOptionBuilder.WithTcpServer(_configuration.Server, _configuration.Port);
-
-        if (!string.IsNullOrWhiteSpace(_configuration.Username))
-        {
-            mqttClientOptionBuilder.WithCredentials(_configuration.Username, _configuration.Password);
-        }
-
-        var mqttClientOptions = mqttClientOptionBuilder.Build();
-
-        // Setup message handling before connecting so that queued messages
-        // are also handled properly. When there is no event handler attached all
-        // received messages get lost.
-        mqttClient.ApplicationMessageReceivedAsync += e =>
+        client.ApplicationMessageReceivedAsync += e =>
         {
             ProcessMessage(e);
             return Task.CompletedTask;
         };
 
-        var mqttSubscribeOptions = _mqttFactory
-            .CreateSubscribeOptionsBuilder()
-            .WithTopicFilter(f => { f.WithTopic("rtl_433/Ambientweather-F007TH/96"); })
-            .WithTopicFilter(f => { f.WithTopic("rtl_433/Ambientweather-F007TH/9"); })
-            .WithTopicFilter(f => { f.WithTopic("rtl_433/Acurite-986/1369"); })
-            .WithTopicFilter(f => { f.WithTopic("rtl_433/Acurite-986/1254"); })
-            .Build();
-
-        await mqttClient.ConnectAsync(mqttClientOptions, stoppingToken);
-        await mqttClient.SubscribeAsync(mqttSubscribeOptions, stoppingToken);
+        await client.StartAsync(BuildOptions());
+        await client.SubscribeAsync(BuildTopicFilters());
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -70,11 +51,49 @@ public class Worker : BackgroundService
 
             ArgumentNullException.ThrowIfNull(message);
 
-            _logger.LogInformation("{Output}", $"{message.Model}({message.Id}): {message.Temperature_C} C | {message.Humidity}%");
+            _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} {message.Time} | {message.Model}:{message.Id} | {message.Temperature_C} C | {message.Humidity} %");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deserializing payload.");
         }
+    }
+
+    private List<MqttTopicFilter> BuildTopicFilters()
+    {
+        var topicFilters = new List<MqttTopicFilter>();
+
+        foreach (var topic in _configuration.Topics)
+        {
+            _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
+
+            var topicFilter = _mqttFactory
+                .CreateTopicFilterBuilder()
+                .WithTopic(topic)
+                .Build();
+
+            topicFilters.Add(topicFilter);
+        }
+
+        return topicFilters;
+    }
+
+    private ManagedMqttClientOptions BuildOptions()
+    {
+        var clientOptionsBuilder = new MqttClientOptionsBuilder()
+            .WithTcpServer(_configuration.Server, _configuration.Port);
+
+        if (!string.IsNullOrWhiteSpace(_configuration.Username))
+        {
+            clientOptionsBuilder.WithCredentials(_configuration.Username, _configuration.Password);
+        }
+
+        var clientOptions = clientOptionsBuilder.Build();
+
+        var managedClientOptions = new ManagedMqttClientOptionsBuilder()
+            .WithClientOptions(clientOptions)
+            .Build();
+
+        return managedClientOptions;
     }
 }

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MQTTnet" Version="4.0.1.184" />
+    <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.0.1.184" />
     <PackageReference Include="nerdbank.gitversioning" Version="3.5.107">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
