@@ -455,3 +455,6 @@ $RECYCLE.BIN/
 
 # Program output
 out/
+
+# App Settings
+appsettings.*.json

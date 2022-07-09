@@ -1,74 +1,76 @@
-using System.Text.Json;
 using MQTTnet;
 using MQTTnet.Client;
+using Newtonsoft.Json;
 
 namespace Rtl_433.Mqtt;
 
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
+    private readonly MqttConfiguration _configuration;
     private readonly MqttFactory _mqttFactory;
 
-    public Worker(ILogger<Worker> logger)
+    public Worker(ILogger<Worker> logger, MqttConfiguration configuration)
     {
         _logger = logger;
+        _configuration = configuration;
         _mqttFactory = new MqttFactory();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Starting MQTT server.");
-        // Due to security reasons the "default" endpoint (which is unencrypted) is not enabled by default!
-        var mqttServerOptions = _mqttFactory.CreateServerOptionsBuilder().WithDefaultEndpoint().Build();
-        using var mqttServer = _mqttFactory.CreateMqttServer(mqttServerOptions);
-        await mqttServer.StartAsync();
-
         using var mqttClient = _mqttFactory.CreateMqttClient();
 
         _logger.LogInformation("Subscribing MQTT client.");
 
-        var mqttClientOptions = new MqttClientOptionsBuilder()
-            .WithTcpServer("localhost")
-            .Build();
+        var mqttClientOptionBuilder = new MqttClientOptionsBuilder();
+        mqttClientOptionBuilder.WithTcpServer(_configuration.Server, _configuration.Port);
+
+        if (!string.IsNullOrWhiteSpace(_configuration.Username))
+        {
+            mqttClientOptionBuilder.WithCredentials(_configuration.Username, _configuration.Password);
+        }
+
+        var mqttClientOptions = mqttClientOptionBuilder.Build();
 
         // Setup message handling before connecting so that queued messages
         // are also handled properly. When there is no event handler attached all
         // received messages get lost.
         mqttClient.ApplicationMessageReceivedAsync += e =>
         {
-            DumpToConsole(e);
-
+            ProcessMessage(e);
             return Task.CompletedTask;
         };
 
-        await mqttClient.ConnectAsync(mqttClientOptions, stoppingToken);
-
         var mqttSubscribeOptions = _mqttFactory
             .CreateSubscribeOptionsBuilder()
-            .WithTopicFilter(f => { f.WithTopic("rtl_433/Acurite-986/#"); })
+            .WithTopicFilter(f => { f.WithTopic("rtl_433/Ambientweather-F007TH/96"); })
+            .WithTopicFilter(f => { f.WithTopic("rtl_433/Ambientweather-F007TH/9"); })
+            .WithTopicFilter(f => { f.WithTopic("rtl_433/Acurite-986/1369"); })
+            .WithTopicFilter(f => { f.WithTopic("rtl_433/Acurite-986/1254"); })
             .Build();
 
+        await mqttClient.ConnectAsync(mqttClientOptions, stoppingToken);
         await mqttClient.SubscribeAsync(mqttSubscribeOptions, stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(100000000, stoppingToken);
         }
-
-        _logger.LogInformation("Stopping MQTT server.");
-        await mqttServer.StopAsync();
     }
 
-    private void DumpToConsole(MqttApplicationMessageReceivedEventArgs e)
+    private void ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
         try
         {
-            // If time, model, id are the same, don't save.
+            // If time, model, id are the same as recent, don't save because duplicate.
             var payload = System.Text.Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
 
-            var message = JsonSerializer.Deserialize<TempMessage>(payload, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var message = JsonConvert.DeserializeObject<TempMessage>(payload);
 
-            _logger.LogInformation("{Output}", JsonSerializer.Serialize(message));
+            ArgumentNullException.ThrowIfNull(message);
+
+            _logger.LogInformation("{Output}", $"{message.Model}({message.Id}): {message.Temperature_C} C | {message.Humidity}%");
         }
         catch (Exception ex)
         {
