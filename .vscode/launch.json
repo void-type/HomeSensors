@@ -8,7 +8,7 @@
       "name": ".NET Core Launch (console)",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build",
+      "preLaunchTask": "build-debug",
       // If you have changed target frameworks, make sure to update the program path.
       "program": "${workspaceFolder}/src/Rtl_433.Mqtt/bin/Debug/net6.0/Rtl_433.Mqtt.dll",
       "args": [],

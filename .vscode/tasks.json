@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
+      "label": "build-debug",
       "command": "dotnet",
       "type": "process",
       "args": [
@@ -14,16 +14,68 @@
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "publish",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "publish",
-        "${workspaceFolder}/src/Rtl_433.Mqtt/Rtl_433.Mqtt.csproj",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "problemMatcher": "$msCompile"
+        "label": "build",
+        "command": "./build.ps1",
+        "options": {
+            "cwd": "./build"
+        },
+        "type": "shell",
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        },
+        "problemMatcher": [
+            "$msCompile"
+        ],
+        "presentation": {
+            "echo": true,
+            "reveal": "always",
+            "focus": false,
+            "panel": "shared",
+            "showReuseMessage": true,
+            "clear": false,
+            "group": "build"
+        }
+    },
+    {
+        "label": "format",
+        "command": "./format.ps1",
+        "options": {
+            "cwd": "./build"
+        },
+        "type": "shell",
+        "problemMatcher": [
+            "$msCompile"
+        ],
+        "presentation": {
+            "echo": true,
+            "reveal": "always",
+            "focus": false,
+            "panel": "shared",
+            "showReuseMessage": true,
+            "clear": false,
+            "group": "build"
+        }
+    },
+    {
+        "label": "update-dependencies",
+        "command": "./updateDependencies.ps1",
+        "options": {
+            "cwd": "./build"
+        },
+        "type": "shell",
+        "problemMatcher": [
+            "$msCompile"
+        ],
+        "presentation": {
+            "echo": true,
+            "reveal": "always",
+            "focus": false,
+            "panel": "shared",
+            "showReuseMessage": true,
+            "clear": false,
+            "group": "build"
+        }
     },
     {
       "label": "watch",

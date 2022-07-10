@@ -458,3 +458,4 @@ out/
 
 # App Settings
 appsettings.*.json
+!appsettings.example.json
