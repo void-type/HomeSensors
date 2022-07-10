@@ -51,7 +51,20 @@ public class Worker : BackgroundService
 
             ArgumentNullException.ThrowIfNull(message);
 
-            _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} {message.Time} | {message.Model}:{message.Id} | {message.Temperature_C} C | {message.Humidity} %");
+            var topic = e.ApplicationMessage.Topic switch
+            {
+                "rtl_433/Ambientweather-F007TH/96" => "Garage",
+                "rtl_433/Ambientweather-F007TH/9" => "Bedroom",
+                "rtl_433/Acurite-986/1369" => "Freezer",
+                "rtl_433/Acurite-986/1254" => "Fridge",
+                _ => "Unknown"
+            };
+
+            // TODO: round these numbers
+            var faren = (message.Temperature_C * (9f / 5f)) + 32;
+
+            // _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} {message.Time} | {message.Model}:{message.Id} | {message.Temperature_C} C | {message.Humidity} %");
+            _logger.LogInformation("{Output}", $"{topic} | {message.Temperature_C:0.00} C | {faren:0.00} F | {message.Humidity} % | {message.Time} | {message.Model}:{message.Id}");
         }
         catch (Exception ex)
         {
