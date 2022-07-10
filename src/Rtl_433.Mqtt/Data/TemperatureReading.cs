@@ -12,4 +12,7 @@ public class TemperatureReading
     public string? MessageIntegrityCheck { get; set; } = string.Empty;
     public double? TemperatureCelsius { get; set; }
     public double? Humidity { get; set; }
+
+    public long TemperatureDeviceId { get; set; }
+    public TemperatureDevice TemperatureDevice { get; set; } = new();
 }
