@@ -3,6 +3,8 @@ using MQTTnet.Client;
 using Newtonsoft.Json;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Packets;
+using Rtl_433.Mqtt.Models;
+using Rtl_433.Mqtt.Data;
 
 namespace Rtl_433.Mqtt;
 
@@ -10,12 +12,14 @@ public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly MqttConfiguration _configuration;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
 
-    public Worker(ILogger<Worker> logger, MqttConfiguration configuration)
+    public Worker(ILogger<Worker> logger, MqttConfiguration configuration, IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
         _configuration = configuration;
+        _scopeFactory = scopeFactory;
         _mqttFactory = new MqttFactory();
     }
 
@@ -40,14 +44,14 @@ public class Worker : BackgroundService
         }
     }
 
-    private void ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
+    private async void ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
         try
         {
             // If time, model, id are the same as recent, don't save because duplicate.
             var payload = System.Text.Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
 
-            var message = JsonConvert.DeserializeObject<TempMessage>(payload);
+            var message = JsonConvert.DeserializeObject<TemperatureMessage>(payload);
 
             ArgumentNullException.ThrowIfNull(message);
 
@@ -65,6 +69,32 @@ public class Worker : BackgroundService
 
             // _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} {message.Time} | {message.Model}:{message.Id} | {message.Temperature_C} C | {message.Humidity} %");
             _logger.LogInformation("{Output}", $"{topic} | {message.Temperature_C:0.00} C | {faren:0.00} F | {message.Humidity} % | {message.Time} | {message.Model}:{message.Id}");
+
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
+
+            var exists = dbContext.TemperatureReadings
+                .Any(x => x.Time == message.Time && x.DeviceModel == message.Model && x.DeviceId == message.Id);
+
+            if (exists)
+            {
+                return;
+            }
+
+            dbContext.TemperatureReadings.Add(new TemperatureReading
+            {
+                Time = message.Time,
+                DeviceModel = message.Model,
+                DeviceId = message.Id,
+                DeviceChannel = message.Channel,
+                DeviceBatteryLevel = message.Battery_Ok,
+                DeviceStatus = message.Status,
+                MessageIntegrityCheck = message.Mic,
+                Humidity = message.Humidity,
+                TemperatureCelsius = message.Temperature_C,
+            });
+
+            await dbContext.SaveChangesAsync();
         }
         catch (Exception ex)
         {

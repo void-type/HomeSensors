@@ -1,11 +1,9 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
-using System;
 
 using Rtl_433.Mqtt;
-
+using Rtl_433.Mqtt.Models;
+using Rtl_433.Mqtt.Data;
+using Microsoft.EntityFrameworkCore;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .UseWindowsService()
@@ -14,6 +12,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         var mqttClient = context.Configuration.GetSection("Mqtt").Get<MqttConfiguration>();
         services.AddSingleton(mqttClient);
+        services.AddDbContext<HomeSensorsContext>(options => options.UseSqlServer("Name=HomeSensors"));
         services.AddHostedService<Worker>();
     })
     .Build();
