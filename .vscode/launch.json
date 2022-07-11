@@ -10,9 +10,9 @@
       "request": "launch",
       "preLaunchTask": "build-debug",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/src/Rtl_433.Mqtt/bin/Debug/net6.0/Rtl_433.Mqtt.dll",
+      "program": "${workspaceFolder}/src/HomeSensors/bin/Debug/net6.0/HomeSensors.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/src/Rtl_433.Mqtt",
+      "cwd": "${workspaceFolder}/src/HomeSensors",
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "internalConsole",
       "stopAtEntry": false

@@ -1,4 +1,4 @@
-namespace Rtl_433.Mqtt.Models;
+namespace HomeSensors.Models;
 
 public class TemperatureMessage
 {

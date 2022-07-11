@@ -1,4 +1,4 @@
-$shortAppName = "Rtl_433.Mqtt"
+$shortAppName = "HomeSensors"
 $projectName = "$shortAppName"
 
 $serviceProjectFolder = "./src/$projectName"

@@ -7,7 +7,7 @@
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/src/Rtl_433.Mqtt/Rtl_433.Mqtt.csproj",
+        "${workspaceFolder}/src/HomeSensors/HomeSensors.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary"
       ],
@@ -85,7 +85,7 @@
         "watch",
         "run",
         "--project",
-        "${workspaceFolder}/src/Rtl_433.Mqtt/Rtl_433.Mqtt.csproj"
+        "${workspaceFolder}/src/HomeSensors/HomeSensors.csproj"
       ],
       "problemMatcher": "$msCompile"
     }

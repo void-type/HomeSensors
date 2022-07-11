@@ -5,15 +5,15 @@
 # $configOverrides = "--ConnectionStrings:MyConnString `"Server=...`""
 
 # Production
-$serviceName = "Rtl_433.Mqtt"
-$serviceDisplayName = 'Rtl_433.Mqtt'
+$serviceName = "HomeSensors"
+$serviceDisplayName = 'HomeSensors'
 $serviceDescription = 'Listens for data on an MQTT server and stores it.'
 $configOverrides = ''
 $environmentName = 'Producton'
 
 # Test
-# $serviceName = "Rtl_433.Mqtt.Test"
-# $serviceDisplayName = 'Rtl_433.Mqtt Test'
+# $serviceName = "HomeSensorsTest"
+# $serviceDisplayName = 'HomeSensors Test'
 # $serviceDescription = 'Listens for data on an MQTT server and stores it.'
 # $configOverrides = ''
 # $environmentName = 'Test'
@@ -36,7 +36,7 @@ $serviceDirectory = "G:\DeployedApps\apps\$serviceName"
 $serviceParams = @{
   'Name'           = $serviceName
   'DisplayName'    = $serviceDisplayName
-  'BinaryPathName' = "`"$serviceDirectory/Rtl_433.Mqtt.exe`" --environment $environmentName $configOverrides"
+  'BinaryPathName' = "`"$serviceDirectory/HomeSensors.exe`" --environment $environmentName $configOverrides"
   'StartupType'    = 'Automatic'
   'Description'    = $serviceDescription
 }

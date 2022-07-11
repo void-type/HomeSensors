@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E29E49BC-316C-42AD-8A93-DBE9DFA1DFF8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rtl_433.Mqtt", "src\Rtl_433.Mqtt\Rtl_433.Mqtt.csproj", "{EEF537BB-7BC9-46E7-9A60-E772291BB02B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HomeSensors", "src\HomeSensors\HomeSensors.csproj", "{EEF537BB-7BC9-46E7-9A60-E772291BB02B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

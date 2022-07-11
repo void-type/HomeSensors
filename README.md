@@ -1,4 +1,4 @@
-# Rtl_433.Mqtt
+# HomeSensors
 
 This is a simple MQTT receiver that will persist messages to a database.
 

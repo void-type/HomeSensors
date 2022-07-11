@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Rtl_433.Mqtt.Data;
+using HomeSensors.Data;
 
 #nullable disable
 
-namespace Rtl_433.Mqtt.Migrations
+namespace HomeSensors.Migrations
 {
     [DbContext(typeof(HomeSensorsContext))]
     [Migration("20220710094517_InitialCreate")]
@@ -24,7 +24,7 @@ namespace Rtl_433.Mqtt.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("Rtl_433.Mqtt.Data.TemperatureReading", b =>
+            modelBuilder.Entity("HomeSensors.Data.TemperatureReading", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()

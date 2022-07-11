@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Rtl_433.Mqtt.Migrations
+namespace HomeSensors.Migrations
 {
     public partial class DeviceNormalization1 : Migration
     {

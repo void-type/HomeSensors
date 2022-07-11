@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Rtl_433.Mqtt.Migrations
+namespace HomeSensors.Migrations
 {
     public partial class InitialCreate : Migration
     {

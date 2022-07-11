@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 #nullable disable
 
-namespace Rtl_433.Mqtt.Data
+namespace HomeSensors.Data
 {
     public class HomeSensorsContext : DbContext
     {

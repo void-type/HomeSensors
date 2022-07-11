@@ -3,11 +3,11 @@ using MQTTnet.Client;
 using Newtonsoft.Json;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Packets;
-using Rtl_433.Mqtt.Models;
-using Rtl_433.Mqtt.Data;
+using HomeSensors.Models;
+using HomeSensors.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Rtl_433.Mqtt;
+namespace HomeSensors;
 
 public class Worker : BackgroundService
 {

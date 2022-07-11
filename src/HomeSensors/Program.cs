@@ -1,8 +1,8 @@
 using Serilog;
 
-using Rtl_433.Mqtt;
-using Rtl_433.Mqtt.Models;
-using Rtl_433.Mqtt.Data;
+using HomeSensors;
+using HomeSensors.Models;
+using HomeSensors.Data;
 using Microsoft.EntityFrameworkCore;
 
 IHost host = Host.CreateDefaultBuilder(args)
