@@ -5,6 +5,7 @@ using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Packets;
 using Rtl_433.Mqtt.Models;
 using Rtl_433.Mqtt.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Rtl_433.Mqtt;
 
@@ -46,59 +47,73 @@ public class Worker : BackgroundService
 
     private async void ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
+        var message = DeserializeMessage(e);
+
+        LogMessage(e, message);
+
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
+
+        var device = await dbContext.TemperatureDevices
+            .FirstOrDefaultAsync(x => x.DeviceModel == message.Model && x.DeviceId == message.Id && x.DeviceChannel == message.Channel);
+
+        if (device is null)
+        {
+            _logger.LogWarning("Device not found: {Model}/{Id} on channel {Channel}", message.Model, message.Id, message.Channel);
+            return;
+        }
+
+        // If we already have a reading for this device at this time, don't save because duplicate.
+        var readingExists = dbContext.TemperatureReadings
+            .Any(x => x.Time == message.Time && x.TemperatureDeviceId == device.Id);
+
+        if (readingExists)
+        {
+            return;
+        }
+
+        dbContext.TemperatureReadings
+            .Add(new TemperatureReading
+            {
+                Time = message.Time,
+                DeviceBatteryLevel = message.Battery_Ok,
+                DeviceStatus = message.Status,
+                MessageIntegrityCheck = message.Mic,
+                Humidity = message.Humidity,
+                TemperatureCelsius = message.Temperature_C,
+                TemperatureDevice = device,
+                TemperatureLocationId = device.CurrentTemperatureLocationId
+            });
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private void LogMessage(MqttApplicationMessageReceivedEventArgs e, TemperatureMessage message)
+    {
+        if (!_configuration.LogMessages)
+        {
+            return;
+        }
+
+        _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} {message.Time} | {message.Model}:{message.Id} | {message.Temperature_C} C | {message.Humidity} %");
+    }
+
+    private TemperatureMessage DeserializeMessage(MqttApplicationMessageReceivedEventArgs e)
+    {
         try
         {
-            // If time, model, id are the same as recent, don't save because duplicate.
             var payload = System.Text.Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
 
             var message = JsonConvert.DeserializeObject<TemperatureMessage>(payload);
 
             ArgumentNullException.ThrowIfNull(message);
 
-            var topic = e.ApplicationMessage.Topic switch
-            {
-                "rtl_433/Ambientweather-F007TH/96" => "Garage",
-                "rtl_433/Ambientweather-F007TH/9" => "Bedroom",
-                "rtl_433/Acurite-986/1369" => "Freezer",
-                "rtl_433/Acurite-986/1254" => "Fridge",
-                _ => "Unknown"
-            };
-
-            // TODO: round these numbers
-            var faren = (message.Temperature_C * (9f / 5f)) + 32;
-
-            // _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} {message.Time} | {message.Model}:{message.Id} | {message.Temperature_C} C | {message.Humidity} %");
-            _logger.LogInformation("{Output}", $"{topic} | {message.Temperature_C:0.00} C | {faren:0.00} F | {message.Humidity} % | {message.Time} | {message.Model}:{message.Id}");
-
-            using var scope = _scopeFactory.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
-
-            var exists = dbContext.TemperatureReadings
-                .Any(x => x.Time == message.Time && x.DeviceModel == message.Model && x.DeviceId == message.Id);
-
-            if (exists)
-            {
-                return;
-            }
-
-            dbContext.TemperatureReadings.Add(new TemperatureReading
-            {
-                Time = message.Time,
-                DeviceModel = message.Model,
-                DeviceId = message.Id,
-                DeviceChannel = message.Channel,
-                DeviceBatteryLevel = message.Battery_Ok,
-                DeviceStatus = message.Status,
-                MessageIntegrityCheck = message.Mic,
-                Humidity = message.Humidity,
-                TemperatureCelsius = message.Temperature_C,
-            });
-
-            await dbContext.SaveChangesAsync();
+            return message;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deserializing payload.");
+            throw;
         }
     }
 

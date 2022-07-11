@@ -11,7 +11,8 @@ namespace Rtl_433.Mqtt.Data
         {
         }
 
-        public virtual DbSet<TemperatureReading> TemperatureReadings { get; set; }
         public virtual DbSet<TemperatureDevice> TemperatureDevices { get; set; }
+        public virtual DbSet<TemperatureLocation> TemperatureLocations { get; set; }
+        public virtual DbSet<TemperatureReading> TemperatureReadings { get; set; }
     }
 }

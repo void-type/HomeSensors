@@ -12,8 +12,8 @@ using Rtl_433.Mqtt.Data;
 namespace Rtl_433.Mqtt.Migrations
 {
     [DbContext(typeof(HomeSensorsContext))]
-    [Migration("20220710182419_DeviceNormalization")]
-    partial class DeviceNormalization
+    [Migration("20220711054751_DeviceNormalization2")]
+    partial class DeviceNormalization2
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -32,6 +32,9 @@ namespace Rtl_433.Mqtt.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
 
+                    b.Property<long?>("CurrentTemperatureLocationId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("DeviceChannel")
                         .HasColumnType("nvarchar(max)");
 
@@ -44,33 +47,9 @@ namespace Rtl_433.Mqtt.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CurrentTemperatureLocationId");
+
                     b.ToTable("TemperatureDevices");
-                });
-
-            modelBuilder.Entity("Rtl_433.Mqtt.Data.TemperatureDeviceLocation", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
-
-                    b.Property<DateTimeOffset>("StartTime")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<long>("TemperatureDeviceId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("TemperatureLocationId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TemperatureDeviceId");
-
-                    b.HasIndex("TemperatureLocationId");
-
-                    b.ToTable("TemperatureDeviceLocation");
                 });
 
             modelBuilder.Entity("Rtl_433.Mqtt.Data.TemperatureLocation", b =>
@@ -87,7 +66,7 @@ namespace Rtl_433.Mqtt.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TemperatureLocation");
+                    b.ToTable("TemperatureLocations");
                 });
 
             modelBuilder.Entity("Rtl_433.Mqtt.Data.TemperatureReading", b =>
@@ -100,16 +79,6 @@ namespace Rtl_433.Mqtt.Migrations
 
                     b.Property<double?>("DeviceBatteryLevel")
                         .HasColumnType("float");
-
-                    b.Property<string>("DeviceChannel")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DeviceId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DeviceModel")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("DeviceStatus")
                         .HasColumnType("int");
@@ -126,6 +95,9 @@ namespace Rtl_433.Mqtt.Migrations
                     b.Property<long>("TemperatureDeviceId")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("TemperatureLocationId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTimeOffset>("Time")
                         .HasColumnType("datetimeoffset");
 
@@ -133,26 +105,18 @@ namespace Rtl_433.Mqtt.Migrations
 
                     b.HasIndex("TemperatureDeviceId");
 
+                    b.HasIndex("TemperatureLocationId");
+
                     b.ToTable("TemperatureReadings");
                 });
 
-            modelBuilder.Entity("Rtl_433.Mqtt.Data.TemperatureDeviceLocation", b =>
+            modelBuilder.Entity("Rtl_433.Mqtt.Data.TemperatureDevice", b =>
                 {
-                    b.HasOne("Rtl_433.Mqtt.Data.TemperatureDevice", "TemperatureDevice")
-                        .WithMany("TemperatureDeviceLocations")
-                        .HasForeignKey("TemperatureDeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("Rtl_433.Mqtt.Data.TemperatureLocation", "CurrentTemperatureLocation")
+                        .WithMany()
+                        .HasForeignKey("CurrentTemperatureLocationId");
 
-                    b.HasOne("Rtl_433.Mqtt.Data.TemperatureLocation", "TemperatureLocation")
-                        .WithMany("TemperatureDeviceLocations")
-                        .HasForeignKey("TemperatureLocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TemperatureDevice");
-
-                    b.Navigation("TemperatureLocation");
+                    b.Navigation("CurrentTemperatureLocation");
                 });
 
             modelBuilder.Entity("Rtl_433.Mqtt.Data.TemperatureReading", b =>
@@ -163,19 +127,23 @@ namespace Rtl_433.Mqtt.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Rtl_433.Mqtt.Data.TemperatureLocation", "TemperatureLocation")
+                        .WithMany("TemperatureReadings")
+                        .HasForeignKey("TemperatureLocationId");
+
                     b.Navigation("TemperatureDevice");
+
+                    b.Navigation("TemperatureLocation");
                 });
 
             modelBuilder.Entity("Rtl_433.Mqtt.Data.TemperatureDevice", b =>
                 {
-                    b.Navigation("TemperatureDeviceLocations");
-
                     b.Navigation("TemperatureReadings");
                 });
 
             modelBuilder.Entity("Rtl_433.Mqtt.Data.TemperatureLocation", b =>
                 {
-                    b.Navigation("TemperatureDeviceLocations");
+                    b.Navigation("TemperatureReadings");
                 });
 #pragma warning restore 612, 618
         }

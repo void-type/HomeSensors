@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Rtl_433.Mqtt.Data;
 
@@ -11,9 +12,10 @@ using Rtl_433.Mqtt.Data;
 namespace Rtl_433.Mqtt.Migrations
 {
     [DbContext(typeof(HomeSensorsContext))]
-    partial class HomeSensorsContextModelSnapshot : ModelSnapshot
+    [Migration("20220711031445_DeviceNormalization1")]
+    partial class DeviceNormalization1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,7 +32,7 @@ namespace Rtl_433.Mqtt.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
 
-                    b.Property<long?>("CurrentTemperatureLocationId")
+                    b.Property<long>("CurrentTemperatureLocationId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("DeviceChannel")
@@ -78,6 +80,16 @@ namespace Rtl_433.Mqtt.Migrations
                     b.Property<double?>("DeviceBatteryLevel")
                         .HasColumnType("float");
 
+                    b.Property<string>("DeviceChannel")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DeviceId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DeviceModel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("DeviceStatus")
                         .HasColumnType("int");
 
@@ -90,7 +102,7 @@ namespace Rtl_433.Mqtt.Migrations
                     b.Property<double?>("TemperatureCelsius")
                         .HasColumnType("float");
 
-                    b.Property<long>("TemperatureDeviceId")
+                    b.Property<long?>("TemperatureDeviceId")
                         .HasColumnType("bigint");
 
                     b.Property<long?>("TemperatureLocationId")
@@ -112,7 +124,9 @@ namespace Rtl_433.Mqtt.Migrations
                 {
                     b.HasOne("Rtl_433.Mqtt.Data.TemperatureLocation", "CurrentTemperatureLocation")
                         .WithMany()
-                        .HasForeignKey("CurrentTemperatureLocationId");
+                        .HasForeignKey("CurrentTemperatureLocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("CurrentTemperatureLocation");
                 });
@@ -121,9 +135,7 @@ namespace Rtl_433.Mqtt.Migrations
                 {
                     b.HasOne("Rtl_433.Mqtt.Data.TemperatureDevice", "TemperatureDevice")
                         .WithMany("TemperatureReadings")
-                        .HasForeignKey("TemperatureDeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TemperatureDeviceId");
 
                     b.HasOne("Rtl_433.Mqtt.Data.TemperatureLocation", "TemperatureLocation")
                         .WithMany("TemperatureReadings")
