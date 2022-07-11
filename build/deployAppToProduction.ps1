@@ -3,7 +3,7 @@
 param()
 
 Push-Location -Path "$PSScriptRoot/../"
-. ./build/util.ps1
+. ./build/buildSettings.ps1
 
 $releaseFolder = './artifacts/dist/release'
 

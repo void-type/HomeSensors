@@ -9,7 +9,7 @@ $serviceName = "HomeSensors"
 $serviceDisplayName = 'HomeSensors'
 $serviceDescription = 'Listens for data on an MQTT server and stores it.'
 $configOverrides = ''
-$environmentName = 'Producton'
+$environmentName = 'Production'
 
 # Test
 # $serviceName = "HomeSensorsTest"
