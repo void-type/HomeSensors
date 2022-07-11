@@ -75,7 +75,8 @@ public class Worker : BackgroundService
         dbContext.TemperatureReadings
             .Add(new TemperatureReading
             {
-                Time = message.Time,
+                // Add local timezone
+                Time = message.Time.ToLocalTime(),
                 DeviceBatteryLevel = message.Battery_Ok,
                 DeviceStatus = message.Status,
                 MessageIntegrityCheck = message.Mic,
@@ -95,7 +96,7 @@ public class Worker : BackgroundService
             return;
         }
 
-        _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} {message.Time} | {message.Model}:{message.Id} | {message.Temperature_C} C | {message.Humidity} %");
+        _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} {message.Time.ToLocalTime()} | {message.Model}:{message.Id} | {message.Temperature_C} C | {message.Humidity} %");
     }
 
     private TemperatureMessage DeserializeMessage(MqttApplicationMessageReceivedEventArgs e)
