@@ -8,9 +8,20 @@ You can use the [.NET SDK](https://dot.net/download) to build and run the source
 
 ## Database
 
-Set your connection string in appsettings, make sure you're an admin or can create DBs, then run `dotnet ef database update` to create the DB.
+This project uses EF Code First.
 
-When you need to make a new migration `dotnet ef migrations add DeviceNormalization`.
+To create/update the database, set your connection string in `src\HomeSensors.Service\appsettings.Development.json`.
+
+```PowerShell
+cd src/HomeSensors.Service
+dotnet ef database update
+```
+
+To add a migration
+
+```PowerShell
+dotnet ef migrations add <migration-name> --project ./src/HomeSensors.Data/HomeSensors.Data.csproj --startup-project  ./src/HomeSensors.Service/HomeSensors.Service.csproj
+```
 
 ## Usage
 

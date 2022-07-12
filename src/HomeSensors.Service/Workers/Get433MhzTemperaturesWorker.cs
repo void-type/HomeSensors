@@ -3,11 +3,11 @@ using MQTTnet.Client;
 using Newtonsoft.Json;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Packets;
-using HomeSensors.Models;
+using HomeSensors.Service.Models;
 using HomeSensors.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace HomeSensors;
+namespace HomeSensors.Service.Workers;
 
 public class Get433MhzTemperaturesWorker : BackgroundService
 {
@@ -30,10 +30,9 @@ public class Get433MhzTemperaturesWorker : BackgroundService
 
         _logger.LogInformation("Connecting Managed MQTT client.");
 
-        client.ApplicationMessageReceivedAsync += e =>
+        client.ApplicationMessageReceivedAsync += async e =>
         {
-            ProcessMessage(e);
-            return Task.CompletedTask;
+            await ProcessMessage(e);
         };
 
         await client.StartAsync(BuildOptions());
@@ -46,7 +45,7 @@ public class Get433MhzTemperaturesWorker : BackgroundService
         }
     }
 
-    private async void ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
+    private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
         var message = DeserializeMessage(e);
 

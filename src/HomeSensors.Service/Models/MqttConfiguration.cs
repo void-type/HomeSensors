@@ -1,4 +1,4 @@
-namespace HomeSensors.Models;
+namespace HomeSensors.Service.Models;
 
 public class MqttConfiguration
 {

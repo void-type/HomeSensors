@@ -14,7 +14,7 @@ FROM [dbo].[TemperatureReadings] tr
 ORDER BY [Time] DESC
 
 
--- Latest readings by device
+-- Latest readings for each device
 SELECT
   td.[DeviceModel]
 , td.[DeviceId]
@@ -39,7 +39,18 @@ FROM [dbo].[TemperatureReadings] tr
   ON tr.[TemperatureDeviceId] = trMax.[TemperatureDeviceId] AND tr.[Time] = trMax.[Time]
 ORDER BY tl.[Name]
 
--- Readings and devices without location
+-- All readings for a specific device
+SELECT TOP (1000)
+  tr.[Time]
+, tr.[TemperatureCelsius]
+, tr.[Humidity]
+FROM [dbo].[TemperatureReadings] tr
+  INNER JOIN [dbo].[TemperatureDevices] td ON td.[Id] = tr.[TemperatureDeviceId]
+  LEFT JOIN [dbo].[TemperatureLocations] tl ON tl.[Id] = tr.[TemperatureLocationId]
+where td.Id = 3
+ORDER BY [Time] DESC
+
+-- Readings and devices that have no location
 SELECT *
 FROM [dbo].[TemperatureReadings]
 WHERE [TemperatureLocationId] IS NULL

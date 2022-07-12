@@ -12,13 +12,13 @@ $configOverrides = ''
 $environmentName = 'Production'
 
 # Test
-# $serviceName = "HomeSensorsTest"
-# $serviceDisplayName = 'HomeSensors Test'
-# $serviceDescription = 'Listens for data on an MQTT server and stores it.'
+# $serviceName = "HomeSensors-Test"
+# $serviceDisplayName = 'HomeSensors-Test'
+# $serviceDescription = 'Listens for data on an MQTT server and stores it. (Test)'
 # $configOverrides = ''
 # $environmentName = 'Test'
 
-$serviceDirectory = "G:\DeployedApps\apps\$serviceName"
+$serviceDirectory = "G:\DeployedApps\apps\$serviceName.Service"
 
 # # We could run this job as a domain service account if we need to access network resources like shares.
 # $serviceAccount = 'some_domain_account$'
@@ -31,12 +31,13 @@ $serviceDirectory = "G:\DeployedApps\apps\$serviceName"
 # $acl | Set-Acl $serviceDirectory
 
 # Create the service to run as LocalSystem if no credential supplied.
-(Get-WmiObject -Class Win32_Service -Filter "Name='$serviceName'").Delete()
+Stop-Service $serviceName
+Remove-Service $serviceName
 
 $serviceParams = @{
   'Name'           = $serviceName
   'DisplayName'    = $serviceDisplayName
-  'BinaryPathName' = "`"$serviceDirectory/HomeSensors.exe`" --environment $environmentName $configOverrides"
+  'BinaryPathName' = "`"$serviceDirectory/$serviceName.Service.exe`" --environment $environmentName $configOverrides"
   'StartupType'    = 'Automatic'
   'Description'    = $serviceDescription
 }
@@ -50,3 +51,5 @@ if ($null -ne $serviceAccount) {
 
 # Start the service
 Start-Service -Name $serviceName
+
+Get-Service -Name $serviceName

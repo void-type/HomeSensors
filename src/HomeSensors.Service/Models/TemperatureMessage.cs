@@ -1,4 +1,4 @@
-namespace HomeSensors.Models;
+namespace HomeSensors.Service.Models;
 
 public class TemperatureMessage
 {
@@ -13,6 +13,7 @@ public class TemperatureMessage
     public double? Humidity { get; set; }
 }
 
+#pragma warning disable S125
 // Documentation for sensors
 // https://triq.org/rtl_433/DATA_FORMAT.html
 // Sample JSON
