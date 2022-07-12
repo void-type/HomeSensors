@@ -13,6 +13,8 @@ public class TemperatureMessage
     public double? Humidity { get; set; }
 }
 
+// Documentation for sensors
+// https://triq.org/rtl_433/DATA_FORMAT.html
 // Sample JSON
 // {
 //   "time":"2022-07-08 06:36:39",

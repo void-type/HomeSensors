@@ -13,7 +13,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         var mqttClient = context.Configuration.GetSection("Mqtt").Get<MqttConfiguration>();
         services.AddSingleton(mqttClient);
         services.AddDbContext<HomeSensorsContext>(options => options.UseSqlServer("Name=HomeSensors"));
-        services.AddHostedService<Worker>();
+        services.AddHostedService<Get433MhzTemperaturesWorker>();
     })
     .Build();
 
