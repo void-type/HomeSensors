@@ -1,10 +1,12 @@
 $shortAppName = "HomeSensors"
 $projectName = "$shortAppName"
 
+$webProjectFolder = "./src/$projectName.Web"
+$iisDirectoryProduction = "\\server2\DeployedApps\apps\$projectName.Web"
+$webSettingsDirectoryProduction = "\\server2\Servers\AppConfigs\$projectName\Web"
+$webReleaseFolder  = './artifacts/dist/release/web'
+
 $serviceProjectFolder = "./src/$projectName.Service"
-
 $serviceDirectoryProduction = "\\server2\DeployedApps\apps\$projectName.Service"
-$settingsDirectoryProduction = "\\server2\Servers\AppConfigs\$projectName"
-
-$serviceDirectoryTest = "\\server2\DeployedApps\apps\$($projectName).Service-Test"
-$settingsDirectoryTest = "$settingsDirectoryProduction"
+$serviceSettingsDirectoryProduction = "\\server2\Servers\AppConfigs\$projectName\Service"
+$serviceReleaseFolder = './artifacts/dist/release/service'

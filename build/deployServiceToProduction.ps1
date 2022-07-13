@@ -5,16 +5,14 @@ param()
 Push-Location -Path "$PSScriptRoot/../"
 . ./build/buildSettings.ps1
 
-$releaseFolder = './artifacts/dist/release'
-
 try {
-  if (-not (Test-Path -Path $releaseFolder)) {
+  if (-not (Test-Path -Path $serviceReleaseFolder)) {
     throw 'No artifacts to deploy. Run build.ps1 before deploying.'
   }
 
-  if ($PSCmdlet.ShouldProcess("$serviceDirectoryProduction", "Deploy $shortAppName to Production.")) {
-    ROBOCOPY "$releaseFolder" "$serviceDirectoryProduction" /MIR
-    Copy-Item -Path "$settingsDirectoryProduction\*" -Include "*.Production.json" -Recurse -Destination $serviceDirectoryProduction
+  if ($PSCmdlet.ShouldProcess("$serviceDirectoryProduction", "Deploy $shortAppName.Service to Production.")) {
+    ROBOCOPY "$serviceReleaseFolder" "$serviceDirectoryProduction" /MIR
+    Copy-Item -Path "$serviceSettingsDirectoryProduction\*" -Include "*.Production.json" -Recurse -Destination $serviceDirectoryProduction
   }
 
 } finally {
