@@ -58,3 +58,23 @@ WHERE [TemperatureLocationId] IS NULL
 SELECT *
 FROM [dbo].[TemperatureDevices]
 WHERE [CurrentTemperatureLocationId] IS NULL
+
+-- Average times
+SELECT
+  tr.[Time]
+,  td.DeviceModel
+FROM [dbo].[TemperatureReadings] tr
+  INNER JOIN [dbo].[TemperatureDevices] td ON td.[Id] = tr.[TemperatureDeviceId]
+  LEFT JOIN [dbo].[TemperatureLocations] tl ON tl.[Id] = tr.[TemperatureLocationId]
+where td.Id = 7
+AND  Time >= DateAdd(SECOND, -14400, (select Convert(DateTime2, max(time)) from TemperatureReadings))
+ORDER BY [Time] ASC
+
+-- $first, $times = Get-Content .\times.csv | % { [DateTimeOffset]::Parse($_) }; $times | % { $temp = $first; $first = $_; ($_ - $temp).TotalSeconds } | measure -Average | select -expand Average
+-- Ambientweather-F007TH 56.95
+-- Ambientweather-F007TH 58.77
+-- Ambientweather-F007TH 61.45
+-- Ambientweather-F007TH 62.99
+-- Acurite-986 144.29
+-- Acurite-986 122.68
+-- Acurite-Tower 16.90

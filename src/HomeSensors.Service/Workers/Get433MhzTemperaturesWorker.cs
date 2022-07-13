@@ -86,11 +86,9 @@ public class Get433MhzTemperaturesWorker : BackgroundService
         dbContext.TemperatureReadings
             .Add(new TemperatureReading
             {
-                // Add local timezone
                 Time = message.Time.ToLocalTime(),
                 DeviceBatteryLevel = message.Battery_Ok,
                 DeviceStatus = message.Status,
-                MessageIntegrityCheck = message.Mic,
                 Humidity = message.Humidity,
                 TemperatureCelsius = message.Temperature_C,
                 TemperatureDevice = device,

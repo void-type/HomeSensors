@@ -6,9 +6,8 @@ public class TemperatureReading
     public DateTimeOffset Time { get; set; }
     public double? DeviceBatteryLevel { get; set; }
     public int? DeviceStatus { get; set; }
-    public string? MessageIntegrityCheck { get; set; } = string.Empty;
-    public double? TemperatureCelsius { get; set; }
     public double? Humidity { get; set; }
+    public double? TemperatureCelsius { get; set; }
 
     public long TemperatureDeviceId { get; set; }
     public TemperatureDevice TemperatureDevice { get; set; } = new();
