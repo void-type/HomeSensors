@@ -1,4 +1,4 @@
-﻿@model IEnumerable<HomeSensors.Web.Controllers.HomeController.TemperatureData>
+﻿@model HomeSensors.Web.Controllers.HomeController.GraphViewModel
 
 @{
     ViewData["Title"] = "Home Page";
@@ -10,43 +10,43 @@
 
 <div id="lineChart"></div>
 
+@foreach (var current in Model.Current) {
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">@(Math.Round((decimal)current.TemperatureCelsius, 1).ToString(".0"))C @current.Location</h5>
+            <p><small class="fw-light">@current.Time</small></p>
+        </div>
+    </div>
+}
+
 @section Styles {
-<link rel="stylesheet" href="~/lib/billboard/billboard.css">
+    <link rel="stylesheet" href="~/lib/billboard/billboard.css">
 }
 
 @section Scripts {
 <script src="~/lib/billboard/d3.js"></script>
 <script src="~/lib/billboard/billboard.js"></script>
 
-
 <script>
     const modelData = @Json.Serialize(Model);
 
     console.log(modelData);
 
-    const columns = modelData
-        .map(md => [md.label, ...md.values]);
+    const columns = [
+        ["x", ...modelData.xAxis],
+    ];
 
-    @* var chart = bb.generate({
-        data: {
-            columns: columns,
-            type: "line",
-        },
-        bindto: "#lineChart"
-    }); *@
+    modelData.series
+        .forEach(s => columns.push([s.location, ...s.points.map(p => p.temperatureCelsius, 1)]));
+
+    console.log(columns);
 
     var chart = bb.generate({
         data: {
             x: "x",
             xFormat: '%Y-%m-%d %H:%M:%S',
-            columns: [
-                ["x", "2013-01-01 22:05:00", "2013-01-02 23:12:00", "2013-01-03 12:23:34", "2013-01-04 07:15:32", "2013-01-05 02:02:03", "2013-01-06 05:05:05"],
-                ["data1", 30, 200, null, 400, 150, 250],
-                ["data2", 130, 340, 200, 500, 250, 350]
-                // {{ date | safe}},
-                // {{value | safe}}
-            ],
-            type: "line", // for ESM specify as: line()
+            columns: columns,
+            type: "line",
         },
         axis: {
             x: {

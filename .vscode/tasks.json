@@ -88,6 +88,18 @@
         "${workspaceFolder}/src/HomeSensors.Service/HomeSensors.Service.csproj"
       ],
       "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "watch-web",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/src/HomeSensors.Web/HomeSensors.Web.csproj"
+      ],
+      "problemMatcher": "$msCompile"
     }
   ]
 }

@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using HomeSensors.Web.Models;
 using HomeSensors.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using System.Collections.Generic;
 
 namespace HomeSensors.Web.Controllers;
 
@@ -21,57 +19,66 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        // var data = _data.TemperatureReadings
-        //     .Include(x => x.TemperatureLocation)
-        //     .OrderByDescending(x => x.Time)
-        //     .Where(x => x.Time > DateTimeOffset.Now.AddDays(-1))
-        //     .Where(x => x.TemperatureLocationId != null)
-        //     .GroupBy(x => x.TemperatureLocation!.Name)
-        //     .OrderBy(x => x.Key)
-        //     .Select(x =>
-        //         new
-        //         {
-        //             label = x.Key,
-        //             values = x.Select(x => x.TemperatureCelsius)
-        //         }
-        //     );
+        var startTime = DateTimeOffset.Now.AddHours(-72);
 
-        var startTime = DateTimeOffset.Now.AddDays(-1);
-
-        var readings = _data.TemperatureReadings
+        var data = _data.TemperatureReadings
             .Include(x => x.TemperatureLocation)
             .OrderByDescending(x => x.Time)
+            .Where(x => x.TemperatureLocationId != null)
             .Where(x => x.Time > startTime)
-            .Where(x => x.TemperatureLocationId != null);
-
-        var data = readings
-            .GroupBy(x => x.TemperatureLocation!.Name)
-            .OrderBy(x => x.Key)
             .AsEnumerable()
-            .Select(x =>
+            .GroupBy(x => x.TemperatureLocation?.Name ?? "unknown");
+
+        var dbSeries = data
+            .Select(locationGroup =>
             {
-                var groups = x.GroupBy(y =>
+                var groups = locationGroup.GroupBy(y =>
                 {
-                    // Round to nearest 30 minutes and zero milliseconds and seconds.
+                    // Round down to 30 minute intervals and zero milliseconds and seconds.
                     var time = y.Time;
                     time = time.AddMinutes(-(time.Minute % 30));
                     time = time.AddMilliseconds(-time.Millisecond - (1000 * time.Second));
                     return time;
                 })
-                .Select(g => new TemperatureTimeSeries { Time = g.Key, Temperature = g.Average(s => s.TemperatureCelsius) })
+                .Select(timeGroup => new GraphPointViewModel
+                {
+                    Time = timeGroup.Key,
+                    TemperatureCelsius = timeGroup.Average(s => s.TemperatureCelsius)
+                })
                 .ToList();
 
-                return new TemperatureData
-                {
-                    Label = x.Key,
-                    TimeSeries = groups
-                };
+                return new GraphSeriesViewModel(locationGroup.Key, groups);
             })
             .ToList();
 
-        var allTimes = data.SelectMany(x => x.TimeSeries.Select(x => x.Time)).Distinct();
+        var allTimes = dbSeries
+            .SelectMany(x => x.Points.Select(y => y.Time))
+            .OrderBy(x => x)
+            .ToList();
 
-        return View("Index", data);
+        var allSeries = dbSeries
+            .Select(series => new GraphSeriesViewModel(
+                series.Location,
+                allTimes
+                    .Select(t => series.Points
+                        .FirstOrDefault(point => point.Time == t, new GraphPointViewModel { Time = t, TemperatureCelsius = null }))
+            ))
+            .OrderBy(series => series.Location);
+
+        var currentTemps = data.Select(l =>
+        {
+            var reading = l.First();
+            return new GraphCurrentReading(l.Key, reading.TemperatureCelsius, reading.Time);
+        });
+
+        var graph = new GraphViewModel
+        {
+            XAxis = allTimes,
+            Series = allSeries,
+            Current = currentTemps
+        };
+
+        return View("Index", graph);
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -80,16 +87,42 @@ public class HomeController : Controller
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 
-    public class TemperatureData
+    public class GraphViewModel
     {
-        public string Label { get; set; } = string.Empty;
-        public IEnumerable<TemperatureTimeSeries> TimeSeries { get; set; } = Array.Empty<TemperatureTimeSeries>();
-        public IEnumerable<DateTimeOffset> AllTimes => TimeSeries.Select(x => x.Time).Distinct();
+        public IEnumerable<DateTimeOffset> XAxis { get; init; } = Array.Empty<DateTimeOffset>();
+        public IEnumerable<GraphSeriesViewModel> Series { get; init; } = Array.Empty<GraphSeriesViewModel>();
+        public IEnumerable<GraphCurrentReading> Current { get; init; } = Array.Empty<GraphCurrentReading>();
     }
 
-    public class TemperatureTimeSeries
+    public class GraphSeriesViewModel
     {
-        public DateTimeOffset Time { get; set; }
-        public double? Temperature { get; set; }
+        public GraphSeriesViewModel(string location, IEnumerable<GraphPointViewModel> points)
+        {
+            Location = location;
+            Points = points;
+        }
+
+        public string Location { get; }
+        public IEnumerable<GraphPointViewModel> Points { get; }
+    }
+
+    public class GraphPointViewModel
+    {
+        public DateTimeOffset Time { get; init; } //.ToString("yyyy-mm-dd HH:MM:ss")
+        public double? TemperatureCelsius { get; init; }
+    }
+
+    public class GraphCurrentReading
+    {
+        public string Location { get; }
+        public double? TemperatureCelsius { get; }
+        public DateTimeOffset Time { get; }
+
+        public GraphCurrentReading(string location, double? temperatureCelsius, DateTimeOffset time)
+        {
+            Location = location;
+            TemperatureCelsius = temperatureCelsius;
+            Time = time;
+        }
     }
 }
