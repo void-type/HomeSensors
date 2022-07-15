@@ -8,7 +8,9 @@
     <h1 class="display-4">Temps</h1>
 </div>
 
-<div id="lineChart"></div>
+<div>
+    <canvas id="myChart"></canvas>
+</div>
 
 @foreach (var current in Model.Current) {
     <div class="card">
@@ -20,45 +22,92 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/lib/billboard/billboard.css">
 }
 
 @section Scripts {
-<script src="~/lib/billboard/d3.js"></script>
-<script src="~/lib/billboard/billboard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@@^3"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@@^2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@@^1"></script>
 
 <script>
+    function getRandomColor() {
+        var letters = '0123456789ABCDEF'.split('');
+        var color = '#';
+        for (var i = 0; i < 6; i++ ) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+
+    var colors = [
+        '#2ac4b3',
+        '#feaf29',
+        '#ff617b',
+        '#73a2ef',
+        '#b180d0',
+        '#3064cf',
+        '#d0a45f',
+        '#8aaec7',
+        '#ef65a2',
+        '#8aaec7',
+    ];
+
     const modelData = @Json.Serialize(Model);
 
     console.log(modelData);
 
-    const columns = [["x", ...modelData.xAxis]];
+    const data = {
+        datasets:  modelData.series
+            .map((s, si) => ({
+                label: s.location,
+                data: s.points.map(p => ({ x: p.time, y: Math.round(p.temperatureCelsius * 10) / 10 })),
+                borderColor: colors[si],
+            }))
+    };
 
-    modelData.series
-        .forEach(s => columns.push([s.location, ...s.points
-            .map(p => Number.isFinite(p.temperatureCelsius) ? (Math.round(p.temperatureCelsius * 10) / 10) : null)]));
+    console.log(data);
 
-    console.log(columns);
-
-    const chart = bb.generate({
-        data: {
-            x: "x",
-            xFormat: '%Y-%m-%d %H:%M',
-            columns: columns,
-            type: "line",
-        },
-        axis: {
-            x: {
-                type: "timeseries",
-                tick: {
-                    format: "%Y-%m-%d %H:%M"
+    const config = {
+        type: 'line',
+        data: data,
+        options: {
+            // 12 hours
+            spanGaps: 1000 * 60 * 60 * 12,
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: false,
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time:{
+                    },
+                    ticks: {
+                        autoSkip: false,
+                        major: {
+                            enabled: true
+                        },
+                        font: function(context) {
+                            if (context.tick && context.tick.major) {
+                                return {
+                                    weight: 'bold',
+                                };
+                            }
+                        }
+                    }
                 }
             }
         },
-        line: {
-            connectNull: true
-        },
-        bindto: "#lineChart"
-    });
+    };
+
+    const myChart = new Chart(
+        document.getElementById('myChart'),
+        config
+    );
 </script>
 }

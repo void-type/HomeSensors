@@ -19,22 +19,22 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        var startTime = DateTimeOffset.Now.AddHours(-72);
+        var startTime = DateTimeOffset.Now.AddHours(-48);
 
         var data = _data.TemperatureReadings
             .Include(x => x.TemperatureLocation)
-            .OrderByDescending(x => x.Time)
             .Where(x => x.TemperatureLocationId != null)
             .Where(x => x.Time > startTime)
             .AsEnumerable()
-            .GroupBy(x => x.TemperatureLocation?.Name ?? "unknown");
+            .GroupBy(x => x.TemperatureLocation?.Name ?? "unknown")
+            .OrderBy(x => x.Key);
 
         var dbSeries = data
             .Select(locationGroup =>
             {
                 var groups = locationGroup.GroupBy(y =>
                 {
-                    // Round down to 30 minute intervals and zero milliseconds and seconds.
+                    // Round down to 30 minute intervals and zero milliseconds and seconds to make period-starting groups.
                     var time = y.Time;
                     time = time.AddMinutes(-(time.Minute % 30));
                     time = time.AddMilliseconds(-time.Millisecond - (1000 * time.Second));
@@ -51,20 +51,6 @@ public class HomeController : Controller
             })
             .ToList();
 
-        var allTimes = dbSeries
-            .SelectMany(x => x.Points.Select(y => y.Time))
-            .OrderBy(x => x)
-            .ToList();
-
-        var allSeries = dbSeries
-            .Select(series => new GraphSeriesViewModel(
-                series.Location,
-                allTimes
-                    .Select(t => series.Points
-                        .FirstOrDefault(point => point.Time == t, new GraphPointViewModel { Time = t, TemperatureCelsius = null }))
-            ))
-            .OrderBy(series => series.Location);
-
         var currentTemps = data.Select(l =>
         {
             var reading = l.First();
@@ -73,8 +59,7 @@ public class HomeController : Controller
 
         var graph = new GraphViewModel
         {
-            XAxis = allTimes,
-            Series = allSeries,
+            Series = dbSeries,
             Current = currentTemps
         };
 
@@ -89,7 +74,6 @@ public class HomeController : Controller
 
     public class GraphViewModel
     {
-        public IEnumerable<DateTimeOffset> XAxis { get; init; } = Array.Empty<DateTimeOffset>();
         public IEnumerable<GraphSeriesViewModel> Series { get; init; } = Array.Empty<GraphSeriesViewModel>();
         public IEnumerable<GraphCurrentReading> Current { get; init; } = Array.Empty<GraphCurrentReading>();
     }
@@ -108,8 +92,8 @@ public class HomeController : Controller
 
     public class GraphPointViewModel
     {
-        public DateTimeOffset Time { get; init; } //.ToString("yyyy-mm-dd HH:MM:ss")
         public double? TemperatureCelsius { get; init; }
+        public DateTimeOffset Time { get; init; }
     }
 
     public class GraphCurrentReading
