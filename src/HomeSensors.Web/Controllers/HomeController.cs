@@ -36,7 +36,7 @@ public class HomeController : Controller
                 {
                     // Round down to 30 minute intervals and zero milliseconds and seconds to make period-starting groups.
                     var time = y.Time;
-                    time = time.AddMinutes(-(time.Minute % 30));
+                    time = time.AddMinutes(-(time.Minute % 15));
                     time = time.AddMilliseconds(-time.Millisecond - (1000 * time.Second));
                     return time;
                 })
@@ -63,6 +63,9 @@ public class HomeController : Controller
             Current = currentTemps
         };
 
+        // TODO: Fahrenheit selector
+        // TODO: SignalR / API with date selectors and granularity selector
+        // Make live readings prettier
         return View("Index", graph);
     }
 
