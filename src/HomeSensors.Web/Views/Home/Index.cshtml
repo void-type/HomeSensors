@@ -32,19 +32,18 @@
 
     console.log(modelData);
 
-    const columns = [
-        ["x", ...modelData.xAxis],
-    ];
+    const columns = [["x", ...modelData.xAxis]];
 
     modelData.series
-        .forEach(s => columns.push([s.location, ...s.points.map(p => p.temperatureCelsius, 1)]));
+        .forEach(s => columns.push([s.location, ...s.points
+            .map(p => Number.isFinite(p.temperatureCelsius) ? (Math.round(p.temperatureCelsius * 10) / 10) : null)]));
 
     console.log(columns);
 
-    var chart = bb.generate({
+    const chart = bb.generate({
         data: {
             x: "x",
-            xFormat: '%Y-%m-%d %H:%M:%S',
+            xFormat: '%Y-%m-%d %H:%M',
             columns: columns,
             type: "line",
         },
@@ -52,7 +51,7 @@
             x: {
                 type: "timeseries",
                 tick: {
-                    format: "%Y-%m-%d %H:%M:%S"
+                    format: "%Y-%m-%d %H:%M"
                 }
             }
         },
