@@ -1,9 +1,8 @@
-using Serilog;
-
-using HomeSensors.Service.Workers;
+﻿using HomeSensors.Data;
 using HomeSensors.Service.Models;
-using HomeSensors.Data;
+using HomeSensors.Service.Workers;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .UseWindowsService()

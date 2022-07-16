@@ -1,11 +1,11 @@
+﻿using HomeSensors.Data;
+using HomeSensors.Service.Models;
+using Microsoft.EntityFrameworkCore;
 using MQTTnet;
 using MQTTnet.Client;
-using Newtonsoft.Json;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Packets;
-using HomeSensors.Service.Models;
-using HomeSensors.Data;
-using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace HomeSensors.Service.Workers;
 

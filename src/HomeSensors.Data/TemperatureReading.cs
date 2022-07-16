@@ -1,4 +1,4 @@
-namespace HomeSensors.Data;
+﻿namespace HomeSensors.Data;
 
 public class TemperatureReading
 {

@@ -1,25 +1,47 @@
-using HomeSensors.Data;
+﻿using HomeSensors.Data;
+using HomeSensors.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Reflection;
+using VoidCore.AspNet.Routing;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 var services = builder.Services;
+var env = builder.Environment;
 
 // Logging
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(config)
     .CreateLogger();
 
-builder.Host.UseSerilog();
-
 try
 {
     Log.Information("Configuring host for {Name} v{Version}", ThisAssembly.AssemblyTitle, ThisAssembly.AssemblyInformationalVersion);
 
     services.AddControllersWithViews();
-    services.AddDbContext<HomeSensorsContext>(options => options
-            .UseSqlServer("Name=HomeSensors", b => b.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName)));
+
+    // Store migrations in the Data project
+    services.AddDbContext<HomeSensorsContext>(options =>
+    {
+        options
+            .UseSqlServer("Name=HomeSensors",
+                b => b.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName));
+    });
+
+    services.AddScoped<TemperatureRepository>();
+
+    services.AddApiExceptionFilter();
+
+    services.AddHttpContextAccessor();
+    services.AddEndpointsApiExplorer();
+    services.AddSwaggerGen(c =>
+    {
+        // Set the comments path for the Swagger JSON and UI.
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        c.IncludeXmlComments(xmlPath);
+    });
 
     var app = builder.Build();
 
@@ -35,6 +57,12 @@ try
     app.UseRouting();
 
     app.UseAuthorization();
+
+    // Swashbuckle in all environments
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.DocumentTitle = env.ApplicationName + " API");
+
+    app.UseSpaEndpoints();
 
     app.MapControllerRoute(
         name: "default",

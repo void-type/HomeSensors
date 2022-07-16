@@ -1,76 +1,33 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using HomeSensors.Web.Models;
-using HomeSensors.Data;
-using Microsoft.EntityFrameworkCore;
+using HomeSensors.Data.Repositories;
+using HomeSensors.Data.Repositories.Models;
 
 namespace HomeSensors.Web.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
-    private readonly HomeSensorsContext _data;
+    private readonly TemperatureRepository _temperatureRepository;
 
-    public HomeController(ILogger<HomeController> logger, HomeSensorsContext data)
+    public HomeController(TemperatureRepository temperatureRepository)
     {
-        _logger = logger;
-        _data = data;
+        _temperatureRepository = temperatureRepository;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        const int intervalMinutes = 15;
-        var startTime = DateTimeOffset.Now.AddHours(-72);
+        var startTime = DateTimeOffset.Now.AddHours(-48);
+        var endTime = DateTimeOffset.Now;
+        var intervalMinutes = 15;
 
-        var data = _data.TemperatureReadings
-            .Include(x => x.TemperatureLocation)
-            .Where(x => x.TemperatureLocationId != null)
-            .Where(x => x.Time > startTime)
-            .OrderByDescending(x => x.Time)
-            .AsEnumerable()
-            .GroupBy(x => x.TemperatureLocation?.Name ?? "unknown")
-            .OrderBy(x => x.Key);
-
-        var dbSeries = data
-            .Select(locationGroup =>
-            {
-                var groups = locationGroup
-                    .GroupBy(y =>
-                    {
-                        // Round down to 30 minute intervals and zero milliseconds and seconds to make period-starting groups.
-                        var time = y.Time;
-                        time = time.AddMinutes(-(time.Minute % intervalMinutes));
-                        time = time.AddMilliseconds(-time.Millisecond - (1000 * time.Second));
-                        return time;
-                    })
-                    .Select(timeGroup =>
-                    {
-                        var intervalAverage = timeGroup.Average(s => s.TemperatureCelsius);
-
-                        return new GraphPointViewModel
-                        {
-                            Time = timeGroup.Key,
-                            TemperatureCelsius = intervalAverage
-                        };
-                    })
-                    .ToList();
-
-                return new GraphSeriesViewModel(locationGroup.Key, groups);
-            })
-            .ToList();
-
-        var currentTemps = data
-            .Select(l =>
-            {
-                var reading = l.First();
-
-                return new GraphCurrentReading(l.Key, reading.TemperatureCelsius, reading.Time);
-            });
+        var readings = await _temperatureRepository.GetCurrentReadings();
+        var series = await _temperatureRepository.GetTemperatureTimeSeries(startTime, endTime, intervalMinutes);
 
         var graph = new GraphViewModel
         {
-            Series = dbSeries,
-            Current = currentTemps,
+            Current = readings,
+            Series = series,
         };
 
         // TODO: Fahrenheit selector
@@ -83,43 +40,5 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-    }
-
-    public class GraphViewModel
-    {
-        public IEnumerable<GraphSeriesViewModel> Series { get; init; } = Array.Empty<GraphSeriesViewModel>();
-        public IEnumerable<GraphCurrentReading> Current { get; init; } = Array.Empty<GraphCurrentReading>();
-    }
-
-    public class GraphSeriesViewModel
-    {
-        public GraphSeriesViewModel(string location, IEnumerable<GraphPointViewModel> points)
-        {
-            Location = location;
-            Points = points;
-        }
-
-        public string Location { get; }
-        public IEnumerable<GraphPointViewModel> Points { get; }
-    }
-
-    public class GraphPointViewModel
-    {
-        public double? TemperatureCelsius { get; init; }
-        public DateTimeOffset Time { get; init; }
-    }
-
-    public class GraphCurrentReading
-    {
-        public string Location { get; }
-        public double? TemperatureCelsius { get; }
-        public DateTimeOffset Time { get; }
-
-        public GraphCurrentReading(string location, double? temperatureCelsius, DateTimeOffset time)
-        {
-            Location = location;
-            TemperatureCelsius = temperatureCelsius;
-            Time = time;
-        }
     }
 }
