@@ -22,7 +22,7 @@ public class OldHomeController : Controller
         var intervalMinutes = 15;
 
         var readings = await _temperatureRepository.GetCurrentReadings();
-        var series = await _temperatureRepository.GetTemperatureTimeSeries(startTime, endTime, intervalMinutes);
+        var series = await _temperatureRepository.GetTimeSeries(startTime, endTime, intervalMinutes);
 
         var graph = new GraphViewModel
         {

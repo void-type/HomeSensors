@@ -11,14 +11,17 @@
 
 import type {
   AppVersion,
+  GraphCurrentReading,
   GraphRequest,
-  GraphViewModel,
+  GraphTimeSeries,
   IFailureIItemSet,
   WebClientInfo,
 } from './data-contracts';
 import { ContentType, HttpClient, type RequestParams } from './http-client';
 
-export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType> {
+export class Api<
+  SecurityDataType = unknown
+> extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
@@ -55,17 +58,36 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * No description
    *
    * @tags TemperatureApi
-   * @name TempsGraphCreate
-   * @request POST:/api/temps/graph
-   * @response `200` `GraphViewModel` Success
+   * @name TemperaturesTimeSeriesCreate
+   * @request POST:/api/temperatures/time-series
+   * @response `200` `(GraphTimeSeries)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  tempsGraphCreate = (data: GraphRequest, params: RequestParams = {}) =>
-    this.request<GraphViewModel, IFailureIItemSet>({
-      path: `/api/temps/graph`,
+  temperaturesTimeSeriesCreate = (
+    data: GraphRequest,
+    params: RequestParams = {}
+  ) =>
+    this.request<GraphTimeSeries[], IFailureIItemSet>({
+      path: `/api/temperatures/time-series`,
       method: 'POST',
       body: data,
       type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureApi
+   * @name TemperaturesCurrentCreate
+   * @request POST:/api/temperatures/current
+   * @response `200` `(GraphCurrentReading)[]` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesCurrentCreate = (params: RequestParams = {}) =>
+    this.request<GraphCurrentReading[], IFailureIItemSet>({
+      path: `/api/temperatures/current`,
+      method: 'POST',
       format: 'json',
       ...params,
     });

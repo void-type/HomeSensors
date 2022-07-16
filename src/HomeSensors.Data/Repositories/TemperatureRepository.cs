@@ -12,7 +12,7 @@ public class TemperatureRepository
         _data = data;
     }
 
-    public async Task<List<GraphTimeSeries>> GetTemperatureTimeSeries(DateTimeOffset startTime, DateTimeOffset endTime, int intervalMinutes = 15)
+    public async Task<List<GraphTimeSeries>> GetTimeSeries(DateTimeOffset startTime, DateTimeOffset endTime, int intervalMinutes = 15)
     {
         // If too many points requested, force hourly.
         var wideRequest = endTime - startTime > TimeSpan.FromDays(3);

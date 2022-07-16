@@ -9,7 +9,7 @@ using VoidCore.Model.Responses.Collections;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-[ApiRoute("temps")]
+[ApiRoute("temperatures")]
 public class TemperatureApiController : ControllerBase
 {
     private readonly TemperatureRepository _temperatureRepository;
@@ -20,18 +20,24 @@ public class TemperatureApiController : ControllerBase
     }
 
     [HttpPost]
-    [Route("graph")]
-    [ProducesResponseType(typeof(GraphViewModel), 200)]
+    [Route("time-series")]
+    [ProducesResponseType(typeof(List<GraphTimeSeries>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetGraph([FromBody] GraphRequest request)
+    public async Task<IActionResult> GetTimeSeries([FromBody] GraphRequest request)
+    {
+        var series = await _temperatureRepository.GetTimeSeries(request.StartTime, request.EndTime, request.IntervalMinutes);
+
+        return HttpResponder.Respond(series);
+    }
+
+    [HttpPost]
+    [Route("current")]
+    [ProducesResponseType(typeof(List<GraphCurrentReading>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> GetCurrentReadings()
     {
         var readings = await _temperatureRepository.GetCurrentReadings();
-        var series = await _temperatureRepository.GetTemperatureTimeSeries(request.StartTime, request.EndTime, request.IntervalMinutes);
 
-        return HttpResponder.Respond(new GraphViewModel
-        {
-            Current = readings,
-            Series = series,
-        });
+        return HttpResponder.Respond(readings);
     }
 }

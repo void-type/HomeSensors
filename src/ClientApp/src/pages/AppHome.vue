@@ -3,7 +3,7 @@ import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
 import { onMounted, reactive, watch, computed } from 'vue';
 import moment from 'moment';
-import type { GraphViewModel } from '@/api/data-contracts';
+import type { GraphCurrentReading, GraphTimeSeries } from '@/api/data-contracts';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-moment';
 
@@ -12,14 +12,15 @@ Chart.register(...registerables);
 const appStore = useAppStore();
 
 const data = reactive({
-  graphData: {
-    series: null,
-    current: null,
-  } as GraphViewModel,
-  useFahrenheit: false,
+  startTime: moment().add(-4, 'd').toDate().toISOString(),
+  endTime: moment().toISOString(),
+  intervalMinutes: 15,
+  series: [] as Array<GraphTimeSeries>,
+  current: [] as Array<GraphCurrentReading>,
+  useFahrenheit: true,
 });
 
-let graphChart: Chart | null = null;
+let lineChart: Chart | null = null;
 
 const tempUnit = computed(() => (data.useFahrenheit ? 'F' : 'C'));
 
@@ -50,7 +51,7 @@ function formatTemp(temp: number | null | undefined, decimals = 1) {
   return Math.round(convertedTemp * 10 ** decimals) / 10 ** decimals;
 }
 
-function setGraphData(model: GraphViewModel) {
+function setGraphData(series: Array<GraphTimeSeries>) {
   const element = document.getElementById('tempGraph') as HTMLCanvasElement;
 
   if (element === null) {
@@ -58,9 +59,9 @@ function setGraphData(model: GraphViewModel) {
     return;
   }
 
-  graphChart?.destroy();
+  lineChart?.destroy();
 
-  const datasets = model.series?.map((s, si) => ({
+  const datasets = series?.map((s, si) => ({
     label: s.location,
     borderColor: colors[si] || getRandomColor(),
     data: s.points
@@ -116,29 +117,45 @@ function setGraphData(model: GraphViewModel) {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  graphChart = new Chart(element, config as any);
+  lineChart = new Chart(element, config as any);
+}
+
+function getTimeSeries() {
+  const parameters = {
+    startTime: data.startTime,
+    endTime: data.endTime,
+    intervalMinutes: data.intervalMinutes,
+  };
+
+  new Api()
+    .temperaturesTimeSeriesCreate(parameters)
+    .then((response) => {
+      data.series = response.data;
+      setGraphData(data.series);
+    })
+    .catch((response) => appStore.setApiFailureMessages(response));
 }
 
 onMounted(() => {
-  const startTime = moment().add(-2, 'd').toDate().toISOString();
-  const endTime = moment().toISOString();
+  getTimeSeries();
 
   new Api()
-    .tempsGraphCreate({
-      startTime,
-      endTime,
-      intervalMinutes: 15,
-    })
+    .temperaturesCurrentCreate()
     .then((response) => {
-      data.graphData = response.data;
-      setGraphData(data.graphData);
+      data.current = response.data;
+      setGraphData(data.current);
     })
     .catch((response) => appStore.setApiFailureMessages(response));
 });
 
 watch(
-  () => [data.graphData, data.useFahrenheit],
-  () => setGraphData(data.graphData)
+  () => [data.startTime, data.endTime, data.intervalMinutes],
+  () => getTimeSeries()
+);
+
+watch(
+  () => [data.series, data.useFahrenheit],
+  () => setGraphData(data.series)
 );
 </script>
 
@@ -158,7 +175,7 @@ watch(
       <canvas id="tempGraph"></canvas>
     </div>
     <div class="row">
-      <div v-for="(currentTemp, i) in data.graphData.current" :key="i" class="card col-4">
+      <div v-for="(currentTemp, i) in data.current" :key="i" class="card col-4">
         <div class="card-body">
           <h5 class="card-title">
             {{ formatTemp(currentTemp.temperatureCelsius) }}{{ tempUnit }}

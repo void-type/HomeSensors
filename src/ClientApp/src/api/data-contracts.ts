@@ -59,11 +59,6 @@ export interface GraphTimeSeries {
   points?: GraphPoint[] | null;
 }
 
-export interface GraphViewModel {
-  series?: GraphTimeSeries[] | null;
-  current?: GraphCurrentReading[] | null;
-}
-
 export interface IFailure {
   message?: string | null;
   uiHandle?: string | null;
