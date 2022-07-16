@@ -92,7 +92,7 @@
       "problemMatcher": "$msCompile"
     },
     {
-        "label": "watch-client",
+        "label": "watch-web-client",
         "command": "./watchClient.ps1",
         "options": {
             "cwd": "./build"
@@ -113,7 +113,7 @@
         }
     },
     {
-        "label": "watch-web",
+        "label": "watch-web-server",
         "command": "./watchWeb.ps1",
         "options": {
             "cwd": "./build"
@@ -133,8 +133,8 @@
         }
     },
     {
-        "label": "watch-dev",
-        "dependsOn": ["watch-client", "watch-web"],
+        "label": "watch-web",
+        "dependsOn": ["watch-server-client", "watch-web-server"],
         "problemMatcher": []
     }
   ]
