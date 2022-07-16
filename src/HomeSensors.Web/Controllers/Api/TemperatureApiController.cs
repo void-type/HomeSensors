@@ -1,10 +1,15 @@
 ﻿using HomeSensors.Data.Repositories;
 using HomeSensors.Data.Repositories.Models;
+using HomeSensors.Web.Models;
 using Microsoft.AspNetCore.Mvc;
+using VoidCore.AspNet.ClientApp;
+using VoidCore.AspNet.Routing;
+using VoidCore.Model.Functional;
+using VoidCore.Model.Responses.Collections;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-[Route("api/temps")]
+[ApiRoute("temps")]
 public class TemperatureApiController : ControllerBase
 {
     private readonly TemperatureRepository _temperatureRepository;
@@ -15,22 +20,18 @@ public class TemperatureApiController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<GraphViewModel> Index([FromBody] GraphRequest request)
+    [Route("graph")]
+    [ProducesResponseType(typeof(GraphViewModel), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> GetGraph([FromBody] GraphRequest request)
     {
         var readings = await _temperatureRepository.GetCurrentReadings();
         var series = await _temperatureRepository.GetTemperatureTimeSeries(request.StartTime, request.EndTime, request.IntervalMinutes);
 
-        return new GraphViewModel
+        return HttpResponder.Respond(new GraphViewModel
         {
             Current = readings,
             Series = series,
-        };
+        });
     }
-}
-
-public class GraphRequest
-{
-    public int IntervalMinutes { get; init; } = 15;
-    public DateTimeOffset StartTime { get; init; } = DateTimeOffset.Now.AddHours(-48);
-    public DateTimeOffset EndTime { get; init; } = DateTimeOffset.Now;
 }

@@ -1,44 +1,59 @@
-﻿using HomeSensors.Data.Repositories;
-using HomeSensors.Data.Repositories.Models;
-using HomeSensors.Web.Models;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 
 namespace HomeSensors.Web.Controllers;
 
-public class HomeController : Controller
+/// <summary>
+/// Home controller.
+/// </summary>
+[ApiExplorerSettings(IgnoreApi = true)]
+public class HomeController : ControllerBase
 {
-    private readonly TemperatureRepository _temperatureRepository;
+    private readonly ILogger _logger;
 
-    public HomeController(TemperatureRepository temperatureRepository)
+    /// <summary>
+    /// Construct a new controller.
+    /// </summary>
+    /// <param name="logger"></param>
+    public HomeController(ILogger<HomeController> logger)
     {
-        _temperatureRepository = temperatureRepository;
+        _logger = logger;
     }
 
-    public async Task<IActionResult> Index()
-    {
-        var startTime = DateTimeOffset.Now.AddHours(-48);
-        var endTime = DateTimeOffset.Now;
-        var intervalMinutes = 15;
-
-        var readings = await _temperatureRepository.GetCurrentReadings();
-        var series = await _temperatureRepository.GetTemperatureTimeSeries(startTime, endTime, intervalMinutes);
-
-        var graph = new GraphViewModel
-        {
-            Current = readings,
-            Series = series,
-        };
-
-        // TODO: Fahrenheit selector
-        // TODO: SignalR / API with date selectors and granularity selector
-        // Make live readings prettier
-        return View("Index", graph);
-    }
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    /// <summary>
+    /// Static error page.
+    /// </summary>
+    /// <returns></returns>
+    [AllowAnonymous]
+    [HttpGet]
+    [Route("/error")]
     public IActionResult Error()
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        _logger.LogInformation("Error page requested.");
+        return File("error.html", "text/html");
+    }
+
+    /// <summary>
+    /// Static forbidden page.
+    /// </summary>
+    /// <returns></returns>
+    [AllowAnonymous]
+    [HttpGet]
+    [Route("/forbidden")]
+    public IActionResult Forbidden()
+    {
+        _logger.LogInformation("Forbidden page requested.");
+        return File("forbidden.html", "text/html");
+    }
+
+    /// <summary>
+    /// Home page.
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    public IActionResult Index()
+    {
+        _logger.LogInformation("Home page requested.");
+        return File("app.html", "text/html");
     }
 }

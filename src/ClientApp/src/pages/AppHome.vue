@@ -1,55 +1,49 @@
 <script lang="ts" setup>
 import { Api } from '@/api/Api';
-import ApiHelpers from '@/models/ApiHelpers';
 import useAppStore from '@/stores/appStore';
-import useRecipeStore from '@/stores/recipeStore';
-import { storeToRefs } from 'pinia';
-import { onMounted } from 'vue';
+import { onMounted, ref, type Ref } from 'vue';
+import moment from 'moment';
+import type { GraphViewModel } from '@/api/data-contracts';
 
 const appStore = useAppStore();
-const recipeStore = useRecipeStore();
 
-const { listResponse, listRequest } = storeToRefs(recipeStore);
-
-const imageUrl = (id: number | string) => ApiHelpers.imageUrl(id);
+const graphData: Ref<GraphViewModel> = ref({
+  series: null,
+  current: null,
+});
 
 onMounted(() => {
-  if (listResponse.value.count === 0) {
-    new Api()
-      .recipesList(listRequest.value)
-      .then((response) => recipeStore.setListResponse(response.data))
-      .catch((response) => appStore.setApiFailureMessages(response));
-  }
+  const startTime = moment().add(-2, 'd').toDate().toISOString();
+  const endTime = moment().toISOString();
+
+  new Api()
+    .tempsGraphCreate({
+      startTime,
+      endTime,
+      intervalMinutes: 15,
+    })
+    .then((response) => {
+      graphData.value = response.data;
+    })
+    .catch((response) => appStore.setApiFailureMessages(response));
 });
 </script>
 
 <template>
   <div class="container-xxl">
     <div class="row">
-      <div v-for="(recipe, i) in listResponse.items" :key="recipe.id" class="col-lg-4 mt-3">
-        <div no-body class="card overflow-hidden">
-          <router-link
-            class="card-link text-center p-3"
-            :to="{ name: 'view', params: { id: recipe.id } }"
-          >
-            <img
-              v-if="recipe.imageId != null"
-              class="img-fluid rounded"
-              :src="imageUrl(recipe.imageId)"
-              :alt="`image of ${recipe.name}`"
-              :loading="i > 3 ? 'lazy' : 'eager'"
-            />
-            <div class="mt-3">
-              <h4 class="card-title">
-                {{ recipe.name }}
-              </h4>
-              <p class="card-text">
-                {{ (recipe?.categories || []).join(', ') }}
-              </p>
-            </div>
-          </router-link>
+      <div v-for="(currentTemp, i) in graphData.current" :key="i" class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            {{ currentTemp.temperatureCelsius }}C {{ currentTemp.location }}
+          </h5>
+          <p>
+            <small class="fw-light">{{ currentTemp.time }}</small>
+          </p>
         </div>
       </div>
+
+      {{ JSON.stringify(graphData) }}
     </div>
   </div>
 </template>

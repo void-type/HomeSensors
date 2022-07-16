@@ -134,7 +134,7 @@
     },
     {
         "label": "watch-dev",
-        "dependsOn": ["watch-client", "watch-server"],
+        "dependsOn": ["watch-client", "watch-web"],
         "problemMatcher": []
     }
   ]

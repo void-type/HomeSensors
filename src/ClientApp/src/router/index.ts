@@ -23,44 +23,6 @@ const router = createRouter({
       meta: { title: 'Home' },
     },
     {
-      name: 'view',
-      path: '/view/:id',
-      component: () => import('@/pages/RecipeView.vue'),
-      props: (route) => ({
-        id: +route.params.id,
-      }),
-      meta: { title: 'View' },
-    },
-    {
-      name: 'edit',
-      path: '/edit/:id',
-      component: () => import('@/pages/RecipeEdit.vue'),
-      props: (route) => ({
-        id: +route.params.id,
-      }),
-      meta: { title: 'Edit' },
-    },
-    {
-      name: 'new',
-      path: '/new',
-      component: () => import('@/pages/RecipeEdit.vue'),
-      props: RouterHelpers.newRecipeProps,
-      meta: { title: 'New' },
-    },
-    {
-      name: 'search',
-      path: '/search',
-      component: () => import('@/pages/RecipeSearch.vue'),
-      props: (route) => ({ query: route.query }),
-      meta: { title: 'Search' },
-    },
-    {
-      path: '/cards',
-      name: 'cards',
-      component: () => import('@/pages/MealCards.vue'),
-      meta: { title: 'Cards' },
-    },
-    {
       path: '/:pathMatch(.*)*',
       redirect: { name: 'home' },
       meta: { title: 'Home' },

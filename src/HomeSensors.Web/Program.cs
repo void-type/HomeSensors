@@ -1,10 +1,13 @@
 ﻿using HomeSensors.Data;
 using HomeSensors.Data.Repositories;
+using HomeSensors.Web.Auth;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
+using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Configuration;
 using VoidCore.AspNet.Routing;
+using VoidCore.Model.Auth;
 using VoidCore.Model.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,30 +50,23 @@ try
         c.IncludeXmlComments(xmlPath);
     });
 
-    var app = builder.Build();
+    services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
 
-    if (!app.Environment.IsDevelopment())
-    {
-        app.UseExceptionHandler("/Home/Error");
-        app.UseHsts();
-    }
+    // Auto-register Domain Events
+    services.AddDomainEvents(
+        ServiceLifetime.Scoped,
+        typeof(GetWebClientInfo).Assembly);
+
+    var app = builder.Build();
 
     app.UseHttpsRedirection();
     app.UseStaticFiles();
-
     app.UseRouting();
-
     app.UseAuthorization();
-
-    // Swashbuckle in all environments
     app.UseSwagger();
     app.UseSwaggerUI(c => c.DocumentTitle = env.ApplicationName + " API");
 
     app.UseSpaEndpoints();
-
-    app.MapControllerRoute(
-        name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}");
 
     Log.Information("Starting host.");
     app.Run();

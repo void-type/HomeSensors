@@ -8,7 +8,7 @@
     }
   },
   "profiles": {
-    "HomeSensors.Web": {
+    "Kestrel (Development)": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
