@@ -3,7 +3,9 @@ using HomeSensors.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
+using VoidCore.AspNet.Configuration;
 using VoidCore.AspNet.Routing;
+using VoidCore.Model.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -18,6 +20,8 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     Log.Information("Configuring host for {Name} v{Version}", ThisAssembly.AssemblyTitle, ThisAssembly.AssemblyInformationalVersion);
+
+    services.AddSettingsSingleton<WebApplicationSettings>(config, true).Validate();
 
     services.AddControllersWithViews();
 

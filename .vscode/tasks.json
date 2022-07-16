@@ -2,18 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build-debug",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "build",
-        "${workspaceFolder}",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "problemMatcher": "$msCompile"
-    },
-    {
         "label": "build",
         "command": "./build.ps1",
         "options": {
@@ -25,6 +13,8 @@
             "isDefault": true
         },
         "problemMatcher": [
+            "$node-sass",
+            "$eslint-compact",
             "$msCompile"
         ],
         "presentation": {
@@ -36,6 +26,18 @@
             "clear": false,
             "group": "build"
         }
+    },
+    {
+      "label": "build-debug",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
     },
     {
         "label": "format",
@@ -90,16 +92,50 @@
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "watch-web",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "watch",
-        "run",
-        "--project",
-        "${workspaceFolder}/src/HomeSensors.Web/HomeSensors.Web.csproj"
-      ],
-      "problemMatcher": "$msCompile"
+        "label": "watch-client",
+        "command": "./watchClient.ps1",
+        "options": {
+            "cwd": "./build"
+        },
+        "type": "shell",
+        "problemMatcher": [
+            "$node-sass",
+            "$eslint-compact"
+        ],
+        "presentation": {
+            "echo": true,
+            "reveal": "always",
+            "focus": false,
+            "panel": "shared",
+            "showReuseMessage": true,
+            "clear": false,
+            "group": "watch"
+        }
+    },
+    {
+        "label": "watch-web",
+        "command": "./watchWeb.ps1",
+        "options": {
+            "cwd": "./build"
+        },
+        "type": "shell",
+        "problemMatcher": [
+            "$msCompile"
+        ],
+        "presentation": {
+            "echo": true,
+            "reveal": "always",
+            "focus": false,
+            "panel": "shared",
+            "showReuseMessage": true,
+            "clear": false,
+            "group": "watch"
+        }
+    },
+    {
+        "label": "watch-dev",
+        "dependsOn": ["watch-client", "watch-server"],
+        "problemMatcher": []
     }
   ]
 }

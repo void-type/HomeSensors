@@ -6,6 +6,11 @@ param(
   [switch] $SkipPublish
 )
 
+$nodeModes = @{
+  'Release' = 'production'
+  'Debug'   = 'development'
+}
+
 function Stop-OnError([string]$errorMessage) {
   if ($LASTEXITCODE -eq 0) {
     return
@@ -32,7 +37,31 @@ try {
   dotnet tool restore
   Stop-OnError
 
+  # Lint and build client
+  # if (-not $SkipClient) {
+  #   Set-Location -Path $webClientProjectFolder
+  #   npm install --no-audit
+  #   Stop-OnError
+
+  #   if (-not $SkipFormat) {
+  #     npm run lint
+  #     Stop-OnError
+  #     npm run format | Out-Null
+  #     Stop-OnError "Formatting the client failed."
+  #   }
+
+  #   if (-not $SkipOutdated) {
+  #     npm outdated
+  #     npm audit --production
+  #     Stop-OnError
+  #   }
+
+  #   npm run build -- --mode "$($nodeModes[$Configuration])"
+  #   Stop-OnError
+  # }
+
   # Build solution
+  Set-Location -Path $projectRoot
 
   if (-not $SkipFormat) {
     dotnet format --verify-no-changes
@@ -56,7 +85,7 @@ try {
     dotnet publish "$serviceProjectFolder" --configuration "$Configuration" --no-build --output $serviceReleaseFolder
     Stop-OnError
 
-    dotnet publish "$webProjectFolder" --configuration "$Configuration" --no-build --output $webReleaseFolder 
+    dotnet publish "$webProjectFolder" --configuration "$Configuration" --no-build --output $webReleaseFolder
     Stop-OnError
   }
 
@@ -64,5 +93,5 @@ try {
   Write-Output "`nBuilt $projectName $projectVersion`n"
 
 } finally {
-  Pop-Location
+  Set-Location $originalLocation
 }

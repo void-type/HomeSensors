@@ -1,8 +1,8 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using HomeSensors.Web.Models;
-using HomeSensors.Data.Repositories;
+﻿using HomeSensors.Data.Repositories;
 using HomeSensors.Data.Repositories.Models;
+using HomeSensors.Web.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace HomeSensors.Web.Controllers;
 

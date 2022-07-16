@@ -14,12 +14,6 @@ public class TemperatureRepository
 
     public async Task<List<GraphTimeSeries>> GetTemperatureTimeSeries(DateTimeOffset startTime, DateTimeOffset endTime, int intervalMinutes = 15)
     {
-        // TODO: Fahrenheit selector (in ui)
-        // TODO: SignalR / API with date selectors and granularity selector
-        // Make live readings prettier
-        // var startTime = DateTimeOffset.Now.AddHours(-48);
-        // var endTime = DateTimeOffset.Now;
-
         // If too many points requested, force hourly.
         var wideRequest = endTime - startTime > TimeSpan.FromDays(3);
         intervalMinutes = wideRequest ? 60 : intervalMinutes;
@@ -74,7 +68,8 @@ public class TemperatureRepository
 
         return data
             .Where(x => x.Readings.Any())
-            .Select(x => {
+            .Select(x =>
+            {
                 var reading = x.Readings.First();
                 return new GraphCurrentReading(x.Location, reading.TemperatureCelsius, reading.Time);
             })
