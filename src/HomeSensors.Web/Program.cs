@@ -1,6 +1,8 @@
 ﻿using HomeSensors.Data;
 using HomeSensors.Data.Repositories;
+using HomeSensors.Service.Workers;
 using HomeSensors.Web.Auth;
+using HomeSensors.Web.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
@@ -57,6 +59,9 @@ try
         ServiceLifetime.Scoped,
         typeof(GetWebClientInfo).Assembly);
 
+    services.AddHostedService<SendCurrentReadingsToClients>();
+    services.AddSignalR();
+
     var app = builder.Build();
 
     app.UseHttpsRedirection();
@@ -65,7 +70,7 @@ try
     app.UseAuthorization();
     app.UseSwagger();
     app.UseSwaggerUI(c => c.DocumentTitle = env.ApplicationName + " API");
-
+    app.MapHub<TemperatureHub>("/hub/temperatures");
     app.UseSpaEndpoints();
 
     Log.Information("Starting host.");

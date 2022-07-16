@@ -6,18 +6,21 @@ import moment from 'moment';
 import type { GraphCurrentReading, GraphTimeSeries } from '@/api/data-contracts';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-moment';
+import * as signalR from '@microsoft/signalr';
 
 Chart.register(...registerables);
 
 const appStore = useAppStore();
 
 const data = reactive({
-  startTime: moment().add(-4, 'd').toDate().toISOString(),
+  startTime: moment().add(-2, 'd').toDate().toISOString(),
   endTime: moment().toISOString(),
   intervalMinutes: 15,
   series: [] as Array<GraphTimeSeries>,
   current: [] as Array<GraphCurrentReading>,
   useFahrenheit: true,
+
+  counter: 0,
 });
 
 let lineChart: Chart | null = null;
@@ -146,6 +149,24 @@ onMounted(() => {
       setGraphData(data.current);
     })
     .catch((response) => appStore.setApiFailureMessages(response));
+
+  const connection = new signalR.HubConnectionBuilder().withUrl('/hub/temperatures').build();
+
+  connection.on('updateCurrentReadings', (currentReadings) => {
+    data.counter += 1;
+    data.current = currentReadings;
+  });
+
+  function connect() {
+    connection.start().catch((error) => {
+      appStore.setErrorMessage(error);
+      setTimeout(connect, 2000);
+    });
+  }
+
+  connection.onclose(connect);
+
+  connect();
 });
 
 watch(
@@ -174,6 +195,7 @@ watch(
     <div>
       <canvas id="tempGraph"></canvas>
     </div>
+    <p>Updates from server: {{ data.counter }}</p>
     <div class="row">
       <div v-for="(currentTemp, i) in data.current" :key="i" class="card col-4">
         <div class="card-body">

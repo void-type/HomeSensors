@@ -19,9 +19,7 @@ import type {
 } from './data-contracts';
 import { ContentType, HttpClient, type RequestParams } from './http-client';
 
-export class Api<
-  SecurityDataType = unknown
-> extends HttpClient<SecurityDataType> {
+export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
@@ -63,10 +61,7 @@ export class Api<
    * @response `200` `(GraphTimeSeries)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesTimeSeriesCreate = (
-    data: GraphRequest,
-    params: RequestParams = {}
-  ) =>
+  temperaturesTimeSeriesCreate = (data: GraphRequest, params: RequestParams = {}) =>
     this.request<GraphTimeSeries[], IFailureIItemSet>({
       path: `/api/temperatures/time-series`,
       method: 'POST',

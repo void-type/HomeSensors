@@ -273,7 +273,6 @@ dotnet_diagnostic.RCS1090.severity = none
 # Ignore TODOs, stops build
 dotnet_diagnostic.S1135.severity = none
 
-
 # Javascript and Vue
 [*.{js,jsx,ts,tsx,vue}]
 indent_size = 2
