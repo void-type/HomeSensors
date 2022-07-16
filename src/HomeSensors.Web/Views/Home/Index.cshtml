@@ -52,17 +52,19 @@
         '#8aaec7',
     ];
 
-    const modelData = @Json.Serialize(Model);
+    const model = @Json.Serialize(Model);
 
-    console.log(modelData);
+    console.log(model);
 
     const data = {
-        datasets:  modelData.series
-            .map((s, si) => ({
-                label: s.location,
-                data: s.points.map(p => ({ x: p.time, y: Math.round(p.temperatureCelsius * 10) / 10 })),
-                borderColor: colors[si],
-            }))
+        datasets:  model.series
+            .map((s, si) => {
+                return {
+                    label: s.location,
+                    data: s.points.map(p => ({ x: p.time, y: Math.round(p.temperatureCelsius * 10) / 10 })),
+                    borderColor: colors[si],
+                };
+            }),
     };
 
     console.log(data);

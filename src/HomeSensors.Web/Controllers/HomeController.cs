@@ -19,12 +19,14 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        var startTime = DateTimeOffset.Now.AddHours(-48);
+        const int intervalMinutes = 15;
+        var startTime = DateTimeOffset.Now.AddHours(-72);
 
         var data = _data.TemperatureReadings
             .Include(x => x.TemperatureLocation)
             .Where(x => x.TemperatureLocationId != null)
             .Where(x => x.Time > startTime)
+            .OrderByDescending(x => x.Time)
             .AsEnumerable()
             .GroupBy(x => x.TemperatureLocation?.Name ?? "unknown")
             .OrderBy(x => x.Key);
@@ -32,35 +34,43 @@ public class HomeController : Controller
         var dbSeries = data
             .Select(locationGroup =>
             {
-                var groups = locationGroup.GroupBy(y =>
-                {
-                    // Round down to 30 minute intervals and zero milliseconds and seconds to make period-starting groups.
-                    var time = y.Time;
-                    time = time.AddMinutes(-(time.Minute % 15));
-                    time = time.AddMilliseconds(-time.Millisecond - (1000 * time.Second));
-                    return time;
-                })
-                .Select(timeGroup => new GraphPointViewModel
-                {
-                    Time = timeGroup.Key,
-                    TemperatureCelsius = timeGroup.Average(s => s.TemperatureCelsius)
-                })
-                .ToList();
+                var groups = locationGroup
+                    .GroupBy(y =>
+                    {
+                        // Round down to 30 minute intervals and zero milliseconds and seconds to make period-starting groups.
+                        var time = y.Time;
+                        time = time.AddMinutes(-(time.Minute % intervalMinutes));
+                        time = time.AddMilliseconds(-time.Millisecond - (1000 * time.Second));
+                        return time;
+                    })
+                    .Select(timeGroup =>
+                    {
+                        var intervalAverage = timeGroup.Average(s => s.TemperatureCelsius);
+
+                        return new GraphPointViewModel
+                        {
+                            Time = timeGroup.Key,
+                            TemperatureCelsius = intervalAverage
+                        };
+                    })
+                    .ToList();
 
                 return new GraphSeriesViewModel(locationGroup.Key, groups);
             })
             .ToList();
 
-        var currentTemps = data.Select(l =>
-        {
-            var reading = l.First();
-            return new GraphCurrentReading(l.Key, reading.TemperatureCelsius, reading.Time);
-        });
+        var currentTemps = data
+            .Select(l =>
+            {
+                var reading = l.First();
+
+                return new GraphCurrentReading(l.Key, reading.TemperatureCelsius, reading.Time);
+            });
 
         var graph = new GraphViewModel
         {
             Series = dbSeries,
-            Current = currentTemps
+            Current = currentTemps,
         };
 
         // TODO: Fahrenheit selector
