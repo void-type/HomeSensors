@@ -62,7 +62,7 @@ public class TemperatureRepository
             .Select(x => new
             {
                 Location = x.Name,
-                Readings = x.TemperatureReadings.Take(1),
+                Readings = x.TemperatureReadings.OrderByDescending(x => x.Time).Take(1),
             })
             .ToListAsync();
 

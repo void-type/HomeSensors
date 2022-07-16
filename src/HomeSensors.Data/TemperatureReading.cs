@@ -1,5 +1,8 @@
-﻿namespace HomeSensors.Data;
+﻿using Microsoft.EntityFrameworkCore;
 
+namespace HomeSensors.Data;
+
+[Index(nameof(Time))]
 public class TemperatureReading
 {
     public long Id { get; set; }

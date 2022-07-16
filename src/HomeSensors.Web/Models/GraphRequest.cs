@@ -1,4 +1,4 @@
-namespace HomeSensors.Web.Models;
+﻿namespace HomeSensors.Web.Models;
 
 public class GraphRequest
 {

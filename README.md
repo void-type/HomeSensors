@@ -14,7 +14,7 @@ To create/update the database, set your connection string in `src\HomeSensors.Se
 
 ```PowerShell
 cd src/HomeSensors.Service
-dotnet ef database update
+dotnet ef database update --project ./src/HomeSensors.Data/HomeSensors.Data.csproj --startup-project  ./src/HomeSensors.Service/HomeSensors.Service.csproj
 ```
 
 To add a migration
