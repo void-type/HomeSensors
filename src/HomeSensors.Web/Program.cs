@@ -1,8 +1,7 @@
 ﻿using HomeSensors.Data;
 using HomeSensors.Data.Repositories;
-using HomeSensors.Service.Workers;
 using HomeSensors.Web.Auth;
-using HomeSensors.Web.Hubs;
+using HomeSensors.Web.Temperatures;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
@@ -59,7 +58,7 @@ try
         ServiceLifetime.Scoped,
         typeof(GetWebClientInfo).Assembly);
 
-    services.AddHostedService<SendCurrentReadingsToClients>();
+    services.AddHostedService<CurrentReadingsWorker>();
     services.AddSignalR();
 
     var app = builder.Build();

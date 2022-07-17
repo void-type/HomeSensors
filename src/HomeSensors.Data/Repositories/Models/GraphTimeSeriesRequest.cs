@@ -1,6 +1,6 @@
-﻿namespace HomeSensors.Web.Models;
+﻿namespace HomeSensors.Data.Repositories.Models;
 
-public class GraphRequest
+public class GraphTimeSeriesRequest
 {
     public int IntervalMinutes { get; init; } = 15;
     public DateTimeOffset StartTime { get; init; } = DateTimeOffset.Now.AddHours(-48);

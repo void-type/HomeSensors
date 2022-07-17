@@ -1,14 +1,16 @@
 ﻿using HomeSensors.Data.Repositories;
 using HomeSensors.Data.Repositories.Models;
-using HomeSensors.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
 
-namespace HomeSensors.Web.Controllers.Api;
+namespace HomeSensors.Web.Temperatures;
 
+/// <summary>
+/// Exposes temperature data through web API
+/// </summary>
 [ApiRoute("temperatures")]
 public class TemperatureApiController : ControllerBase
 {
@@ -23,10 +25,9 @@ public class TemperatureApiController : ControllerBase
     [Route("time-series")]
     [ProducesResponseType(typeof(List<GraphTimeSeries>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetTimeSeries([FromBody] GraphRequest request)
+    public async Task<IActionResult> GetTimeSeries([FromBody] GraphTimeSeriesRequest request)
     {
-        var series = await _temperatureRepository.GetTimeSeries(request.StartTime, request.EndTime, request.IntervalMinutes);
-
+        var series = await _temperatureRepository.GetTimeSeries(request);
         return HttpResponder.Respond(series);
     }
 
@@ -37,7 +38,6 @@ public class TemperatureApiController : ControllerBase
     public async Task<IActionResult> GetCurrentReadings()
     {
         var readings = await _temperatureRepository.GetCurrentReadings();
-
         return HttpResponder.Respond(readings);
     }
 }

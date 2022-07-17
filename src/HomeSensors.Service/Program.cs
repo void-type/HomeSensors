@@ -4,7 +4,7 @@ using HomeSensors.Service.Workers;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
-IHost host = Host.CreateDefaultBuilder(args)
+var host = Host.CreateDefaultBuilder(args)
     .UseWindowsService()
     .UseSerilog()
     .ConfigureServices((context, services) =>

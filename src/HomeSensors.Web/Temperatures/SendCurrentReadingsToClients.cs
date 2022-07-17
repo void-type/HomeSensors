@@ -1,15 +1,20 @@
 ﻿using HomeSensors.Data.Repositories;
-using HomeSensors.Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
-namespace HomeSensors.Service.Workers;
+namespace HomeSensors.Web.Temperatures;
 
-public class SendCurrentReadingsToClients : BackgroundService
+/// <summary>
+/// This worker broadcasts all of the TemperatureHub SignalR clients with current readings.
+/// </summary>
+public class CurrentReadingsWorker : BackgroundService
 {
+    private const string MessageName = "updateCurrentReadings";
+
+    private readonly TimeSpan _betweenTicks = TimeSpan.FromSeconds(30);
     private readonly IHubContext<TemperatureHub> _tempHubContext;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public SendCurrentReadingsToClients(IHubContext<TemperatureHub> tempHubContext, IServiceScopeFactory scopeFactory)
+    public CurrentReadingsWorker(IHubContext<TemperatureHub> tempHubContext, IServiceScopeFactory scopeFactory)
     {
         _tempHubContext = tempHubContext;
         _scopeFactory = scopeFactory;
@@ -17,7 +22,7 @@ public class SendCurrentReadingsToClients : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        var timer = new PeriodicTimer(_betweenTicks);
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
@@ -25,7 +30,7 @@ public class SendCurrentReadingsToClients : BackgroundService
             var temperatureRepository = scope.ServiceProvider.GetRequiredService<TemperatureRepository>();
 
             var currentReadings = await temperatureRepository.GetCurrentReadings();
-            await _tempHubContext.Clients.All.SendAsync("updateCurrentReadings", currentReadings, cancellationToken: stoppingToken);
+            await _tempHubContext.Clients.All.SendAsync(MessageName, currentReadings, cancellationToken: stoppingToken);
         }
     }
 }

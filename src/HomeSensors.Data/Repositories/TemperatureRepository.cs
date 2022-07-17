@@ -12,16 +12,16 @@ public class TemperatureRepository
         _data = data;
     }
 
-    public async Task<List<GraphTimeSeries>> GetTimeSeries(DateTimeOffset startTime, DateTimeOffset endTime, int intervalMinutes = 15)
+    public async Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
     {
         // If too many points requested, force hourly.
-        var wideRequest = endTime - startTime > TimeSpan.FromDays(3);
-        intervalMinutes = wideRequest ? 60 : intervalMinutes;
+        var wideRequest = request.EndTime - request.StartTime > TimeSpan.FromDays(3);
+        var intervalMinutes = wideRequest ? 60 : request.IntervalMinutes;
 
         var data = await _data.TemperatureReadings
             .Include(x => x.TemperatureLocation)
             .Where(x => x.TemperatureLocationId != null)
-            .Where(x => x.Time > startTime && x.Time < endTime)
+            .Where(x => x.Time > request.StartTime && x.Time < request.EndTime)
             .OrderByDescending(x => x.Time)
             .ToListAsync();
 
