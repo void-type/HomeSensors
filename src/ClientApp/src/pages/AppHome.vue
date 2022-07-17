@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
+import type { GraphPoint } from '@/api/data-contracts';
 import { onMounted, reactive, watch, computed } from 'vue';
 import moment from 'moment';
 import type { GraphCurrentReading, GraphTimeSeries } from '@/api/data-contracts';
@@ -19,8 +20,6 @@ const data = reactive({
   series: [] as Array<GraphTimeSeries>,
   current: [] as Array<GraphCurrentReading>,
   useFahrenheit: true,
-
-  counter: 0,
 });
 
 let lineChart: Chart | null = null;
@@ -67,8 +66,8 @@ function setGraphData(series: Array<GraphTimeSeries>) {
     label: s.location,
     borderColor: colors[si] || getRandomColor(),
     data: s.points
-      ?.filter((p) => p.temperatureCelsius)
-      .map((p) => ({ x: p.time, y: formatTemp(p.temperatureCelsius) })),
+      ?.filter((p: GraphPoint) => p.temperatureCelsius)
+      .map((p: GraphPoint) => ({ x: p.time, y: formatTemp(p.temperatureCelsius) })),
   }));
 
   const config = {
@@ -122,30 +121,34 @@ function setGraphData(series: Array<GraphTimeSeries>) {
   lineChart = new Chart(element, config as any);
 }
 
-function getTimeSeries() {
+async function getTimeSeries() {
   const parameters = {
     startTime: data.startTime,
     endTime: data.endTime,
     intervalMinutes: data.intervalMinutes,
   };
 
-  new Api()
-    .temperaturesTimeSeriesCreate(parameters)
-    .then((response) => {
-      data.series = response.data;
-      setGraphData(data.series);
-    })
-    .catch((response) => appStore.setApiFailureMessages(response));
+  try {
+    const response = await new Api().temperaturesTimeSeriesCreate(parameters);
+    data.series = response.data;
+    setGraphData(data.series);
+  } catch (error) {
+    appStore.setApiFailureMessages(error);
+  }
 }
 
 let connection: signalR.HubConnection | null = null;
 
-function connectToHub() {
-  function connectInternal() {
+async function connectToHub() {
+  async function connectInternal() {
     if (connection !== null) {
-      connection.start().catch(() => {
+      try {
+        await connection.start();
+        const response = await connection?.invoke('getCurrentReadings');
+        data.current = response;
+      } catch {
         setTimeout(connectInternal, 2000);
-      });
+      }
     }
   }
 
@@ -153,7 +156,6 @@ function connectToHub() {
     connection = new signalR.HubConnectionBuilder().withUrl('/hub/temperatures').build();
 
     connection.on('updateCurrentReadings', (currentReadings) => {
-      data.counter += 1;
       data.current = currentReadings;
     });
 
@@ -163,19 +165,9 @@ function connectToHub() {
   connectInternal();
 }
 
-onMounted(() => {
-  getTimeSeries();
-
-  // Get initial data until hub sends us stuff
-  new Api()
-    .temperaturesCurrentCreate()
-    .then((response) => {
-      data.current = response.data;
-      setGraphData(data.current);
-    })
-    .catch((response) => appStore.setApiFailureMessages(response));
-
-  connectToHub();
+onMounted(async () => {
+  await connectToHub();
+  await getTimeSeries();
 });
 
 watch(
@@ -192,7 +184,7 @@ watch(
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-0">Temps</h1>
-    <div class="form-check form-switch mt-2">
+    <div class="form-check form-switch">
       <label class="form-check-label" for="useFahrenheit">Use fahrenheit</label>
       <input
         id="useFahrenheit"
@@ -201,12 +193,8 @@ watch(
         type="checkbox"
       />
     </div>
-    <div>
-      <canvas id="tempGraph"></canvas>
-    </div>
-    <p>Updates from server: {{ data.counter }}</p>
-    <div class="row">
-      <div v-for="(currentTemp, i) in data.current" :key="i" class="card col-4">
+    <div class="row mt-3">
+      <div v-for="(currentTemp, i) in data.current" :key="i" class="card col-sm-6 col-md-4">
         <div class="card-body">
           <h5 class="card-title">
             {{ formatTemp(currentTemp.temperatureCelsius) }}{{ tempUnit }}
@@ -217,6 +205,9 @@ watch(
           </p>
         </div>
       </div>
+    </div>
+    <div class="mt-3">
+      <canvas id="tempGraph"></canvas>
     </div>
   </div>
 </template>

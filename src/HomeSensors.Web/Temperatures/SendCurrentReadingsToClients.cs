@@ -30,6 +30,7 @@ public class CurrentReadingsWorker : BackgroundService
             var temperatureRepository = scope.ServiceProvider.GetRequiredService<TemperatureRepository>();
 
             var currentReadings = await temperatureRepository.GetCurrentReadings();
+
             await _tempHubContext.Clients.All.SendAsync(MessageName, currentReadings, cancellationToken: stoppingToken);
         }
     }

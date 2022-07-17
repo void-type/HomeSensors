@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using HomeSensors.Data.Repositories;
+using HomeSensors.Data.Repositories.Models;
+using Microsoft.AspNetCore.SignalR;
 
 namespace HomeSensors.Web.Temperatures;
 
@@ -7,4 +9,14 @@ namespace HomeSensors.Web.Temperatures;
 /// </summary>
 public class TemperatureHub : Hub
 {
+    private readonly TemperatureRepository _temperatureRepository;
+
+    public TemperatureHub(TemperatureRepository temperatureRepository)
+    {
+        _temperatureRepository = temperatureRepository;
+    }
+    public Task<List<GraphCurrentReading>> GetCurrentReadings()
+    {
+        return _temperatureRepository.GetCurrentReadings();
+    }
 }
