@@ -3,7 +3,7 @@ using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 
-namespace HomeSensors.Web.Controllers.Api;
+namespace HomeSensors.Web.Controllers;
 
 /// <summary>
 /// Application metadata.

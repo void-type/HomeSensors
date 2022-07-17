@@ -8,6 +8,7 @@ import type { GraphCurrentReading, GraphTimeSeries } from '@/api/data-contracts'
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-moment';
 import * as signalR from '@microsoft/signalr';
+import type { HttpResponse } from '@/api/http-client';
 
 Chart.register(...registerables);
 
@@ -133,7 +134,7 @@ async function getTimeSeries() {
     data.series = response.data;
     setGraphData(data.series);
   } catch (error) {
-    appStore.setApiFailureMessages(error);
+    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
