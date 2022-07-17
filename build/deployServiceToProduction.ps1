@@ -1,3 +1,4 @@
+# Get-Service HomeSensors | Stop-Service; pause; Get-Service HomeSensors | Start-Service
 # Run this script as a server administrator from the scripts directory
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = "High")]
 param()
