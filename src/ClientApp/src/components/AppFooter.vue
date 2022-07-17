@@ -14,8 +14,7 @@ const { version } = storeToRefs(appStore);
       >
     </div>
     <div>
-      Logo icon made by <a href="http://www.freepik.com/" title="Freepik">Freepik</a> from
-      <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
+      Logo from <a href="https://www.svgrepo.com/svg/230960/home-real-estate">svgrepo.com</a>
     </div>
   </footer>
 </template>
