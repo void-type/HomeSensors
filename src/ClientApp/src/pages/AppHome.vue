@@ -13,7 +13,7 @@ Chart.register(...registerables);
 const appStore = useAppStore();
 
 const data = reactive({
-  startTime: moment().add(-2, 'd').toDate().toISOString(),
+  startTime: moment().add(-48, 'h').toDate().toISOString(),
   endTime: moment().toISOString(),
   intervalMinutes: 15,
   series: [] as Array<GraphTimeSeries>,
@@ -58,7 +58,6 @@ function setGraphData(series: Array<GraphTimeSeries>) {
   const element = document.getElementById('tempGraph') as HTMLCanvasElement;
 
   if (element === null) {
-    appStore.setErrorMessage('No canvas found on page for graph.');
     return;
   }
 
@@ -139,9 +138,35 @@ function getTimeSeries() {
     .catch((response) => appStore.setApiFailureMessages(response));
 }
 
+let connection: signalR.HubConnection | null = null;
+
+function connectToHub() {
+  function connectInternal() {
+    if (connection !== null) {
+      connection.start().catch(() => {
+        setTimeout(connectInternal, 2000);
+      });
+    }
+  }
+
+  if (connection === null) {
+    connection = new signalR.HubConnectionBuilder().withUrl('/hub/temperatures').build();
+
+    connection.on('updateCurrentReadings', (currentReadings) => {
+      data.counter += 1;
+      data.current = currentReadings;
+    });
+
+    connection.onclose(connectInternal);
+  }
+
+  connectInternal();
+}
+
 onMounted(() => {
   getTimeSeries();
 
+  // Get initial data until hub sends us stuff
   new Api()
     .temperaturesCurrentCreate()
     .then((response) => {
@@ -150,23 +175,7 @@ onMounted(() => {
     })
     .catch((response) => appStore.setApiFailureMessages(response));
 
-  const connection = new signalR.HubConnectionBuilder().withUrl('/hub/temperatures').build();
-
-  connection.on('updateCurrentReadings', (currentReadings) => {
-    data.counter += 1;
-    data.current = currentReadings;
-  });
-
-  function connect() {
-    connection.start().catch((error) => {
-      appStore.setErrorMessage(error);
-      setTimeout(connect, 2000);
-    });
-  }
-
-  connection.onclose(connect);
-
-  connect();
+  connectToHub();
 });
 
 watch(
