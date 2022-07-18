@@ -185,7 +185,7 @@ watch(
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-0">Temps</h1>
-    <div class="form-check form-switch">
+    <div class="form-check form-switch mt-3">
       <label class="form-check-label" for="useFahrenheit">Use fahrenheit</label>
       <input
         id="useFahrenheit"
@@ -207,10 +207,14 @@ watch(
         </div>
       </div>
     </div>
-    <div class="mt-3">
+    <div class="chart-container mt-3">
       <canvas id="tempGraph"></canvas>
     </div>
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.chart-container {
+  position: relative;
+}
+</style>
