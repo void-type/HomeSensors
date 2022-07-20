@@ -51,6 +51,7 @@ onMounted(() => {
 <style lang="scss">
 @import '@/styles/theme';
 @import 'bootstrap/scss/bootstrap';
+@import 'v-calendar/dist/style.css';
 
 // Sticky footer
 html,

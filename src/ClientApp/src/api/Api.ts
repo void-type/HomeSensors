@@ -12,8 +12,8 @@
 import type {
   AppVersion,
   GraphCurrentReading,
-  GraphRequest,
   GraphTimeSeries,
+  GraphTimeSeriesRequest,
   IFailureIItemSet,
   WebClientInfo,
 } from './data-contracts';
@@ -61,7 +61,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `(GraphTimeSeries)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesTimeSeriesCreate = (data: GraphRequest, params: RequestParams = {}) =>
+  temperaturesTimeSeriesCreate = (data: GraphTimeSeriesRequest, params: RequestParams = {}) =>
     this.request<GraphTimeSeries[], IFailureIItemSet>({
       path: `/api/temperatures/time-series`,
       method: 'POST',

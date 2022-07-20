@@ -5,7 +5,14 @@ import 'bootstrap';
 // @ts-ignore
 import App from '@/App.vue';
 import router from '@/router';
+// import { DatePicker } from 'v-calendar';
+import SetupCalendar, { DatePicker } from 'v-calendar';
 
 const app = createApp(App);
 
-app.use(createPinia()).use(router).mount('#app');
+app
+  .use(SetupCalendar, {})
+  .component('VDatePicker', DatePicker)
+  .use(createPinia())
+  .use(router)
+  .mount('#app');

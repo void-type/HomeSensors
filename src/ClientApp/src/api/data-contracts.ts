@@ -43,20 +43,17 @@ export interface GraphPoint {
   time?: string;
 }
 
-export interface GraphRequest {
-  /** @format int32 */
-  intervalMinutes?: number;
+export interface GraphTimeSeries {
+  location?: string | null;
+  points?: GraphPoint[] | null;
+}
 
+export interface GraphTimeSeriesRequest {
   /** @format date-time */
   startTime?: string;
 
   /** @format date-time */
   endTime?: string;
-}
-
-export interface GraphTimeSeries {
-  location?: string | null;
-  points?: GraphPoint[] | null;
 }
 
 export interface IFailure {

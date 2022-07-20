@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
-import type { GraphPoint } from '@/api/data-contracts';
+import type { GraphPoint, GraphCurrentReading, GraphTimeSeries } from '@/api/data-contracts';
 import { onMounted, reactive, watch, computed } from 'vue';
 import moment from 'moment';
-import type { GraphCurrentReading, GraphTimeSeries } from '@/api/data-contracts';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-moment';
 import * as signalR from '@microsoft/signalr';
@@ -15,11 +14,12 @@ Chart.register(...registerables);
 const appStore = useAppStore();
 
 const data = reactive({
-  startTime: moment().add(-48, 'h').toDate().toISOString(),
-  endTime: moment().toISOString(),
-  intervalMinutes: 15,
-  series: [] as Array<GraphTimeSeries>,
-  current: [] as Array<GraphCurrentReading>,
+  graphRange: {
+    start: moment().add(-48, 'h').toDate(),
+    end: moment().toDate(),
+  },
+  graphSeries: [] as Array<GraphTimeSeries>,
+  currentReadings: [] as Array<GraphCurrentReading>,
   useFahrenheit: true,
 });
 
@@ -80,6 +80,7 @@ function setGraphData(series: Array<GraphTimeSeries>) {
       // 12 hours
       spanGaps: 1000 * 60 * 60 * 12,
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           position: 'bottom',
@@ -124,15 +125,14 @@ function setGraphData(series: Array<GraphTimeSeries>) {
 
 async function getTimeSeries() {
   const parameters = {
-    startTime: data.startTime,
-    endTime: data.endTime,
-    intervalMinutes: data.intervalMinutes,
+    startTime: moment(data.graphRange.start).toISOString(),
+    endTime: moment(data.graphRange.end).toISOString(),
   };
 
   try {
     const response = await new Api().temperaturesTimeSeriesCreate(parameters);
-    data.series = response.data;
-    setGraphData(data.series);
+    data.graphSeries = response.data;
+    setGraphData(data.graphSeries);
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
@@ -146,7 +146,7 @@ async function connectToHub() {
       try {
         await connection.start();
         const response = await connection?.invoke('getCurrentReadings');
-        data.current = response;
+        data.currentReadings = response;
       } catch {
         setTimeout(connectInternal, 2000);
       }
@@ -157,7 +157,7 @@ async function connectToHub() {
     connection = new signalR.HubConnectionBuilder().withUrl('/hub/temperatures').build();
 
     connection.on('updateCurrentReadings', (currentReadings) => {
-      data.current = currentReadings;
+      data.currentReadings = currentReadings;
     });
 
     connection.onclose(connectInternal);
@@ -172,20 +172,20 @@ onMounted(async () => {
 });
 
 watch(
-  () => [data.startTime, data.endTime, data.intervalMinutes],
+  () => [data.graphRange.start, data.graphRange.end],
   () => getTimeSeries()
 );
 
 watch(
-  () => [data.series, data.useFahrenheit],
-  () => setGraphData(data.series)
+  () => [data.graphSeries, data.useFahrenheit],
+  () => setGraphData(data.graphSeries)
 );
 </script>
 
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-0">Temps</h1>
-    <div class="form-check form-switch mt-3">
+    <div class="form-check form-switch mt-4">
       <label class="form-check-label" for="useFahrenheit">Use fahrenheit</label>
       <input
         id="useFahrenheit"
@@ -194,8 +194,8 @@ watch(
         type="checkbox"
       />
     </div>
-    <div class="row mt-3">
-      <div v-for="(currentTemp, i) in data.current" :key="i" class="card col-sm-6 col-md-4">
+    <div class="row mt-4">
+      <div v-for="(currentTemp, i) in data.currentReadings" :key="i" class="card col-sm-6 col-md-4">
         <div class="card-body">
           <h5 class="card-title">
             {{ formatTemp(currentTemp.temperatureCelsius) }}{{ tempUnit }}
@@ -207,6 +207,24 @@ watch(
         </div>
       </div>
     </div>
+    <div class="row mt-4">
+      <div class="col-md-6 mb-3">
+        <label for="startDate" class="form-label">Start date</label>
+        <v-date-picker v-model="data.graphRange.start" mode="dateTime" is24hr
+          ><template #default="{ inputValue, inputEvents }">
+            <input id="startDate" class="form-control" :value="inputValue" v-on="inputEvents" />
+          </template>
+        </v-date-picker>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="endDate" class="form-label">End date</label>
+        <v-date-picker v-model="data.graphRange.end" mode="dateTime" is24hr
+          ><template #default="{ inputValue, inputEvents }">
+            <input id="endDate" class="form-control" :value="inputValue" v-on="inputEvents" />
+          </template>
+        </v-date-picker>
+      </div>
+    </div>
     <div class="chart-container mt-3">
       <canvas id="tempGraph"></canvas>
     </div>
@@ -216,5 +234,9 @@ watch(
 <style lang="scss" scoped>
 .chart-container {
   position: relative;
+}
+
+#tempGraph {
+  height: 400px;
 }
 </style>

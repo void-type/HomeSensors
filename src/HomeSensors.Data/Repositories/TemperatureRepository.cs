@@ -14,44 +14,37 @@ public class TemperatureRepository
 
     public async Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
     {
-        // If too many points requested, force hourly.
-        var wideRequest = request.EndTime - request.StartTime > TimeSpan.FromDays(3);
-        var intervalMinutes = wideRequest ? 60 : request.IntervalMinutes;
-
-        var data = await _data.TemperatureReadings
+        var dbReadings = await _data.TemperatureReadings
             .Include(x => x.TemperatureLocation)
             .Where(x => x.TemperatureLocationId != null)
             .Where(x => x.Time > request.StartTime && x.Time < request.EndTime)
             .OrderByDescending(x => x.Time)
             .ToListAsync();
 
-        return data
+        if (dbReadings.Count == 0)
+        {
+            return new();
+        }
+
+        // Depending on the total span of data returned, we will create averages to prevent overloading the client.
+        var dbSpan = (dbReadings.Max(x => x.Time) - dbReadings.Min(x => x.Time)).TotalHours;
+
+        var intervalMinutes = dbSpan switch
+        {
+            > 3 * 24 => 60,
+            > 2 * 24 => 30,
+            > 1 * 24 => 15,
+            > 12 => 10,
+            > 6 => 5,
+            > 3 => 1,
+            _ => 0,
+        };
+
+        return dbReadings
             .GroupBy(x => x.TemperatureLocation!.Name)
             .OrderBy(x => x.Key)
             .ToList()
-            .ConvertAll(locationGroup =>
-            {
-                var groups = locationGroup
-                    .GroupBy(y =>
-                    {
-                        // Round down to 30 minute intervals, zero milliseconds and seconds to make period-starting groups.
-                        var time = y.Time.AddMilliseconds(-y.Time.Millisecond - (1000 * y.Time.Second));
-                        return time.AddMinutes(-(time.Minute % intervalMinutes));
-                    })
-                    .Select(timeGroup =>
-                    {
-                        var intervalAverage = timeGroup.Average(s => s.TemperatureCelsius);
-
-                        return new GraphPoint
-                        {
-                            Time = timeGroup.Key,
-                            TemperatureCelsius = intervalAverage
-                        };
-                    })
-                    .ToList();
-
-                return new GraphTimeSeries(locationGroup.Key, groups);
-            });
+            .ConvertAll(locationGroup => new GraphTimeSeries(locationGroup.Key, GetReadingAverages(locationGroup, intervalMinutes)));
     }
 
     public async Task<List<GraphCurrentReading>> GetCurrentReadings()
@@ -62,16 +55,43 @@ public class TemperatureRepository
             .Select(x => new
             {
                 Location = x.Name,
-                Readings = x.TemperatureReadings.OrderByDescending(x => x.Time).Take(1),
+                Reading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault(),
             })
+            .Where(x => x.Reading != null && x.Reading.Time > DateTimeOffset.Now.AddDays(-2))
             .ToListAsync();
 
         return data
-            .Where(x => x.Readings.Any())
-            .Select(x =>
+            .ConvertAll(x => new GraphCurrentReading(x.Location, x.Reading!.TemperatureCelsius, x.Reading.Time));
+    }
+
+    private static List<GraphPoint> GetReadingAverages(IGrouping<string, TemperatureReading> locationGroup, int intervalMinutes)
+    {
+        if (intervalMinutes == 0)
+        {
+            return locationGroup
+                .Select(reading => new GraphPoint
+                {
+                    Time = reading.Time,
+                    TemperatureCelsius = reading.TemperatureCelsius
+                })
+                .ToList();
+        }
+
+        return locationGroup
+            .GroupBy(y =>
             {
-                var reading = x.Readings.First();
-                return new GraphCurrentReading(x.Location, reading.TemperatureCelsius, reading.Time);
+                var time = y.Time.AddMilliseconds(-y.Time.Millisecond - (1000 * y.Time.Second));
+                return time.AddMinutes(-(time.Minute % intervalMinutes));
+            })
+            .Select(timeGroup =>
+            {
+                var intervalAverage = timeGroup.Average(s => s.TemperatureCelsius);
+
+                return new GraphPoint
+                {
+                    Time = timeGroup.Key,
+                    TemperatureCelsius = intervalAverage
+                };
             })
             .ToList();
     }
