@@ -1,5 +1,4 @@
-﻿using HomeSensors.Data.Repositories;
-using HomeSensors.Data.Repositories.Models;
+﻿using HomeSensors.Data.Repositories.Models;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -14,9 +13,9 @@ namespace HomeSensors.Web.Temperatures;
 [ApiRoute("temperatures")]
 public class TemperatureApiController : ControllerBase
 {
-    private readonly TemperatureRepository _temperatureRepository;
+    private readonly CachedTemperatureRepository _temperatureRepository;
 
-    public TemperatureApiController(TemperatureRepository temperatureRepository)
+    public TemperatureApiController(CachedTemperatureRepository temperatureRepository)
     {
         _temperatureRepository = temperatureRepository;
     }

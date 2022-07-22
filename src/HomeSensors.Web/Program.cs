@@ -39,6 +39,9 @@ try
 
     services.AddScoped<TemperatureRepository>();
 
+    services.AddLazyCache();
+    services.AddScoped<CachedTemperatureRepository>();
+
     services.AddApiExceptionFilter();
 
     services.AddHttpContextAccessor();
