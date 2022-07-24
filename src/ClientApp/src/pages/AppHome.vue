@@ -38,15 +38,19 @@ function getRandomColor() {
 
 const colors = [
   '#2ac4b3',
-  '#feaf29',
-  '#ff617b',
+  '#b2df8a',
+  '#ff526f',
   '#73a2ef',
-  '#b180d0',
   '#3064cf',
-  '#d0a45f',
+  '#b180d0',
+  '#feaf29',
   '#8aaec7',
-  '#ef65a2',
-  '#8aaec7',
+  '#fe7db7',
+  '#33a02c',
+  '#0097fb',
+  '#914bdc',
+  '#915535',
+  '#5d5652',
 ];
 
 function formatTemp(temp: number | null | undefined, decimals = 1) {
