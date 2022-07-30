@@ -1,4 +1,4 @@
-namespace HomeSensors.Data.Repositories.Models;
+﻿namespace HomeSensors.Data.Repositories.Models;
 
 public class InactiveDevice
 {

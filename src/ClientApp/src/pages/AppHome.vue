@@ -188,7 +188,7 @@ watch(
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-4 mb-0">Temps</h1>
+    <h1 class="mt-4 mb-0">Temperatures</h1>
     <div class="form-check form-switch mt-4">
       <label class="form-check-label" for="useFahrenheit">Use fahrenheit</label>
       <input
