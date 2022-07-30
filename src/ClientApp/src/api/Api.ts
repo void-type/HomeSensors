@@ -15,6 +15,7 @@ import type {
   GraphTimeSeries,
   GraphTimeSeriesRequest,
   IFailureIItemSet,
+  InactiveDevice,
   WebClientInfo,
 } from './data-contracts';
 import { ContentType, HttpClient, type RequestParams } from './http-client';
@@ -56,6 +57,38 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * No description
    *
    * @tags TemperatureApi
+   * @name TemperaturesCurrentReadingsCreate
+   * @request POST:/api/temperatures/current-readings
+   * @response `200` `(GraphCurrentReading)[]` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesCurrentReadingsCreate = (params: RequestParams = {}) =>
+    this.request<GraphCurrentReading[], IFailureIItemSet>({
+      path: `/api/temperatures/current-readings`,
+      method: 'POST',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureApi
+   * @name TemperaturesInactiveDevicesCreate
+   * @request POST:/api/temperatures/inactive-devices
+   * @response `200` `(InactiveDevice)[]` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesInactiveDevicesCreate = (params: RequestParams = {}) =>
+    this.request<InactiveDevice[], IFailureIItemSet>({
+      path: `/api/temperatures/inactive-devices`,
+      method: 'POST',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureApi
    * @name TemperaturesTimeSeriesCreate
    * @request POST:/api/temperatures/time-series
    * @response `200` `(GraphTimeSeries)[]` Success
@@ -67,22 +100,6 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
       method: 'POST',
       body: data,
       type: ContentType.Json,
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags TemperatureApi
-   * @name TemperaturesCurrentCreate
-   * @request POST:/api/temperatures/current
-   * @response `200` `(GraphCurrentReading)[]` Success
-   * @response `400` `IFailureIItemSet` Bad Request
-   */
-  temperaturesCurrentCreate = (params: RequestParams = {}) =>
-    this.request<GraphCurrentReading[], IFailureIItemSet>({
-      path: `/api/temperatures/current`,
-      method: 'POST',
       format: 'json',
       ...params,
     });

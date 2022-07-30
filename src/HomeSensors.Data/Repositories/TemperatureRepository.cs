@@ -12,6 +12,54 @@ public class TemperatureRepository
         _data = data;
     }
 
+    public async Task<List<GraphCurrentReading>> GetCurrentReadings()
+    {
+        var data = await _data.TemperatureLocations
+            .Include(x => x.TemperatureReadings)
+            .OrderBy(x => x.Name)
+            .Select(x => new
+            {
+                Location = x.Name,
+                Reading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault(),
+            })
+            .Where(x => x.Reading != null && x.Reading.Time >= DateTimeOffset.Now.AddDays(-1))
+            .ToListAsync();
+
+        return data
+            .ConvertAll(x => new GraphCurrentReading(x.Location, x.Reading!.TemperatureCelsius, x.Reading.Time));
+    }
+
+    public async Task<List<InactiveDevice>> GetInactiveDevices()
+    {
+        var data = await _data.TemperatureDevices
+            .Include(x => x.CurrentTemperatureLocation)
+            .Include(x => x.TemperatureReadings)
+            .OrderBy(x => x.DeviceModel)
+            .ThenBy(x => x.DeviceId)
+            .ThenBy(x => x.DeviceChannel)
+            .Select(x => new
+            {
+                x.Id,
+                x.DeviceModel,
+                x.DeviceId,
+                x.DeviceChannel,
+                LocationName = x.CurrentTemperatureLocation!.Name,
+                LastReading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault()
+            })
+            .Where(x => x.LastReading == null || x.LastReading.Time < DateTimeOffset.Now.AddDays(-1))
+            .ToListAsync();
+
+        return data.ConvertAll(x => new InactiveDevice
+        {
+            Id = x.Id,
+            DeviceModel = x.DeviceModel,
+            DeviceId = x.DeviceId,
+            DeviceChannel = x.DeviceChannel,
+            LocationName = x.LocationName,
+            LastReading = x.LastReading?.Time,
+        });
+    }
+
     public async Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
     {
         var dbReadings = await _data.TemperatureReadings
@@ -45,23 +93,6 @@ public class TemperatureRepository
             .OrderBy(x => x.Key)
             .ToList()
             .ConvertAll(locationGroup => new GraphTimeSeries(locationGroup.Key, GetReadingAverages(locationGroup, intervalMinutes)));
-    }
-
-    public async Task<List<GraphCurrentReading>> GetCurrentReadings()
-    {
-        var data = await _data.TemperatureLocations
-            .Include(x => x.TemperatureReadings)
-            .OrderBy(x => x.Name)
-            .Select(x => new
-            {
-                Location = x.Name,
-                Reading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault(),
-            })
-            .Where(x => x.Reading != null && x.Reading.Time > DateTimeOffset.Now.AddDays(-2))
-            .ToListAsync();
-
-        return data
-            .ConvertAll(x => new GraphCurrentReading(x.Location, x.Reading!.TemperatureCelsius, x.Reading.Time));
     }
 
     private static List<GraphPoint> GetReadingAverages(IGrouping<string, TemperatureReading> locationGroup, int intervalMinutes)

@@ -21,6 +21,26 @@ public class TemperatureApiController : ControllerBase
     }
 
     [HttpPost]
+    [Route("current-readings")]
+    [ProducesResponseType(typeof(List<GraphCurrentReading>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> GetCurrentReadings()
+    {
+        var readings = await _temperatureRepository.GetCurrentReadings();
+        return HttpResponder.Respond(readings);
+    }
+
+    [HttpPost]
+    [Route("inactive-devices")]
+    [ProducesResponseType(typeof(List<InactiveDevice>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> GetInactiveDevices()
+    {
+        var readings = await _temperatureRepository.GetInactiveDevices();
+        return HttpResponder.Respond(readings);
+    }
+
+    [HttpPost]
     [Route("time-series")]
     [ProducesResponseType(typeof(List<GraphTimeSeries>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
@@ -28,15 +48,5 @@ public class TemperatureApiController : ControllerBase
     {
         var series = await _temperatureRepository.GetTimeSeries(request);
         return HttpResponder.Respond(series);
-    }
-
-    [HttpPost]
-    [Route("current")]
-    [ProducesResponseType(typeof(List<GraphCurrentReading>), 200)]
-    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetCurrentReadings()
-    {
-        var readings = await _temperatureRepository.GetCurrentReadings();
-        return HttpResponder.Respond(readings);
     }
 }

@@ -77,6 +77,18 @@ export interface IFailureIItemSet {
   totalCount?: number;
 }
 
+export interface InactiveDevice {
+  /** @format int64 */
+  id?: number;
+  deviceModel?: string | null;
+  deviceId?: string | null;
+  deviceChannel?: string | null;
+  locationName?: string | null;
+
+  /** @format date-time */
+  lastReading?: string | null;
+}
+
 export interface WebClientInfo {
   antiforgeryToken?: string | null;
   antiforgeryTokenHeaderName?: string | null;
