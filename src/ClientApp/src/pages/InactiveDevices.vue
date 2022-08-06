@@ -4,8 +4,11 @@ import useAppStore from '@/stores/appStore';
 import type { InactiveDevice } from '@/api/data-contracts';
 import { onMounted, reactive } from 'vue';
 import type { HttpResponse } from '@/api/http-client';
+import { storeToRefs } from 'pinia';
 
 const appStore = useAppStore();
+
+const { useDarkMode } = storeToRefs(appStore);
 
 const data = reactive({
   inactiveDevices: [] as Array<InactiveDevice>,
@@ -28,8 +31,8 @@ onMounted(async () => {
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-0">Inactive devices</h1>
-    <div class="row mt-4">
-      <table class="table">
+    <div class="mt-4">
+      <table :class="{ table: true, 'table-dark': useDarkMode }">
         <thead>
           <tr>
             <th>Id</th>
@@ -49,6 +52,7 @@ onMounted(async () => {
           </tr>
         </tbody>
       </table>
+      <div v-if="data.inactiveDevices.length < 1" class="text-center">No inactive devices.</div>
     </div>
   </div>
 </template>

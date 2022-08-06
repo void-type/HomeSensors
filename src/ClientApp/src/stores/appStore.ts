@@ -17,6 +17,8 @@ interface AppStoreState {
   user: DomainUser;
   isInitialized: boolean;
   version: string;
+  useFahrenheit: boolean;
+  useDarkMode: boolean;
 }
 
 interface UserMessage {
@@ -35,6 +37,8 @@ export const useAppStore = defineStore('app', {
     },
     isInitialized: false,
     version: '',
+    useFahrenheit: true,
+    useDarkMode: true,
   }),
 
   getters: {

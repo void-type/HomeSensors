@@ -8,10 +8,13 @@ import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } f
 import 'chartjs-adapter-moment';
 import * as signalR from '@microsoft/signalr';
 import type { HttpResponse } from '@/api/http-client';
+import { storeToRefs } from 'pinia';
 
 Chart.register(...registerables);
 
 const appStore = useAppStore();
+
+const { useFahrenheit, useDarkMode } = storeToRefs(appStore);
 
 const data = reactive({
   graphRange: {
@@ -20,12 +23,11 @@ const data = reactive({
   },
   graphSeries: [] as Array<GraphTimeSeries>,
   currentReadings: [] as Array<GraphCurrentReading>,
-  useFahrenheit: true,
 });
 
 let lineChart: Chart | null = null;
 
-const tempUnit = computed(() => (data.useFahrenheit ? 'F' : 'C'));
+const tempUnit = computed(() => (useFahrenheit.value ? 'F' : 'C'));
 
 function getRandomColor() {
   const letters = '0123456789ABCDEF'.split('');
@@ -54,7 +56,7 @@ const colors = [
 ];
 
 function formatTemp(temp: number | null | undefined, decimals = 1) {
-  const convertedTemp = data.useFahrenheit ? (temp || 0) * 1.8 + 32 : temp || 0;
+  const convertedTemp = useFahrenheit.value ? (temp || 0) * 1.8 + 32 : temp || 0;
   return Math.round(convertedTemp * 10 ** decimals) / 10 ** decimals;
 }
 
@@ -170,10 +172,31 @@ async function connectToHub() {
   connectInternal();
 }
 
+function setDarkMode(setting: boolean) {
+  const { body } = document;
+
+  if (setting) {
+    body.classList.add('bg-dark');
+    body.classList.add('text-light');
+    body.classList.remove('bg-light');
+    body.classList.remove('text-dark');
+  } else {
+    body.classList.remove('bg-dark');
+    body.classList.remove('text-light');
+    body.classList.add('bg-light');
+    body.classList.add('text-dark');
+  }
+}
+
 onMounted(async () => {
   await connectToHub();
   await getTimeSeries();
 });
+
+watch(
+  () => [useDarkMode.value],
+  () => setDarkMode(useDarkMode.value)
+);
 
 watch(
   () => [data.graphRange.start, data.graphRange.end],
@@ -181,7 +204,7 @@ watch(
 );
 
 watch(
-  () => [data.graphSeries, data.useFahrenheit],
+  () => [data.graphSeries, useFahrenheit.value],
   () => setGraphData(data.graphSeries)
 );
 </script>
@@ -189,25 +212,39 @@ watch(
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-0">Temperatures</h1>
-    <div class="form-check form-switch mt-4">
-      <label class="form-check-label" for="useFahrenheit">Use fahrenheit</label>
-      <input
-        id="useFahrenheit"
-        v-model="data.useFahrenheit"
-        class="form-check-input"
-        type="checkbox"
-      />
+    <div class="btn-toolbar">
+      <div class="form-check form-switch me-3 mt-4">
+        <label class="form-check-label" for="useFahrenheit">Fahrenheit</label>
+        <input
+          id="useFahrenheit"
+          v-model="useFahrenheit"
+          class="form-check-input"
+          type="checkbox"
+        />
+      </div>
+      <div class="form-check form-switch mt-4">
+        <label class="form-check-label" for="useDarkMode">Dark</label>
+        <input id="useDarkMode" v-model="useDarkMode" class="form-check-input" type="checkbox" />
+      </div>
     </div>
-    <div class="row mt-4">
-      <div v-for="(currentTemp, i) in data.currentReadings" :key="i" class="card col-sm-6 col-md-4">
-        <div class="card-body">
-          <h5 class="card-title">
-            {{ formatTemp(currentTemp.temperatureCelsius) }}{{ tempUnit }}
-            {{ currentTemp.location }}
-          </h5>
-          <p>
-            <small class="fw-light">{{ moment(currentTemp.time).format('ll HH:mm') }}</small>
-          </p>
+    <div class="row mt-4 px-2">
+      <div
+        v-for="(currentTemp, i) in data.currentReadings"
+        :key="i"
+        class="col-sm-6 col-md-4 mb-3 px-2"
+      >
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="mb-2">
+              <span class="fw-bold"
+                >{{ formatTemp(currentTemp.temperatureCelsius) }}{{ tempUnit }}</span
+              >
+              {{ currentTemp.location }}
+            </h5>
+            <p class="mb-2">
+              <small class="fw-light">{{ moment(currentTemp.time).format('ll HH:mm') }}</small>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -236,6 +273,10 @@ watch(
 </template>
 
 <style lang="scss" scoped>
+.card {
+  background-color: inherit;
+}
+
 .chart-container {
   position: relative;
 }

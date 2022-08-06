@@ -73,7 +73,7 @@ footer {
 
 // Modal background
 .modal-content {
-  background: $body-bg;
+  background: inherit;
 }
 
 // Minimum button width
@@ -83,22 +83,6 @@ button.btn,
 a.btn,
 .btn {
   min-width: 5rem;
-}
-
-// Colored headings
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.h1,
-.h2,
-.h3,
-.h4,
-.h5,
-.h6 {
-  color: $primary;
 }
 
 // Printable screens
