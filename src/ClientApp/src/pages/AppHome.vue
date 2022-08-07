@@ -14,7 +14,7 @@ Chart.register(...registerables);
 
 const appStore = useAppStore();
 
-const { useFahrenheit, useDarkMode } = storeToRefs(appStore);
+const { useFahrenheit } = storeToRefs(appStore);
 
 const data = reactive({
   graphRange: {
@@ -186,36 +186,11 @@ watch(
   () => [data.graphSeries, useFahrenheit.value],
   () => setGraphData(data.graphSeries)
 );
-
-watch(
-  () => [useDarkMode.value],
-  () => appStore.setDarkMode(useDarkMode.value)
-);
-
-watch(
-  () => [useFahrenheit.value],
-  () => appStore.setFahrenheit(useFahrenheit.value)
-);
 </script>
 
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-0">Temperatures</h1>
-    <div class="btn-toolbar">
-      <div class="form-check form-switch me-3 mt-4" title="Toggle Fahrenheit">
-        <label class="form-check-label" for="useFahrenheit">🇺🇸</label>
-        <input
-          id="useFahrenheit"
-          v-model="useFahrenheit"
-          class="form-check-input"
-          type="checkbox"
-        />
-      </div>
-      <div class="form-check form-switch mt-4" title="Toggle dark mode">
-        <label class="form-check-label" for="useDarkMode">🌙</label>
-        <input id="useDarkMode" v-model="useDarkMode" class="form-check-input" type="checkbox" />
-      </div>
-    </div>
     <div class="row mt-4 px-2">
       <div
         v-for="(currentTemp, i) in data.currentReadings"
