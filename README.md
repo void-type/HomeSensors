@@ -6,30 +6,30 @@ HomeSensors.Service - This is a simple MQTT receiver that will persist messages 
 
 HomeSensors.Web - A web app for data analysis and entry. Exposes a web API and SignalR endpoints for clients.
 
-## Build and Install
+## Build tools
 
-You can use the [.NET SDK](https://dot.net/download) to build and run the source.
+You can use the [.NET SDK](https://dot.net/download) and [Node.js LTS](https://nodejs.org/) to build and run the source.
 
 ## Database
 
-This project uses EF Code First.
+This project uses Entity Framework Code First.
 
-To create/update the database, set your connection string in `src\HomeSensors.Service\appsettings.Development.json`.
+To create/update the database, set your connection string in `src\HomeSensors.Service\appsettings.Development.json` and run the following.
 
 ```PowerShell
 cd src/HomeSensors.Service
 dotnet ef database update --project ./src/HomeSensors.Data/HomeSensors.Data.csproj --startup-project  ./src/HomeSensors.Service/HomeSensors.Service.csproj
 ```
 
-To add a migration
+To add a migration after updating the database context or models, run the following.
 
 ```PowerShell
 dotnet ef migrations add <migration-name> --project ./src/HomeSensors.Data/HomeSensors.Data.csproj --startup-project  ./src/HomeSensors.Service/HomeSensors.Service.csproj
 ```
 
-## Initial Deploy
+## Deploy initial
 
-Run the rtl_433.sh script by hand, section-by-section to setup RTL_433 as a service and an MQTT server. This can be on a remote device. I'm using a Raspberry Pi with a USB SDR.
+Run the rtl_433.sh script by hand, section-by-section to setup RTL_433 as a service and an MQTT server. This can be on a remote device. I'm using a Raspberry Pi with Nooelec NESDR Mini 2+.
 
 Run ./build/build.ps1.
 
@@ -41,13 +41,17 @@ Run the registerService script on the server to get the service going to read th
 
 Make an IIS website pointing to the web app folder.
 
-## Deploy Updates
+## Deploy updates
 
 Run ./build/build.ps1
 
 Use the database migration section above to deploy any migrations needed. Be sure to run these in a test environment in case there's data loss!
 
-Run `Get-Service HomeSensors | Stop-Service; pause; Get-Service HomeSensors | Start-Service` on the service server as an administrator. This will stop the service and pause so you can run the following.
+Run the following  on the service server as an administrator. This will stop the service and pause so you can deploy, then it will restart the service.
+
+```PowerShell
+Get-Service HomeSensors | Stop-Service; pause; Get-Service HomeSensors | Start-Service
+```
 
 Run the web and service deploy scripts from the code repo to get the code and settings on the app server.
 
