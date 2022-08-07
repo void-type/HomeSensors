@@ -25,6 +25,33 @@ interface UserMessage {
   message: string;
 }
 
+const settingKeyDisableDarkMode = 'disableDarkMode';
+const settingKeyDisableFahrenheit = 'disableFahrenheit';
+
+const initialDarkModeSetting = localStorage.getItem(settingKeyDisableDarkMode) === null;
+
+function setDarkMode(setting: boolean) {
+  const { body } = document;
+
+  if (setting) {
+    body.classList.add('bg-dark');
+    body.classList.add('text-light');
+    body.classList.remove('bg-light');
+    body.classList.remove('text-dark');
+
+    localStorage.removeItem(settingKeyDisableDarkMode);
+  } else {
+    body.classList.remove('bg-dark');
+    body.classList.remove('text-light');
+    body.classList.add('bg-light');
+    body.classList.add('text-dark');
+
+    localStorage.setItem(settingKeyDisableDarkMode, 'true');
+  }
+}
+
+setDarkMode(initialDarkModeSetting);
+
 export const useAppStore = defineStore('app', {
   state: (): AppStoreState => ({
     applicationName: '',
@@ -37,8 +64,8 @@ export const useAppStore = defineStore('app', {
     },
     isInitialized: false,
     version: '',
-    useFahrenheit: true,
-    useDarkMode: true,
+    useFahrenheit: localStorage.getItem(settingKeyDisableFahrenheit) === null,
+    useDarkMode: initialDarkModeSetting,
   }),
 
   getters: {
@@ -122,6 +149,16 @@ export const useAppStore = defineStore('app', {
       this.messageIsError = true;
       this.fieldsInError = fieldNames.filter(notEmpty);
       this.messages = messages.filter(notEmpty);
+    },
+
+    setDarkMode,
+
+    setFahrenheit(setting: boolean) {
+      if (setting) {
+        localStorage.removeItem(settingKeyDisableFahrenheit);
+      } else {
+        localStorage.setItem(settingKeyDisableFahrenheit, 'true');
+      }
     },
   },
 });

@@ -27,7 +27,7 @@ const data = reactive({
 
 let lineChart: Chart | null = null;
 
-const tempUnit = computed(() => (useFahrenheit.value ? 'F' : 'C'));
+const tempUnit = computed(() => (useFahrenheit.value ? '°F' : '°C'));
 
 function getRandomColor() {
   const letters = '0123456789ABCDEF'.split('');
@@ -172,31 +172,10 @@ async function connectToHub() {
   connectInternal();
 }
 
-function setDarkMode(setting: boolean) {
-  const { body } = document;
-
-  if (setting) {
-    body.classList.add('bg-dark');
-    body.classList.add('text-light');
-    body.classList.remove('bg-light');
-    body.classList.remove('text-dark');
-  } else {
-    body.classList.remove('bg-dark');
-    body.classList.remove('text-light');
-    body.classList.add('bg-light');
-    body.classList.add('text-dark');
-  }
-}
-
 onMounted(async () => {
   await connectToHub();
   await getTimeSeries();
 });
-
-watch(
-  () => [useDarkMode.value],
-  () => setDarkMode(useDarkMode.value)
-);
 
 watch(
   () => [data.graphRange.start, data.graphRange.end],
@@ -207,14 +186,24 @@ watch(
   () => [data.graphSeries, useFahrenheit.value],
   () => setGraphData(data.graphSeries)
 );
+
+watch(
+  () => [useDarkMode.value],
+  () => appStore.setDarkMode(useDarkMode.value)
+);
+
+watch(
+  () => [useFahrenheit.value],
+  () => appStore.setFahrenheit(useFahrenheit.value)
+);
 </script>
 
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-0">Temperatures</h1>
     <div class="btn-toolbar">
-      <div class="form-check form-switch me-3 mt-4">
-        <label class="form-check-label" for="useFahrenheit">Fahrenheit</label>
+      <div class="form-check form-switch me-3 mt-4" title="Toggle Fahrenheit">
+        <label class="form-check-label" for="useFahrenheit">🇺🇸</label>
         <input
           id="useFahrenheit"
           v-model="useFahrenheit"
@@ -222,8 +211,8 @@ watch(
           type="checkbox"
         />
       </div>
-      <div class="form-check form-switch mt-4">
-        <label class="form-check-label" for="useDarkMode">Dark</label>
+      <div class="form-check form-switch mt-4" title="Toggle dark mode">
+        <label class="form-check-label" for="useDarkMode">🌙</label>
         <input id="useDarkMode" v-model="useDarkMode" class="form-check-input" type="checkbox" />
       </div>
     </div>
