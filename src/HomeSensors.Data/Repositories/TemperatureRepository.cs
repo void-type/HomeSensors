@@ -16,7 +16,8 @@ public class TemperatureRepository
     {
         var data = await _data.TemperatureLocations
             .Include(x => x.TemperatureReadings)
-            .OrderBy(x => x.Name)
+            .OrderBy(x => x.Name != "Outside")
+            .ThenBy(x => x.Name)
             .Select(x => new
             {
                 Location = x.Name,
@@ -90,7 +91,8 @@ public class TemperatureRepository
 
         return dbReadings
             .GroupBy(x => x.TemperatureLocation!.Name)
-            .OrderBy(x => x.Key)
+            .OrderBy(x => x.Key != "Outside")
+            .ThenBy(x => x.Key)
             .ToList()
             .ConvertAll(locationGroup => new GraphTimeSeries(locationGroup.Key, GetReadingAverages(locationGroup, intervalMinutes)));
     }

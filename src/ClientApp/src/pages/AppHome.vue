@@ -29,6 +29,26 @@ let lineChart: Chart | null = null;
 
 const tempUnit = computed(() => (useFahrenheit.value ? '°F' : '°C'));
 
+const categoryColors: Record<string, string> = {
+  Basement: '#2ac4b3',
+  Bedroom: '#b2df8a',
+  Garage: '#ff526f',
+  'Garage Freezer': '#73a2ef',
+  'Garage Fridge': '#3064cf',
+  "Jeff's Office": '#b180d0',
+  Outside: '#feaf29',
+};
+
+const predefinedColors = [
+  '#8aaec7',
+  '#fe7db7',
+  '#33a02c',
+  '#0097fb',
+  '#914bdc',
+  '#915535',
+  '#5d5652',
+];
+
 function getRandomColor() {
   const letters = '0123456789ABCDEF'.split('');
   let color = '#';
@@ -38,22 +58,25 @@ function getRandomColor() {
   return color;
 }
 
-const colors = [
-  '#2ac4b3',
-  '#b2df8a',
-  '#ff526f',
-  '#73a2ef',
-  '#3064cf',
-  '#b180d0',
-  '#feaf29',
-  '#8aaec7',
-  '#fe7db7',
-  '#33a02c',
-  '#0097fb',
-  '#914bdc',
-  '#915535',
-  '#5d5652',
-];
+function getColor(categoryName: string) {
+  const existing = categoryColors[categoryName];
+
+  if (existing) {
+    return existing;
+  }
+
+  const predefinedColor = predefinedColors.find((x) => !Object.values(categoryColors).includes(x));
+
+  if (predefinedColor) {
+    categoryColors[categoryName] = predefinedColor;
+    return predefinedColor;
+  }
+
+  const randomColor = getRandomColor();
+
+  categoryColors[categoryName] = randomColor;
+  return randomColor;
+}
 
 function formatTemp(temp: number | null | undefined, decimals = 1) {
   const convertedTemp = useFahrenheit.value ? (temp || 0) * 1.8 + 32 : temp || 0;
@@ -69,9 +92,9 @@ function setGraphData(series: Array<GraphTimeSeries>) {
 
   lineChart?.destroy();
 
-  const datasets = series?.map((s, si) => ({
+  const datasets = series?.map((s) => ({
     label: s.location,
-    borderColor: colors[si] || getRandomColor(),
+    borderColor: getColor(s.location || 'unknown'),
     data: s.points
       ?.filter((p: GraphPoint) => p.temperatureCelsius)
       .map((p: GraphPoint) => ({ x: p.time, y: formatTemp(p.temperatureCelsius) })),
