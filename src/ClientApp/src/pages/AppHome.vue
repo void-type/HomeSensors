@@ -2,19 +2,23 @@
 import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
 import type { GraphPoint, GraphCurrentReading, GraphTimeSeries } from '@/api/data-contracts';
-import { onMounted, reactive, watch, computed } from 'vue';
+import { onMounted, reactive, watch } from 'vue';
 import moment from 'moment';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-moment';
 import * as signalR from '@microsoft/signalr';
 import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
+import { formatTemp } from '@/models/FormatHelpers';
+import DateHelpers from '@/models/DateHelpers';
 
 Chart.register(...registerables);
 
 const appStore = useAppStore();
 
 const { useFahrenheit } = storeToRefs(appStore);
+
+const { tempUnit } = appStore;
 
 const data = reactive({
   graphRange: {
@@ -26,8 +30,6 @@ const data = reactive({
 });
 
 let lineChart: Chart | null = null;
-
-const tempUnit = computed(() => (useFahrenheit.value ? '°F' : '°C'));
 
 const categoryColors: Record<string, string> = {
   Basement: '#2ac4b3',
@@ -78,11 +80,6 @@ function getColor(categoryName: string) {
   return randomColor;
 }
 
-function formatTemp(temp: number | null | undefined, decimals = 1) {
-  const convertedTemp = useFahrenheit.value ? (temp || 0) * 1.8 + 32 : temp || 0;
-  return Math.round(convertedTemp * 10 ** decimals) / 10 ** decimals;
-}
-
 function setGraphData(series: Array<GraphTimeSeries>) {
   const element = document.getElementById('tempGraph') as HTMLCanvasElement;
 
@@ -97,7 +94,10 @@ function setGraphData(series: Array<GraphTimeSeries>) {
     borderColor: getColor(s.location || 'unknown'),
     data: s.points
       ?.filter((p: GraphPoint) => p.temperatureCelsius)
-      .map((p: GraphPoint) => ({ x: p.time, y: formatTemp(p.temperatureCelsius) })),
+      .map((p: GraphPoint) => ({
+        x: p.time,
+        y: formatTemp(p.temperatureCelsius, useFahrenheit.value),
+      })),
   }));
 
   const config = {
@@ -120,7 +120,7 @@ function setGraphData(series: Array<GraphTimeSeries>) {
         tooltip: {
           callbacks: {
             label: (item: TooltipItem<'line'>) =>
-              `${item.dataset.label}: ${item.formattedValue}${tempUnit.value}`,
+              `${item.dataset.label}: ${item.formattedValue}${tempUnit}`,
           },
         },
       },
@@ -128,7 +128,20 @@ function setGraphData(series: Array<GraphTimeSeries>) {
       scales: {
         x: {
           type: 'time',
-          time: {},
+          time: {
+            displayFormats: {
+              millisecond: 'HH:mm:ss',
+              second: 'HH:mm:ss',
+              minute: 'HH:mm',
+              hour: 'HH',
+              day: 'MMM D',
+              week: 'll',
+              month: 'MMM YYYY',
+              quarter: '[Q]Q - YYYY',
+              year: 'YYYY',
+            },
+            tooltipFormat: 'YYYY-MM-DD HH:mm:ss',
+          },
           ticks: {
             autoSkip: false,
             major: {
@@ -224,7 +237,7 @@ watch(
           <div class="card-body">
             <h5 class="mb-2">
               <span class="fw-bold"
-                >{{ formatTemp(currentTemp.temperatureCelsius) }}{{ tempUnit }}</span
+                >{{ formatTemp(currentTemp.temperatureCelsius, useFahrenheit) }}{{ tempUnit }}</span
               >
               {{ currentTemp.location }}
             </h5>
@@ -238,7 +251,11 @@ watch(
     <div class="row mt-4">
       <div class="col-md-6 mb-3">
         <label for="startDate" class="form-label">Start date</label>
-        <v-date-picker v-model="data.graphRange.start" mode="dateTime" is24hr
+        <v-date-picker
+          v-model="data.graphRange.start"
+          mode="dateTime"
+          :masks="{ inputDateTime24hr: DateHelpers.formatStrings.viewDateTimeShort }"
+          is24hr
           ><template #default="{ inputValue, inputEvents }">
             <input id="startDate" class="form-control" :value="inputValue" v-on="inputEvents" />
           </template>
@@ -246,7 +263,11 @@ watch(
       </div>
       <div class="col-md-6 mb-3">
         <label for="endDate" class="form-label">End date</label>
-        <v-date-picker v-model="data.graphRange.end" mode="dateTime" is24hr
+        <v-date-picker
+          v-model="data.graphRange.end"
+          mode="dateTime"
+          :masks="{ inputDateTime24hr: DateHelpers.formatStrings.viewDateTimeShort }"
+          is24hr
           ><template #default="{ inputValue, inputEvents }">
             <input id="endDate" class="form-control" :value="inputValue" v-on="inputEvents" />
           </template>

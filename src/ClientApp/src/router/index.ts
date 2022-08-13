@@ -29,6 +29,12 @@ const router = createRouter({
       meta: { title: 'Inactive devices' },
     },
     {
+      path: '/lost-devices',
+      name: 'lostDevices',
+      component: () => import('@/pages/LostDevices.vue'),
+      meta: { title: 'Lost devices' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: { name: 'home' },
       meta: { title: 'Home' },

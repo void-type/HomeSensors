@@ -16,6 +16,7 @@ import type {
   GraphTimeSeriesRequest,
   IFailureIItemSet,
   InactiveDevice,
+  LostDevice,
   WebClientInfo,
 } from './data-contracts';
 import { ContentType, HttpClient, type RequestParams } from './http-client';
@@ -81,6 +82,22 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   temperaturesInactiveDevicesCreate = (params: RequestParams = {}) =>
     this.request<InactiveDevice[], IFailureIItemSet>({
       path: `/api/temperatures/inactive-devices`,
+      method: 'POST',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureApi
+   * @name TemperaturesLostDevicesCreate
+   * @request POST:/api/temperatures/lost-devices
+   * @response `200` `(LostDevice)[]` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesLostDevicesCreate = (params: RequestParams = {}) =>
+    this.request<LostDevice[], IFailureIItemSet>({
+      path: `/api/temperatures/lost-devices`,
       method: 'POST',
       format: 'json',
       ...params,

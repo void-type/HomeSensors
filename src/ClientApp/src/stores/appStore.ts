@@ -76,6 +76,8 @@ export const useAppStore = defineStore('app', {
 
     userIsAuthorizedAs: (state) => (policy: string) =>
       (state.user.authorizedAs || []).includes(policy),
+
+    tempUnit: (state) => (state.useFahrenheit ? '°F' : '°C'),
   },
 
   actions: {

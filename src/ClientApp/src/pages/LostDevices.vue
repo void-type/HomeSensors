@@ -1,37 +1,40 @@
 <script lang="ts" setup>
 import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
-import type { InactiveDevice } from '@/api/data-contracts';
+import type { LostDevice } from '@/api/data-contracts';
 import { onMounted, reactive } from 'vue';
 import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
+import { formatTemp } from '@/models/FormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
 
 const appStore = useAppStore();
 
-const { useDarkMode } = storeToRefs(appStore);
+const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
+
+const { tempUnit } = appStore;
 
 const data = reactive({
-  inactiveDevices: [] as Array<InactiveDevice>,
+  lostDevices: [] as Array<LostDevice>,
 });
 
-async function getInactiveDevices() {
+async function getLostDevices() {
   try {
-    const response = await new Api().temperaturesInactiveDevicesCreate();
-    data.inactiveDevices = response.data;
+    const response = await new Api().temperaturesLostDevicesCreate();
+    data.lostDevices = response.data;
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
 onMounted(async () => {
-  await getInactiveDevices();
+  await getLostDevices();
 });
 </script>
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-4 mb-0">Inactive devices</h1>
+    <h1 class="mt-4 mb-0">Lost devices</h1>
     <div class="mt-4">
       <table :class="{ table: true, 'table-dark': useDarkMode }">
         <thead>
@@ -40,22 +43,23 @@ onMounted(async () => {
             <th>Model</th>
             <th>Device ID</th>
             <th>Channel</th>
-            <th>Location</th>
             <th>Last reading</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="device in data.inactiveDevices" :key="device.id">
+          <tr v-for="device in data.lostDevices" :key="device.id">
             <td>{{ device.id }}</td>
             <td>{{ device.deviceModel }}</td>
             <td>{{ device.deviceId }}</td>
             <td>{{ device.deviceChannel }}</td>
-            <td>{{ device.locationName }}</td>
-            <td>{{ DateHelpers.dateTimeShortForView(device.lastReading) }}</td>
+            <td>
+              {{ formatTemp(device.lastReadingTemperatureCelsius, useFahrenheit) }}{{ tempUnit }} on
+              {{ DateHelpers.dateTimeShortForView(device.lastReadingTime) }}
+            </td>
           </tr>
         </tbody>
       </table>
-      <div v-if="data.inactiveDevices.length < 1" class="text-center">No inactive devices.</div>
+      <div v-if="data.lostDevices.length < 1" class="text-center">No lost devices.</div>
     </div>
   </div>
 </template>

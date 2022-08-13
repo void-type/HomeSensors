@@ -47,7 +47,7 @@ public class TemperatureRepository
                 LocationName = x.CurrentTemperatureLocation!.Name,
                 LastReading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault()
             })
-            .Where(x => x.LastReading == null || x.LastReading.Time < DateTimeOffset.Now.AddDays(-1))
+            .Where(x => x.LastReading == null || x.LastReading.Time < DateTimeOffset.Now.AddHours(-2))
             .ToListAsync();
 
         return data.ConvertAll(x => new InactiveDevice
@@ -58,6 +58,35 @@ public class TemperatureRepository
             DeviceChannel = x.DeviceChannel,
             LocationName = x.LocationName,
             LastReading = x.LastReading?.Time,
+        });
+    }
+
+    public async Task<List<LostDevice>> GetLostDevices()
+    {
+        var data = await _data.TemperatureDevices
+            .Include(x => x.TemperatureReadings)
+            .OrderBy(x => x.DeviceModel)
+            .ThenBy(x => x.DeviceId)
+            .ThenBy(x => x.DeviceChannel)
+            .Where(x => x.CurrentTemperatureLocationId == null)
+            .Select(x => new
+            {
+                x.Id,
+                x.DeviceModel,
+                x.DeviceId,
+                x.DeviceChannel,
+                LastReading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault()
+            })
+            .ToListAsync();
+
+        return data.ConvertAll(x => new LostDevice
+        {
+            Id = x.Id,
+            DeviceModel = x.DeviceModel,
+            DeviceId = x.DeviceId,
+            DeviceChannel = x.DeviceChannel,
+            LastReadingTemperatureCelsius = x.LastReading?.TemperatureCelsius,
+            LastReadingTime = x.LastReading?.Time,
         });
     }
 

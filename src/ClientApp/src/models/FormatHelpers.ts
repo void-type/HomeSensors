@@ -23,3 +23,8 @@ export function trimAndTitleCase(value: string) {
 export function isNil(value: string | null | undefined) {
   return value === null || value === undefined || value === '';
 }
+
+export function formatTemp(temp: number | null | undefined, useFahrenheit: boolean, decimals = 1) {
+  const convertedTemp = useFahrenheit ? (temp || 0) * 1.8 + 32 : temp || 0;
+  return Math.round(convertedTemp * 10 ** decimals) / 10 ** decimals;
+}

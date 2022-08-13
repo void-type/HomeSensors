@@ -1,6 +1,6 @@
 import moment from 'moment';
 
-function getFormattedMoment(value: Date | string, formatString: string) {
+function getFormattedMoment(value: moment.MomentInput, formatString: string) {
   const instant = moment(value);
 
   if (instant.isValid() === false) {
@@ -13,24 +13,31 @@ function getFormattedMoment(value: Date | string, formatString: string) {
 const formatStrings = {
   apiDate: 'YYYY-MM-DD',
   apiDateTime: 'YYYY-MM-DDTHH:mm:ss',
-  viewDate: 'L',
-  viewDateTime: 'L LT',
+  viewDate: 'YYYY-MM-DD',
+  viewDateTime: 'YYYY-MM-DD HH:mm:ss',
+  viewDateTimeShort: 'YYYY-MM-DD HH:mm',
 };
 
 export default class DateHelpers {
-  static dateForApi(value: Date) {
+  static dateForApi(value: moment.MomentInput) {
     return getFormattedMoment(value, formatStrings.apiDate);
   }
 
-  static dateTimeForApi(value: Date) {
+  static dateTimeForApi(value: moment.MomentInput) {
     return getFormattedMoment(value, formatStrings.apiDateTime);
   }
 
-  static dateForView(value: Date) {
+  static dateForView(value: moment.MomentInput) {
     return getFormattedMoment(value, formatStrings.viewDate);
   }
 
-  static dateTimeForView(value: Date) {
+  static dateTimeForView(value: moment.MomentInput) {
     return getFormattedMoment(value, formatStrings.viewDateTime);
   }
+
+  static dateTimeShortForView(value: moment.MomentInput) {
+    return getFormattedMoment(value, formatStrings.viewDateTimeShort);
+  }
+
+  static formatStrings = formatStrings;
 }

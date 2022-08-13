@@ -89,6 +89,20 @@ export interface InactiveDevice {
   lastReading?: string | null;
 }
 
+export interface LostDevice {
+  /** @format int64 */
+  id?: number;
+  deviceModel?: string | null;
+  deviceId?: string | null;
+  deviceChannel?: string | null;
+
+  /** @format double */
+  lastReadingTemperatureCelsius?: number | null;
+
+  /** @format date-time */
+  lastReadingTime?: string | null;
+}
+
 export interface WebClientInfo {
   antiforgeryToken?: string | null;
   antiforgeryTokenHeaderName?: string | null;

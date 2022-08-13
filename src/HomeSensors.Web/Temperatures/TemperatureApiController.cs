@@ -41,6 +41,16 @@ public class TemperatureApiController : ControllerBase
     }
 
     [HttpPost]
+    [Route("lost-devices")]
+    [ProducesResponseType(typeof(List<LostDevice>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> GetLostDevices()
+    {
+        var readings = await _temperatureRepository.GetLostDevices();
+        return HttpResponder.Respond(readings);
+    }
+
+    [HttpPost]
     [Route("time-series")]
     [ProducesResponseType(typeof(List<GraphTimeSeries>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]

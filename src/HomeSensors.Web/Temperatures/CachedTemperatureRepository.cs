@@ -54,6 +54,18 @@ public class CachedTemperatureRepository
             });
     }
 
+    public Task<List<LostDevice>> GetLostDevices()
+    {
+        var cacheKey = $"{nameof(CachedTemperatureRepository)}.{nameof(GetLostDevices)}";
+
+        return _cache.GetOrAddAsync(cacheKey,
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
+                return await _inner.GetLostDevices();
+            });
+    }
+
     public Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
     {
         var cacheKey = $"{nameof(CachedTemperatureRepository)}.{nameof(GetTimeSeries)}|{request.StartTime:o}|{request.EndTime:o}";
