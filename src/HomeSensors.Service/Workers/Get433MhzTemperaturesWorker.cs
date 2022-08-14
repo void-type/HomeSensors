@@ -30,10 +30,7 @@ public class Get433MhzTemperaturesWorker : BackgroundService
 
         _logger.LogInformation("Connecting Managed MQTT client.");
 
-        client.ApplicationMessageReceivedAsync += async e =>
-        {
-            await ProcessMessage(e);
-        };
+        client.ApplicationMessageReceivedAsync += async e => await ProcessMessage(e);
 
         await client.StartAsync(BuildOptions());
         await client.SubscribeAsync(BuildTopicFilters());

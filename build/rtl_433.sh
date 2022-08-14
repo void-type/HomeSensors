@@ -53,4 +53,4 @@ sudo systemctl enable rtl_433
 sudo systemctl status rtl_433
 
 # Test. Listen for the models you own, # is wild card. Our service sets topics up like rtl_433/model/id
-# mosquitto_sub -h localhost -t "rtl_433/Acurite-986/#" -t "rtl_433/Acurite-609TXC/149"
+# mosquitto_sub -h localhost -t "rtl_433/Acurite-986/#" -t "rtl_433/Acurite-609TXC/149" -u mqtt_user -P ***PASSWORD***
