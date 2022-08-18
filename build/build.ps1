@@ -38,27 +38,27 @@ try {
   Stop-OnError
 
   # Lint and build client
-  # if (-not $SkipClient) {
-  #   Set-Location -Path $webClientProjectFolder
-  #   npm install --no-audit
-  #   Stop-OnError
+  if (-not $SkipClient) {
+    Set-Location -Path $webClientProjectFolder
+    npm install --no-audit
+    Stop-OnError
 
-  #   if (-not $SkipFormat) {
-  #     npm run lint
-  #     Stop-OnError
-  #     npm run format | Out-Null
-  #     Stop-OnError "Formatting the client failed."
-  #   }
+    if (-not $SkipFormat) {
+      npm run lint
+      Stop-OnError
+      npm run format | Out-Null
+      Stop-OnError "Formatting the client failed."
+    }
 
-  #   if (-not $SkipOutdated) {
-  #     npm outdated
-  #     npm audit --production
-  #     Stop-OnError
-  #   }
+    if (-not $SkipOutdated) {
+      npm outdated
+      npm audit --production
+      Stop-OnError
+    }
 
-  #   npm run build -- --mode "$($nodeModes[$Configuration])"
-  #   Stop-OnError
-  # }
+    npm run build -- --mode "$($nodeModes[$Configuration])"
+    Stop-OnError
+  }
 
   # Build solution
   Set-Location -Path $projectRoot

@@ -5,6 +5,12 @@ try {
   Set-Location -Path $projectRoot
   . ./build/buildSettings.ps1
 
+  Set-Location -Path $webClientProjectFolder
+
+  npm install --no-audit
+  npx ncu -u
+  npm install --no-audit
+
   Set-Location -Path $projectRoot
   ./build/updateTools.ps1
   dotnet outdated -u
