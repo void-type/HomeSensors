@@ -71,11 +71,6 @@ footer {
   flex-shrink: 0;
 }
 
-// Modal background
-.modal-content {
-  background: inherit;
-}
-
 // Minimum button width
 Button animation input[type='button'].btn,
 input[type='submit'].btn,
@@ -83,6 +78,72 @@ button.btn,
 a.btn,
 .btn {
   min-width: 5rem;
+}
+
+.bg-light {
+  // Colored headings
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .h1,
+  .h2,
+  .h3,
+  .h4,
+  .h5,
+  .h6 {
+    color: $primary;
+  }
+}
+
+footer {
+  border-top: $gray-500 1px solid;
+}
+
+body.bg-dark {
+  footer {
+    border-top: $gray-800 1px solid;
+  }
+}
+
+.card {
+  outline: $gray-500 1px solid;
+
+  &.card-hover:hover:not(.active),
+  .card-hover:hover:not(.active) {
+    background-color: $gray-200;
+  }
+
+  .card-link {
+    text-decoration: none;
+    color: unset;
+
+    & > img {
+      max-height: 350px;
+    }
+  }
+}
+
+body.bg-dark {
+  .card,
+  .list-group,
+  .list-group-item:not(.active) {
+    background-color: inherit;
+    color: inherit;
+    outline: $gray-800 1px solid;
+
+    &.card-hover:hover:not(.active),
+    .card-hover:hover:not(.active) {
+      background-color: $gray-800;
+
+      .card-link:hover {
+        background-color: inherit;
+        color: inherit;
+      }
+    }
+  }
 }
 
 // Printable screens

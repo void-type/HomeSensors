@@ -281,10 +281,6 @@ watch(
 </template>
 
 <style lang="scss" scoped>
-.card {
-  background-color: inherit;
-}
-
 .chart-container {
   position: relative;
 }
