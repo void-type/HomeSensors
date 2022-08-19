@@ -20,7 +20,7 @@
     "chart.js": "^3.9.1",
     "chartjs-adapter-moment": "^1.0.0",
     "moment": "^2.29.4",
-    "pinia": "^2.0.18",
+    "pinia": "^2.0.19",
     "v-calendar": "^3.0.0-alpha.8",
     "vue": "^3.2.37",
     "vue-router": "^4.1.3"
