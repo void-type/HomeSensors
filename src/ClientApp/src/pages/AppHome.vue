@@ -20,10 +20,12 @@ const { useFahrenheit } = storeToRefs(appStore);
 
 const { tempUnit } = appStore;
 
+const initialTime = moment().startOf('minute');
+
 const data = reactive({
   graphRange: {
-    start: moment().add(-48, 'h').toDate(),
-    end: moment().toDate(),
+    start: moment(initialTime).add(-48, 'h').toDate(),
+    end: moment(initialTime).toDate(),
   },
   graphSeries: [] as Array<GraphTimeSeries>,
   currentReadings: [] as Array<GraphCurrentReading>,
