@@ -1,6 +1,7 @@
 ﻿using HomeSensors.Data.Repositories;
 using HomeSensors.Data.Repositories.Models;
 using LazyCache;
+using VoidCore.Model.Time;
 
 namespace HomeSensors.Web.Temperatures;
 
@@ -8,12 +9,14 @@ public class CachedTemperatureRepository
 {
     private readonly TemperatureRepository _inner;
     private readonly IAppCache _cache;
+    private readonly IDateTimeService _dateTimeService;
     private readonly TimeSpan _defaultCacheTime = TimeSpan.FromSeconds(30);
 
-    public CachedTemperatureRepository(TemperatureRepository inner, IAppCache cache)
+    public CachedTemperatureRepository(TemperatureRepository inner, IAppCache cache, IDateTimeService dateTimeService)
     {
         _inner = inner;
         _cache = cache;
+        _dateTimeService = dateTimeService;
     }
 
     /// <summary>
@@ -68,6 +71,12 @@ public class CachedTemperatureRepository
 
     public Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
     {
+        // Prevent caching time spans that are incomplete
+        if (request.EndTime >= _dateTimeService.MomentWithOffset)
+        {
+            return _inner.GetTimeSeries(request);
+        }
+
         var cacheKey = $"{nameof(CachedTemperatureRepository)}.{nameof(GetTimeSeries)}|{request.StartTime:o}|{request.EndTime:o}";
 
         return _cache.GetOrAddAsync(cacheKey,

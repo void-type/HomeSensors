@@ -10,6 +10,7 @@ using VoidCore.AspNet.Configuration;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Auth;
 using VoidCore.Model.Configuration;
+using VoidCore.Model.Time;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -55,6 +56,7 @@ try
     });
 
     services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
+    services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
 
     // Auto-register Domain Events
     services.AddDomainEvents(
