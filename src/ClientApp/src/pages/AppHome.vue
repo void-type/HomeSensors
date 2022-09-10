@@ -89,7 +89,22 @@ function setGraphData(series: Array<GraphTimeSeries>) {
     return;
   }
 
-  lineChart?.destroy();
+  const oldHiddenCategories: Array<string | null | undefined> = [];
+
+  if (lineChart != null) {
+    const oldCategoryCount = lineChart?.data.datasets.length || 0;
+
+    for (let i = 0; i < oldCategoryCount; i += 1) {
+      const datasetMeta = lineChart.getDatasetMeta(i);
+      const isHidden = datasetMeta.visible === false;
+
+      if (isHidden && datasetMeta) {
+        oldHiddenCategories.push(datasetMeta.label);
+      }
+    }
+
+    lineChart?.destroy();
+  }
 
   const datasets = series?.map((s) => ({
     label: s.location,
@@ -100,6 +115,7 @@ function setGraphData(series: Array<GraphTimeSeries>) {
         x: p.time,
         y: formatTemp(p.temperatureCelsius, useFahrenheit.value),
       })),
+    hidden: oldHiddenCategories.includes(s.location),
   }));
 
   const config = {
@@ -176,7 +192,6 @@ async function getTimeSeries() {
   try {
     const response = await new Api().temperaturesTimeSeriesCreate(parameters);
     data.graphSeries = response.data;
-    setGraphData(data.graphSeries);
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
