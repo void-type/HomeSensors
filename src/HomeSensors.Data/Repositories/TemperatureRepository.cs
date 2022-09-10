@@ -123,10 +123,17 @@ public class TemperatureRepository
             .OrderBy(x => x.Key != "Outside")
             .ThenBy(x => x.Key)
             .ToList()
-            .ConvertAll(locationGroup => new GraphTimeSeries(locationGroup.Key, GetReadingAverages(locationGroup, intervalMinutes)));
+            .ConvertAll(locationGroup =>
+            {
+                var points = GetReadingAveragesForIntervals(locationGroup, intervalMinutes);
+
+                var values = locationGroup.Select(x => x.TemperatureCelsius);
+
+                return new GraphTimeSeries(locationGroup.Key, values.Min(), values.Max(), values.Average(), points);
+            });
     }
 
-    private static List<GraphPoint> GetReadingAverages(IGrouping<string, TemperatureReading> locationGroup, int intervalMinutes)
+    private static List<GraphPoint> GetReadingAveragesForIntervals(IGrouping<string, TemperatureReading> locationGroup, int intervalMinutes)
     {
         if (intervalMinutes == 0)
         {

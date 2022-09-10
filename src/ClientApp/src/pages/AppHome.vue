@@ -16,9 +16,7 @@ Chart.register(...registerables);
 
 const appStore = useAppStore();
 
-const { useFahrenheit } = storeToRefs(appStore);
-
-const { tempUnit } = appStore;
+const { useFahrenheit, useDarkMode, tempUnit } = storeToRefs(appStore);
 
 const initialTime = moment().startOf('minute');
 
@@ -138,7 +136,7 @@ function setGraphData(series: Array<GraphTimeSeries>) {
         tooltip: {
           callbacks: {
             label: (item: TooltipItem<'line'>) =>
-              `${item.dataset.label}: ${item.formattedValue}${tempUnit}`,
+              `${item.dataset.label}: ${item.formattedValue}${tempUnit.value}`,
           },
         },
       },
@@ -294,6 +292,24 @@ watch(
     <div class="chart-container mt-3">
       <canvas id="tempGraph"></canvas>
     </div>
+    <table :class="{ 'mt-3': true, table: true, 'table-dark': useDarkMode }">
+      <thead>
+        <tr>
+          <th>Location</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Avg</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(point, i) in data.graphSeries" :key="i">
+          <td>{{ point.location }}</td>
+          <td>{{ formatTemp(point.min, useFahrenheit) }}{{ tempUnit }}</td>
+          <td>{{ formatTemp(point.max, useFahrenheit) }}{{ tempUnit }}</td>
+          <td>{{ formatTemp(point.average, useFahrenheit) }}{{ tempUnit }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 

@@ -9,14 +9,14 @@ public class CachedTemperatureRepository
 {
     private readonly TemperatureRepository _inner;
     private readonly IAppCache _cache;
-    private readonly IDateTimeService _dateTimeService;
+    private readonly IDateTimeService _now;
     private readonly TimeSpan _defaultCacheTime = TimeSpan.FromSeconds(30);
 
     public CachedTemperatureRepository(TemperatureRepository inner, IAppCache cache, IDateTimeService dateTimeService)
     {
         _inner = inner;
         _cache = cache;
-        _dateTimeService = dateTimeService;
+        _now = dateTimeService;
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ public class CachedTemperatureRepository
     public Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
     {
         // Prevent caching time spans that are incomplete
-        if (request.EndTime >= _dateTimeService.MomentWithOffset)
+        if (request.EndTime >= _now.MomentWithOffset)
         {
             return _inner.GetTimeSeries(request);
         }

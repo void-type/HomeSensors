@@ -45,6 +45,9 @@ export interface GraphPoint {
 
 export interface GraphTimeSeries {
   location?: string | null;
+  min?: number | null;
+  max?: number | null;
+  average?: number | null;
   points?: GraphPoint[] | null;
 }
 
