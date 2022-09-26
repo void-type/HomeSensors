@@ -9,7 +9,7 @@ namespace HomeSensors.Web.Controllers;
 /// Application metadata.
 /// </summary>
 [ApiRoute("app")]
-public class ApplicationController : ControllerBase
+public class ApplicationApiController : ControllerBase
 {
     /// <summary>
     /// Get information to bootstrap the SPA client like application name and user data.
