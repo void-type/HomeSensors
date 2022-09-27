@@ -1,15 +1,18 @@
 ﻿using HomeSensors.Data.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
+using VoidCore.Model.Time;
 
 namespace HomeSensors.Data.Repositories;
 
-public class TemperatureRepository
+public class TemperatureReadingRepository
 {
     private readonly HomeSensorsContext _data;
+    private readonly IDateTimeService _dateTimeService;
 
-    public TemperatureRepository(HomeSensorsContext data)
+    public TemperatureReadingRepository(HomeSensorsContext data, IDateTimeService dateTimeService)
     {
         _data = data;
+        _dateTimeService = dateTimeService;
     }
 
     public async Task<List<GraphCurrentReading>> GetCurrentReadings()
@@ -23,71 +26,11 @@ public class TemperatureRepository
                 Location = x.Name,
                 Reading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault(),
             })
-            .Where(x => x.Reading != null && x.Reading.Time >= DateTimeOffset.Now.AddDays(-1))
+            .Where(x => x.Reading != null && x.Reading.Time >= _dateTimeService.MomentWithOffset.AddDays(-1))
             .ToListAsync();
 
         return data
             .ConvertAll(x => new GraphCurrentReading(x.Location, x.Reading!.TemperatureCelsius, x.Reading.Time));
-    }
-
-    public async Task<List<InactiveDevice>> GetInactiveDevices()
-    {
-        var data = await _data.TemperatureDevices
-            .Include(x => x.CurrentTemperatureLocation)
-            .Include(x => x.TemperatureReadings)
-            .OrderBy(x => x.DeviceModel)
-            .ThenBy(x => x.DeviceId)
-            .ThenBy(x => x.DeviceChannel)
-            .Select(x => new
-            {
-                x.Id,
-                x.DeviceModel,
-                x.DeviceId,
-                x.DeviceChannel,
-                LocationName = x.CurrentTemperatureLocation!.Name,
-                LastReading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault()
-            })
-            .Where(x => x.LastReading == null || x.LastReading.Time < DateTimeOffset.Now.AddHours(-2))
-            .ToListAsync();
-
-        return data.ConvertAll(x => new InactiveDevice
-        {
-            Id = x.Id,
-            DeviceModel = x.DeviceModel,
-            DeviceId = x.DeviceId,
-            DeviceChannel = x.DeviceChannel,
-            LocationName = x.LocationName,
-            LastReading = x.LastReading?.Time,
-        });
-    }
-
-    public async Task<List<LostDevice>> GetLostDevices()
-    {
-        var data = await _data.TemperatureDevices
-            .Include(x => x.TemperatureReadings)
-            .OrderBy(x => x.DeviceModel)
-            .ThenBy(x => x.DeviceId)
-            .ThenBy(x => x.DeviceChannel)
-            .Where(x => x.CurrentTemperatureLocationId == null)
-            .Select(x => new
-            {
-                x.Id,
-                x.DeviceModel,
-                x.DeviceId,
-                x.DeviceChannel,
-                LastReading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault()
-            })
-            .ToListAsync();
-
-        return data.ConvertAll(x => new LostDevice
-        {
-            Id = x.Id,
-            DeviceModel = x.DeviceModel,
-            DeviceId = x.DeviceId,
-            DeviceChannel = x.DeviceChannel,
-            LastReadingTemperatureCelsius = x.LastReading?.TemperatureCelsius,
-            LastReadingTime = x.LastReading?.Time,
-        });
     }
 
     public async Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
@@ -104,7 +47,7 @@ public class TemperatureRepository
             return new();
         }
 
-        // Depending on the total span of data returned, we will create averages to prevent overloading the client.
+        // Depending on the total span of data returned, we will create averages over intervals to prevent overloading the client with too many data points.
         var dbSpan = (dbReadings.Max(x => x.Time) - dbReadings.Min(x => x.Time)).TotalHours;
 
         var intervalMinutes = dbSpan switch

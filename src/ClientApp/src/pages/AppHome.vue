@@ -270,6 +270,7 @@ watch(
           v-model="data.graphRange.start"
           mode="dateTime"
           :masks="{ inputDateTime24hr: DateHelpers.formatStrings.viewDateTimeShort }"
+          :update-on-input="false"
           is24hr
           ><template #default="{ inputValue, inputEvents }">
             <input id="startDate" class="form-control" :value="inputValue" v-on="inputEvents" />
@@ -282,6 +283,7 @@ watch(
           v-model="data.graphRange.end"
           mode="dateTime"
           :masks="{ inputDateTime24hr: DateHelpers.formatStrings.viewDateTimeShort }"
+          :update-on-input="false"
           is24hr
           ><template #default="{ inputValue, inputEvents }">
             <input id="endDate" class="form-control" :value="inputValue" v-on="inputEvents" />

@@ -45,8 +45,14 @@ export interface GraphPoint {
 
 export interface GraphTimeSeries {
   location?: string | null;
+
+  /** @format double */
   min?: number | null;
+
+  /** @format double */
   max?: number | null;
+
+  /** @format double */
   average?: number | null;
   points?: GraphPoint[] | null;
 }
@@ -88,8 +94,11 @@ export interface InactiveDevice {
   deviceChannel?: string | null;
   locationName?: string | null;
 
+  /** @format double */
+  lastReadingTemperatureCelsius?: number | null;
+
   /** @format date-time */
-  lastReading?: string | null;
+  lastReadingTime?: string | null;
 }
 
 export interface LostDevice {

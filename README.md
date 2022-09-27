@@ -17,7 +17,6 @@ This project uses Entity Framework Code First.
 To create/update the database, set your connection string in `src\HomeSensors.Service\appsettings.Development.json` and run the following.
 
 ```PowerShell
-cd src/HomeSensors.Service
 dotnet ef database update --project ./src/HomeSensors.Data/HomeSensors.Data.csproj --startup-project  ./src/HomeSensors.Service/HomeSensors.Service.csproj
 ```
 

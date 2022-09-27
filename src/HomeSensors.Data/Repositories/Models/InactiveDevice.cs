@@ -7,5 +7,6 @@ public class InactiveDevice
     public string? DeviceId { get; init; }
     public string? DeviceChannel { get; init; }
     public string? LocationName { get; init; }
-    public DateTimeOffset? LastReading { get; init; }
+    public double? LastReadingTemperatureCelsius { get; init; }
+    public DateTimeOffset? LastReadingTime { get; init; }
 }

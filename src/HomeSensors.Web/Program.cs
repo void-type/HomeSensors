@@ -38,7 +38,9 @@ try
                 b => b.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName));
     });
 
-    services.AddScoped<TemperatureRepository>();
+    services.AddScoped<TemperatureReadingRepository>();
+    services.AddScoped<TemperatureDeviceRepository>();
+    services.AddScoped<TemperatureLocationRepository>();
 
     services.AddLazyCache();
     services.AddScoped<CachedTemperatureRepository>();

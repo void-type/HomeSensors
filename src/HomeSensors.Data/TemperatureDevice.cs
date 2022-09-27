@@ -6,6 +6,7 @@ public class TemperatureDevice
     public string DeviceModel { get; set; } = string.Empty;
     public string? DeviceId { get; set; } = string.Empty;
     public string? DeviceChannel { get; set; } = string.Empty;
+    public bool IsRetired { get; set; }
 
     public long? CurrentTemperatureLocationId { get; set; }
     public virtual TemperatureLocation? CurrentTemperatureLocation { get; set; }

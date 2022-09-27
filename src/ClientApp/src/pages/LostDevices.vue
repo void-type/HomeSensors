@@ -35,6 +35,7 @@ onMounted(async () => {
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-0">Lost devices</h1>
+    <p>Devices that don't have a location.</p>
     <div class="mt-4">
       <table :class="{ table: true, 'table-dark': useDarkMode }">
         <thead>

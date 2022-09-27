@@ -5,11 +5,13 @@ import type { InactiveDevice } from '@/api/data-contracts';
 import { onMounted, reactive } from 'vue';
 import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
+import { formatTemp } from '@/models/FormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
 
 const appStore = useAppStore();
 
-const { useDarkMode } = storeToRefs(appStore);
+const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
+const { tempUnit } = appStore;
 
 const data = reactive({
   inactiveDevices: [] as Array<InactiveDevice>,
@@ -32,6 +34,7 @@ onMounted(async () => {
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-0">Inactive devices</h1>
+    <p>Devices that haven't saved data within the last 2 hours.</p>
     <div class="mt-4">
       <table :class="{ table: true, 'table-dark': useDarkMode }">
         <thead>
@@ -51,7 +54,10 @@ onMounted(async () => {
             <td>{{ device.deviceId }}</td>
             <td>{{ device.deviceChannel }}</td>
             <td>{{ device.locationName }}</td>
-            <td>{{ DateHelpers.dateTimeShortForView(device.lastReading) }}</td>
+            <td>
+              {{ formatTemp(device.lastReadingTemperatureCelsius, useFahrenheit) }}{{ tempUnit }} on
+              {{ DateHelpers.dateTimeShortForView(device.lastReadingTime) }}
+            </td>
           </tr>
         </tbody>
       </table>

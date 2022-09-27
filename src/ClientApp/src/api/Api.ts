@@ -25,7 +25,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags Application
+   * @tags ApplicationApi
    * @name AppInfoList
    * @summary Get information to bootstrap the SPA client like application name and user data.
    * @request GET:/api/app/info
@@ -41,7 +41,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags Application
+   * @tags ApplicationApi
    * @name AppVersionList
    * @summary Get the version of the application.
    * @request GET:/api/app/version

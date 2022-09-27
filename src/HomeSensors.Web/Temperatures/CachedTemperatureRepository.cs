@@ -7,16 +7,18 @@ namespace HomeSensors.Web.Temperatures;
 
 public class CachedTemperatureRepository
 {
-    private readonly TemperatureRepository _inner;
+    private readonly TemperatureReadingRepository _readingRepository;
+    private readonly TemperatureDeviceRepository _deviceRepository;
     private readonly IAppCache _cache;
-    private readonly IDateTimeService _now;
+    private readonly IDateTimeService _dateTimeService;
     private readonly TimeSpan _defaultCacheTime = TimeSpan.FromSeconds(30);
 
-    public CachedTemperatureRepository(TemperatureRepository inner, IAppCache cache, IDateTimeService dateTimeService)
+    public CachedTemperatureRepository(TemperatureReadingRepository readingRepository, TemperatureDeviceRepository deviceRepository, IAppCache cache, IDateTimeService dateTimeService)
     {
-        _inner = inner;
+        _readingRepository = readingRepository;
+        _deviceRepository = deviceRepository;
         _cache = cache;
-        _now = dateTimeService;
+        _dateTimeService = dateTimeService;
     }
 
     /// <summary>
@@ -29,7 +31,7 @@ public class CachedTemperatureRepository
 
         if (forceRefresh)
         {
-            var item = await _inner.GetCurrentReadings();
+            var item = await _readingRepository.GetCurrentReadings();
 
             _cache.Add(cacheKey, item, new Microsoft.Extensions.Caching.Memory.MemoryCacheEntryOptions()
             {
@@ -41,7 +43,25 @@ public class CachedTemperatureRepository
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _inner.GetCurrentReadings();
+                return await _readingRepository.GetCurrentReadings();
+            });
+    }
+
+    public Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
+    {
+        // Prevent caching time spans that are incomplete
+        if (request.EndTime >= _dateTimeService.MomentWithOffset)
+        {
+            return _readingRepository.GetTimeSeries(request);
+        }
+
+        var cacheKey = $"{nameof(CachedTemperatureRepository)}.{nameof(GetTimeSeries)}|{request.StartTime:o}|{request.EndTime:o}";
+
+        return _cache.GetOrAddAsync(cacheKey,
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
+                return await _readingRepository.GetTimeSeries(request);
             });
     }
 
@@ -53,7 +73,7 @@ public class CachedTemperatureRepository
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _inner.GetInactiveDevices();
+                return await _deviceRepository.GetInactiveDevices();
             });
     }
 
@@ -65,25 +85,7 @@ public class CachedTemperatureRepository
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _inner.GetLostDevices();
-            });
-    }
-
-    public Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
-    {
-        // Prevent caching time spans that are incomplete
-        if (request.EndTime >= _now.MomentWithOffset)
-        {
-            return _inner.GetTimeSeries(request);
-        }
-
-        var cacheKey = $"{nameof(CachedTemperatureRepository)}.{nameof(GetTimeSeries)}|{request.StartTime:o}|{request.EndTime:o}";
-
-        return _cache.GetOrAddAsync(cacheKey,
-            async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _inner.GetTimeSeries(request);
+                return await _deviceRepository.GetLostDevices();
             });
     }
 }
