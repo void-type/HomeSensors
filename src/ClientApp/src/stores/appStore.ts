@@ -19,6 +19,7 @@ interface AppStoreState {
   version: string;
   useFahrenheit: boolean;
   useDarkMode: boolean;
+  showHumidity: boolean;
 }
 
 interface UserMessage {
@@ -27,10 +28,11 @@ interface UserMessage {
 
 const settingKeyDisableDarkMode = 'disableDarkMode';
 const settingKeyDisableFahrenheit = 'disableFahrenheit';
+const settingKeyDisableHumidity = 'disableHumidity';
 
 const initialDarkModeSetting = localStorage.getItem(settingKeyDisableDarkMode) === null;
 
-function setDarkMode(setting: boolean) {
+function setUseDarkMode(setting: boolean) {
   const { body } = document;
 
   if (setting) {
@@ -50,7 +52,7 @@ function setDarkMode(setting: boolean) {
   }
 }
 
-setDarkMode(initialDarkModeSetting);
+setUseDarkMode(initialDarkModeSetting);
 
 export const useAppStore = defineStore('app', {
   state: (): AppStoreState => ({
@@ -66,6 +68,7 @@ export const useAppStore = defineStore('app', {
     version: '',
     useFahrenheit: localStorage.getItem(settingKeyDisableFahrenheit) === null,
     useDarkMode: initialDarkModeSetting,
+    showHumidity: localStorage.getItem(settingKeyDisableHumidity) === null,
   }),
 
   getters: {
@@ -153,13 +156,21 @@ export const useAppStore = defineStore('app', {
       this.messages = messages.filter(notEmpty);
     },
 
-    setDarkMode,
+    setUseDarkMode,
 
-    setFahrenheit(setting: boolean) {
+    setUseFahrenheit(setting: boolean) {
       if (setting) {
         localStorage.removeItem(settingKeyDisableFahrenheit);
       } else {
         localStorage.setItem(settingKeyDisableFahrenheit, 'true');
+      }
+    },
+
+    setShowHumidity(setting: boolean) {
+      if (setting) {
+        localStorage.removeItem(settingKeyDisableHumidity);
+      } else {
+        localStorage.setItem(settingKeyDisableHumidity, 'true');
       }
     },
   },

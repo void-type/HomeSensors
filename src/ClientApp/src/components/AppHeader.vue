@@ -4,17 +4,22 @@ import { computed, watch } from 'vue';
 import useAppStore from '@/stores/appStore';
 
 const appStore = useAppStore();
-const { applicationName, user, useFahrenheit, useDarkMode } = storeToRefs(appStore);
+const { applicationName, user, useFahrenheit, useDarkMode, showHumidity } = storeToRefs(appStore);
 const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
 
 watch(
   () => [useDarkMode.value],
-  () => appStore.setDarkMode(useDarkMode.value)
+  () => appStore.setUseDarkMode(useDarkMode.value)
 );
 
 watch(
   () => [useFahrenheit.value],
-  () => appStore.setFahrenheit(useFahrenheit.value)
+  () => appStore.setUseFahrenheit(useFahrenheit.value)
+);
+
+watch(
+  () => [showHumidity.value],
+  () => appStore.setShowHumidity(showHumidity.value)
 );
 </script>
 
@@ -63,6 +68,17 @@ watch(
                   <input
                     id="useFahrenheit"
                     v-model="useFahrenheit"
+                    class="form-check-input"
+                    type="checkbox"
+                  />
+                </div>
+              </li>
+              <li class="dropdown-item">
+                <div class="form-check form-switch" title="Toggle Humidity">
+                  <label class="form-check-label" for="showHumidity">%</label>
+                  <input
+                    id="showHumidity"
+                    v-model="showHumidity"
                     class="form-check-input"
                     type="checkbox"
                   />

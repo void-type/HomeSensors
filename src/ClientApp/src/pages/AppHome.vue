@@ -16,7 +16,7 @@ Chart.register(...registerables);
 
 const appStore = useAppStore();
 
-const { useFahrenheit, useDarkMode, tempUnit } = storeToRefs(appStore);
+const { useFahrenheit, useDarkMode, tempUnit, showHumidity } = storeToRefs(appStore);
 
 const initialTime = moment().startOf('minute');
 
@@ -250,15 +250,18 @@ watch(
       >
         <div class="card text-center">
           <div class="card-body">
-            <h5 class="mb-2">
+            <div class="h4 mb-2">
+              {{ currentTemp.location }}
+            </div>
+            <div class="h3">
               <span class="fw-bold"
                 >{{ formatTemp(currentTemp.temperatureCelsius, useFahrenheit) }}{{ tempUnit }}</span
               >
-              {{ currentTemp.location }}
-            </h5>
-            <p class="mb-2">
+              <span class="ps-3" v-if="currentTemp.humidity !== null && showHumidity">{{ currentTemp.humidity }}%</span>
+            </div>
+            <div>
               <small class="fw-light">{{ moment(currentTemp.time).format('ll HH:mm') }}</small>
-            </p>
+            </div>
           </div>
         </div>
       </div>

@@ -31,6 +31,9 @@ export interface GraphCurrentReading {
   /** @format double */
   temperatureCelsius?: number | null;
 
+  /** @format double */
+  humidity?: number | null;
+
   /** @format date-time */
   time?: string;
 }

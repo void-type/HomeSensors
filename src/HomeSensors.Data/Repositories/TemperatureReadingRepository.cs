@@ -30,7 +30,7 @@ public class TemperatureReadingRepository
             .ToListAsync();
 
         return data
-            .ConvertAll(x => new GraphCurrentReading(x.Location, x.Reading!.TemperatureCelsius, x.Reading.Time));
+            .ConvertAll(x => new GraphCurrentReading(x.Location, x.Reading!.TemperatureCelsius, x.Reading!.Humidity, x.Reading.Time));
     }
 
     public async Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
