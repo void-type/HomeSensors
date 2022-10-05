@@ -1,4 +1,4 @@
-using HomeSensors.Data.Repositories.Models;
+﻿using HomeSensors.Data.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HomeSensors.Data.Repositories;
@@ -12,38 +12,48 @@ public class TemperatureLocationRepository
         _data = data;
     }
 
-    public async Task<List<LimitCheckResult>> CheckLimits(DateTimeOffset lastCheck)
+    public async Task<List<CheckLimitResult>> CheckLimits(DateTimeOffset lastCheck)
     {
         var locations = await _data.TemperatureLocations.ToListAsync();
 
-        var results = new List<LimitCheckResult>();
+        var results = new List<CheckLimitResult>();
 
         foreach (var location in locations)
         {
             var dbReadingsSince = _data.TemperatureReadings
                 .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id);
 
-            TemperatureReading? minimum = null;
+            var minimum = await GetMinimum(location, dbReadingsSince);
 
-            if (location.MinTemperatureLimit.HasValue)
-            {
-                minimum = await dbReadingsSince
-                    .OrderBy(x => x.TemperatureCelsius)
-                    .FirstOrDefaultAsync(x => x.TemperatureCelsius < location.MinTemperatureLimit);
-            }
+            var maximum = await GetMaximum(location, dbReadingsSince);
 
-            TemperatureReading? maximum = null;
-
-            if (location.MaxTemperatureLimit.HasValue)
-            {
-                maximum = await dbReadingsSince
-                    .OrderByDescending(x => x.TemperatureCelsius)
-                    .FirstOrDefaultAsync(x => x.TemperatureCelsius > location.MaxTemperatureLimit);
-            }
-
-            results.Add(new LimitCheckResult(location, minimum, maximum));
+            results.Add(new CheckLimitResult(location, minimum, maximum));
         }
 
         return results;
+    }
+
+    private static async Task<TemperatureReading?> GetMinimum(TemperatureLocation location, IQueryable<TemperatureReading> dbReadingsSince)
+    {
+        if (!location.MinTemperatureLimit.HasValue)
+        {
+            return null;
+        }
+
+        return await dbReadingsSince
+            .OrderBy(x => x.TemperatureCelsius)
+            .FirstOrDefaultAsync(x => x.TemperatureCelsius < location.MinTemperatureLimit);
+    }
+
+    private static async Task<TemperatureReading?> GetMaximum(TemperatureLocation location, IQueryable<TemperatureReading> dbReadingsSince)
+    {
+        if (!location.MaxTemperatureLimit.HasValue)
+        {
+            return null;
+        }
+
+        return await dbReadingsSince
+            .OrderByDescending(x => x.TemperatureCelsius)
+            .FirstOrDefaultAsync(x => x.TemperatureCelsius > location.MaxTemperatureLimit);
     }
 }

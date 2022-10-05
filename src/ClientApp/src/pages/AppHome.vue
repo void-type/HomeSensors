@@ -257,7 +257,9 @@ watch(
               <span class="fw-bold"
                 >{{ formatTemp(currentTemp.temperatureCelsius, useFahrenheit) }}{{ tempUnit }}</span
               >
-              <span class="ps-3" v-if="currentTemp.humidity !== null && showHumidity">{{ currentTemp.humidity }}%</span>
+              <span v-if="currentTemp.humidity !== null && showHumidity" class="ps-3"
+                >{{ currentTemp.humidity }}%</span
+              >
             </div>
             <div>
               <small class="fw-light">{{ moment(currentTemp.time).format('ll HH:mm') }}</small>

@@ -65,8 +65,10 @@ try
         ServiceLifetime.Scoped,
         typeof(GetWebClientInfo).Assembly);
 
-    services.AddHostedService<CurrentReadingsWorker>();
     services.AddSignalR();
+
+    services.AddHostedService<CurrentReadingsWorker>();
+    services.AddHostedService<CheckLimitsWorker>();
 
     var app = builder.Build();
 
