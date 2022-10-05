@@ -51,6 +51,6 @@ public class CheckLimitsWorker : BackgroundService
 
     private static string GetCelsiusString(TemperatureReading reading)
     {
-        return reading.TemperatureCelsius?.ToString("{0.#}°C") ?? "null";
+        return reading.TemperatureCelsius?.ToString("0.#°C") ?? "null";
     }
 }

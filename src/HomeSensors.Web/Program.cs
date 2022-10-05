@@ -22,6 +22,8 @@ Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(config)
     .CreateLogger();
 
+builder.Host.UseSerilog();
+
 try
 {
     Log.Information("Configuring host for {Name} v{Version}", ThisAssembly.AssemblyTitle, ThisAssembly.AssemblyInformationalVersion);
@@ -75,6 +77,7 @@ try
     app.UseHttpsRedirection();
     app.UseStaticFiles();
     app.UseRouting();
+    app.UseSerilogRequestLogging();
     app.UseAuthorization();
     app.UseSwagger();
     app.UseSwaggerUI(c => c.DocumentTitle = env.ApplicationName + " API");
