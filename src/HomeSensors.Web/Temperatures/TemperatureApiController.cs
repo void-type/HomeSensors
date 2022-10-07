@@ -56,7 +56,7 @@ public class TemperatureApiController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetTimeSeries([FromBody] GraphTimeSeriesRequest request)
     {
-        var series = await _temperatureRepository.GetTimeSeries(request);
+        var series = await _temperatureRepository.GetTimeSeriesReadings(request);
         return HttpResponder.Respond(series);
     }
 }

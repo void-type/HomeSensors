@@ -1,5 +1,5 @@
 ﻿using HomeSensors.Data;
-using HomeSensors.Service.Models;
+using HomeSensors.Service.Mqtt;
 using Microsoft.EntityFrameworkCore;
 using MQTTnet;
 using MQTTnet.Client;
@@ -12,11 +12,11 @@ namespace HomeSensors.Service.Workers;
 public class Get433MhzTemperaturesWorker : BackgroundService
 {
     private readonly ILogger<Get433MhzTemperaturesWorker> _logger;
-    private readonly MqttConfiguration _configuration;
+    private readonly MqttSettings _configuration;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
 
-    public Get433MhzTemperaturesWorker(ILogger<Get433MhzTemperaturesWorker> logger, MqttConfiguration configuration, IServiceScopeFactory scopeFactory)
+    public Get433MhzTemperaturesWorker(ILogger<Get433MhzTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
         _configuration = configuration;

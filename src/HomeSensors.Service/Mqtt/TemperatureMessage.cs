@@ -1,4 +1,4 @@
-﻿namespace HomeSensors.Service.Models;
+﻿namespace HomeSensors.Service.Mqtt;
 
 public class TemperatureMessage
 {

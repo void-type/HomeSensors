@@ -1,6 +1,8 @@
 ﻿using HomeSensors.Data.Repositories;
 using HomeSensors.Data.Repositories.Models;
 using LazyCache;
+using Microsoft.Extensions.Caching.Memory;
+using System.Runtime.CompilerServices;
 using VoidCore.Model.Time;
 
 namespace HomeSensors.Web.Temperatures;
@@ -27,13 +29,13 @@ public class CachedTemperatureRepository
     /// <param name="forceRefresh">When true, the cache will be refreshed.</param>
     public async Task<List<GraphCurrentReading>> GetCurrentReadings(bool forceRefresh = false)
     {
-        var cacheKey = $"{nameof(CachedTemperatureRepository)}.{nameof(GetCurrentReadings)}";
+        var cacheKey = GetCacheKeyPrefix();
 
         if (forceRefresh)
         {
-            var item = await _readingRepository.GetCurrentReadings();
+            var item = await _readingRepository.GetCurrent();
 
-            _cache.Add(cacheKey, item, new Microsoft.Extensions.Caching.Memory.MemoryCacheEntryOptions()
+            _cache.Add(cacheKey, item, new MemoryCacheEntryOptions()
             {
                 AbsoluteExpirationRelativeToNow = _defaultCacheTime,
             });
@@ -43,11 +45,11 @@ public class CachedTemperatureRepository
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _readingRepository.GetCurrentReadings();
+                return await _readingRepository.GetCurrent();
             });
     }
 
-    public Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
+    public Task<List<GraphTimeSeries>> GetTimeSeriesReadings(GraphTimeSeriesRequest request)
     {
         // Prevent caching time spans that are incomplete
         if (request.EndTime >= _dateTimeService.MomentWithOffset)
@@ -55,7 +57,7 @@ public class CachedTemperatureRepository
             return _readingRepository.GetTimeSeries(request);
         }
 
-        var cacheKey = $"{nameof(CachedTemperatureRepository)}.{nameof(GetTimeSeries)}|{request.StartTime:o}|{request.EndTime:o}";
+        var cacheKey = $"{GetCacheKeyPrefix()}|{request.StartTime:o}|{request.EndTime:o}";
 
         return _cache.GetOrAddAsync(cacheKey,
             async entry =>
@@ -67,25 +69,30 @@ public class CachedTemperatureRepository
 
     public Task<List<InactiveDevice>> GetInactiveDevices()
     {
-        var cacheKey = $"{nameof(CachedTemperatureRepository)}.{nameof(GetInactiveDevices)}";
+        var cacheKey = GetCacheKeyPrefix();
 
         return _cache.GetOrAddAsync(cacheKey,
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _deviceRepository.GetInactiveDevices();
+                return await _deviceRepository.GetInactive();
             });
     }
 
     public Task<List<LostDevice>> GetLostDevices()
     {
-        var cacheKey = $"{nameof(CachedTemperatureRepository)}.{nameof(GetLostDevices)}";
+        var cacheKey = GetCacheKeyPrefix();
 
         return _cache.GetOrAddAsync(cacheKey,
             async entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _deviceRepository.GetLostDevices();
+                return await _deviceRepository.GetLost();
             });
+    }
+
+    private string GetCacheKeyPrefix([CallerMemberName] string caller = "unknown")
+    {
+        return $"{nameof(CachedTemperatureRepository)}.{caller}";
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace HomeSensors.Service.Models;
+﻿namespace HomeSensors.Service.Mqtt;
 
-public class MqttConfiguration
+public class MqttSettings
 {
     public string Server { get; set; } = string.Empty;
     public int? Port { get; set; }

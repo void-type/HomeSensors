@@ -1,19 +1,37 @@
 ﻿using HomeSensors.Data;
-using HomeSensors.Service.Models;
+using HomeSensors.Data.Repositories;
+using HomeSensors.Service.Emailing;
+using HomeSensors.Service.Mqtt;
 using HomeSensors.Service.Workers;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using VoidCore.Model.Configuration;
+using VoidCore.Model.Emailing;
+using VoidCore.Model.Time;
 
 var host = Host.CreateDefaultBuilder(args)
     .UseWindowsService()
     .UseSerilog()
     .ConfigureServices((context, services) =>
     {
-        var mqttClient = context.Configuration.GetSection("Mqtt").Get<MqttConfiguration>();
-        services.AddSingleton(mqttClient);
+        services.AddSettingsSingleton<ApplicationSettings>(context.Configuration, true).Validate();
+        services.AddSettingsSingleton<MqttSettings>(context.Configuration);
+        services.AddSettingsSingleton<NotificationsSettings>(context.Configuration);
+
         services.AddDbContext<HomeSensorsContext>(options => options
             .UseSqlServer("Name=HomeSensors", b => b.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName)));
+
+        services.AddScoped<TemperatureReadingRepository>();
+        services.AddScoped<TemperatureDeviceRepository>();
+        services.AddScoped<TemperatureLocationRepository>();
+
+        services.AddSingleton<IEmailFactory, HtmlEmailFactory>();
+        services.AddSingleton<IEmailSender, SmtpEmailer>();
+        services.AddSingleton<EmailNotificationService>();
+        services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
+
         services.AddHostedService<Get433MhzTemperaturesWorker>();
+        services.AddHostedService<CheckTemperatureLimitsWorker>();
     })
     .Build();
 

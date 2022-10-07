@@ -15,7 +15,7 @@ public class TemperatureReadingRepository
         _dateTimeService = dateTimeService;
     }
 
-    public async Task<List<GraphCurrentReading>> GetCurrentReadings()
+    public async Task<List<GraphCurrentReading>> GetCurrent()
     {
         var data = await _data.TemperatureLocations
             .Include(x => x.TemperatureReadings)
@@ -68,7 +68,7 @@ public class TemperatureReadingRepository
             .ToList()
             .ConvertAll(locationGroup =>
             {
-                var points = GetReadingAveragesForIntervals(locationGroup, intervalMinutes);
+                var points = GetAveragesForIntervals(locationGroup, intervalMinutes);
 
                 var values = locationGroup.Select(x => x.TemperatureCelsius);
 
@@ -76,7 +76,7 @@ public class TemperatureReadingRepository
             });
     }
 
-    private static List<GraphPoint> GetReadingAveragesForIntervals(IGrouping<string, TemperatureReading> locationGroup, int intervalMinutes)
+    private static List<GraphPoint> GetAveragesForIntervals(IGrouping<string, TemperatureReading> locationGroup, int intervalMinutes)
     {
         if (intervalMinutes == 0)
         {

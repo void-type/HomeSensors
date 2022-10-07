@@ -18,7 +18,7 @@ public class TemperatureDeviceRepository
     /// <summary>
     /// Devices that haven't saved any data in 2 hours.
     /// </summary>
-    public async Task<List<InactiveDevice>> GetInactiveDevices()
+    public async Task<List<InactiveDevice>> GetInactive()
     {
         var data = await _data.TemperatureDevices
             .Include(x => x.CurrentTemperatureLocation)
@@ -54,7 +54,7 @@ public class TemperatureDeviceRepository
     /// <summary>
     /// Devices that have no location.
     /// </summary>
-    public async Task<List<LostDevice>> GetLostDevices()
+    public async Task<List<LostDevice>> GetLost()
     {
         var data = await _data.TemperatureDevices
             .Include(x => x.TemperatureReadings)

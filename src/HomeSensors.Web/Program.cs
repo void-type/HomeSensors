@@ -31,24 +31,7 @@ try
     services.AddSettingsSingleton<WebApplicationSettings>(config, true).Validate();
 
     services.AddControllersWithViews();
-
-    // Store migrations in the Data project
-    services.AddDbContext<HomeSensorsContext>(options =>
-    {
-        options
-            .UseSqlServer("Name=HomeSensors",
-                b => b.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName));
-    });
-
-    services.AddScoped<TemperatureReadingRepository>();
-    services.AddScoped<TemperatureDeviceRepository>();
-    services.AddScoped<TemperatureLocationRepository>();
-
-    services.AddLazyCache();
-    services.AddScoped<CachedTemperatureRepository>();
-
     services.AddApiExceptionFilter();
-
     services.AddHttpContextAccessor();
     services.AddEndpointsApiExplorer();
     services.AddSwaggerGen(c =>
@@ -59,18 +42,23 @@ try
         c.IncludeXmlComments(xmlPath);
     });
 
-    services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
-    services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
+    services.AddDbContext<HomeSensorsContext>(options => options
+        .UseSqlServer("Name=HomeSensors", b => b.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName)));
 
-    // Auto-register Domain Events
-    services.AddDomainEvents(
-        ServiceLifetime.Scoped,
-        typeof(GetWebClientInfo).Assembly);
+    services.AddScoped<TemperatureReadingRepository>();
+    services.AddScoped<TemperatureDeviceRepository>();
+    services.AddScoped<TemperatureLocationRepository>();
+
+    services.AddLazyCache();
+    services.AddScoped<CachedTemperatureRepository>();
+
+    services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
+    services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
+
+    services.AddDomainEvents(ServiceLifetime.Scoped, typeof(GetWebClientInfo).Assembly);
 
     services.AddSignalR();
-
     services.AddHostedService<CurrentReadingsWorker>();
-    services.AddHostedService<CheckLimitsWorker>();
 
     var app = builder.Build();
 
