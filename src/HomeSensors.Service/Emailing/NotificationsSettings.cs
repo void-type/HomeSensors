@@ -15,6 +15,8 @@ public class NotificationsSettings
     public bool SmtpUseAuthentication { get; init; }
     public string SmtpUserName { get; init; } = string.Empty;
     public string SmtpPassword { get; init; } = string.Empty;
+    public string SignatureName { get; set; } = string.Empty;
+    public string SignatureLink { get; set; } = string.Empty;
 
     /// <summary>
     /// Check the state of this configuration and throw an exception if it is invalid.

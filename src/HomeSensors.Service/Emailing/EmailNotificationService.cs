@@ -1,4 +1,5 @@
 ﻿using VoidCore.Model.Emailing;
+using VoidCore.Model.Text;
 
 namespace HomeSensors.Service.Emailing;
 
@@ -25,6 +26,8 @@ public class EmailNotificationService
             configure.Invoke(e);
 
             e.AddRecipients(_notificationsSettings.EmailRecipients ?? Enumerable.Empty<string>());
+            e.AddLine();
+            e.AddLine($"Sent from {TextHelpers.Link(_notificationsSettings.SignatureName, _notificationsSettings.SignatureLink)}");
         });
 
         return _emailSender.SendEmail(newEmail, cancellationToken);
