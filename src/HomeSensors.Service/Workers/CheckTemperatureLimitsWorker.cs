@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Data;
 using HomeSensors.Data.Repositories;
+using HomeSensors.Data.Repositories.Models;
 using HomeSensors.Service.Emailing;
 using VoidCore.Model.Time;
 
@@ -10,7 +11,9 @@ namespace HomeSensors.Service.Workers;
 /// </summary>
 public class CheckTemperatureLimitsWorker : BackgroundService
 {
-    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(20);
+    private const int MinutesBetweenTicks = 20;
+
+    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(MinutesBetweenTicks);
     private readonly ILogger<CheckTemperatureLimitsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDateTimeService _dateTimeService;
@@ -33,45 +36,64 @@ public class CheckTemperatureLimitsWorker : BackgroundService
             using var scope = _scopeFactory.CreateScope();
             var locationRepository = scope.ServiceProvider.GetRequiredService<TemperatureLocationRepository>();
 
-            var results = await locationRepository.CheckLimits(_dateTimeService.MomentWithOffset.Subtract(_betweenTicks));
+            var sinceLastTick = _dateTimeService.MomentWithOffset.Subtract(_betweenTicks);
 
-            foreach (var result in results.Where(x => x.IsFailed))
+            var failedResults = (await locationRepository.CheckLimits(sinceLastTick))
+                .Where(x => x.IsFailed);
+
+            foreach (var failedResult in failedResults)
             {
-                if (result.MinReading is not null)
+                if (failedResult.MinReading is not null)
                 {
-                    var reading = result.MinReading;
-                    var tempString = GetCelsiusString(reading);
-
-                    _logger.LogWarning("Temperature limit check alert: {Location} was as cold as {MinReading} at {Time}.", result.Location.Name, tempString, reading.Time);
-
-                    await _emailNotificationService.Send(e =>
-                    {
-                        e.SetSubject($"{result.Location.Name} is cold ({tempString})");
-
-                        e.AddLine($"Temperature limit check alert: {result.Location.Name} was as cold as {tempString} at {reading.Time}.");
-                    }, stoppingToken);
+                    await NotifyLimitExceeded(failedResult, "minimum", "cold", failedResult.MinReading, failedResult.Location.MinTemperatureLimit, stoppingToken);
                 }
 
-                if (result.MaxReading is not null)
+                if (failedResult.MaxReading is not null)
                 {
-                    var reading = result.MaxReading;
-                    var tempString = GetCelsiusString(reading);
-
-                    _logger.LogWarning("Temperature limit check alert: {Location} was as hot as {MaxReading} at {Time}.", result.Location.Name, tempString, reading.Time);
-
-                    await _emailNotificationService.Send(e =>
-                    {
-                        e.SetSubject($"{result.Location.Name} is hot ({tempString})");
-
-                        e.AddLine($"Temperature limit check alert: {result.Location.Name} was as hot as {tempString} at {reading.Time}.");
-                    }, stoppingToken);
+                    await NotifyLimitExceeded(failedResult, "maximum", "hot", failedResult.MaxReading, failedResult.Location.MaxTemperatureLimit, stoppingToken);
                 }
             }
         }
     }
 
-    private static string GetCelsiusString(TemperatureReading reading)
+    private Task NotifyLimitExceeded(CheckLimitResult failedResult, string minOrMax, string hotOrCold, TemperatureReading reading, double? limit, CancellationToken stoppingToken)
     {
-        return reading.TemperatureCelsius?.ToString("0.#°C") ?? "null";
+        var locationName = failedResult.Location.Name;
+        var time = reading.Time;
+        var readingTempString = GetDualTempString(reading.TemperatureCelsius);
+        var limitTempString = GetDualTempString(limit);
+
+        _logger.LogWarning("Temperature limit exceeded: {LocationName} was as {HotOrCold} as {Reading} at {Time}. Limit of {Limit}.", locationName, hotOrCold, readingTempString, time, limitTempString);
+
+        return _emailNotificationService.Send(e =>
+        {
+            e.SetSubject($"{locationName} is {hotOrCold} ({readingTempString})");
+
+            e.AddLine($"{locationName} exceeded the {minOrMax} temperature limit of {limitTempString}.");
+            e.AddLine();
+            e.AddLine($"Temperature: {readingTempString}");
+            e.AddLine($"Time: {time}");
+        }, stoppingToken);
+    }
+
+    private static string FormatTemp(double tempCelsius, bool useFahrenheit = false)
+    {
+        var decimals = useFahrenheit ? 0 : 1;
+        var convertedTemp = useFahrenheit ? (tempCelsius * 1.8) + 32 : tempCelsius;
+        var num = Math.Round(convertedTemp, decimals, MidpointRounding.AwayFromZero);
+
+        var unit = useFahrenheit ? "°F" : "°C";
+
+        return $"{num}{unit}";
+    }
+
+    private static string GetDualTempString(double? tempCelsius)
+    {
+        if (!tempCelsius.HasValue)
+        {
+            return "null";
+        }
+
+        return $"{FormatTemp(tempCelsius.Value, true)} / {FormatTemp(tempCelsius.Value)}";
     }
 }
