@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Data.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
+using VoidCore.Model.Responses.Collections;
 
 namespace HomeSensors.Data.Repositories;
 
@@ -10,6 +11,15 @@ public class TemperatureLocationRepository
     public TemperatureLocationRepository(HomeSensorsContext data)
     {
         _data = data;
+    }
+
+    public Task<List<TemperatureLocation>> GetAll(PaginationOptions paginationOptions)
+    {
+        return _data.TemperatureLocations
+             .AsNoTracking()
+             .OrderBy(x => x.Name)
+             .GetPage(paginationOptions)
+             .ToListAsync();
     }
 
     public async Task<List<CheckLimitResult>> CheckLimits(DateTimeOffset lastCheck)
