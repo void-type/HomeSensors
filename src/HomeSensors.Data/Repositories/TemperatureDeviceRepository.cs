@@ -21,6 +21,7 @@ public class TemperatureDeviceRepository
     public async Task<List<InactiveDevice>> GetInactive()
     {
         var data = await _data.TemperatureDevices
+            .AsNoTracking()
             .Include(x => x.CurrentTemperatureLocation)
             .Include(x => x.TemperatureReadings)
             .OrderBy(x => x.DeviceModel)
@@ -57,6 +58,7 @@ public class TemperatureDeviceRepository
     public async Task<List<LostDevice>> GetLost()
     {
         var data = await _data.TemperatureDevices
+            .AsNoTracking()
             .Include(x => x.TemperatureReadings)
             .OrderBy(x => x.DeviceModel)
             .ThenBy(x => x.DeviceId)

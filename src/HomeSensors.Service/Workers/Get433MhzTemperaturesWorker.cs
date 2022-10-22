@@ -59,12 +59,12 @@ public class Get433MhzTemperaturesWorker : BackgroundService
             _logger.LogWarning("Device not found in database. Creating new device. ({Model}/{Id}/{Channel})", message.Model, message.Id, message.Channel);
 
             var savedDevice = dbContext.TemperatureDevices
-            .Add(new TemperatureDevice
-            {
-                DeviceModel = message.Model,
-                DeviceId = message.Id,
-                DeviceChannel = message.Channel
-            });
+                .Add(new TemperatureDevice
+                {
+                    DeviceModel = message.Model,
+                    DeviceId = message.Id,
+                    DeviceChannel = message.Channel
+                });
 
             await dbContext.SaveChangesAsync();
 
@@ -155,10 +155,8 @@ public class Get433MhzTemperaturesWorker : BackgroundService
 
         var clientOptions = clientOptionsBuilder.Build();
 
-        var managedClientOptions = new ManagedMqttClientOptionsBuilder()
+        return new ManagedMqttClientOptionsBuilder()
             .WithClientOptions(clientOptions)
             .Build();
-
-        return managedClientOptions;
     }
 }

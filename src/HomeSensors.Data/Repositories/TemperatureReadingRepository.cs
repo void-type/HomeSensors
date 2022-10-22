@@ -18,6 +18,7 @@ public class TemperatureReadingRepository
     public async Task<List<GraphCurrentReading>> GetCurrent()
     {
         var data = await _data.TemperatureLocations
+            .AsNoTracking()
             .Include(x => x.TemperatureReadings)
             .OrderBy(x => x.Name != "Outside")
             .ThenBy(x => x.Name)
@@ -36,6 +37,7 @@ public class TemperatureReadingRepository
     public async Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
     {
         var dbReadings = await _data.TemperatureReadings
+            .AsNoTracking()
             .Include(x => x.TemperatureLocation)
             .Where(x => x.TemperatureLocationId != null)
             .Where(x => x.Time > request.StartTime && x.Time < request.EndTime)

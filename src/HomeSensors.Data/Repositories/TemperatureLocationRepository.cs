@@ -14,13 +14,16 @@ public class TemperatureLocationRepository
 
     public async Task<List<CheckLimitResult>> CheckLimits(DateTimeOffset lastCheck)
     {
-        var locations = await _data.TemperatureLocations.ToListAsync();
+        var locations = await _data.TemperatureLocations
+            .AsNoTracking()
+            .ToListAsync();
 
         var results = new List<CheckLimitResult>();
 
         foreach (var location in locations)
         {
             var dbReadingsSince = _data.TemperatureReadings
+                .AsNoTracking()
                 .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id);
 
             var minimum = await GetMinimum(location, dbReadingsSince);
