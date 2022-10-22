@@ -50,9 +50,9 @@ public class TemperatureReadingRepository
         }
 
         // Depending on the total span of data returned, we will create averages over intervals to prevent overloading the client with too many data points.
-        var dbSpan = (dbReadings.Max(x => x.Time) - dbReadings.Min(x => x.Time)).TotalHours;
+        var dbSpanHours = (dbReadings.Max(x => x.Time) - dbReadings.Min(x => x.Time)).TotalHours;
 
-        var intervalMinutes = dbSpan switch
+        var intervalMinutes = dbSpanHours switch
         {
             > 3 * 24 => 60,
             > 2 * 24 => 30,
@@ -68,21 +68,21 @@ public class TemperatureReadingRepository
             .OrderBy(x => x.Key != "Outside")
             .ThenBy(x => x.Key)
             .ToList()
-            .ConvertAll(locationGroup =>
+            .ConvertAll(readingsForLocation =>
             {
-                var points = GetAveragesForIntervals(locationGroup, intervalMinutes);
+                var points = GetAveragesForIntervals(readingsForLocation, intervalMinutes);
 
-                var values = locationGroup.Select(x => x.TemperatureCelsius);
+                var values = readingsForLocation.Select(x => x.TemperatureCelsius);
 
-                return new GraphTimeSeries(locationGroup.Key, values.Min(), values.Max(), values.Average(), points);
+                return new GraphTimeSeries(readingsForLocation.Key, values.Min(), values.Max(), values.Average(), points);
             });
     }
 
-    private static List<GraphPoint> GetAveragesForIntervals(IGrouping<string, TemperatureReading> locationGroup, int intervalMinutes)
+    private static List<GraphPoint> GetAveragesForIntervals(IGrouping<string, TemperatureReading> readingsForLocation, int intervalMinutes)
     {
         if (intervalMinutes == 0)
         {
-            return locationGroup
+            return readingsForLocation
                 .Select(reading => new GraphPoint
                 {
                     Time = reading.Time,
@@ -91,7 +91,7 @@ public class TemperatureReadingRepository
                 .ToList();
         }
 
-        return locationGroup
+        return readingsForLocation
             .GroupBy(y =>
             {
                 var time = y.Time.AddMilliseconds(-y.Time.Millisecond - (1000 * y.Time.Second));
