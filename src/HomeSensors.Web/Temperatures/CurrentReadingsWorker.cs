@@ -3,7 +3,7 @@
 namespace HomeSensors.Web.Temperatures;
 
 /// <summary>
-/// This worker broadcasts all of the TemperatureHub SignalR clients with current readings.
+/// This worker broadcasts current readings to all of the TemperatureHub SignalR clients.
 /// </summary>
 public class CurrentReadingsWorker : BackgroundService
 {
