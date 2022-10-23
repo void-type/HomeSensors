@@ -1,4 +1,5 @@
-﻿using HomeSensors.Data.Repositories.Models;
+﻿using HomeSensors.Data.Repositories;
+using HomeSensors.Data.Repositories.Models;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -13,11 +14,13 @@ namespace HomeSensors.Web.Temperatures;
 [ApiRoute("temperatures")]
 public class TemperatureApiController : ControllerBase
 {
-    private readonly CachedTemperatureRepository _temperatureRepository;
+    private readonly CachedTemperatureRepository _cachedTemperatureRepository;
+    private readonly TemperatureDeviceRepository _deviceRepository;
 
-    public TemperatureApiController(CachedTemperatureRepository temperatureRepository)
+    public TemperatureApiController(CachedTemperatureRepository temperatureRepository, TemperatureDeviceRepository temperatureDeviceRepository)
     {
-        _temperatureRepository = temperatureRepository;
+        _cachedTemperatureRepository = temperatureRepository;
+        _deviceRepository = temperatureDeviceRepository;
     }
 
     [HttpPost]
@@ -26,27 +29,7 @@ public class TemperatureApiController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetCurrentReadings()
     {
-        var readings = await _temperatureRepository.GetCurrentReadings();
-        return HttpResponder.Respond(readings);
-    }
-
-    [HttpPost]
-    [Route("inactive-devices")]
-    [ProducesResponseType(typeof(List<InactiveDevice>), 200)]
-    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetInactiveDevices()
-    {
-        var readings = await _temperatureRepository.GetInactiveDevices();
-        return HttpResponder.Respond(readings);
-    }
-
-    [HttpPost]
-    [Route("lost-devices")]
-    [ProducesResponseType(typeof(List<LostDevice>), 200)]
-    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetLostDevices()
-    {
-        var readings = await _temperatureRepository.GetLostDevices();
+        var readings = await _cachedTemperatureRepository.GetCurrentReadings();
         return HttpResponder.Respond(readings);
     }
 
@@ -56,7 +39,27 @@ public class TemperatureApiController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetTimeSeries([FromBody] GraphTimeSeriesRequest request)
     {
-        var series = await _temperatureRepository.GetTimeSeriesReadings(request);
+        var series = await _cachedTemperatureRepository.GetTimeSeriesReadings(request);
         return HttpResponder.Respond(series);
+    }
+
+    [HttpPost]
+    [Route("inactive-devices")]
+    [ProducesResponseType(typeof(List<InactiveDevice>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> GetInactiveDevices()
+    {
+        var readings = await _deviceRepository.GetInactive();
+        return HttpResponder.Respond(readings);
+    }
+
+    [HttpPost]
+    [Route("lost-devices")]
+    [ProducesResponseType(typeof(List<LostDevice>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> GetLostDevices()
+    {
+        var readings = await _deviceRepository.GetLost();
+        return HttpResponder.Respond(readings);
     }
 }

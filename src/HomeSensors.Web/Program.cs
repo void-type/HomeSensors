@@ -1,6 +1,7 @@
 ﻿using HomeSensors.Data;
 using HomeSensors.Data.Repositories;
 using HomeSensors.Web.Auth;
+using HomeSensors.Web.Caching;
 using HomeSensors.Web.Temperatures;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -29,6 +30,7 @@ try
     Log.Information("Configuring host for {Name} v{Version}", ThisAssembly.AssemblyTitle, ThisAssembly.AssemblyInformationalVersion);
 
     services.AddSettingsSingleton<WebApplicationSettings>(config, true).Validate();
+    services.AddSettingsSingleton<CachingSettings>(config);
 
     services.AddControllersWithViews();
     services.AddApiExceptionFilter();

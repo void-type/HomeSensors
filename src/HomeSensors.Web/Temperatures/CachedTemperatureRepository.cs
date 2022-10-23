@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Data.Repositories;
 using HomeSensors.Data.Repositories.Models;
+using HomeSensors.Web.Caching;
 using LazyCache;
 using Microsoft.Extensions.Caching.Memory;
 using System.Runtime.CompilerServices;
@@ -10,17 +11,18 @@ namespace HomeSensors.Web.Temperatures;
 public class CachedTemperatureRepository
 {
     private readonly TemperatureReadingRepository _readingRepository;
-    private readonly TemperatureDeviceRepository _deviceRepository;
     private readonly IAppCache _cache;
     private readonly IDateTimeService _dateTimeService;
-    private readonly TimeSpan _defaultCacheTime = TimeSpan.FromSeconds(30);
+    private readonly TimeSpan _defaultCacheTime;
+    private readonly TimeSpan _currentReadingsCacheTime;
 
-    public CachedTemperatureRepository(TemperatureReadingRepository readingRepository, TemperatureDeviceRepository deviceRepository, IAppCache cache, IDateTimeService dateTimeService)
+    public CachedTemperatureRepository(TemperatureReadingRepository readingRepository, IAppCache cache, IDateTimeService dateTimeService, CachingSettings cachingSettings)
     {
         _readingRepository = readingRepository;
-        _deviceRepository = deviceRepository;
         _cache = cache;
         _dateTimeService = dateTimeService;
+        _defaultCacheTime = TimeSpan.FromMinutes(cachingSettings.DefaultMinutes);
+        _currentReadingsCacheTime = TimeSpan.FromSeconds(cachingSettings.CurrentReadingsSeconds);
     }
 
     /// <summary>
@@ -37,14 +39,16 @@ public class CachedTemperatureRepository
 
             _cache.Add(cacheKey, item, new MemoryCacheEntryOptions()
             {
-                AbsoluteExpirationRelativeToNow = _defaultCacheTime,
+                AbsoluteExpirationRelativeToNow = _currentReadingsCacheTime,
             });
+
+            return item;
         }
 
         return await _cache.GetOrAddAsync(cacheKey,
             async entry =>
             {
-                entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
+                entry.AbsoluteExpirationRelativeToNow = _currentReadingsCacheTime;
                 return await _readingRepository.GetCurrent();
             });
     }
@@ -64,30 +68,6 @@ public class CachedTemperatureRepository
             {
                 entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
                 return await _readingRepository.GetTimeSeries(request);
-            });
-    }
-
-    public Task<List<InactiveDevice>> GetInactiveDevices()
-    {
-        var cacheKey = GetCacheKeyPrefix();
-
-        return _cache.GetOrAddAsync(cacheKey,
-            async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _deviceRepository.GetInactive();
-            });
-    }
-
-    public Task<List<LostDevice>> GetLostDevices()
-    {
-        var cacheKey = GetCacheKeyPrefix();
-
-        return _cache.GetOrAddAsync(cacheKey,
-            async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _deviceRepository.GetLost();
             });
     }
 
