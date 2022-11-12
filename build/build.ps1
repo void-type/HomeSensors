@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
   [string] $Configuration = 'Release',
+  [switch] $SkipClient,
   [switch] $SkipFormat,
   [switch] $SkipOutdated,
   [switch] $SkipPublish

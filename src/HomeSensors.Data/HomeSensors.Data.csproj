@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-<ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.10" />
-    <PackageReference Include="VoidCore.Model" Version="8.3.2" />
-</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0" />
+        <PackageReference Include="VoidCore.Model" Version="9.0.6-ga326377cf0" />
+    </ItemGroup>
 
 </Project>
