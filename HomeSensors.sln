@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E29E49BC-316
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HomeSensors.Service", "src\HomeSensors.Service\HomeSensors.Service.csproj", "{B4CC7A3B-B491-4039-BD84-15E0AF52C329}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HomeSensors.Data", "src\HomeSensors.Data\HomeSensors.Data.csproj", "{642BD3B2-1D0B-435E-A8E7-CB4BF9C4C95E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HomeSensors.Model", "src\HomeSensors.Model\HomeSensors.Model.csproj", "{642BD3B2-1D0B-435E-A8E7-CB4BF9C4C95E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HomeSensors.Web", "src\HomeSensors.Web\HomeSensors.Web.csproj", "{17469B46-E5C9-4510-9144-651467BDA90B}"
 EndProject

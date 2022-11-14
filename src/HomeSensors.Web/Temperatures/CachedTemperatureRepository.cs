@@ -1,5 +1,5 @@
-﻿using HomeSensors.Data.Repositories;
-using HomeSensors.Data.Repositories.Models;
+﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Data.Models;
 using HomeSensors.Web.Caching;
 using LazyCache;
 using Microsoft.Extensions.Caching.Memory;

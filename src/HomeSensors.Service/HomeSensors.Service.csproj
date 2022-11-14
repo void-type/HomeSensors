@@ -26,6 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HomeSensors.Data\HomeSensors.Data.csproj" />
+    <ProjectReference Include="..\HomeSensors.Model\HomeSensors.Model.csproj" />
   </ItemGroup>
 </Project>

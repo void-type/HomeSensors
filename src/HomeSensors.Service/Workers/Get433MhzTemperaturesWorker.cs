@@ -1,4 +1,5 @@
-﻿using HomeSensors.Data;
+﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Data.Models;
 using HomeSensors.Service.Mqtt;
 using Microsoft.EntityFrameworkCore;
 using MQTTnet;

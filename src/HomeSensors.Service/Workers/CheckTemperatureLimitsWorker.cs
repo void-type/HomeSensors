@@ -1,6 +1,5 @@
-﻿using HomeSensors.Data;
-using HomeSensors.Data.Repositories;
-using HomeSensors.Data.Repositories.Models;
+﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Data.Models;
 using HomeSensors.Service.Emailing;
 using VoidCore.Model.Time;
 

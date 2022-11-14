@@ -1,5 +1,4 @@
-﻿using HomeSensors.Data;
-using HomeSensors.Data.Repositories;
+﻿using HomeSensors.Model.Data;
 using HomeSensors.Web.Auth;
 using HomeSensors.Web.Caching;
 using HomeSensors.Web.Temperatures;
