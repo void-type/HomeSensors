@@ -1,8 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿namespace HomeSensors.Model.Data.Models;
 
-namespace HomeSensors.Model.Data.Models;
-
-[Index(nameof(Name), IsUnique = true)]
 public class TemperatureLocation
 {
     public long Id { get; set; }

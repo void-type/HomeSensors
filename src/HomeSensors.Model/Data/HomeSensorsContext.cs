@@ -15,4 +15,14 @@ public class HomeSensorsContext : DbContext
     public virtual DbSet<TemperatureDevice> TemperatureDevices { get; set; }
     public virtual DbSet<TemperatureLocation> TemperatureLocations { get; set; }
     public virtual DbSet<TemperatureReading> TemperatureReadings { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TemperatureReading>()
+            .HasIndex(r => r.Time);
+
+        modelBuilder.Entity<TemperatureLocation>()
+            .HasIndex(r => r.Name)
+            .IsUnique();
+    }
 }
