@@ -2,6 +2,7 @@
 using HomeSensors.Web.Auth;
 using HomeSensors.Web.Caching;
 using HomeSensors.Web.Temperatures;
+using LazyCache;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
@@ -50,7 +51,14 @@ try
     services.AddScoped<TemperatureDeviceRepository>();
     services.AddScoped<TemperatureLocationRepository>();
 
-    services.AddLazyCache();
+    services.AddLazyCache(sp =>
+    {
+        var cachingSettings = sp.GetRequiredService<CachingSettings>();
+        var cache = new CachingService(CachingService.DefaultCacheProvider);
+        cache.DefaultCachePolicy.DefaultCacheDurationSeconds = cachingSettings.DefaultMinutes * 60;
+        return cache;
+    });
+
     services.AddScoped<CachedTemperatureRepository>();
 
     services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();

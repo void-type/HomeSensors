@@ -13,7 +13,6 @@ public class CachedTemperatureRepository
     private readonly TemperatureReadingRepository _readingRepository;
     private readonly IAppCache _cache;
     private readonly IDateTimeService _dateTimeService;
-    private readonly TimeSpan _defaultCacheTime;
     private readonly TimeSpan _currentReadingsCacheTime;
 
     public CachedTemperatureRepository(TemperatureReadingRepository readingRepository, IAppCache cache, IDateTimeService dateTimeService, CachingSettings cachingSettings)
@@ -21,7 +20,6 @@ public class CachedTemperatureRepository
         _readingRepository = readingRepository;
         _cache = cache;
         _dateTimeService = dateTimeService;
-        _defaultCacheTime = TimeSpan.FromMinutes(cachingSettings.DefaultMinutes);
         _currentReadingsCacheTime = TimeSpan.FromSeconds(cachingSettings.CurrentReadingsSeconds);
     }
 
@@ -64,11 +62,7 @@ public class CachedTemperatureRepository
         var cacheKey = $"{GetCacheKeyPrefix()}|{request.StartTime:o}|{request.EndTime:o}";
 
         return _cache.GetOrAddAsync(cacheKey,
-            async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = _defaultCacheTime;
-                return await _readingRepository.GetTimeSeries(request);
-            });
+            async _ => await _readingRepository.GetTimeSeries(request));
     }
 
     private string GetCacheKeyPrefix([CallerMemberName] string caller = "unknown")
