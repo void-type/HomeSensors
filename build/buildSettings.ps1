@@ -2,6 +2,7 @@ $shortAppName = "HomeSensors"
 $projectName = "$shortAppName"
 
 $webProjectFolder = "./src/$projectName.Web"
+$modelProjectFolder = "./src/$projectName.Data"
 $webClientProjectFolder = "./src/ClientApp"
 $iisDirectoryProduction = "\\server2\DeployedApps\apps\$projectName.Web"
 $webSettingsDirectoryProduction = "\\server2\Servers\AppConfigs\$projectName\Web"

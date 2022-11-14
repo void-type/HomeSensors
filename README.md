@@ -14,17 +14,9 @@ You can use the [.NET SDK](https://dot.net/download) and [Node.js LTS](https://n
 
 This project uses Entity Framework Code First.
 
-To create/update the database, set your connection string in `src\HomeSensors.Service\appsettings.Development.json` and run the following.
+Use the `dbApplyMigration.ps1` script to create or update the database.
 
-```PowerShell
-dotnet ef database update --project ./src/HomeSensors.Data/HomeSensors.Data.csproj --startup-project  ./src/HomeSensors.Service/HomeSensors.Service.csproj
-```
-
-To add a migration after updating the database context or models, run the following.
-
-```PowerShell
-dotnet ef migrations add <migration-name> --project ./src/HomeSensors.Data/HomeSensors.Data.csproj --startup-project  ./src/HomeSensors.Service/HomeSensors.Service.csproj
-```
+Use the `dbCreateMigration.ps1` script to create a migration after you make changes to the DbContext or models.
 
 ## Deploy initial
 
