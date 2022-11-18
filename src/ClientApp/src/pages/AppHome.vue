@@ -3,9 +3,9 @@ import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
 import type { GraphPoint, GraphCurrentReading, GraphTimeSeries } from '@/api/data-contracts';
 import { onMounted, reactive, watch } from 'vue';
-import moment from 'moment';
+import { addHours, startOfMinute, format } from 'date-fns';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
-import 'chartjs-adapter-moment';
+import 'chartjs-adapter-date-fns';
 import * as signalR from '@microsoft/signalr';
 import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
@@ -18,12 +18,12 @@ const appStore = useAppStore();
 
 const { useFahrenheit, useDarkMode, tempUnit, showHumidity } = storeToRefs(appStore);
 
-const initialTime = moment().startOf('minute');
+const initialTime = startOfMinute(new Date());
 
 const data = reactive({
   graphRange: {
-    start: moment(initialTime).add(-48, 'h').toDate(),
-    end: moment(initialTime).toDate(),
+    start: addHours(initialTime, -48),
+    end: initialTime,
   },
   graphSeries: [] as Array<GraphTimeSeries>,
   currentReadings: [] as Array<GraphCurrentReading>,
@@ -150,13 +150,13 @@ function setGraphData(series: Array<GraphTimeSeries>) {
               second: 'HH:mm:ss',
               minute: 'HH:mm',
               hour: 'HH',
-              day: 'MMM D',
-              week: 'll',
-              month: 'MMM YYYY',
-              quarter: '[Q]Q - YYYY',
-              year: 'YYYY',
+              day: 'MMM d',
+              week: 'PP',
+              month: 'MMM yyyy',
+              quarter: 'QQQ yyyy',
+              year: 'yyyy',
             },
-            tooltipFormat: 'YYYY-MM-DD HH:mm:ss',
+            tooltipFormat: 'yyyy-MM-dd HH:mm:ss',
           },
           ticks: {
             autoSkip: false,
@@ -183,8 +183,8 @@ function setGraphData(series: Array<GraphTimeSeries>) {
 
 async function getTimeSeries() {
   const parameters = {
-    startTime: moment(data.graphRange.start).toISOString(),
-    endTime: moment(data.graphRange.end).toISOString(),
+    startTime: DateHelpers.dateTimeForApi(data.graphRange.start),
+    endTime: DateHelpers.dateTimeForApi(data.graphRange.end),
   };
 
   try {
@@ -262,7 +262,9 @@ watch(
               >
             </div>
             <div>
-              <small class="fw-light">{{ moment(currentTemp.time).format('ll HH:mm') }}</small>
+              <small class="fw-light">{{
+                format(new Date(currentTemp.time as string), 'HH:mm')
+              }}</small>
             </div>
           </div>
         </div>
@@ -274,9 +276,10 @@ watch(
         <v-date-picker
           v-model="data.graphRange.start"
           mode="dateTime"
-          :masks="{ inputDateTime24hr: DateHelpers.formatStrings.viewDateTimeShort }"
+          :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
           :update-on-input="false"
           is24hr
+          is-required
           ><template #default="{ inputValue, inputEvents }">
             <input id="startDate" class="form-control" :value="inputValue" v-on="inputEvents" />
           </template>
@@ -287,9 +290,10 @@ watch(
         <v-date-picker
           v-model="data.graphRange.end"
           mode="dateTime"
-          :masks="{ inputDateTime24hr: DateHelpers.formatStrings.viewDateTimeShort }"
+          :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
           :update-on-input="false"
           is24hr
+          is-required
           ><template #default="{ inputValue, inputEvents }">
             <input id="endDate" class="form-control" :value="inputValue" v-on="inputEvents" />
           </template>

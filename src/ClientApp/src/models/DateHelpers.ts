@@ -1,43 +1,31 @@
-import moment from 'moment';
-
-function getFormattedMoment(value: moment.MomentInput, formatString: string) {
-  const instant = moment(value);
-
-  if (instant.isValid() === false) {
-    return null;
-  }
-
-  return instant.format(formatString);
-}
+import { format, formatISO, formatISO9075 } from 'date-fns';
 
 const formatStrings = {
-  apiDate: 'YYYY-MM-DD',
-  apiDateTime: 'YYYY-MM-DDTHH:mm:ss',
-  viewDate: 'YYYY-MM-DD',
-  viewDateTime: 'YYYY-MM-DD HH:mm:ss',
-  viewDateTimeShort: 'YYYY-MM-DD HH:mm',
+  // apiDate: 'yyyy-MM-dd',
+  // apiDateTime: "yyyy-MM-dd'T'HH:mm:ss",
+  // viewDate: 'yyyy-MM-dd',
+  // viewDateTime: 'yyyy-MM-dd HH:mm:ss',
+  viewDateTimeShort: 'yyyy-MM-dd HH:mm',
 };
 
 export default class DateHelpers {
-  static dateForApi(value: moment.MomentInput) {
-    return getFormattedMoment(value, formatStrings.apiDate);
+  static dateForApi(value: Date | string | null | undefined) {
+    return formatISO(value as Date, { representation: 'date' });
   }
 
-  static dateTimeForApi(value: moment.MomentInput) {
-    return getFormattedMoment(value, formatStrings.apiDateTime);
+  static dateTimeForApi(value: Date | null | undefined) {
+    return formatISO(value as Date);
   }
 
-  static dateForView(value: moment.MomentInput) {
-    return getFormattedMoment(value, formatStrings.viewDate);
+  static dateForView(value: Date | null | undefined) {
+    return formatISO9075(value as Date, { representation: 'date' });
   }
 
-  static dateTimeForView(value: moment.MomentInput) {
-    return getFormattedMoment(value, formatStrings.viewDateTime);
+  static dateTimeForView(value: Date | string | null | undefined) {
+    return formatISO9075(value as Date);
   }
 
-  static dateTimeShortForView(value: moment.MomentInput) {
-    return getFormattedMoment(value, formatStrings.viewDateTimeShort);
+  static dateTimeShortForView(value: Date | string | null | undefined) {
+    return format(new Date(value as string), formatStrings.viewDateTimeShort);
   }
-
-  static formatStrings = formatStrings;
 }
