@@ -7,6 +7,8 @@ using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Packets;
 using Newtonsoft.Json;
+using System.Text;
+using VoidCore.Model.Guards;
 
 namespace HomeSensors.Service.Workers;
 
@@ -110,13 +112,10 @@ public class Get433MhzTemperaturesWorker : BackgroundService
     {
         try
         {
-            var payload = System.Text.Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+            var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
 
-            var message = JsonConvert.DeserializeObject<TemperatureMessage>(payload);
-
-            ArgumentNullException.ThrowIfNull(message);
-
-            return message;
+            return JsonConvert.DeserializeObject<TemperatureMessage>(payload)
+                .EnsureNotNull();
         }
         catch (Exception ex)
         {
