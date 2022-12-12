@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.Data;
-using HomeSensors.Model.Data.Models;
+﻿using HomeSensors.Model.TemperatureRepositories;
+using HomeSensors.Model.TemperatureRepositories.Models;
 using HomeSensors.Service.Emailing;
 using VoidCore.Model.Time;
 
@@ -55,7 +55,7 @@ public class CheckTemperatureLimitsWorker : BackgroundService
         }
     }
 
-    private Task NotifyLimitExceeded(CheckLimitResult failedResult, string minOrMax, string hotOrCold, TemperatureReading reading, double? limit, CancellationToken stoppingToken)
+    private Task NotifyLimitExceeded(CheckLimitResult failedResult, string minOrMax, string hotOrCold, Reading reading, double? limit, CancellationToken stoppingToken)
     {
         var locationName = failedResult.Location.Name;
         var time = reading.Time;

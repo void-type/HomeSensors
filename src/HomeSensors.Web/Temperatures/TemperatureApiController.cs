@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.Data;
-using HomeSensors.Model.Data.Models;
+﻿using HomeSensors.Model.TemperatureRepositories;
+using HomeSensors.Model.TemperatureRepositories.Models;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -40,6 +40,16 @@ public class TemperatureApiController : ControllerBase
     public async Task<IActionResult> GetTimeSeries([FromBody] GraphTimeSeriesRequest request)
     {
         var series = await _cachedTemperatureRepository.GetTimeSeriesReadings(request);
+        return HttpResponder.Respond(series);
+    }
+
+    [HttpPost]
+    [Route("locations")]
+    [ProducesResponseType(typeof(List<Location>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> GetLocations()
+    {
+        var series = await _cachedTemperatureRepository.GetAllLocations();
         return HttpResponder.Respond(series);
     }
 

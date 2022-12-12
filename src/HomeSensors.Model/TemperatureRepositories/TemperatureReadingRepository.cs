@@ -1,8 +1,10 @@
-﻿using HomeSensors.Model.Data.Models;
+﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Data.Models;
+using HomeSensors.Model.TemperatureRepositories.Models;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Time;
 
-namespace HomeSensors.Model.Data;
+namespace HomeSensors.Model.TemperatureRepositories;
 
 public class TemperatureReadingRepository
 {
@@ -102,7 +104,7 @@ public class TemperatureReadingRepository
         return readingsForLocation
             .GroupBy(y =>
             {
-                var time = y.Time.AddMilliseconds(-y.Time.Millisecond - (1000 * y.Time.Second));
+                var time = y.Time.AddMilliseconds(-y.Time.Millisecond - 1000 * y.Time.Second);
                 return time.AddMinutes(-(time.Minute % intervalMinutes));
             })
             .Select(timeGroup =>

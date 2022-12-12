@@ -1,4 +1,5 @@
 ﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.TemperatureRepositories;
 using HomeSensors.Service.Emailing;
 using HomeSensors.Service.Mqtt;
 using HomeSensors.Service.Workers;

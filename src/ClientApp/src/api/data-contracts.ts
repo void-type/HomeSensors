@@ -92,6 +92,16 @@ export interface InactiveDevice {
   lastReadingTime?: string | null;
 }
 
+export interface Location {
+  /** @format int64 */
+  id?: number;
+  name?: string | null;
+  /** @format double */
+  minTemperatureLimit?: number | null;
+  /** @format double */
+  maxTemperatureLimit?: number | null;
+}
+
 export interface LostDevice {
   /** @format int64 */
   id?: number;

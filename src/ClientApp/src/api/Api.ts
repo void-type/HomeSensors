@@ -16,6 +16,7 @@ import type {
   GraphTimeSeriesRequest,
   IFailureIItemSet,
   InactiveDevice,
+  Location,
   LostDevice,
   WebClientInfo,
 } from './data-contracts';
@@ -85,6 +86,22 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
       method: 'POST',
       body: data,
       type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureApi
+   * @name TemperaturesLocationsCreate
+   * @request POST:/api/temperatures/locations
+   * @response `200` `(Location)[]` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesLocationsCreate = (params: RequestParams = {}) =>
+    this.request<Location[], IFailureIItemSet>({
+      path: `/api/temperatures/locations`,
+      method: 'POST',
       format: 'json',
       ...params,
     });

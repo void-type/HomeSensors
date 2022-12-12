@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.Data;
-using HomeSensors.Model.Data.Models;
+﻿using HomeSensors.Model.TemperatureRepositories;
+using HomeSensors.Model.TemperatureRepositories.Models;
 using HomeSensors.Web.Caching;
 using LazyCache;
 using Microsoft.Extensions.Caching.Memory;
@@ -74,7 +74,7 @@ public class CachedTemperatureRepository
             async _ => await _readingRepository.GetTimeSeries(request));
     }
 
-    public Task<List<TemperatureLocation>> GetAllLocations()
+    public Task<List<Location>> GetAllLocations()
     {
         var cacheKey = GetCacheKeyPrefix();
 

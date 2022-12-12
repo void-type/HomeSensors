@@ -1,9 +1,9 @@
-﻿using HomeSensors.Model.Data.Models;
+﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.TemperatureRepositories.Models;
 using Microsoft.EntityFrameworkCore;
-using VoidCore.Model.Responses.Collections;
 using VoidCore.Model.Time;
 
-namespace HomeSensors.Model.Data;
+namespace HomeSensors.Model.TemperatureRepositories;
 
 public class TemperatureDeviceRepository
 {
@@ -14,17 +14,6 @@ public class TemperatureDeviceRepository
     {
         _data = data;
         _dateTimeService = dateTimeService;
-    }
-
-    public Task<List<TemperatureDevice>> GetAll(PaginationOptions paginationOptions)
-    {
-        return _data.TemperatureDevices
-            .AsNoTracking()
-            .OrderBy(x => x.DeviceModel)
-            .ThenBy(x => x.DeviceId)
-            .ThenBy(x => x.DeviceChannel)
-            .GetPage(paginationOptions)
-            .ToListAsync();
     }
 
     /// <summary>

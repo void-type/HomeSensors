@@ -1,12 +1,7 @@
-﻿namespace HomeSensors.Model.Data.Models;
+﻿namespace HomeSensors.Model.TemperatureRepositories.Models;
 
 public class GraphCurrentReading
 {
-    public string Location { get; }
-    public double? TemperatureCelsius { get; }
-    public double? Humidity { get; }
-    public DateTimeOffset Time { get; }
-
     public GraphCurrentReading(string location, double? temperatureCelsius, double? humidity, DateTimeOffset time)
     {
         Location = location;
@@ -14,4 +9,9 @@ public class GraphCurrentReading
         Humidity = humidity;
         Time = time;
     }
+
+    public string Location { get; }
+    public double? TemperatureCelsius { get; }
+    public double? Humidity { get; }
+    public DateTimeOffset Time { get; }
 }

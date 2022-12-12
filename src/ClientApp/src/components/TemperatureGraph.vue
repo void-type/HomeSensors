@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
-import type { GraphPoint, GraphTimeSeries } from '@/api/data-contracts';
+import type { GraphPoint, GraphTimeSeries, Location } from '@/api/data-contracts';
 import { onMounted, reactive, watch } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
@@ -25,6 +25,7 @@ const data = reactive({
     end: initialTime,
     locationIds: [] as Array<number>,
   },
+  locations: [] as Array<Location>,
   graphSeries: [] as Array<GraphTimeSeries>,
 });
 
@@ -195,8 +196,18 @@ async function getTimeSeries() {
   }
 }
 
+async function getLocations() {
+  try {
+    const response = await new Api().temperaturesLocationsCreate();
+    data.locations = response.data;
+  } catch (error) {
+    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+  }
+}
+
 onMounted(async () => {
   await getTimeSeries();
+  await getLocations();
 });
 
 watch(
@@ -242,6 +253,9 @@ watch(
         </v-date-picker>
       </div>
     </div>
+    <ul>
+      <li v-for="location in data.locations" :key="location.id">{{ location.name }}</li>
+    </ul>
     <div class="chart-container mt-3">
       <canvas id="tempGraph"></canvas>
     </div>
