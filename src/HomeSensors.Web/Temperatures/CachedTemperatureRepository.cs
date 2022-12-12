@@ -4,6 +4,7 @@ using HomeSensors.Web.Caching;
 using LazyCache;
 using Microsoft.Extensions.Caching.Memory;
 using System.Runtime.CompilerServices;
+using VoidCore.Model.Responses.Collections;
 using VoidCore.Model.Time;
 
 namespace HomeSensors.Web.Temperatures;
@@ -11,15 +12,18 @@ namespace HomeSensors.Web.Temperatures;
 public class CachedTemperatureRepository
 {
     private readonly TemperatureReadingRepository _readingRepository;
+    private readonly TemperatureLocationRepository _locationRepository;
     private readonly IAppCache _cache;
     private readonly IDateTimeService _dateTimeService;
     private readonly TimeSpan _currentReadingsCacheTime;
 
-    public CachedTemperatureRepository(TemperatureReadingRepository readingRepository, IAppCache cache, IDateTimeService dateTimeService, CachingSettings cachingSettings)
+    public CachedTemperatureRepository(TemperatureReadingRepository readingRepository, IAppCache cache,
+        IDateTimeService dateTimeService, CachingSettings cachingSettings, TemperatureLocationRepository locationRepository)
     {
         _readingRepository = readingRepository;
         _cache = cache;
         _dateTimeService = dateTimeService;
+        _locationRepository = locationRepository;
         _currentReadingsCacheTime = TimeSpan.FromSeconds(cachingSettings.CurrentReadingsSeconds);
     }
 
@@ -59,14 +63,39 @@ public class CachedTemperatureRepository
             return _readingRepository.GetTimeSeries(request);
         }
 
-        var cacheKey = $"{GetCacheKeyPrefix()}|{request.StartTime:o}|{request.EndTime:o}";
+        var cacheKey = BuildCacheKey(
+            GetCacheKeyPrefix(),
+            request.StartTime.ToString("o"),
+            request.EndTime.ToString("o"),
+            string.Join(",", request.LocationIds.OrderBy(x => x)),
+            GetCacheKey(request.PaginationOptions));
 
         return _cache.GetOrAddAsync(cacheKey,
             async _ => await _readingRepository.GetTimeSeries(request));
     }
 
+    public Task<List<TemperatureLocation>> GetAllLocations()
+    {
+        var cacheKey = GetCacheKeyPrefix();
+
+        return _cache.GetOrAddAsync(cacheKey,
+            async _ => await _locationRepository.GetAll(PaginationOptions.None));
+    }
+
     private string GetCacheKeyPrefix([CallerMemberName] string caller = "unknown")
     {
         return $"{nameof(CachedTemperatureRepository)}.{caller}";
+    }
+
+    private static string BuildCacheKey(params string[] cacheKeyParts)
+    {
+        return string.Join("|", cacheKeyParts);
+    }
+
+    private static string GetCacheKey(PaginationOptions paginationOptions)
+    {
+        return paginationOptions.IsPagingEnabled
+            ? $"{paginationOptions.Page},{paginationOptions.Take}"
+            : "None";
     }
 }

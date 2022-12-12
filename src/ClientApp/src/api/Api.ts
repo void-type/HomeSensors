@@ -74,6 +74,24 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * No description
    *
    * @tags TemperatureApi
+   * @name TemperaturesTimeSeriesCreate
+   * @request POST:/api/temperatures/time-series
+   * @response `200` `(GraphTimeSeries)[]` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesTimeSeriesCreate = (data: GraphTimeSeriesRequest, params: RequestParams = {}) =>
+    this.request<GraphTimeSeries[], IFailureIItemSet>({
+      path: `/api/temperatures/time-series`,
+      method: 'POST',
+      body: data,
+      type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureApi
    * @name TemperaturesInactiveDevicesCreate
    * @request POST:/api/temperatures/inactive-devices
    * @response `200` `(InactiveDevice)[]` Success
@@ -99,24 +117,6 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
     this.request<LostDevice[], IFailureIItemSet>({
       path: `/api/temperatures/lost-devices`,
       method: 'POST',
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags TemperatureApi
-   * @name TemperaturesTimeSeriesCreate
-   * @request POST:/api/temperatures/time-series
-   * @response `200` `(GraphTimeSeries)[]` Success
-   * @response `400` `IFailureIItemSet` Bad Request
-   */
-  temperaturesTimeSeriesCreate = (data: GraphTimeSeriesRequest, params: RequestParams = {}) =>
-    this.request<GraphTimeSeries[], IFailureIItemSet>({
-      path: `/api/temperatures/time-series`,
-      method: 'POST',
-      body: data,
-      type: ContentType.Json,
       format: 'json',
       ...params,
     });

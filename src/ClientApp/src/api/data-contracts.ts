@@ -14,7 +14,6 @@ export interface AppVersion {
   isPublicRelease?: boolean;
   isPrerelease?: boolean;
   gitCommitId?: string | null;
-
   /** @format date-time */
   gitCommitDate?: string;
   assemblyConfiguration?: string | null;
@@ -27,13 +26,10 @@ export interface DomainUser {
 
 export interface GraphCurrentReading {
   location?: string | null;
-
   /** @format double */
   temperatureCelsius?: number | null;
-
   /** @format double */
   humidity?: number | null;
-
   /** @format date-time */
   time?: string;
 }
@@ -41,20 +37,16 @@ export interface GraphCurrentReading {
 export interface GraphPoint {
   /** @format double */
   temperatureCelsius?: number | null;
-
   /** @format date-time */
   time?: string;
 }
 
 export interface GraphTimeSeries {
   location?: string | null;
-
   /** @format double */
   min?: number | null;
-
   /** @format double */
   max?: number | null;
-
   /** @format double */
   average?: number | null;
   points?: GraphPoint[] | null;
@@ -63,9 +55,10 @@ export interface GraphTimeSeries {
 export interface GraphTimeSeriesRequest {
   /** @format date-time */
   startTime?: string;
-
   /** @format date-time */
   endTime?: string;
+  locationIds?: number[] | null;
+  paginationOptions?: PaginationOptions;
 }
 
 export interface IFailure {
@@ -78,13 +71,10 @@ export interface IFailureIItemSet {
   count?: number;
   items?: IFailure[] | null;
   isPagingEnabled?: boolean;
-
   /** @format int32 */
   page?: number;
-
   /** @format int32 */
   take?: number;
-
   /** @format int32 */
   totalCount?: number;
 }
@@ -96,10 +86,8 @@ export interface InactiveDevice {
   deviceId?: string | null;
   deviceChannel?: string | null;
   locationName?: string | null;
-
   /** @format double */
   lastReadingTemperatureCelsius?: number | null;
-
   /** @format date-time */
   lastReadingTime?: string | null;
 }
@@ -110,12 +98,18 @@ export interface LostDevice {
   deviceModel?: string | null;
   deviceId?: string | null;
   deviceChannel?: string | null;
-
   /** @format double */
   lastReadingTemperatureCelsius?: number | null;
-
   /** @format date-time */
   lastReadingTime?: string | null;
+}
+
+export interface PaginationOptions {
+  /** @format int32 */
+  page?: number;
+  /** @format int32 */
+  take?: number;
+  isPagingEnabled?: boolean;
 }
 
 export interface WebClientInfo {

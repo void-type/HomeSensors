@@ -19,12 +19,12 @@ public class TemperatureDeviceRepository
     public Task<List<TemperatureDevice>> GetAll(PaginationOptions paginationOptions)
     {
         return _data.TemperatureDevices
-             .AsNoTracking()
-             .OrderBy(x => x.DeviceModel)
-             .ThenBy(x => x.DeviceId)
-             .ThenBy(x => x.DeviceChannel)
-             .GetPage(paginationOptions)
-             .ToListAsync();
+            .AsNoTracking()
+            .OrderBy(x => x.DeviceModel)
+            .ThenBy(x => x.DeviceId)
+            .ThenBy(x => x.DeviceChannel)
+            .GetPage(paginationOptions)
+            .ToListAsync();
     }
 
     /// <summary>

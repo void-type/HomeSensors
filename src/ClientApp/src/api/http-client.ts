@@ -53,6 +53,7 @@ export enum ContentType {
   Json = 'application/json',
   FormData = 'multipart/form-data',
   UrlEncoded = 'application/x-www-form-urlencoded',
+  Text = 'text/plain',
 }
 
 export class HttpClient<SecurityDataType = unknown> {
@@ -113,6 +114,8 @@ export class HttpClient<SecurityDataType = unknown> {
       input !== null && (typeof input === 'object' || typeof input === 'string')
         ? JSON.stringify(input)
         : input,
+    [ContentType.Text]: (input: any) =>
+      input !== null && typeof input !== 'string' ? JSON.stringify(input) : input,
     [ContentType.FormData]: (input: any) =>
       Object.keys(input || {}).reduce((formData, key) => {
         const property = input[key];
@@ -191,8 +194,8 @@ export class HttpClient<SecurityDataType = unknown> {
       {
         ...requestParams,
         headers: {
-          ...(type && type !== ContentType.FormData ? { 'Content-Type': type } : {}),
           ...(requestParams.headers || {}),
+          ...(type && type !== ContentType.FormData ? { 'Content-Type': type } : {}),
         },
         signal: cancelToken ? this.createAbortSignal(cancelToken) : requestParams.signal,
         body: typeof body === 'undefined' || body === null ? null : payloadFormatter(body),

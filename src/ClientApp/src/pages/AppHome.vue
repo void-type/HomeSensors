@@ -185,6 +185,11 @@ async function getTimeSeries() {
   const parameters = {
     startTime: DateHelpers.dateTimeForApi(data.graphRange.start),
     endTime: DateHelpers.dateTimeForApi(data.graphRange.end),
+    locationIds: [
+      1,
+      2,
+      3
+    ],
   };
 
   try {

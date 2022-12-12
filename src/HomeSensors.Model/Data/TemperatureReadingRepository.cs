@@ -36,11 +36,19 @@ public class TemperatureReadingRepository
 
     public async Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
     {
-        var dbReadings = await _data.TemperatureReadings
+        var dbReadingsQuery = _data.TemperatureReadings
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
             .Where(x => x.TemperatureLocationId != null)
-            .Where(x => x.Time > request.StartTime && x.Time < request.EndTime)
+            .Where(x => x.Time > request.StartTime && x.Time < request.EndTime);
+
+        if (request.LocationIds.Count > 0)
+        {
+            dbReadingsQuery = dbReadingsQuery
+                .Where(x => request.LocationIds.Contains(x.TemperatureLocationId));
+        }
+
+        var dbReadings = await dbReadingsQuery
             .OrderByDescending(x => x.Time)
             .ToListAsync();
 
