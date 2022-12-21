@@ -15,16 +15,26 @@ public class TemperatureLocationRepository
         _data = data;
     }
 
+    /// <summary>
+    /// Get all locations.
+    /// </summary>
+    /// <param name="paginationOptions"></param>
     public async Task<List<Location>> GetAll(PaginationOptions paginationOptions)
     {
         return (await _data.TemperatureLocations
             .AsNoTracking()
-            .OrderBy(x => x.Name)
+            .OrderBy(x => x.Name != "Outside")
+            .ThenBy(x => x.Name)
             .GetPage(paginationOptions)
             .ToListAsync())
             .ConvertAll(x => x.ToLocation());
     }
 
+    /// <summary>
+    /// Check all locations for readings that exceed min/max since the last check.
+    /// </summary>
+    /// <param name="lastCheck">The time of the last check.</param>
+    /// <returns>List of results</returns>
     public async Task<List<CheckLimitResult>> CheckLimits(DateTimeOffset lastCheck)
     {
         var locations = await _data.TemperatureLocations

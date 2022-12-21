@@ -2,7 +2,7 @@
 import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
 import type { GraphPoint, GraphTimeSeries, Location } from '@/api/data-contracts';
-import { onMounted, reactive, watch } from 'vue';
+import { onMounted, reactive, watch, computed } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-date-fns';
@@ -28,6 +28,18 @@ const data = reactive({
   locations: [] as Array<Location>,
   graphSeries: [] as Array<GraphTimeSeries>,
 });
+
+const areAllLocationsSelected = computed(() =>
+  data.locations.every((value) => data.graphRange.locationIds.includes(value.id as number))
+);
+
+function onSelectAllClick() {
+  if (areAllLocationsSelected.value) {
+    data.graphRange.locationIds = [];
+  } else {
+    data.graphRange.locationIds = data.locations.map((x) => x.id as number);
+  }
+}
 
 let lineChart: Chart | null = null;
 
@@ -200,6 +212,7 @@ async function getLocations() {
   try {
     const response = await new Api().temperaturesLocationsCreate();
     data.locations = response.data;
+    data.graphRange.locationIds = data.locations.map((x) => x.id as number);
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
@@ -253,9 +266,29 @@ watch(
         </v-date-picker>
       </div>
     </div>
-    <ul>
-      <li v-for="location in data.locations" :key="location.id">{{ location.name }}</li>
-    </ul>
+    <div class="text-center">
+      <button id="selectAllButton" class="btn btn-sm btn-secondary" @click="onSelectAllClick">
+        {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
+      </button>
+    </div>
+    <div class="text-center">
+      <div
+        v-for="location in data.locations"
+        :key="location.id"
+        class="form-check form-check-inline"
+      >
+        <input
+          :id="`locationSelect-${location.id}`"
+          v-model="data.graphRange.locationIds"
+          :value="location.id"
+          class="form-check-input"
+          type="checkbox"
+        />
+        <label class="form-check-label" for="`locationSelect-${location.id}`">{{
+          location.name
+        }}</label>
+      </div>
+    </div>
     <div class="chart-container mt-3">
       <canvas id="tempGraph"></canvas>
     </div>
