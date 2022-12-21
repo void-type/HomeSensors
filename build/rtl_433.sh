@@ -27,7 +27,7 @@ sudo apt install -y mosquitto mosquitto-clients
 
 # Create new passwd file. Enter password for clients to use with mqtt_user, put this password in the service file on line 6.
 sudo mosquitto_passwd -c /etc/mosquitto/password_file mqtt_user
-echo -e '\npassword_file /etc/mosquitto/password_file\n' | sudo tee -a /etc/mosquitto/mosquitto.conf
+echo -e '\npassword_file /etc/mosquitto/password_file\nlistener 1883\n' | sudo tee -a /etc/mosquitto/mosquitto.conf
 
 sudo systemctl enable mosquitto
 sudo systemctl status mosquitto
