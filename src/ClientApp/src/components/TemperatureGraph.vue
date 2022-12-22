@@ -284,7 +284,7 @@ watch(
           class="form-check-input"
           type="checkbox"
         />
-        <label class="form-check-label" for="`locationSelect-${location.id}`">{{
+        <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
           location.name
         }}</label>
       </div>
@@ -296,8 +296,8 @@ watch(
       <thead>
         <tr>
           <th>Location</th>
-          <th>Min</th>
-          <th>Max</th>
+          <th>Low</th>
+          <th>High</th>
           <th>Avg</th>
         </tr>
       </thead>
