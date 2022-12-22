@@ -29,13 +29,11 @@ public class Get433MhzTemperaturesWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // TODO: failed connections don't log anything.
-        // TODO: enable persistence? turn persistence back on on the PI if so.
-        // TODO: if not enable persistence, then add to the script to turn it off.
         using var client = _mqttFactory.CreateManagedMqttClient();
 
         _logger.LogInformation("Connecting Managed MQTT client.");
 
+        client.ConnectingFailedAsync += async e => await LogConnectionFailure(e);
         client.ApplicationMessageReceivedAsync += async e => await ProcessMessage(e);
 
         await client.StartAsync(BuildOptions());
@@ -46,6 +44,12 @@ public class Get433MhzTemperaturesWorker : BackgroundService
         {
             await Task.Delay(100000000, stoppingToken);
         }
+    }
+
+    private Task LogConnectionFailure(ConnectingFailedEventArgs e)
+    {
+        _logger.LogError(e.Exception, "MQTT client failed to connect.");
+        return Task.CompletedTask;
     }
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
