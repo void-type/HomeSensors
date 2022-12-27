@@ -1,6 +1,6 @@
 ﻿using VoidCore.Model.Responses.Collections;
 
-namespace HomeSensors.Model.TemperatureRepositories.Models;
+namespace HomeSensors.Model.Repositories.Models;
 
 public class GraphTimeSeriesRequest
 {

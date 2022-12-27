@@ -12,14 +12,14 @@ using VoidCore.Model.Guards;
 
 namespace HomeSensors.Service.Workers;
 
-public class Get433MhzTemperaturesWorker : BackgroundService
+public class GetMqttTemperaturesWorker : BackgroundService
 {
-    private readonly ILogger<Get433MhzTemperaturesWorker> _logger;
+    private readonly ILogger<GetMqttTemperaturesWorker> _logger;
     private readonly MqttSettings _configuration;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
 
-    public Get433MhzTemperaturesWorker(ILogger<Get433MhzTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory)
+    public GetMqttTemperaturesWorker(ILogger<GetMqttTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
         _configuration = configuration;
@@ -33,8 +33,8 @@ public class Get433MhzTemperaturesWorker : BackgroundService
 
         _logger.LogInformation("Connecting Managed MQTT client.");
 
-        client.ConnectingFailedAsync += async e => await LogConnectionFailure(e);
-        client.ApplicationMessageReceivedAsync += async e => await ProcessMessage(e);
+        client.ConnectingFailedAsync += LogConnectionFailure;
+        client.ApplicationMessageReceivedAsync += ProcessMessage;
 
         await client.StartAsync(BuildOptions());
         await client.SubscribeAsync(BuildTopicFilters());

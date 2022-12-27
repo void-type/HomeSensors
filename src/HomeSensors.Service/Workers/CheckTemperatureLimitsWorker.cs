@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.TemperatureRepositories;
-using HomeSensors.Model.TemperatureRepositories.Models;
+﻿using HomeSensors.Model.Repositories;
+using HomeSensors.Model.Repositories.Models;
 using HomeSensors.Service.Emailing;
 using VoidCore.Model.Time;
 
@@ -10,9 +10,7 @@ namespace HomeSensors.Service.Workers;
 /// </summary>
 public class CheckTemperatureLimitsWorker : BackgroundService
 {
-    private const int MinutesBetweenTicks = 20;
-
-    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(MinutesBetweenTicks);
+    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(20);
     private readonly ILogger<CheckTemperatureLimitsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDateTimeService _dateTimeService;
@@ -44,18 +42,18 @@ public class CheckTemperatureLimitsWorker : BackgroundService
             {
                 if (failedResult.MinReading is not null)
                 {
-                    await NotifyLimitExceeded(failedResult, "minimum", "cold", failedResult.MinReading, failedResult.Location.MinTemperatureLimit, stoppingToken);
+                    await NotifyLimitExceeded(failedResult, "minimum", "cold", failedResult.MinReading, failedResult.Location.MinLimitTemperatureCelsius, stoppingToken);
                 }
 
                 if (failedResult.MaxReading is not null)
                 {
-                    await NotifyLimitExceeded(failedResult, "maximum", "hot", failedResult.MaxReading, failedResult.Location.MaxTemperatureLimit, stoppingToken);
+                    await NotifyLimitExceeded(failedResult, "maximum", "hot", failedResult.MaxReading, failedResult.Location.MaxLimitTemperatureCelsius, stoppingToken);
                 }
             }
         }
     }
 
-    private Task NotifyLimitExceeded(CheckLimitResult failedResult, string minOrMax, string hotOrCold, Reading reading, double? limit, CancellationToken stoppingToken)
+    private Task NotifyLimitExceeded(CheckLimitResult failedResult, string minOrMax, string hotOrCold, CheckLimitResultReading reading, double? limit, CancellationToken stoppingToken)
     {
         var locationName = failedResult.Location.Name;
         var time = reading.Time;

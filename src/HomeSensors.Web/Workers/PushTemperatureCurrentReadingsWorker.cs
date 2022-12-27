@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using HomeSensors.Web.Hubs;
+using HomeSensors.Web.Repositories;
+using Microsoft.AspNetCore.SignalR;
 
-namespace HomeSensors.Web.Temperatures;
+namespace HomeSensors.Web.Workers;
 
 /// <summary>
 /// This worker broadcasts current readings to all of the TemperatureHub SignalR clients.
 /// </summary>
-public class CurrentReadingsWorker : BackgroundService
+public class PushTemperatureCurrentReadingsWorker : BackgroundService
 {
     private const string MessageName = "updateCurrentReadings";
 
@@ -13,7 +15,7 @@ public class CurrentReadingsWorker : BackgroundService
     private readonly IHubContext<TemperatureHub> _tempHubContext;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public CurrentReadingsWorker(IHubContext<TemperatureHub> tempHubContext, IServiceScopeFactory scopeFactory)
+    public PushTemperatureCurrentReadingsWorker(IHubContext<TemperatureHub> tempHubContext, IServiceScopeFactory scopeFactory)
     {
         _tempHubContext = tempHubContext;
         _scopeFactory = scopeFactory;
@@ -26,7 +28,7 @@ public class CurrentReadingsWorker : BackgroundService
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
             using var scope = _scopeFactory.CreateScope();
-            var temperatureRepository = scope.ServiceProvider.GetRequiredService<CachedTemperatureRepository>();
+            var temperatureRepository = scope.ServiceProvider.GetRequiredService<TemperatureCachedRepository>();
 
             var currentReadings = await temperatureRepository.GetCurrentReadings(true);
 

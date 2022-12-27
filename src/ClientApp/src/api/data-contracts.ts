@@ -19,36 +19,36 @@ export interface AppVersion {
   assemblyConfiguration?: string | null;
 }
 
+export interface CurrentReading {
+  /** @format date-time */
+  time?: string;
+  /** @format double */
+  temperatureCelsius?: number | null;
+  /** @format double */
+  humidity?: number | null;
+  location?: Location;
+}
+
 export interface DomainUser {
   login?: string | null;
   authorizedAs?: string[] | null;
 }
 
-export interface GraphCurrentReading {
-  location?: string | null;
-  /** @format double */
-  temperatureCelsius?: number | null;
-  /** @format double */
-  humidity?: number | null;
-  /** @format date-time */
-  time?: string;
-}
-
 export interface GraphPoint {
-  /** @format double */
-  temperatureCelsius?: number | null;
   /** @format date-time */
   time?: string;
+  /** @format double */
+  temperatureCelsius?: number | null;
 }
 
 export interface GraphTimeSeries {
-  location?: string | null;
+  location?: Location;
   /** @format double */
-  min?: number | null;
+  minTemperatureCelsius?: number | null;
   /** @format double */
-  max?: number | null;
+  maxTemperatureCelsius?: number | null;
   /** @format double */
-  average?: number | null;
+  averageTemperatureCelsius?: number | null;
   points?: GraphPoint[] | null;
 }
 
@@ -85,7 +85,7 @@ export interface InactiveDevice {
   deviceModel?: string | null;
   deviceId?: string | null;
   deviceChannel?: string | null;
-  locationName?: string | null;
+  location?: Location;
   /** @format double */
   lastReadingTemperatureCelsius?: number | null;
   /** @format date-time */
@@ -97,9 +97,9 @@ export interface Location {
   id?: number;
   name?: string | null;
   /** @format double */
-  minTemperatureLimit?: number | null;
+  minLimitTemperatureCelsius?: number | null;
   /** @format double */
-  maxTemperatureLimit?: number | null;
+  maxLimitTemperatureCelsius?: number | null;
 }
 
 export interface LostDevice {

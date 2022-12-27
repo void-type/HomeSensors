@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
-import type { GraphCurrentReading } from '@/api/data-contracts';
+import type { CurrentReading } from '@/api/data-contracts';
 import { onMounted, reactive } from 'vue';
 import { format } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
@@ -12,7 +12,7 @@ const appStore = useAppStore();
 const { useFahrenheit, tempUnit, showHumidity } = storeToRefs(appStore);
 
 const data = reactive({
-  currentReadings: [] as Array<GraphCurrentReading>,
+  currentReadings: [] as Array<CurrentReading>,
 });
 
 let connection: signalR.HubConnection | null = null;
@@ -58,7 +58,7 @@ onMounted(async () => {
       <div class="card text-center">
         <div class="card-body">
           <div class="h4 mb-2">
-            {{ currentTemp.location }}
+            {{ currentTemp.location?.name }}
           </div>
           <div class="h3">
             <span class="fw-bold"

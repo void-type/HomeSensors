@@ -1,5 +1,5 @@
 ﻿using HomeSensors.Model.Data;
-using HomeSensors.Model.TemperatureRepositories;
+using HomeSensors.Model.Repositories;
 using HomeSensors.Service.Emailing;
 using HomeSensors.Service.Mqtt;
 using HomeSensors.Service.Workers;
@@ -30,8 +30,9 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<EmailNotificationService>();
         services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
 
-        services.AddHostedService<Get433MhzTemperaturesWorker>();
+        services.AddHostedService<GetMqttTemperaturesWorker>();
         services.AddHostedService<CheckTemperatureLimitsWorker>();
+        services.AddHostedService<SummarizeTemperatureReadingsWorker>();
     })
     .Build();
 

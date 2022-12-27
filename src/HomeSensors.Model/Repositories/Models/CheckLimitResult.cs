@@ -1,8 +1,8 @@
-﻿namespace HomeSensors.Model.TemperatureRepositories.Models;
+﻿namespace HomeSensors.Model.Repositories.Models;
 
 public class CheckLimitResult
 {
-    public CheckLimitResult(Location location, Reading? minReading, Reading? maxReading)
+    public CheckLimitResult(Location location, CheckLimitResultReading? minReading, CheckLimitResultReading? maxReading)
     {
         Location = location;
 
@@ -19,6 +19,6 @@ public class CheckLimitResult
 
     public Location Location { get; }
     public bool IsFailed { get; }
-    public Reading? MinReading { get; }
-    public Reading? MaxReading { get; }
+    public CheckLimitResultReading? MinReading { get; }
+    public CheckLimitResultReading? MaxReading { get; }
 }

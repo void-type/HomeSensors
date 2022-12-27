@@ -1,10 +1,10 @@
 ﻿using HomeSensors.Model.Data;
-using HomeSensors.Model.Data.Models;
-using HomeSensors.Model.TemperatureRepositories.Models;
+using HomeSensors.Model.Helpers;
+using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Time;
 
-namespace HomeSensors.Model.TemperatureRepositories;
+namespace HomeSensors.Model.Repositories;
 
 public class TemperatureReadingRepository
 {
@@ -20,7 +20,7 @@ public class TemperatureReadingRepository
     /// <summary>
     /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
     /// </summary>
-    public async Task<List<GraphCurrentReading>> GetCurrent()
+    public async Task<List<CurrentReading>> GetCurrent()
     {
         var data = await _data.TemperatureLocations
             .AsNoTracking()
@@ -29,14 +29,18 @@ public class TemperatureReadingRepository
             .ThenBy(x => x.Name)
             .Select(x => new
             {
-                Location = x.Name,
+                Location = x,
                 Reading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault(),
             })
             .Where(x => x.Reading != null && x.Reading.Time >= _dateTimeService.MomentWithOffset.AddDays(-1))
             .ToListAsync();
 
-        return data
-            .ConvertAll(x => new GraphCurrentReading(x.Location, x.Reading!.TemperatureCelsius, x.Reading!.Humidity, x.Reading.Time));
+        return data.ConvertAll(x => new CurrentReading(
+            location: x.Location.ToLocation(),
+            temperatureCelsius: x.Reading!.TemperatureCelsius,
+            humidity: x.Reading!.Humidity,
+            time: x.Reading.Time
+        ));
     }
 
     /// <summary>
@@ -45,19 +49,17 @@ public class TemperatureReadingRepository
     /// <param name="request">GraphTimeSeriesRequest</param>
     public async Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
     {
-        var dbReadingsQuery = _data.TemperatureReadings
+        if (request.LocationIds.Count == 0)
+        {
+            return new();
+        }
+
+        var dbReadings = await _data.TemperatureReadings
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
             .Where(x => x.TemperatureLocationId != null)
-            .Where(x => x.Time > request.StartTime && x.Time < request.EndTime);
-
-        if (request.LocationIds.Count > 0)
-        {
-            dbReadingsQuery = dbReadingsQuery
-                .Where(x => request.LocationIds.Contains(x.TemperatureLocationId));
-        }
-
-        var dbReadings = await dbReadingsQuery
+            .Where(x => request.LocationIds.Contains(x.TemperatureLocationId))
+            .Where(x => x.Time >= request.StartTime && x.Time <= request.EndTime)
             .OrderByDescending(x => x.Time)
             .ToListAsync();
 
@@ -87,43 +89,17 @@ public class TemperatureReadingRepository
             .ToList()
             .ConvertAll(readingsForLocation =>
             {
-                var points = GetAveragesForIntervals(readingsForLocation, intervalMinutes);
+                var avgGraphPoints = readingsForLocation.GetIntervalAverages(intervalMinutes);
 
-                var values = readingsForLocation.Select(x => x.TemperatureCelsius);
+                var allValues = readingsForLocation.Select(x => x.TemperatureCelsius);
 
-                return new GraphTimeSeries(readingsForLocation.Key, values.Min(), values.Max(), values.Average(), points);
+                return new GraphTimeSeries(
+                    location: readingsForLocation.First().TemperatureLocation!.ToLocation(),
+                    min: allValues.Min(),
+                    max: allValues.Max(),
+                    average: allValues.Average(),
+                    points: avgGraphPoints
+                );
             });
-    }
-
-    private static List<GraphPoint> GetAveragesForIntervals(IGrouping<string, TemperatureReading> readingsForLocation, int intervalMinutes)
-    {
-        if (intervalMinutes == 0)
-        {
-            return readingsForLocation
-                .Select(reading => new GraphPoint
-                {
-                    Time = reading.Time,
-                    TemperatureCelsius = reading.TemperatureCelsius
-                })
-                .ToList();
-        }
-
-        return readingsForLocation
-            .GroupBy(y =>
-            {
-                var time = y.Time.AddMilliseconds(-y.Time.Millisecond - 1000 * y.Time.Second);
-                return time.AddMinutes(-(time.Minute % intervalMinutes));
-            })
-            .Select(timeGroup =>
-            {
-                var intervalAverage = timeGroup.Average(s => s.TemperatureCelsius);
-
-                return new GraphPoint
-                {
-                    Time = timeGroup.Key,
-                    TemperatureCelsius = intervalAverage
-                };
-            })
-            .ToList();
     }
 }

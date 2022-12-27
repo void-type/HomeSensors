@@ -1,4 +1,4 @@
-﻿namespace HomeSensors.Web.Caching;
+﻿namespace HomeSensors.Model.Caching;
 
 public class CachingSettings
 {

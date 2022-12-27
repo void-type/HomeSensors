@@ -1,9 +1,9 @@
 ﻿using HomeSensors.Model.Data;
-using HomeSensors.Model.TemperatureRepositories.Models;
+using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Time;
 
-namespace HomeSensors.Model.TemperatureRepositories;
+namespace HomeSensors.Model.Repositories;
 
 public class TemperatureDeviceRepository
 {
@@ -35,22 +35,22 @@ public class TemperatureDeviceRepository
                 x.DeviceId,
                 x.DeviceChannel,
                 x.IsRetired,
-                LocationName = x.CurrentTemperatureLocation!.Name,
+                Location = x.CurrentTemperatureLocation!,
                 LastReading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault()
             })
             .Where(x => (x.LastReading == null || x.LastReading.Time < _dateTimeService.MomentWithOffset.AddHours(-2)) && !x.IsRetired)
             .ToListAsync();
 
         return data.ConvertAll(x => new InactiveDevice
-        {
-            Id = x.Id,
-            DeviceModel = x.DeviceModel,
-            DeviceId = x.DeviceId,
-            DeviceChannel = x.DeviceChannel,
-            LocationName = x.LocationName,
-            LastReadingTemperatureCelsius = x.LastReading?.TemperatureCelsius,
-            LastReadingTime = x.LastReading?.Time,
-        });
+        (
+            id: x.Id,
+            deviceModel: x.DeviceModel,
+            deviceId: x.DeviceId,
+            deviceChannel: x.DeviceChannel,
+            location: x.Location.ToLocation(),
+            lastReadingTemperatureCelsius: x.LastReading?.TemperatureCelsius,
+            lastReadingTime: x.LastReading?.Time
+        ));
     }
 
     /// <summary>
@@ -76,13 +76,13 @@ public class TemperatureDeviceRepository
             .ToListAsync();
 
         return data.ConvertAll(x => new LostDevice
-        {
-            Id = x.Id,
-            DeviceModel = x.DeviceModel,
-            DeviceId = x.DeviceId,
-            DeviceChannel = x.DeviceChannel,
-            LastReadingTemperatureCelsius = x.LastReading?.TemperatureCelsius,
-            LastReadingTime = x.LastReading?.Time,
-        });
+        (
+            id: x.Id,
+            deviceModel: x.DeviceModel,
+            deviceId: x.DeviceId,
+            deviceChannel: x.DeviceChannel,
+            lastReadingTemperatureCelsius: x.LastReading?.TemperatureCelsius,
+            lastReadingTime: x.LastReading?.Time
+        ));
     }
 }

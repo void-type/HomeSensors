@@ -1,12 +1,13 @@
-﻿using HomeSensors.Model.TemperatureRepositories;
-using HomeSensors.Model.TemperatureRepositories.Models;
+﻿using HomeSensors.Model.Repositories;
+using HomeSensors.Model.Repositories.Models;
+using HomeSensors.Web.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
 
-namespace HomeSensors.Web.Temperatures;
+namespace HomeSensors.Web.Controllers;
 
 /// <summary>
 /// Exposes temperature data through web API
@@ -14,10 +15,10 @@ namespace HomeSensors.Web.Temperatures;
 [ApiRoute("temperatures")]
 public class TemperatureApiController : ControllerBase
 {
-    private readonly CachedTemperatureRepository _cachedTemperatureRepository;
+    private readonly TemperatureCachedRepository _cachedTemperatureRepository;
     private readonly TemperatureDeviceRepository _deviceRepository;
 
-    public TemperatureApiController(CachedTemperatureRepository temperatureRepository, TemperatureDeviceRepository temperatureDeviceRepository)
+    public TemperatureApiController(TemperatureCachedRepository temperatureRepository, TemperatureDeviceRepository temperatureDeviceRepository)
     {
         _cachedTemperatureRepository = temperatureRepository;
         _deviceRepository = temperatureDeviceRepository;
@@ -25,7 +26,7 @@ public class TemperatureApiController : ControllerBase
 
     [HttpPost]
     [Route("current-readings")]
-    [ProducesResponseType(typeof(List<GraphCurrentReading>), 200)]
+    [ProducesResponseType(typeof(List<CurrentReading>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetCurrentReadings()
     {

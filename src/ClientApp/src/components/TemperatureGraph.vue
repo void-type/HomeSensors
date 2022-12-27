@@ -117,15 +117,15 @@ function setGraphData(series: Array<GraphTimeSeries>) {
   }
 
   const datasets = series?.map((s) => ({
-    label: s.location,
-    borderColor: getColor(s.location || 'unknown'),
+    label: s.location?.name,
+    borderColor: getColor(s.location?.name || 'unknown'),
     data: s.points
       ?.filter((p: GraphPoint) => p.temperatureCelsius)
       .map((p: GraphPoint) => ({
         x: p.time,
         y: formatTemp(p.temperatureCelsius, useFahrenheit.value),
       })),
-    hidden: oldHiddenCategories.includes(s.location),
+    hidden: oldHiddenCategories.includes(s.location?.name),
   }));
 
   const config = {
@@ -303,10 +303,10 @@ watch(
       </thead>
       <tbody>
         <tr v-for="(point, i) in data.graphSeries" :key="i">
-          <td>{{ point.location }}</td>
-          <td>{{ formatTemp(point.min, useFahrenheit) }}{{ tempUnit }}</td>
-          <td>{{ formatTemp(point.max, useFahrenheit) }}{{ tempUnit }}</td>
-          <td>{{ formatTemp(point.average, useFahrenheit) }}{{ tempUnit }}</td>
+          <td>{{ point.location?.name }}</td>
+          <td>{{ formatTemp(point.minTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
+          <td>{{ formatTemp(point.maxTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
+          <td>{{ formatTemp(point.averageTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
         </tr>
       </tbody>
     </table>

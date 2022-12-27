@@ -11,7 +11,7 @@
 
 import type {
   AppVersion,
-  GraphCurrentReading,
+  CurrentReading,
   GraphTimeSeries,
   GraphTimeSeriesRequest,
   IFailureIItemSet,
@@ -61,11 +61,11 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags TemperatureApi
    * @name TemperaturesCurrentReadingsCreate
    * @request POST:/api/temperatures/current-readings
-   * @response `200` `(GraphCurrentReading)[]` Success
+   * @response `200` `(CurrentReading)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesCurrentReadingsCreate = (params: RequestParams = {}) =>
-    this.request<GraphCurrentReading[], IFailureIItemSet>({
+    this.request<CurrentReading[], IFailureIItemSet>({
       path: `/api/temperatures/current-readings`,
       method: 'POST',
       format: 'json',

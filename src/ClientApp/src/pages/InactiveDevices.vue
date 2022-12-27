@@ -53,7 +53,7 @@ onMounted(async () => {
             <td>{{ device.deviceModel }}</td>
             <td>{{ device.deviceId }}</td>
             <td>{{ device.deviceChannel }}</td>
-            <td>{{ device.locationName }}</td>
+            <td>{{ device.location?.name }}</td>
             <td>
               {{ formatTemp(device.lastReadingTemperatureCelsius, useFahrenheit) }}{{ tempUnit }} on
               {{ DateHelpers.dateTimeShortForView(device.lastReadingTime) }}

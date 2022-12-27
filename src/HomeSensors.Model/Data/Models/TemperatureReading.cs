@@ -8,6 +8,7 @@ public class TemperatureReading
     public int? DeviceStatus { get; set; }
     public double? Humidity { get; set; }
     public double? TemperatureCelsius { get; set; }
+    public bool IsSummary { get; set; }
 
     public long TemperatureDeviceId { get; set; }
     public TemperatureDevice TemperatureDevice { get; set; } = new();

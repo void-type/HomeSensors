@@ -1,8 +1,10 @@
-﻿using HomeSensors.Model.Data;
-using HomeSensors.Model.TemperatureRepositories;
+﻿using HomeSensors.Model.Caching;
+using HomeSensors.Model.Data;
+using HomeSensors.Model.Repositories;
 using HomeSensors.Web.Auth;
-using HomeSensors.Web.Caching;
-using HomeSensors.Web.Temperatures;
+using HomeSensors.Web.Hubs;
+using HomeSensors.Web.Repositories;
+using HomeSensors.Web.Workers;
 using LazyCache;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -60,7 +62,7 @@ try
         return cache;
     });
 
-    services.AddScoped<CachedTemperatureRepository>();
+    services.AddScoped<TemperatureCachedRepository>();
 
     services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
     services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
@@ -68,7 +70,7 @@ try
     services.AddDomainEvents(ServiceLifetime.Scoped, typeof(GetWebClientInfo).Assembly);
 
     services.AddSignalR();
-    services.AddHostedService<CurrentReadingsWorker>();
+    services.AddHostedService<PushTemperatureCurrentReadingsWorker>();
 
     var app = builder.Build();
 
