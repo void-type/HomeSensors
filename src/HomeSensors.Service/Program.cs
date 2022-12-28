@@ -32,7 +32,6 @@ var host = Host.CreateDefaultBuilder(args)
 
         services.AddHostedService<GetMqttTemperaturesWorker>();
         services.AddHostedService<CheckTemperatureLimitsWorker>();
-        services.AddHostedService<SummarizeTemperatureReadingsWorker>();
     })
     .Build();
 
