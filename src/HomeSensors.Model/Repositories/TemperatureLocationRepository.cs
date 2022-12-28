@@ -6,7 +6,7 @@ using VoidCore.Model.Responses.Collections;
 
 namespace HomeSensors.Model.Repositories;
 
-public class TemperatureLocationRepository
+public class TemperatureLocationRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
 
@@ -22,6 +22,7 @@ public class TemperatureLocationRepository
     public async Task<List<Location>> GetAll(PaginationOptions paginationOptions)
     {
         return (await _data.TemperatureLocations
+            .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.Name != "Outside")
             .ThenBy(x => x.Name)
@@ -38,6 +39,7 @@ public class TemperatureLocationRepository
     public async Task<List<CheckLimitResult>> CheckLimits(DateTimeOffset lastCheck)
     {
         var locations = await _data.TemperatureLocations
+            .TagWith(GetTag())
             .AsNoTracking()
             .ToListAsync();
 
@@ -46,6 +48,7 @@ public class TemperatureLocationRepository
         foreach (var location in locations)
         {
             var dbReadingsSince = _data.TemperatureReadings
+                .TagWith(GetTag())
                 .AsNoTracking()
                 .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id);
 

@@ -5,7 +5,7 @@ using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Repositories;
 
-public class TemperatureDeviceRepository
+public class TemperatureDeviceRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
     private readonly IDateTimeService _dateTimeService;
@@ -22,6 +22,7 @@ public class TemperatureDeviceRepository
     public async Task<List<InactiveDevice>> GetInactive()
     {
         var data = await _data.TemperatureDevices
+            .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.CurrentTemperatureLocation)
             .Include(x => x.TemperatureReadings)
@@ -59,6 +60,7 @@ public class TemperatureDeviceRepository
     public async Task<List<LostDevice>> GetLost()
     {
         var data = await _data.TemperatureDevices
+            .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.TemperatureReadings)
             .OrderBy(x => x.DeviceModel)

@@ -1,16 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using HomeSensors.Model.Repositories;
+using System.Runtime.CompilerServices;
 
 namespace HomeSensors.Model.Caching;
 
-public class CachedRepositoryBase
+public class CachedRepositoryBase : RepositoryBase
 {
-    private readonly string _thisClassName;
-
-    public CachedRepositoryBase()
-    {
-        _thisClassName = GetType().Name;
-    }
-
     protected static string BuildCacheKey(params string[] cacheKeyParts)
     {
         return string.Join("|", cacheKeyParts);
@@ -18,6 +12,6 @@ public class CachedRepositoryBase
 
     protected string GetCacheKeyPrefix([CallerMemberName] string caller = "unknown")
     {
-        return $"{_thisClassName}.{caller}";
+        return $"{ThisClassName}.{caller}";
     }
 }
