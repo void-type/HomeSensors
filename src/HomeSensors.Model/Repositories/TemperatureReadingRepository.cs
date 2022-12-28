@@ -22,25 +22,22 @@ public class TemperatureReadingRepository : RepositoryBase
     /// </summary>
     public async Task<List<CurrentReading>> GetCurrent()
     {
-        var data = await _data.TemperatureLocations
+        var data = await _data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
-            .Include(x => x.TemperatureReadings)
-            .OrderBy(x => x.Name != "Outside")
-            .ThenBy(x => x.Name)
-            .Select(x => new
-            {
-                Location = x,
-                Reading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault(),
-            })
-            .Where(x => x.Reading != null && x.Reading.Time >= _dateTimeService.MomentWithOffset.AddDays(-1))
+            .Include(x => x.TemperatureLocation)
+            .Where(x => x.Time >= _dateTimeService.MomentWithOffset.AddDays(-1) && x.TemperatureLocationId != null)
+            .GroupBy(x => x.TemperatureLocation!.Name)
+            .OrderBy(g => g.Key != "Outside")
+            .ThenBy(x => x.Key)
+            .Select(g => g.OrderByDescending(x => x.Time).First())
             .ToListAsync();
 
         return data.ConvertAll(x => new CurrentReading(
-            location: x.Location.ToLocation(),
-            temperatureCelsius: x.Reading!.TemperatureCelsius,
-            humidity: x.Reading!.Humidity,
-            time: x.Reading.Time
+            location: x.TemperatureLocation!.ToLocation(),
+            temperatureCelsius: x.TemperatureCelsius,
+            humidity: x.Humidity,
+            time: x.Time
         ));
     }
 
