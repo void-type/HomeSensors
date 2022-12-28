@@ -64,8 +64,6 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                     }))
                 .ToList();
 
-            _logger.LogInformation("Summarizing data older than {Cutoff}. Compressed {OldCount} rows to {NewCount} rows.", cutoffLimit.ToString("o"), oldReadings.Count, newReadings.Count);
-
             data.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
 
             data.TemperatureReadings.AddRange(newReadings);
@@ -74,6 +72,8 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
             await data.TemperatureReadings
                 .WhereShouldBeSummarized(cutoffLimit)
                 .ExecuteDeleteAsync(stoppingToken);
+
+            _logger.LogInformation("Summarized data older than {Cutoff}. Compressed {OldCount} rows to {NewCount} rows.", cutoffLimit.ToString("o"), oldReadings.Count, newReadings.Count);
         }
     }
 }
