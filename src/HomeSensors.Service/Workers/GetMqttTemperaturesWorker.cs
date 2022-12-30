@@ -19,12 +19,12 @@ public class GetMqttTemperaturesWorker : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
 
-    public GetMqttTemperaturesWorker(ILogger<GetMqttTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory)
+    public GetMqttTemperaturesWorker(ILogger<GetMqttTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory, MqttFactory mqttFactory)
     {
         _logger = logger;
         _configuration = configuration;
         _scopeFactory = scopeFactory;
-        _mqttFactory = new MqttFactory();
+        _mqttFactory = mqttFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -59,16 +59,21 @@ public class GetMqttTemperaturesWorker : BackgroundService
         LogMessage(e, message);
 
         using var scope = _scopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
+        var data = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
-        var device = await dbContext.TemperatureDevices
+        var device = await data.TemperatureDevices
             .FirstOrDefaultAsync(x => x.DeviceModel == message.Model && x.DeviceId == message.Id && x.DeviceChannel == message.Channel);
+
+        if (device?.IsRetired == true)
+        {
+            return;
+        }
 
         if (device is null)
         {
             _logger.LogWarning("Device not found in database. Creating new device. ({Model}/{Id}/{Channel})", message.Model, message.Id, message.Channel);
 
-            var savedDevice = dbContext.TemperatureDevices
+            var savedDevice = data.TemperatureDevices
                 .Add(new TemperatureDevice
                 {
                     DeviceModel = message.Model,
@@ -76,13 +81,13 @@ public class GetMqttTemperaturesWorker : BackgroundService
                     DeviceChannel = message.Channel
                 });
 
-            await dbContext.SaveChangesAsync();
+            await data.SaveChangesAsync();
 
             device = savedDevice.Entity;
         }
 
         // If we already have a reading for this device at this time, don't save because duplicate.
-        var readingExists = dbContext.TemperatureReadings
+        var readingExists = data.TemperatureReadings
             .Any(x => x.Time == message.Time && x.TemperatureDeviceId == device.Id);
 
         if (readingExists)
@@ -90,7 +95,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
             return;
         }
 
-        dbContext.TemperatureReadings
+        data.TemperatureReadings
             .Add(new TemperatureReading
             {
                 Time = message.Time.ToLocalTime(),
@@ -102,7 +107,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
                 TemperatureLocationId = device.CurrentTemperatureLocationId
             });
 
-        await dbContext.SaveChangesAsync();
+        await data.SaveChangesAsync();
     }
 
     private void LogMessage(MqttApplicationMessageReceivedEventArgs e, TemperatureMessage message)

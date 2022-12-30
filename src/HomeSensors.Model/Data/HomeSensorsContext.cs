@@ -21,6 +21,9 @@ public class HomeSensorsContext : DbContext
         modelBuilder.Entity<TemperatureReading>()
             .HasIndex(r => r.Time);
 
+        modelBuilder.Entity<TemperatureReading>()
+            .HasIndex(r => r.IsSummary);
+
         modelBuilder.Entity<TemperatureLocation>()
             .HasIndex(r => r.Name)
             .IsUnique();

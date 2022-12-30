@@ -42,9 +42,15 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
             var devices = await data.TemperatureDevices.ToListAsync(stoppingToken);
 
             var oldReadings = await data.TemperatureReadings
+                .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
                 .AsNoTracking()
                 .WhereShouldBeSummarized(cutoffLimit)
                 .ToListAsync(stoppingToken);
+
+            if (oldReadings.Count == 0)
+            {
+                return;
+            }
 
             var newReadings = oldReadings
                 .GroupBy(x => (device: x.TemperatureDeviceId, location: x.TemperatureLocationId))
@@ -58,7 +64,6 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                         Humidity = x.Average(x => x.Humidity),
                         TemperatureCelsius = x.Average(x => x.TemperatureCelsius),
                         IsSummary = true,
-                        TemperatureDeviceId = group.Key.device,
                         TemperatureDevice = devices.First(x => x.Id == group.Key.device),
                         TemperatureLocationId = group.Key.location
                     }))

@@ -4,6 +4,7 @@ using HomeSensors.Service.Emailing;
 using HomeSensors.Service.Mqtt;
 using HomeSensors.Service.Workers;
 using Microsoft.EntityFrameworkCore;
+using MQTTnet;
 using Serilog;
 using VoidCore.Model.Configuration;
 using VoidCore.Model.Emailing;
@@ -29,9 +30,11 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IEmailSender, SmtpEmailer>();
         services.AddSingleton<EmailNotificationService>();
         services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
+        services.AddSingleton<MqttFactory>();
 
         services.AddHostedService<GetMqttTemperaturesWorker>();
         services.AddHostedService<CheckTemperatureLimitsWorker>();
+        services.AddHostedService<SummarizeTemperatureReadingsWorker>();
     })
     .Build();
 
