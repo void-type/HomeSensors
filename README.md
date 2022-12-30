@@ -2,9 +2,22 @@
 
 This is a solution to gather data from various sensors and display it.
 
-HomeSensors.Service - This is a simple MQTT receiver that will persist messages to a database. Can be expanded to reliably ingest other data in the future.
+## Features
 
-HomeSensors.Web - A web app for data analysis and entry. Exposes a web API and SignalR endpoints for clients.
+HomeSensors.Service - A service for performing scheduled or continuous actions.
+
+* Gathers temperature data from an external MQTT feed using MQTTnet. There are scripts to setup an SDR, RTL_433 and Mosquito on a Raspberry PI.
+* Performs temperature limit checks per-location. Will notify via email when limit is exceeded.
+* Compresses historical data (> 30 days ago) into 5 minute intervals. This can save significant space as some of these sensors can poll every few seconds.
+
+HomeSensors.Web - A web app for working with the data.
+
+* Shows current readings in a live dashboard via SignalR.
+* Time series line graph with selectable date range and locations using Chart.js. Time series also populates a table showing min, max and average temps of each location queried.
+* Data is cached using LazyCache.
+* Web API is automatically documented using Swashbuckle and Swagger. Vue app uses swagger-typescript-api to generate an API client from the swagger endpoint.
+* Vue app has settings under the user name for temperature unit, show/hide humidity, and dark theme.
+* See screenshots [here](docs/screenshots.md).
 
 ## Build tools
 
