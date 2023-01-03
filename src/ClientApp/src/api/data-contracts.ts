@@ -25,7 +25,8 @@ export interface Device {
   deviceModel?: string | null;
   deviceId?: string | null;
   deviceChannel?: string | null;
-  currentLocation?: Location;
+  /** @format int64 */
+  currentLocationId?: number | null;
   lastReading?: Reading;
   isRetired?: boolean;
   isLost?: boolean;

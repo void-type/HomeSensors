@@ -235,82 +235,76 @@ watch(
 </script>
 
 <template>
-  <div class="container-xxl">
-    <div class="row mt-4">
-      <div class="col-md-6 mb-3">
-        <label for="startDate" class="form-label">Start date</label>
-        <v-date-picker
-          v-model="data.graphRange.start"
-          mode="dateTime"
-          :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
-          :update-on-input="false"
-          is24hr
-          is-required
-          ><template #default="{ inputValue, inputEvents }">
-            <input id="startDate" class="form-control" :value="inputValue" v-on="inputEvents" />
-          </template>
-        </v-date-picker>
-      </div>
-      <div class="col-md-6 mb-3">
-        <label for="endDate" class="form-label">End date</label>
-        <v-date-picker
-          v-model="data.graphRange.end"
-          mode="dateTime"
-          :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
-          :update-on-input="false"
-          is24hr
-          is-required
-          ><template #default="{ inputValue, inputEvents }">
-            <input id="endDate" class="form-control" :value="inputValue" v-on="inputEvents" />
-          </template>
-        </v-date-picker>
-      </div>
+  <div class="row mt-4">
+    <div class="col-md-6 mb-3">
+      <label for="startDate" class="form-label">Start date</label>
+      <v-date-picker
+        v-model="data.graphRange.start"
+        mode="dateTime"
+        :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
+        :update-on-input="false"
+        is24hr
+        is-required
+        ><template #default="{ inputValue, inputEvents }">
+          <input id="startDate" class="form-control" :value="inputValue" v-on="inputEvents" />
+        </template>
+      </v-date-picker>
     </div>
-    <div class="text-center">
-      <button id="selectAllButton" class="btn btn-sm btn-secondary" @click="onSelectAllClick">
-        {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
-      </button>
+    <div class="col-md-6 mb-3">
+      <label for="endDate" class="form-label">End date</label>
+      <v-date-picker
+        v-model="data.graphRange.end"
+        mode="dateTime"
+        :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
+        :update-on-input="false"
+        is24hr
+        is-required
+        ><template #default="{ inputValue, inputEvents }">
+          <input id="endDate" class="form-control" :value="inputValue" v-on="inputEvents" />
+        </template>
+      </v-date-picker>
     </div>
-    <div class="text-center">
-      <div
-        v-for="location in data.locations"
-        :key="location.id"
-        class="form-check form-check-inline"
-      >
-        <input
-          :id="`locationSelect-${location.id}`"
-          v-model="data.graphRange.locationIds"
-          :value="location.id"
-          class="form-check-input"
-          type="checkbox"
-        />
-        <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
-          location.name
-        }}</label>
-      </div>
-    </div>
-    <div class="chart-container mt-3">
-      <canvas id="tempGraph"></canvas>
-    </div>
-    <table :class="{ 'mt-3': true, table: true, 'table-dark': useDarkMode }">
-      <thead>
-        <tr>
-          <th>Location</th>
-          <th>Low</th>
-          <th>High</th>
-          <th>Avg</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(point, i) in data.graphSeries" :key="i">
-          <td>{{ point.location?.name }}</td>
-          <td>{{ formatTemp(point.minTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
-          <td>{{ formatTemp(point.maxTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
-          <td>{{ formatTemp(point.averageTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
-        </tr>
-      </tbody>
-    </table>
   </div>
+  <div class="text-center">
+    <button id="selectAllButton" class="btn btn-sm btn-secondary" @click="onSelectAllClick">
+      {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
+    </button>
+  </div>
+  <div class="text-center">
+    <div v-for="location in data.locations" :key="location.id" class="form-check form-check-inline">
+      <input
+        :id="`locationSelect-${location.id}`"
+        v-model="data.graphRange.locationIds"
+        :value="location.id"
+        class="form-check-input"
+        type="checkbox"
+      />
+      <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
+        location.name
+      }}</label>
+    </div>
+  </div>
+  <div class="chart-container mt-3">
+    <canvas id="tempGraph"></canvas>
+  </div>
+  <table :class="{ 'mt-3': true, table: true, 'table-dark': useDarkMode }">
+    <thead>
+      <tr>
+        <th>Location</th>
+        <th>Low</th>
+        <th>High</th>
+        <th>Avg</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="(point, i) in data.graphSeries" :key="i">
+        <td>{{ point.location?.name }}</td>
+        <td>{{ formatTemp(point.minTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
+        <td>{{ formatTemp(point.maxTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
+        <td>{{ formatTemp(point.averageTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <style lang="scss" scoped>

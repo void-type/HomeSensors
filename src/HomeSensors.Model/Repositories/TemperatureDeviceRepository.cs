@@ -24,7 +24,6 @@ public class TemperatureDeviceRepository : RepositoryBase
         var data = await _data.TemperatureDevices
             .TagWith(GetTag())
             .AsNoTracking()
-            .Include(x => x.CurrentTemperatureLocation)
             .Include(x => x.TemperatureReadings)
             .OrderBy(x => x.DeviceModel)
             .ThenBy(x => x.DeviceId)
@@ -36,7 +35,7 @@ public class TemperatureDeviceRepository : RepositoryBase
                 x.DeviceId,
                 x.DeviceChannel,
                 x.IsRetired,
-                Location = x.CurrentTemperatureLocation,
+                CurrentLocationId = x.CurrentTemperatureLocationId,
                 LastReading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault()
             })
             .ToListAsync();
@@ -47,10 +46,10 @@ public class TemperatureDeviceRepository : RepositoryBase
             deviceModel: x.DeviceModel,
             deviceId: x.DeviceId,
             deviceChannel: x.DeviceChannel,
-            currentLocation: x.Location?.ToLocation(),
+            currentLocationId: x.CurrentLocationId,
             lastReading: x.LastReading?.ToReading(),
             isRetired: x.IsRetired,
-            isLost: x.Location is null && !x.IsRetired,
+            isLost: x.CurrentLocationId is null && !x.IsRetired,
             isInactive: (x.LastReading is null || x.LastReading.Time < _dateTimeService.MomentWithOffset.AddHours(-2)) && !x.IsRetired
         ));
     }

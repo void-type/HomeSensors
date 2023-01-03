@@ -4,7 +4,7 @@ public class Device
 {
     public Device(
         long id, string? deviceModel, string? deviceId, string? deviceChannel,
-        Location? currentLocation, Reading? lastReading,
+        long? currentLocationId, Reading? lastReading,
         bool isRetired, bool isLost, bool isInactive
         )
     {
@@ -12,7 +12,7 @@ public class Device
         DeviceModel = deviceModel;
         DeviceId = deviceId;
         DeviceChannel = deviceChannel;
-        CurrentLocation = currentLocation;
+        CurrentLocationId = currentLocationId;
         LastReading = lastReading;
         IsRetired = isRetired;
         IsLost = isLost;
@@ -23,7 +23,7 @@ public class Device
     public string? DeviceModel { get; }
     public string? DeviceId { get; }
     public string? DeviceChannel { get; }
-    public Location? CurrentLocation { get; }
+    public long? CurrentLocationId { get; }
     public Reading? LastReading { get; }
     public bool IsRetired { get; }
     public bool IsLost { get; }

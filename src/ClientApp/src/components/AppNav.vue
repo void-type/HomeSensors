@@ -3,10 +3,7 @@
 <template>
   <ul class="navbar-nav">
     <li class="nav-item">
-      <router-link :to="{ name: 'inactiveDevices' }" class="nav-link">Inactive devices</router-link>
-    </li>
-    <li class="nav-item">
-      <router-link :to="{ name: 'lostDevices' }" class="nav-link">Lost devices</router-link>
+      <router-link :to="{ name: 'devicesMain' }" class="nav-link">Devices</router-link>
     </li>
   </ul>
 </template>
