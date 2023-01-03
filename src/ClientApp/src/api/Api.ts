@@ -11,13 +11,12 @@
 
 import type {
   AppVersion,
-  CurrentReading,
+  Device,
   GraphTimeSeries,
   GraphTimeSeriesRequest,
   IFailureIItemSet,
-  InactiveDevice,
   Location,
-  LostDevice,
+  Reading,
   WebClientInfo,
 } from './data-contracts';
 import { ContentType, HttpClient, type RequestParams } from './http-client';
@@ -61,11 +60,11 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags TemperatureApi
    * @name TemperaturesCurrentReadingsCreate
    * @request POST:/api/temperatures/current-readings
-   * @response `200` `(CurrentReading)[]` Success
+   * @response `200` `(Reading)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesCurrentReadingsCreate = (params: RequestParams = {}) =>
-    this.request<CurrentReading[], IFailureIItemSet>({
+    this.request<Reading[], IFailureIItemSet>({
       path: `/api/temperatures/current-readings`,
       method: 'POST',
       format: 'json',
@@ -109,30 +108,14 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * No description
    *
    * @tags TemperatureApi
-   * @name TemperaturesInactiveDevicesCreate
-   * @request POST:/api/temperatures/inactive-devices
-   * @response `200` `(InactiveDevice)[]` Success
+   * @name TemperaturesDevicesCreate
+   * @request POST:/api/temperatures/devices
+   * @response `200` `(Device)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesInactiveDevicesCreate = (params: RequestParams = {}) =>
-    this.request<InactiveDevice[], IFailureIItemSet>({
-      path: `/api/temperatures/inactive-devices`,
-      method: 'POST',
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags TemperatureApi
-   * @name TemperaturesLostDevicesCreate
-   * @request POST:/api/temperatures/lost-devices
-   * @response `200` `(LostDevice)[]` Success
-   * @response `400` `IFailureIItemSet` Bad Request
-   */
-  temperaturesLostDevicesCreate = (params: RequestParams = {}) =>
-    this.request<LostDevice[], IFailureIItemSet>({
-      path: `/api/temperatures/lost-devices`,
+  temperaturesDevicesCreate = (params: RequestParams = {}) =>
+    this.request<Device[], IFailureIItemSet>({
+      path: `/api/temperatures/devices`,
       method: 'POST',
       format: 'json',
       ...params,

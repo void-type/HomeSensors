@@ -20,7 +20,7 @@ public class TemperatureReadingRepository : RepositoryBase
     /// <summary>
     /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
     /// </summary>
-    public async Task<List<CurrentReading>> GetCurrent()
+    public async Task<List<Reading>> GetCurrent()
     {
         var data = await _data.TemperatureReadings
             .TagWith(GetTag())
@@ -33,11 +33,11 @@ public class TemperatureReadingRepository : RepositoryBase
             .Select(g => g.OrderByDescending(x => x.Time).First())
             .ToListAsync();
 
-        return data.ConvertAll(x => new CurrentReading(
-            location: x.TemperatureLocation!.ToLocation(),
-            temperatureCelsius: x.TemperatureCelsius,
+        return data.ConvertAll(x => new Reading(
+            time: x.Time,
             humidity: x.Humidity,
-            time: x.Time
+            temperatureCelsius: x.TemperatureCelsius,
+            location: x.TemperatureLocation!.ToLocation()
         ));
     }
 

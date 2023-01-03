@@ -53,7 +53,7 @@ public class CheckTemperatureLimitsWorker : BackgroundService
         }
     }
 
-    private Task NotifyLimitExceeded(CheckLimitResult failedResult, string minOrMax, string hotOrCold, CheckLimitResultReading reading, double? limit, CancellationToken stoppingToken)
+    private Task NotifyLimitExceeded(CheckLimitResult failedResult, string minOrMax, string hotOrCold, Reading reading, double? limit, CancellationToken stoppingToken)
     {
         var locationName = failedResult.Location.Name;
         var time = reading.Time;

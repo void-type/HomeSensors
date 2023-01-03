@@ -2,7 +2,7 @@
 
 public class CheckLimitResult
 {
-    public CheckLimitResult(Location location, CheckLimitResultReading? minReading, CheckLimitResultReading? maxReading)
+    public CheckLimitResult(Location location, Reading? minReading, Reading? maxReading)
     {
         Location = location;
 
@@ -19,6 +19,6 @@ public class CheckLimitResult
 
     public Location Location { get; }
     public bool IsFailed { get; }
-    public CheckLimitResultReading? MinReading { get; }
-    public CheckLimitResultReading? MaxReading { get; }
+    public Reading? MinReading { get; }
+    public Reading? MaxReading { get; }
 }

@@ -62,7 +62,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return results;
     }
 
-    private static async Task<CheckLimitResultReading?> GetMinExceeded(TemperatureLocation location, IQueryable<TemperatureReading> dbReadingsSince)
+    private static async Task<Reading?> GetMinExceeded(TemperatureLocation location, IQueryable<TemperatureReading> dbReadingsSince)
     {
         if (!location.MinTemperatureLimitCelsius.HasValue)
         {
@@ -78,10 +78,10 @@ public class TemperatureLocationRepository : RepositoryBase
             return null;
         }
 
-        return min.ToCheckLimitResultReading();
+        return min.ToReading();
     }
 
-    private static async Task<CheckLimitResultReading?> GetMaxExceeded(TemperatureLocation location, IQueryable<TemperatureReading> dbReadingsSince)
+    private static async Task<Reading?> GetMaxExceeded(TemperatureLocation location, IQueryable<TemperatureReading> dbReadingsSince)
     {
         if (!location.MaxTemperatureLimitCelsius.HasValue)
         {
@@ -97,6 +97,6 @@ public class TemperatureLocationRepository : RepositoryBase
             return null;
         }
 
-        return max.ToCheckLimitResultReading();
+        return max.ToReading();
     }
 }

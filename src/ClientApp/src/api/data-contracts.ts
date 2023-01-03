@@ -19,14 +19,17 @@ export interface AppVersion {
   assemblyConfiguration?: string | null;
 }
 
-export interface CurrentReading {
-  /** @format date-time */
-  time?: string;
-  /** @format double */
-  temperatureCelsius?: number | null;
-  /** @format double */
-  humidity?: number | null;
-  location?: Location;
+export interface Device {
+  /** @format int64 */
+  id?: number;
+  deviceModel?: string | null;
+  deviceId?: string | null;
+  deviceChannel?: string | null;
+  currentLocation?: Location;
+  lastReading?: Reading;
+  isRetired?: boolean;
+  isLost?: boolean;
+  isInactive?: boolean;
 }
 
 export interface DomainUser {
@@ -79,19 +82,6 @@ export interface IFailureIItemSet {
   totalCount?: number;
 }
 
-export interface InactiveDevice {
-  /** @format int64 */
-  id?: number;
-  deviceModel?: string | null;
-  deviceId?: string | null;
-  deviceChannel?: string | null;
-  location?: Location;
-  /** @format double */
-  lastReadingTemperatureCelsius?: number | null;
-  /** @format date-time */
-  lastReadingTime?: string | null;
-}
-
 export interface Location {
   /** @format int64 */
   id?: number;
@@ -102,24 +92,22 @@ export interface Location {
   maxLimitTemperatureCelsius?: number | null;
 }
 
-export interface LostDevice {
-  /** @format int64 */
-  id?: number;
-  deviceModel?: string | null;
-  deviceId?: string | null;
-  deviceChannel?: string | null;
-  /** @format double */
-  lastReadingTemperatureCelsius?: number | null;
-  /** @format date-time */
-  lastReadingTime?: string | null;
-}
-
 export interface PaginationOptions {
   /** @format int32 */
   page?: number;
   /** @format int32 */
   take?: number;
   isPagingEnabled?: boolean;
+}
+
+export interface Reading {
+  /** @format date-time */
+  time?: string;
+  /** @format double */
+  humidity?: number | null;
+  /** @format double */
+  temperatureCelsius?: number | null;
+  location?: Location;
 }
 
 export interface WebClientInfo {

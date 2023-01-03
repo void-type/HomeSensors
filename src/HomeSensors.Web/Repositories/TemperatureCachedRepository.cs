@@ -41,7 +41,7 @@ public class TemperatureCachedRepository : CachedRepositoryBase
     /// If called from the timer service, then force a refresh. Otherwise all other clients will get cached data upon connection or REST query.
     /// </summary>
     /// <param name="forceRefresh">When true, the cache will be refreshed.</param>
-    public async Task<List<CurrentReading>> GetCurrentReadings(bool forceRefresh = false)
+    public async Task<List<Reading>> GetCurrentReadings(bool forceRefresh = false)
     {
         var cacheKey = GetCacheKeyPrefix();
 

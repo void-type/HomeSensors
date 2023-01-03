@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
-import type { LostDevice } from '@/api/data-contracts';
+import type { Device } from '@/api/data-contracts';
 import { onMounted, reactive } from 'vue';
 import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
@@ -15,13 +15,13 @@ const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
 const { tempUnit } = appStore;
 
 const data = reactive({
-  lostDevices: [] as Array<LostDevice>,
+  lostDevices: [] as Array<Device>,
 });
 
 async function getLostDevices() {
   try {
-    const response = await new Api().temperaturesLostDevicesCreate();
-    data.lostDevices = response.data;
+    const response = await new Api().temperaturesDevicesCreate();
+    data.lostDevices = response.data.filter((x) => x.isLost);
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
@@ -54,8 +54,9 @@ onMounted(async () => {
             <td>{{ device.deviceId }}</td>
             <td>{{ device.deviceChannel }}</td>
             <td>
-              {{ formatTemp(device.lastReadingTemperatureCelsius, useFahrenheit) }}{{ tempUnit }} on
-              {{ DateHelpers.dateTimeShortForView(device.lastReadingTime) }}
+              {{ formatTemp(device.lastReading?.temperatureCelsius, useFahrenheit)
+              }}{{ tempUnit }} on
+              {{ DateHelpers.dateTimeShortForView(device.lastReading?.time) }}
             </td>
           </tr>
         </tbody>

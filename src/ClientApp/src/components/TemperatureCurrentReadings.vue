@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
-import type { CurrentReading } from '@/api/data-contracts';
+import type { Reading } from '@/api/data-contracts';
 import { onMounted, reactive } from 'vue';
 import { format } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
@@ -12,7 +12,7 @@ const appStore = useAppStore();
 const { useFahrenheit, tempUnit, showHumidity } = storeToRefs(appStore);
 
 const data = reactive({
-  currentReadings: [] as Array<CurrentReading>,
+  currentReadings: [] as Array<Reading>,
 });
 
 let connection: signalR.HubConnection | null = null;

@@ -26,7 +26,7 @@ public class TemperatureApiController : ControllerBase
 
     [HttpPost]
     [Route("current-readings")]
-    [ProducesResponseType(typeof(List<CurrentReading>), 200)]
+    [ProducesResponseType(typeof(List<Reading>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetCurrentReadings()
     {
@@ -55,22 +55,12 @@ public class TemperatureApiController : ControllerBase
     }
 
     [HttpPost]
-    [Route("inactive-devices")]
-    [ProducesResponseType(typeof(List<InactiveDevice>), 200)]
+    [Route("devices")]
+    [ProducesResponseType(typeof(List<Device>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetInactiveDevices()
+    public async Task<IActionResult> GetDevices()
     {
-        var readings = await _deviceRepository.GetInactive();
-        return HttpResponder.Respond(readings);
-    }
-
-    [HttpPost]
-    [Route("lost-devices")]
-    [ProducesResponseType(typeof(List<LostDevice>), 200)]
-    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetLostDevices()
-    {
-        var readings = await _deviceRepository.GetLost();
+        var readings = await _deviceRepository.GetAll();
         return HttpResponder.Respond(readings);
     }
 }
