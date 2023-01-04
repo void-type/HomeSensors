@@ -19,6 +19,13 @@ export interface AppVersion {
   assemblyConfiguration?: string | null;
 }
 
+export interface CheckLimitResult {
+  location?: Location;
+  isFailed?: boolean;
+  minReading?: Reading;
+  maxReading?: Reading;
+}
+
 export interface Device {
   /** @format int64 */
   id?: number;
@@ -62,7 +69,6 @@ export interface GraphTimeSeriesRequest {
   /** @format date-time */
   endTime?: string;
   locationIds?: number[] | null;
-  paginationOptions?: PaginationOptions;
 }
 
 export interface IFailure {
@@ -83,6 +89,12 @@ export interface IFailureIItemSet {
   totalCount?: number;
 }
 
+export interface Int64EntityMessage {
+  message?: string | null;
+  /** @format int64 */
+  id?: number;
+}
+
 export interface Location {
   /** @format int64 */
   id?: number;
@@ -91,14 +103,6 @@ export interface Location {
   minLimitTemperatureCelsius?: number | null;
   /** @format double */
   maxLimitTemperatureCelsius?: number | null;
-}
-
-export interface PaginationOptions {
-  /** @format int32 */
-  page?: number;
-  /** @format int32 */
-  take?: number;
-  isPagingEnabled?: boolean;
 }
 
 export interface Reading {
@@ -111,9 +115,22 @@ export interface Reading {
   location?: Location;
 }
 
+export interface UpdateDeviceRequest {
+  /** @format int64 */
+  id?: number;
+  /** @format int64 */
+  currentLocationId?: number | null;
+  isRetired?: boolean;
+}
+
 export interface WebClientInfo {
   antiforgeryToken?: string | null;
   antiforgeryTokenHeaderName?: string | null;
   applicationName?: string | null;
   user?: DomainUser;
+}
+
+export interface TemperaturesLocationsCheckLimitsCreateParams {
+  /** @format date-time */
+  lastCheck?: string;
 }

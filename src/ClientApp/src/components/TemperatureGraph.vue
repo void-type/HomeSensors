@@ -201,7 +201,7 @@ async function getTimeSeries() {
   };
 
   try {
-    const response = await new Api().temperaturesTimeSeriesCreate(parameters);
+    const response = await new Api().temperaturesReadingsTimeSeriesCreate(parameters);
     data.graphSeries = response.data;
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -210,7 +210,7 @@ async function getTimeSeries() {
 
 async function getLocations() {
   try {
-    const response = await new Api().temperaturesLocationsCreate();
+    const response = await new Api().temperaturesLocationsAllCreate();
     data.locations = response.data;
     data.graphRange.locationIds = data.locations.map((x) => x.id as number);
   } catch (error) {
@@ -265,7 +265,7 @@ watch(
       </v-date-picker>
     </div>
   </div>
-  <div class="text-center">
+  <div class="text-center mb-1">
     <button id="selectAllButton" class="btn btn-sm btn-secondary" @click="onSelectAllClick">
       {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
     </button>

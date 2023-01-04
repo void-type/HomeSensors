@@ -11,12 +11,16 @@
 
 import type {
   AppVersion,
+  CheckLimitResult,
   Device,
   GraphTimeSeries,
   GraphTimeSeriesRequest,
   IFailureIItemSet,
+  Int64EntityMessage,
   Location,
   Reading,
+  TemperaturesLocationsCheckLimitsCreateParams,
+  UpdateDeviceRequest,
   WebClientInfo,
 } from './data-contracts';
 import { ContentType, HttpClient, type RequestParams } from './http-client';
@@ -57,15 +61,15 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags TemperatureApi
-   * @name TemperaturesCurrentReadingsCreate
-   * @request POST:/api/temperatures/current-readings
-   * @response `200` `(Reading)[]` Success
+   * @tags DevicesApi
+   * @name TemperaturesDevicesAllCreate
+   * @request POST:/api/temperatures/devices/all
+   * @response `200` `(Device)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesCurrentReadingsCreate = (params: RequestParams = {}) =>
-    this.request<Reading[], IFailureIItemSet>({
-      path: `/api/temperatures/current-readings`,
+  temperaturesDevicesAllCreate = (params: RequestParams = {}) =>
+    this.request<Device[], IFailureIItemSet>({
+      path: `/api/temperatures/devices/all`,
       method: 'POST',
       format: 'json',
       ...params,
@@ -73,15 +77,15 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags TemperatureApi
-   * @name TemperaturesTimeSeriesCreate
-   * @request POST:/api/temperatures/time-series
-   * @response `200` `(GraphTimeSeries)[]` Success
+   * @tags DevicesApi
+   * @name TemperaturesDevicesUpdateCreate
+   * @request POST:/api/temperatures/devices/update
+   * @response `200` `Int64EntityMessage` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesTimeSeriesCreate = (data: GraphTimeSeriesRequest, params: RequestParams = {}) =>
-    this.request<GraphTimeSeries[], IFailureIItemSet>({
-      path: `/api/temperatures/time-series`,
+  temperaturesDevicesUpdateCreate = (data: UpdateDeviceRequest, params: RequestParams = {}) =>
+    this.request<Int64EntityMessage, IFailureIItemSet>({
+      path: `/api/temperatures/devices/update`,
       method: 'POST',
       body: data,
       type: ContentType.Json,
@@ -91,15 +95,15 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags TemperatureApi
-   * @name TemperaturesLocationsCreate
-   * @request POST:/api/temperatures/locations
+   * @tags LocationsApi
+   * @name TemperaturesLocationsAllCreate
+   * @request POST:/api/temperatures/locations/all
    * @response `200` `(Location)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesLocationsCreate = (params: RequestParams = {}) =>
+  temperaturesLocationsAllCreate = (params: RequestParams = {}) =>
     this.request<Location[], IFailureIItemSet>({
-      path: `/api/temperatures/locations`,
+      path: `/api/temperatures/locations/all`,
       method: 'POST',
       format: 'json',
       ...params,
@@ -107,16 +111,57 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags TemperatureApi
-   * @name TemperaturesDevicesCreate
-   * @request POST:/api/temperatures/devices
-   * @response `200` `(Device)[]` Success
+   * @tags LocationsApi
+   * @name TemperaturesLocationsCheckLimitsCreate
+   * @request POST:/api/temperatures/locations/check-limits
+   * @response `200` `(CheckLimitResult)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesDevicesCreate = (params: RequestParams = {}) =>
-    this.request<Device[], IFailureIItemSet>({
-      path: `/api/temperatures/devices`,
+  temperaturesLocationsCheckLimitsCreate = (
+    query: TemperaturesLocationsCheckLimitsCreateParams,
+    params: RequestParams = {}
+  ) =>
+    this.request<CheckLimitResult[], IFailureIItemSet>({
+      path: `/api/temperatures/locations/check-limits`,
       method: 'POST',
+      query: query,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags ReadingsApi
+   * @name TemperaturesReadingsCurrentCreate
+   * @request POST:/api/temperatures/readings/current
+   * @response `200` `(Reading)[]` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesReadingsCurrentCreate = (params: RequestParams = {}) =>
+    this.request<Reading[], IFailureIItemSet>({
+      path: `/api/temperatures/readings/current`,
+      method: 'POST',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags ReadingsApi
+   * @name TemperaturesReadingsTimeSeriesCreate
+   * @request POST:/api/temperatures/readings/time-series
+   * @response `200` `(GraphTimeSeries)[]` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesReadingsTimeSeriesCreate = (
+    data: GraphTimeSeriesRequest,
+    params: RequestParams = {}
+  ) =>
+    this.request<GraphTimeSeries[], IFailureIItemSet>({
+      path: `/api/temperatures/readings/time-series`,
+      method: 'POST',
+      body: data,
+      type: ContentType.Json,
       format: 'json',
       ...params,
     });

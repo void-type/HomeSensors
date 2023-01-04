@@ -80,24 +80,6 @@ a.btn,
   min-width: 5rem;
 }
 
-.bg-light {
-  // Colored headings
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  .h1,
-  .h2,
-  .h3,
-  .h4,
-  .h5,
-  .h6 {
-    color: $primary;
-  }
-}
-
 footer {
   border-top: $gray-500 1px solid;
 }

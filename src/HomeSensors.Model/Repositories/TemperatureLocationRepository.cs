@@ -2,7 +2,6 @@
 using HomeSensors.Model.Data.Models;
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
-using VoidCore.Model.Responses.Collections;
 
 namespace HomeSensors.Model.Repositories;
 
@@ -18,15 +17,13 @@ public class TemperatureLocationRepository : RepositoryBase
     /// <summary>
     /// Get all locations.
     /// </summary>
-    /// <param name="paginationOptions"></param>
-    public async Task<List<Location>> GetAll(PaginationOptions paginationOptions)
+    public async Task<List<Location>> GetAll()
     {
         return (await _data.TemperatureLocations
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.Name != "Outside")
             .ThenBy(x => x.Name)
-            .GetPage(paginationOptions)
             .ToListAsync())
             .ConvertAll(x => x.ToLocation());
     }

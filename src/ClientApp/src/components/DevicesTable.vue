@@ -34,7 +34,7 @@ function getStatus(device: Device) {
 
 async function getDevices() {
   try {
-    const response = await new Api().temperaturesDevicesCreate();
+    const response = await new Api().temperaturesDevicesAllCreate();
     data.devices = response.data;
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -43,19 +43,47 @@ async function getDevices() {
 
 async function getLocations() {
   try {
-    const response = await new Api().temperaturesLocationsCreate();
+    const response = await new Api().temperaturesLocationsAllCreate();
     data.locations = response.data;
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
-async function saveDevice(device: Device) {
-  // TODO: Make device save API, make location create/update API.
-  const deviceSaveRequest = {
-    currentLocationId: device.currentLocationId,
+async function updateDevice(device: Device) {
+  const request = {
+    id: device.id,
+    currentLocationId: device.currentLocationId || null,
     isRetired: device.isRetired,
   };
+
+  try {
+    const response = await new Api().temperaturesDevicesUpdateCreate(request);
+    if (response.data.message) {
+      appStore.setSuccessMessage(response.data.message);
+    }
+  } catch (error) {
+    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+  }
+
+  // Update statuses
+  try {
+    const response = await new Api().temperaturesDevicesAllCreate();
+    const newDevices = response.data;
+
+    data.devices.forEach((x) => {
+      const d = newDevices.filter((y) => y.id === x.id)[0];
+
+      if (d) {
+        // eslint-disable-next-line no-param-reassign
+        x.isInactive = d.isInactive;
+        // eslint-disable-next-line no-param-reassign
+        x.isLost = d.isLost;
+      }
+    });
+  } catch (error) {
+    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+  }
 }
 
 onMounted(async () => {
@@ -67,9 +95,11 @@ onMounted(async () => {
 <template>
   <div class="mt-4">
     <p>
-      Inactive - devices that haven't saved data within the last 2 hours.
+      Inactive - device that hasn't saved a reading in the last 2 hours.
       <br />
-      Lost - devices that don't have a location.
+      Lost - device that doesn't have a location but will acquire new readings.
+      <br />
+      Retired - device will not acquire new readings and statuses are suppressed.
     </p>
     <table :class="{ table: true, 'table-dark': useDarkMode }">
       <thead>
@@ -113,7 +143,7 @@ onMounted(async () => {
             </select>
           </td>
           <td>
-            <button class="btn btn-sm btn-primary" @click="saveDevice(device)">Save</button>
+            <button class="btn btn-sm btn-primary" @click="updateDevice(device)">Save</button>
           </td>
         </tr>
       </tbody>
