@@ -126,6 +126,20 @@ body.bg-dark {
       }
     }
   }
+
+  .form-control {
+    background-color: $dark;
+    color: $light;
+  }
+
+  .form-check-input {
+    background-color: $dark;
+    border-color: $light;
+
+    &:checked {
+      background-color: $primary;
+    }
+  }
 }
 
 // Printable screens

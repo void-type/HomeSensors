@@ -2,7 +2,7 @@
 import useAppStore from '@/stores/appStore';
 import type { Device, Location } from '@/api/data-contracts';
 import { storeToRefs } from 'pinia';
-import { formatTemp } from '@/models/FormatHelpers';
+import { formatTempWithUnit } from '@/models/FormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
 import { onMounted, reactive } from 'vue';
 import { Api } from '@/api/Api';
@@ -11,7 +11,6 @@ import type { HttpResponse } from '@/api/http-client';
 const appStore = useAppStore();
 
 const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
-const { tempUnit } = appStore;
 
 const data = reactive({
   devices: [] as Array<Device>,
@@ -116,7 +115,7 @@ onMounted(async () => {
         <tr v-for="device in data.devices" :key="device.id">
           <td>{{ device.deviceModel }}/{{ device.deviceId }}/{{ device.deviceChannel }}</td>
           <td>
-            {{ formatTemp(device.lastReading?.temperatureCelsius, useFahrenheit) }}{{ tempUnit }} on
+            {{ formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit) }} on
             {{ DateHelpers.dateTimeShortForView(device.lastReading?.time) }}
           </td>
           <td>
@@ -135,7 +134,11 @@ onMounted(async () => {
           </td>
           <td>
             <label class="visually-hidden" :for="`location-${device.id}`">Location</label>
-            <select :id="`location-${device.id}`" v-model="device.currentLocationId">
+            <select
+              :id="`location-${device.id}`"
+              v-model="device.currentLocationId"
+              class="form-control form-control-sm"
+            >
               <option value=""></option>
               <option v-for="location in data.locations" :key="location.id" :value="location.id">
                 {{ location.name }}

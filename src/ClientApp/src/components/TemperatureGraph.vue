@@ -8,14 +8,14 @@ import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } f
 import 'chartjs-adapter-date-fns';
 import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
-import { formatTemp } from '@/models/FormatHelpers';
+import { formatTemp, formatTempWithUnit, tempUnit } from '@/models/FormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
 
 Chart.register(...registerables);
 
 const appStore = useAppStore();
 
-const { useFahrenheit, useDarkMode, tempUnit } = storeToRefs(appStore);
+const { useFahrenheit, useDarkMode } = storeToRefs(appStore);
 
 const initialTime = startOfMinute(new Date());
 
@@ -28,6 +28,8 @@ const data = reactive({
   locations: [] as Array<Location>,
   graphSeries: [] as Array<GraphTimeSeries>,
 });
+
+const tempUnitComputed = computed(() => tempUnit(useFahrenheit.value));
 
 const areAllLocationsSelected = computed(() =>
   data.locations.every((value) => data.graphRange.locationIds.includes(value.id as number))
@@ -148,7 +150,7 @@ function setGraphData(series: Array<GraphTimeSeries>) {
         tooltip: {
           callbacks: {
             label: (item: TooltipItem<'line'>) =>
-              `${item.dataset.label}: ${item.formattedValue}${tempUnit.value}`,
+              `${item.dataset.label}: ${item.formattedValue}${tempUnitComputed.value}`,
           },
         },
       },
@@ -299,9 +301,9 @@ watch(
     <tbody>
       <tr v-for="(point, i) in data.graphSeries" :key="i">
         <td>{{ point.location?.name }}</td>
-        <td>{{ formatTemp(point.minTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
-        <td>{{ formatTemp(point.maxTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
-        <td>{{ formatTemp(point.averageTemperatureCelsius, useFahrenheit) }}{{ tempUnit }}</td>
+        <td>{{ formatTempWithUnit(point.minTemperatureCelsius, useFahrenheit) }}</td>
+        <td>{{ formatTempWithUnit(point.maxTemperatureCelsius, useFahrenheit) }}</td>
+        <td>{{ formatTempWithUnit(point.averageTemperatureCelsius, useFahrenheit) }}</td>
       </tr>
     </tbody>
   </table>

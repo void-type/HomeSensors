@@ -5,11 +5,11 @@ import { onMounted, reactive } from 'vue';
 import { format } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
 import { storeToRefs } from 'pinia';
-import { formatTemp } from '@/models/FormatHelpers';
+import { formatTempWithUnit } from '@/models/FormatHelpers';
 
 const appStore = useAppStore();
 
-const { useFahrenheit, tempUnit, showHumidity } = storeToRefs(appStore);
+const { useFahrenheit, showHumidity } = storeToRefs(appStore);
 
 const data = reactive({
   currentReadings: [] as Array<Reading>,
@@ -61,9 +61,9 @@ onMounted(async () => {
             {{ currentTemp.location?.name }}
           </div>
           <div class="h3">
-            <span class="fw-bold"
-              >{{ formatTemp(currentTemp.temperatureCelsius, useFahrenheit) }}{{ tempUnit }}</span
-            >
+            <span class="fw-bold">{{
+              formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit)
+            }}</span>
             <span v-if="currentTemp.humidity !== null && showHumidity" class="ps-3"
               >{{ currentTemp.humidity }}%</span
             >

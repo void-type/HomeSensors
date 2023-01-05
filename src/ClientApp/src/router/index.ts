@@ -29,6 +29,12 @@ const router = createRouter({
       meta: { title: 'Devices' },
     },
     {
+      path: '/locations',
+      name: 'locationsMain',
+      component: () => import('@/pages/LocationsMain.vue'),
+      meta: { title: 'Locations' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: { name: 'home' },
       meta: { title: 'Home' },

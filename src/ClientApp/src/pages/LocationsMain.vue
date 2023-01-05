@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import DevicesTable from '@/components/DevicesTable.vue';
+import LocationsTable from '@/components/LocationsTable.vue';
 </script>
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-4 mb-0">Devices</h1>
-    <DevicesTable />
+    <h1 class="mt-4 mb-0">Locations</h1>
+    <LocationsTable />
   </div>
 </template>
 
