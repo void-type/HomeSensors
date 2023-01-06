@@ -127,7 +127,8 @@ body.bg-dark {
     }
   }
 
-  .form-control {
+  .form-control,
+  .form-select {
     background-color: $dark;
     color: $light;
   }

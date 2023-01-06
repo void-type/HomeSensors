@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
-import type { Device, Location } from '@/api/data-contracts';
+import type { Device, IFailureIItemSet, Location } from '@/api/data-contracts';
 import { storeToRefs } from 'pinia';
 import { formatTempWithUnit } from '@/models/FormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
@@ -15,6 +15,7 @@ const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
 const data = reactive({
   devices: [] as Array<Device>,
   locations: [] as Array<Location>,
+  errors: [] as Array<string>,
 });
 
 function getStatus(device: Device) {
@@ -50,6 +51,8 @@ async function getLocations() {
 }
 
 async function updateDevice(device: Device) {
+  data.errors = [];
+
   const request = {
     id: device.id,
     currentLocationId: device.currentLocationId || null,
@@ -62,7 +65,11 @@ async function updateDevice(device: Device) {
       appStore.setSuccessMessage(response.data.message);
     }
   } catch (error) {
-    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    const response = error as HttpResponse<unknown, unknown>;
+    appStore.setApiFailureMessages(response);
+
+    const failures = (response.error as IFailureIItemSet).items || [];
+    failures.forEach((x) => data.errors.push(`${x.uiHandle}-${device.id}`));
   }
 
   // Update statuses
@@ -129,6 +136,10 @@ onMounted(async () => {
               :id="`retired-${device.id}`"
               v-model="device.isRetired"
               class="form-check-input"
+              :class="{
+                'form-check-input': true,
+                'is-invalid': data.errors.includes(`retired-${device.id}`),
+              }"
               type="checkbox"
             />
           </td>
@@ -137,7 +148,11 @@ onMounted(async () => {
             <select
               :id="`location-${device.id}`"
               v-model="device.currentLocationId"
-              class="form-control form-control-sm"
+              :class="{
+                'form-select': true,
+                'form-select-sm': true,
+                'is-invalid': data.errors.includes(`location-${device.id}`),
+              }"
             >
               <option value=""></option>
               <option v-for="location in data.locations" :key="location.id" :value="location.id">

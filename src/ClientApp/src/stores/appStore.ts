@@ -96,7 +96,7 @@ export const useAppStore = defineStore('app', {
         const userMessage = response.error as UserMessage;
         this.setErrorMessage(userMessage.message);
       } else {
-        const failureSet = response.data as IFailureIItemSet;
+        const failureSet = response.error as IFailureIItemSet;
         if (failureSet !== undefined && failureSet !== null) {
           this.setValidationErrorMessages(failureSet.items || []);
         } else {

@@ -6,6 +6,7 @@ using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
+using VoidCore.Model.Responses.Messages;
 
 namespace HomeSensors.Web.Controllers.Temperatures;
 
@@ -42,5 +43,25 @@ public class LocationsApiController : ControllerBase
     {
         var limitResults = await _locationRepository.CheckLimits(lastCheck);
         return HttpResponder.Respond(limitResults);
+    }
+
+    [HttpPost]
+    [Route("create")]
+    [ProducesResponseType(typeof(EntityMessage<long>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> Create([FromBody] CreateLocationRequest request)
+    {
+        var result = await _cachedTemperatureRepository.CreateLocation(request);
+        return HttpResponder.Respond(result);
+    }
+
+    [HttpPost]
+    [Route("update")]
+    [ProducesResponseType(typeof(EntityMessage<long>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> Update([FromBody] UpdateLocationRequest request)
+    {
+        var result = await _cachedTemperatureRepository.UpdateLocation(request);
+        return HttpResponder.Respond(result);
     }
 }

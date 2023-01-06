@@ -100,4 +100,18 @@ public class TemperatureCachedRepository : CachedRepositoryBase
 
         return _deviceRepository.Update(request);
     }
+
+    public Task<IResult<EntityMessage<long>>> CreateLocation(CreateLocationRequest request)
+    {
+        _cache.Remove(GetCacheKeyPrefix(nameof(GetAllLocations)));
+
+        return _locationRepository.Create(request);
+    }
+
+    public Task<IResult<EntityMessage<long>>> UpdateLocation(UpdateLocationRequest request)
+    {
+        _cache.Remove(GetCacheKeyPrefix(nameof(GetAllLocations)));
+
+        return _locationRepository.Update(request);
+    }
 }

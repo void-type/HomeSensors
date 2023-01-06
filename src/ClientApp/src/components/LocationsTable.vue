@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
-import type { Device, Location } from '@/api/data-contracts';
+import type { IFailureIItemSet, Location } from '@/api/data-contracts';
 import { storeToRefs } from 'pinia';
-import { formatTempWithUnit } from '@/models/FormatHelpers';
+import { formatTempWithUnit, toNumberOrNull } from '@/models/FormatHelpers';
 import { onMounted, reactive } from 'vue';
 import { Api } from '@/api/Api';
 import type { HttpResponse } from '@/api/http-client';
@@ -18,6 +18,7 @@ const data = reactive({
     min: null as number | null,
     max: null as number | null,
   },
+  errors: [] as Array<string>,
 });
 
 async function getLocations() {
@@ -31,32 +32,52 @@ async function getLocations() {
 
 // TODO: finish these API calls
 async function updateLocation(location: Location) {
-  // const request = {
-  //   name: location.name,
-  //   minLimitTemperatureCelsius: location.minLimitTemperatureCelsius,
-  //   maxLimitTemperatureCelsius: location.maxLimitTemperatureCelsius,
-  // };
+  data.errors = [];
+
+  const request = {
+    id: location.id,
+    name: location.name,
+    minLimitTemperatureCelsius: toNumberOrNull(location.minLimitTemperatureCelsius),
+    maxLimitTemperatureCelsius: toNumberOrNull(location.maxLimitTemperatureCelsius),
+  };
 
   try {
-    // const response = await new Api().temperaturesLocationsUpdateCreate(request);
-    // if (response.data.message) {
-    //   appStore.setSuccessMessage(response.data.message);
-    // }
+    const response = await new Api().temperaturesLocationsUpdateCreate(request);
+    if (response.data.message) {
+      appStore.setSuccessMessage(response.data.message);
+    }
   } catch (error) {
-    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    const response = error as HttpResponse<unknown, unknown>;
+    appStore.setApiFailureMessages(response);
+
+    const failures = (response.error as IFailureIItemSet).items || [];
+    failures.forEach((x) => data.errors.push(`${x.uiHandle}-${location.id}`));
   }
 }
 
 async function createLocation() {
-  // const request = data.newLocation;
+  data.errors = [];
+
+  const location = data.newLocation;
+
+  const request = {
+    name: location.name,
+    minLimitTemperatureCelsius: toNumberOrNull(location.min),
+    maxLimitTemperatureCelsius: toNumberOrNull(location.max),
+  };
 
   try {
-    // const response = await new Api().temperaturesLocationsCreateCreate(request);
-    // if (response.data.message) {
-    //   appStore.setSuccessMessage(response.data.message);
-    // }
+    const response = await new Api().temperaturesLocationsCreateCreate(request);
+    if (response.data.message) {
+      appStore.setSuccessMessage(response.data.message);
+      await getLocations();
+    }
   } catch (error) {
-    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    const response = error as HttpResponse<unknown, unknown>;
+    appStore.setApiFailureMessages(response);
+
+    const failures = (response.error as IFailureIItemSet).items || [];
+    failures.forEach((x) => data.errors.push(`${x.uiHandle}-new`));
   }
 }
 
@@ -83,7 +104,11 @@ onMounted(async () => {
             <input
               :id="`name-${location.id}`"
               v-model="location.name"
-              class="form-control form-control-sm"
+              :class="{
+                'form-control': true,
+                'form-control-sm': true,
+                'is-invalid': data.errors.includes(`name-${location.id}`),
+              }"
               type="text"
             />
           </td>
@@ -92,7 +117,11 @@ onMounted(async () => {
             <input
               :id="`min-${location.id}`"
               v-model="location.minLimitTemperatureCelsius"
-              class="form-control form-control-sm"
+              :class="{
+                'form-control': true,
+                'form-control-sm': true,
+                'is-invalid': data.errors.includes(`min-${location.id}`),
+              }"
               type="number"
             />
             {{ formatTempWithUnit(location.minLimitTemperatureCelsius, useFahrenheit) }}
@@ -102,15 +131,17 @@ onMounted(async () => {
             <input
               :id="`max-${location.id}`"
               v-model="location.maxLimitTemperatureCelsius"
-              class="form-control form-control-sm"
+              :class="{
+                'form-control': true,
+                'form-control-sm': true,
+                'is-invalid': data.errors.includes(`max-${location.id}`),
+              }"
               type="number"
             />
             {{ formatTempWithUnit(location.maxLimitTemperatureCelsius, useFahrenheit) }}
           </td>
           <td>
-            <button class="btn btn-sm btn-primary" disabled @click="updateLocation(location)">
-              Save
-            </button>
+            <button class="btn btn-sm btn-primary" @click="updateLocation(location)">Save</button>
           </td>
         </tr>
       </tbody>
@@ -118,37 +149,50 @@ onMounted(async () => {
     <div v-if="data.locations.length < 1" class="text-center">No locations.</div>
   </div>
   <div class="mt-4 row g-3">
+    <h2>New location</h2>
     <div class="col-md-6">
-      <label for="newLocationName">Name</label>
+      <label for="name-new">Name</label>
       <input
-        id="newLocationName"
+        id="name-new"
         v-model="data.newLocation.name"
         type="text"
-        class="form-control"
+        :class="{
+          'form-control': true,
+          'form-control-sm': true,
+          'is-invalid': data.errors.includes('name-new'),
+        }"
       />
     </div>
     <div class="col-md-3">
-      <label for="newLocationMin">Min temp (°C)</label>
+      <label for="min-new">Min temp (°C)</label>
       <input
-        id="newLocationMin"
+        id="min-new"
         v-model="data.newLocation.min"
         type="number"
-        class="form-control"
+        :class="{
+          'form-control': true,
+          'form-control-sm': true,
+          'is-invalid': data.errors.includes('min-new'),
+        }"
       />
       {{ formatTempWithUnit(data.newLocation.min, useFahrenheit) }}
     </div>
     <div class="col-md-3">
-      <label for="newLocationMax">Max temp (°C)</label>
+      <label for="max-new">Max temp (°C)</label>
       <input
-        id="newLocationMax"
+        id="max-new"
         v-model="data.newLocation.max"
         type="number"
-        class="form-control"
+        :class="{
+          'form-control': true,
+          'form-control-sm': true,
+          'is-invalid': data.errors.includes('max-new'),
+        }"
       />
       {{ formatTempWithUnit(data.newLocation.max, useFahrenheit) }}
     </div>
     <div class="col-md-12">
-      <button class="btn btn-primary" disabled @click="createLocation()">Add</button>
+      <button class="btn btn-sm btn-primary" @click="createLocation()">Add</button>
     </div>
   </div>
 </template>

@@ -64,14 +64,14 @@ public class TemperatureDeviceRepository : RepositoryBase
 
             if (!locationExists)
             {
-                return Result.Fail<EntityMessage<long>>(new Failure("Location doesn't exist.", nameof(request.CurrentLocationId)));
+                return Result.Fail<EntityMessage<long>>(new Failure("Location doesn't exist.", "location"));
             }
         }
 
         return await _data.TemperatureDevices
             .FirstOrDefaultAsync(x => x.Id == request.Id)
             .MapAsync(x => Maybe.From(x))
-            .ToResultAsync(new Failure("Device does not exist.", nameof(request.Id)))
+            .ToResultAsync(new Failure("Device does not exist.", "id"))
             .TeeOnSuccessAsync(x =>
             {
                 x.IsRetired = request.IsRetired;

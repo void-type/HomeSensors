@@ -12,6 +12,7 @@
 import type {
   AppVersion,
   CheckLimitResult,
+  CreateLocationRequest,
   Device,
   GraphTimeSeries,
   GraphTimeSeriesRequest,
@@ -21,6 +22,7 @@ import type {
   Reading,
   TemperaturesLocationsCheckLimitsCreateParams,
   UpdateDeviceRequest,
+  UpdateLocationRequest,
   WebClientInfo,
 } from './data-contracts';
 import { ContentType, HttpClient, type RequestParams } from './http-client';
@@ -125,6 +127,42 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
       path: `/api/temperatures/locations/check-limits`,
       method: 'POST',
       query: query,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags LocationsApi
+   * @name TemperaturesLocationsCreateCreate
+   * @request POST:/api/temperatures/locations/create
+   * @response `200` `Int64EntityMessage` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesLocationsCreateCreate = (data: CreateLocationRequest, params: RequestParams = {}) =>
+    this.request<Int64EntityMessage, IFailureIItemSet>({
+      path: `/api/temperatures/locations/create`,
+      method: 'POST',
+      body: data,
+      type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags LocationsApi
+   * @name TemperaturesLocationsUpdateCreate
+   * @request POST:/api/temperatures/locations/update
+   * @response `200` `Int64EntityMessage` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesLocationsUpdateCreate = (data: UpdateLocationRequest, params: RequestParams = {}) =>
+    this.request<Int64EntityMessage, IFailureIItemSet>({
+      path: `/api/temperatures/locations/update`,
+      method: 'POST',
+      body: data,
+      type: ContentType.Json,
       format: 'json',
       ...params,
     });

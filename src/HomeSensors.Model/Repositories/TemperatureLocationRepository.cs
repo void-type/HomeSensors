@@ -2,6 +2,8 @@
 using HomeSensors.Model.Data.Models;
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
+using VoidCore.Model.Functional;
+using VoidCore.Model.Responses.Messages;
 
 namespace HomeSensors.Model.Repositories;
 
@@ -57,6 +59,69 @@ public class TemperatureLocationRepository : RepositoryBase
         }
 
         return results;
+    }
+
+    public Task<IResult<EntityMessage<long>>> Create(CreateLocationRequest request)
+    {
+        return ValidateName(request.Name)
+            .ThenAsync(() => ValidateNameIsAvailableAsync(request.Name))
+            .SelectAsync(async () =>
+            {
+                var newLocation = new TemperatureLocation()
+                {
+                    Name = request.Name,
+                    MinTemperatureLimitCelsius = request.MinLimitTemperatureCelsius,
+                    MaxTemperatureLimitCelsius = request.MaxLimitTemperatureCelsius,
+                };
+
+                var savedLocationEntity = _data.TemperatureLocations.Add(newLocation);
+
+                await _data.SaveChangesAsync();
+
+                return savedLocationEntity;
+            })
+            .SelectAsync(x => EntityMessage.Create("Location added.", x.Entity.Id));
+    }
+
+    public Task<IResult<EntityMessage<long>>> Update(UpdateLocationRequest request)
+    {
+        return ValidateName(request.Name)
+            .ThenAsync(async () =>
+            {
+                return (await _data.TemperatureLocations.FirstOrDefaultAsync(x => x.Id == request.Id))
+                    .Map(x => Maybe.From(x))
+                    .ToResult(new Failure("Location does not exist.", "id"));
+            })
+            .TeeOnSuccessAsync(x =>
+            {
+                x.Name = request.Name;
+                x.MinTemperatureLimitCelsius = request.MinLimitTemperatureCelsius;
+                x.MaxTemperatureLimitCelsius = request.MaxLimitTemperatureCelsius;
+                _data.SaveChanges();
+            })
+            .SelectAsync(x => EntityMessage.Create("Location saved.", x.Id));
+    }
+
+    private static IResult ValidateName(string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            return Result.Fail(new Failure("Name is required.", "name"));
+        }
+
+        return Result.Ok();
+    }
+
+    private async Task<IResult> ValidateNameIsAvailableAsync(string newName)
+    {
+        var nameExists = await _data.TemperatureLocations.AnyAsync(x => x.Name == newName);
+
+        if (nameExists)
+        {
+            return Result.Fail(new Failure("Name already exists.", "name"));
+        }
+
+        return Result.Ok();
     }
 
     private static async Task<Reading?> GetMinExceeded(TemperatureLocation location, IQueryable<TemperatureReading> dbReadingsSince)
