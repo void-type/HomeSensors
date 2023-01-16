@@ -29,7 +29,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="app-inner" tabindex="-1" @keydown.stop.prevent.esc="clearMessages()">
+  <div id="app-inner" tabindex="-1">
     <div class="container-xxl visually-hidden-focusable">
       <router-link class="d-inline-flex p-2 m-1" :to="{ hash: '#main', query: route.query }"
         >Skip to main content</router-link
@@ -42,7 +42,7 @@ onMounted(() => {
     </AppHeader>
     <AppMessageCenter class="d-print-none" />
     <main id="main" class="mb-4" tabindex="-1">
-      <RouterView />
+      <RouterView @keydown.stop.prevent.esc="clearMessages()" />
     </main>
     <AppFooter />
   </div>
