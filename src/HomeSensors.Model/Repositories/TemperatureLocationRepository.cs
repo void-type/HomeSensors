@@ -46,14 +46,14 @@ public class TemperatureLocationRepository : RepositoryBase
 
         foreach (var location in locations)
         {
-            var dbReadingsSince = _data.TemperatureReadings
+            var dbReadingsSinceQuery = _data.TemperatureReadings
                 .TagWith(GetTag())
                 .AsNoTracking()
                 .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id);
 
-            var min = await GetMinExceeded(location, dbReadingsSince);
+            var min = await GetMinExceeded(location, dbReadingsSinceQuery);
 
-            var max = await GetMaxExceeded(location, dbReadingsSince);
+            var max = await GetMaxExceeded(location, dbReadingsSinceQuery);
 
             results.Add(new CheckLimitResult(location.ToLocation(), min, max));
         }

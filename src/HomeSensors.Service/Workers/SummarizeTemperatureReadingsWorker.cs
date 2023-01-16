@@ -39,7 +39,9 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                 .Add(_summarizeCutoff)
                 .RoundDownMinutes(SummarizeIntervalMinutes);
 
-            var devices = await data.TemperatureDevices.ToListAsync(stoppingToken);
+            var devices = await data.TemperatureDevices
+                .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
+                .ToListAsync(stoppingToken);
 
             var oldReadings = await data.TemperatureReadings
                 .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")

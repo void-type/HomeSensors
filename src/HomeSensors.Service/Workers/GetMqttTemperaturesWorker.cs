@@ -62,6 +62,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
         var data = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
         var device = await data.TemperatureDevices
+            .TagWith($"Query called from {nameof(GetMqttTemperaturesWorker)}.")
             .FirstOrDefaultAsync(x => x.DeviceModel == message.Model && x.DeviceId == message.Id && x.DeviceChannel == message.Channel);
 
         if (device?.IsRetired == true)
@@ -87,8 +88,9 @@ public class GetMqttTemperaturesWorker : BackgroundService
         }
 
         // If we already have a reading for this device at this time, don't save because duplicate.
-        var readingExists = data.TemperatureReadings
-            .Any(x => x.Time == message.Time && x.TemperatureDeviceId == device.Id);
+        var readingExists = await data.TemperatureReadings
+            .TagWith($"Query called from {nameof(GetMqttTemperaturesWorker)}.")
+            .AnyAsync(x => x.Time == message.Time && x.TemperatureDeviceId == device.Id && !x.IsSummary);
 
         if (readingExists)
         {
