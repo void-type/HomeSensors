@@ -12,11 +12,13 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
     private const string MessageName = "updateCurrentReadings";
 
     private readonly TimeSpan _betweenTicks = TimeSpan.FromSeconds(30);
+    private readonly ILogger<PushTemperatureCurrentReadingsWorker> _logger;
     private readonly IHubContext<TemperatureHub> _tempHubContext;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public PushTemperatureCurrentReadingsWorker(IHubContext<TemperatureHub> tempHubContext, IServiceScopeFactory scopeFactory)
+    public PushTemperatureCurrentReadingsWorker(ILogger<PushTemperatureCurrentReadingsWorker> logger, IHubContext<TemperatureHub> tempHubContext, IServiceScopeFactory scopeFactory)
     {
+        _logger = logger;
         _tempHubContext = tempHubContext;
         _scopeFactory = scopeFactory;
     }
@@ -27,12 +29,19 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var temperatureRepository = scope.ServiceProvider.GetRequiredService<TemperatureCachedRepository>();
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var temperatureRepository = scope.ServiceProvider.GetRequiredService<TemperatureCachedRepository>();
 
-            var currentReadings = await temperatureRepository.GetCurrentReadings(true);
+                var currentReadings = await temperatureRepository.GetCurrentReadings(true);
 
-            await _tempHubContext.Clients.All.SendAsync(MessageName, currentReadings, cancellationToken: stoppingToken);
+                await _tempHubContext.Clients.All.SendAsync(MessageName, currentReadings, cancellationToken: stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(PushTemperatureCurrentReadingsWorker));
+            }
         }
     }
 }

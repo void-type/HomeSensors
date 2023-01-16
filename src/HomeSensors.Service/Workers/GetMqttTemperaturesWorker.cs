@@ -34,7 +34,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
         _logger.LogInformation("Connecting Managed MQTT client.");
 
         client.ConnectingFailedAsync += LogConnectionFailure;
-        client.ApplicationMessageReceivedAsync += ProcessMessage;
+        client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
 
         await client.StartAsync(BuildOptions());
         await client.SubscribeAsync(BuildTopicFilters());
@@ -50,6 +50,18 @@ public class GetMqttTemperaturesWorker : BackgroundService
     {
         _logger.LogError(e.Exception, "MQTT client failed to connect.");
         return Task.CompletedTask;
+    }
+
+    private async Task ProcessMessageWithExceptionLogging(MqttApplicationMessageReceivedEventArgs e)
+    {
+        try
+        {
+            await ProcessMessage(e);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(GetMqttTemperaturesWorker));
+        }
     }
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)

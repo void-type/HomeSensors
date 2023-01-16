@@ -32,55 +32,62 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var data = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
-
-            var cutoffLimit = _dateTimeService.MomentWithOffset
-                .Add(_summarizeCutoff)
-                .RoundDownMinutes(SummarizeIntervalMinutes);
-
-            var devices = await data.TemperatureDevices
-                .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
-                .ToListAsync(stoppingToken);
-
-            var oldReadings = await data.TemperatureReadings
-                .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
-                .AsNoTracking()
-                .WhereShouldBeSummarized(cutoffLimit)
-                .ToListAsync(stoppingToken);
-
-            if (oldReadings.Count == 0)
+            try
             {
-                return;
+                using var scope = _scopeFactory.CreateScope();
+                var data = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
+
+                var cutoffLimit = _dateTimeService.MomentWithOffset
+                    .Add(_summarizeCutoff)
+                    .RoundDownMinutes(SummarizeIntervalMinutes);
+
+                var devices = await data.TemperatureDevices
+                    .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
+                    .ToListAsync(stoppingToken);
+
+                var oldReadings = await data.TemperatureReadings
+                    .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
+                    .AsNoTracking()
+                    .WhereShouldBeSummarized(cutoffLimit)
+                    .ToListAsync(stoppingToken);
+
+                if (oldReadings.Count == 0)
+                {
+                    return;
+                }
+
+                var newReadings = oldReadings
+                    .GroupBy(x => (device: x.TemperatureDeviceId, location: x.TemperatureLocationId))
+                    .SelectMany(group => group
+                        .GroupBy(x => x.Time.RoundDownMinutes(SummarizeIntervalMinutes))
+                        .Select(x => new TemperatureReading()
+                        {
+                            Time = x.Key,
+                            DeviceBatteryLevel = null,
+                            DeviceStatus = null,
+                            Humidity = x.Average(x => x.Humidity),
+                            TemperatureCelsius = x.Average(x => x.TemperatureCelsius),
+                            IsSummary = true,
+                            TemperatureDevice = devices.First(x => x.Id == group.Key.device),
+                            TemperatureLocationId = group.Key.location
+                        }))
+                    .ToList();
+
+                data.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
+
+                data.TemperatureReadings.AddRange(newReadings);
+                await data.SaveChangesAsync(stoppingToken);
+
+                await data.TemperatureReadings
+                    .WhereShouldBeSummarized(cutoffLimit)
+                    .ExecuteDeleteAsync(stoppingToken);
+
+                _logger.LogInformation("Summarized data older than {Cutoff}. Compressed {OldCount} rows to {NewCount} rows.", cutoffLimit.ToString("o"), oldReadings.Count, newReadings.Count);
             }
-
-            var newReadings = oldReadings
-                .GroupBy(x => (device: x.TemperatureDeviceId, location: x.TemperatureLocationId))
-                .SelectMany(group => group
-                    .GroupBy(x => x.Time.RoundDownMinutes(SummarizeIntervalMinutes))
-                    .Select(x => new TemperatureReading()
-                    {
-                        Time = x.Key,
-                        DeviceBatteryLevel = null,
-                        DeviceStatus = null,
-                        Humidity = x.Average(x => x.Humidity),
-                        TemperatureCelsius = x.Average(x => x.TemperatureCelsius),
-                        IsSummary = true,
-                        TemperatureDevice = devices.First(x => x.Id == group.Key.device),
-                        TemperatureLocationId = group.Key.location
-                    }))
-                .ToList();
-
-            data.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
-
-            data.TemperatureReadings.AddRange(newReadings);
-            await data.SaveChangesAsync(stoppingToken);
-
-            await data.TemperatureReadings
-                .WhereShouldBeSummarized(cutoffLimit)
-                .ExecuteDeleteAsync(stoppingToken);
-
-            _logger.LogInformation("Summarized data older than {Cutoff}. Compressed {OldCount} rows to {NewCount} rows.", cutoffLimit.ToString("o"), oldReadings.Count, newReadings.Count);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(SummarizeTemperatureReadingsWorker));
+            }
         }
     }
 }

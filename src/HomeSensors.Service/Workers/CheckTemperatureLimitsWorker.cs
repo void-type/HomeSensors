@@ -30,25 +30,32 @@ public class CheckTemperatureLimitsWorker : BackgroundService
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var locationRepository = scope.ServiceProvider.GetRequiredService<TemperatureLocationRepository>();
-
-            var sinceLastTick = _dateTimeService.MomentWithOffset.Subtract(_betweenTicks);
-
-            var failedResults = (await locationRepository.CheckLimits(sinceLastTick))
-                .Where(x => x.IsFailed);
-
-            foreach (var failedResult in failedResults)
+            try
             {
-                if (failedResult.MinReading is not null)
-                {
-                    await NotifyLimitExceeded(failedResult, "minimum", "cold", failedResult.MinReading, failedResult.Location.MinLimitTemperatureCelsius, stoppingToken);
-                }
+                using var scope = _scopeFactory.CreateScope();
+                var locationRepository = scope.ServiceProvider.GetRequiredService<TemperatureLocationRepository>();
 
-                if (failedResult.MaxReading is not null)
+                var sinceLastTick = _dateTimeService.MomentWithOffset.Subtract(_betweenTicks);
+
+                var failedResults = (await locationRepository.CheckLimits(sinceLastTick))
+                    .Where(x => x.IsFailed);
+
+                foreach (var failedResult in failedResults)
                 {
-                    await NotifyLimitExceeded(failedResult, "maximum", "hot", failedResult.MaxReading, failedResult.Location.MaxLimitTemperatureCelsius, stoppingToken);
+                    if (failedResult.MinReading is not null)
+                    {
+                        await NotifyLimitExceeded(failedResult, "minimum", "cold", failedResult.MinReading, failedResult.Location.MinLimitTemperatureCelsius, stoppingToken);
+                    }
+
+                    if (failedResult.MaxReading is not null)
+                    {
+                        await NotifyLimitExceeded(failedResult, "maximum", "hot", failedResult.MaxReading, failedResult.Location.MaxLimitTemperatureCelsius, stoppingToken);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(CheckTemperatureLimitsWorker));
             }
         }
     }
