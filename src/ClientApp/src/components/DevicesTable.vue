@@ -110,7 +110,8 @@ onMounted(async () => {
     <table :class="{ table: true, 'table-dark': useDarkMode }">
       <thead>
         <tr>
-          <th>Model/ID/Channel</th>
+          <th>ID</th>
+          <th>Radio Model/ID/Channel</th>
           <th>Last reading</th>
           <th>Status</th>
           <th>Retired</th>
@@ -120,6 +121,7 @@ onMounted(async () => {
       </thead>
       <tbody>
         <tr v-for="device in data.devices" :key="device.id">
+          <td>{{ device.id }}</td>
           <td>{{ device.deviceModel }}/{{ device.deviceId }}/{{ device.deviceChannel }}</td>
           <td>
             {{ formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit) }} on

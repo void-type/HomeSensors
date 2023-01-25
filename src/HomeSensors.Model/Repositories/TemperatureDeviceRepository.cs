@@ -27,9 +27,8 @@ public class TemperatureDeviceRepository : RepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.TemperatureReadings)
-            .OrderBy(x => x.DeviceModel)
-            .ThenBy(x => x.DeviceId)
-            .ThenBy(x => x.DeviceChannel)
+            .OrderBy(x => x.IsRetired)
+            .ThenBy(x => x.Id)
             .Select(x => new
             {
                 x.Id,
