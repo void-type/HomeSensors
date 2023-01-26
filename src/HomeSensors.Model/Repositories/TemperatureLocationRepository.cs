@@ -37,10 +37,11 @@ public class TemperatureLocationRepository : RepositoryBase
     /// <returns>List of results</returns>
     public async Task<List<CheckLimitResult>> CheckLimits(DateTimeOffset lastCheck)
     {
-        var locations = await _data.TemperatureLocations
+        var locations = (await _data.TemperatureLocations
             .TagWith(GetTag())
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync())
+            .Select(x => x.ToLocation());
 
         var results = new List<CheckLimitResult>();
 
@@ -49,13 +50,13 @@ public class TemperatureLocationRepository : RepositoryBase
             var dbReadingsSinceQuery = _data.TemperatureReadings
                 .TagWith(GetTag())
                 .AsNoTracking()
+                .Include(x => x.TemperatureLocation)
                 .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id);
 
             var min = await GetMinExceeded(location, dbReadingsSinceQuery);
-
             var max = await GetMaxExceeded(location, dbReadingsSinceQuery);
 
-            results.Add(new CheckLimitResult(location.ToLocation(), min, max));
+            results.Add(new CheckLimitResult(location, min, max));
         }
 
         return results;
@@ -70,8 +71,8 @@ public class TemperatureLocationRepository : RepositoryBase
                 var newLocation = new TemperatureLocation()
                 {
                     Name = request.Name,
-                    MinTemperatureLimitCelsius = request.MinLimitTemperatureCelsius,
-                    MaxTemperatureLimitCelsius = request.MaxLimitTemperatureCelsius,
+                    MinTemperatureLimitCelsius = request.MinTemperatureLimitCelsius,
+                    MaxTemperatureLimitCelsius = request.MaxTemperatureLimitCelsius,
                 };
 
                 var savedLocationEntity = _data.TemperatureLocations.Add(newLocation);
@@ -95,8 +96,8 @@ public class TemperatureLocationRepository : RepositoryBase
             .TeeOnSuccessAsync(x =>
             {
                 x.Name = request.Name;
-                x.MinTemperatureLimitCelsius = request.MinLimitTemperatureCelsius;
-                x.MaxTemperatureLimitCelsius = request.MaxLimitTemperatureCelsius;
+                x.MinTemperatureLimitCelsius = request.MinTemperatureLimitCelsius;
+                x.MaxTemperatureLimitCelsius = request.MaxTemperatureLimitCelsius;
                 _data.SaveChanges();
             })
             .SelectAsync(x => EntityMessage.Create("Location saved.", x.Id));
@@ -124,7 +125,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return Result.Ok();
     }
 
-    private static async Task<Reading?> GetMinExceeded(TemperatureLocation location, IQueryable<TemperatureReading> dbReadingsSince)
+    private static async Task<Reading?> GetMinExceeded(Location location, IQueryable<TemperatureReading> dbReadingsSince)
     {
         if (!location.MinTemperatureLimitCelsius.HasValue)
         {
@@ -135,15 +136,10 @@ public class TemperatureLocationRepository : RepositoryBase
             .OrderBy(x => x.TemperatureCelsius)
             .FirstOrDefaultAsync(x => x.TemperatureCelsius < location.MinTemperatureLimitCelsius);
 
-        if (min is null)
-        {
-            return null;
-        }
-
-        return min.ToReading();
+        return min?.ToReading();
     }
 
-    private static async Task<Reading?> GetMaxExceeded(TemperatureLocation location, IQueryable<TemperatureReading> dbReadingsSince)
+    private static async Task<Reading?> GetMaxExceeded(Location location, IQueryable<TemperatureReading> dbReadingsSince)
     {
         if (!location.MaxTemperatureLimitCelsius.HasValue)
         {
@@ -154,11 +150,6 @@ public class TemperatureLocationRepository : RepositoryBase
             .OrderByDescending(x => x.TemperatureCelsius)
             .FirstOrDefaultAsync(x => x.TemperatureCelsius > location.MaxTemperatureLimitCelsius);
 
-        if (max is null)
-        {
-            return null;
-        }
-
-        return max.ToReading();
+        return max?.ToReading();
     }
 }

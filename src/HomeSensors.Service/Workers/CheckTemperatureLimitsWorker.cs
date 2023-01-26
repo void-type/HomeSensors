@@ -44,12 +44,12 @@ public class CheckTemperatureLimitsWorker : BackgroundService
                 {
                     if (failedResult.MinReading is not null)
                     {
-                        await NotifyLimitExceeded(failedResult, "minimum", "cold", failedResult.MinReading, failedResult.Location.MinLimitTemperatureCelsius, stoppingToken);
+                        await NotifyLimitExceeded(failedResult, "minimum", "cold", failedResult.MinReading, failedResult.Location.MinTemperatureLimitCelsius, stoppingToken);
                     }
 
                     if (failedResult.MaxReading is not null)
                     {
-                        await NotifyLimitExceeded(failedResult, "maximum", "hot", failedResult.MaxReading, failedResult.Location.MaxLimitTemperatureCelsius, stoppingToken);
+                        await NotifyLimitExceeded(failedResult, "maximum", "hot", failedResult.MaxReading, failedResult.Location.MaxTemperatureLimitCelsius, stoppingToken);
                     }
                 }
             }

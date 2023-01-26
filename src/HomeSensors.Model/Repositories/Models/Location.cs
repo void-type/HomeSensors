@@ -2,16 +2,16 @@
 
 public class Location
 {
-    public Location(long id, string name, double? minLimitTemperatureCelsius, double? maxLimitTemperatureCelsius)
+    public Location(long id, string name, double? minTemperatureLimitCelsius, double? maxTemperatureLimitCelsius)
     {
         Id = id;
         Name = name;
-        MinLimitTemperatureCelsius = minLimitTemperatureCelsius;
-        MaxLimitTemperatureCelsius = maxLimitTemperatureCelsius;
+        MinTemperatureLimitCelsius = minTemperatureLimitCelsius;
+        MaxTemperatureLimitCelsius = maxTemperatureLimitCelsius;
     }
 
     public long Id { get; }
     public string Name { get; }
-    public double? MinLimitTemperatureCelsius { get; }
-    public double? MaxLimitTemperatureCelsius { get; }
+    public double? MinTemperatureLimitCelsius { get; }
+    public double? MaxTemperatureLimitCelsius { get; }
 }

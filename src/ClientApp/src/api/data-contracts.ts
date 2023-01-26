@@ -29,9 +29,9 @@ export interface CheckLimitResult {
 export interface CreateLocationRequest {
   name?: string | null;
   /** @format double */
-  minLimitTemperatureCelsius?: number | null;
+  minTemperatureLimitCelsius?: number | null;
   /** @format double */
-  maxLimitTemperatureCelsius?: number | null;
+  maxTemperatureLimitCelsius?: number | null;
 }
 
 export interface Device {
@@ -108,9 +108,9 @@ export interface Location {
   id?: number;
   name?: string | null;
   /** @format double */
-  minLimitTemperatureCelsius?: number | null;
+  minTemperatureLimitCelsius?: number | null;
   /** @format double */
-  maxLimitTemperatureCelsius?: number | null;
+  maxTemperatureLimitCelsius?: number | null;
 }
 
 export interface Reading {
@@ -136,9 +136,9 @@ export interface UpdateLocationRequest {
   id?: number;
   name?: string | null;
   /** @format double */
-  minLimitTemperatureCelsius?: number | null;
+  minTemperatureLimitCelsius?: number | null;
   /** @format double */
-  maxLimitTemperatureCelsius?: number | null;
+  maxTemperatureLimitCelsius?: number | null;
 }
 
 export interface WebClientInfo {

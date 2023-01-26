@@ -37,8 +37,8 @@ async function updateLocation(location: Location) {
   const request = {
     id: location.id,
     name: location.name,
-    minLimitTemperatureCelsius: toNumberOrNull(location.minLimitTemperatureCelsius),
-    maxLimitTemperatureCelsius: toNumberOrNull(location.maxLimitTemperatureCelsius),
+    minTemperatureLimitCelsius: toNumberOrNull(location.minTemperatureLimitCelsius),
+    maxTemperatureLimitCelsius: toNumberOrNull(location.maxTemperatureLimitCelsius),
   };
 
   try {
@@ -62,8 +62,8 @@ async function createLocation() {
 
   const request = {
     name: location.name,
-    minLimitTemperatureCelsius: toNumberOrNull(location.min),
-    maxLimitTemperatureCelsius: toNumberOrNull(location.max),
+    minTemperatureLimitCelsius: toNumberOrNull(location.min),
+    maxTemperatureLimitCelsius: toNumberOrNull(location.max),
   };
 
   try {
@@ -116,7 +116,7 @@ onMounted(async () => {
             <label class="visually-hidden" :for="`min-${location.id}`">Min temp limit (°C)</label>
             <input
               :id="`min-${location.id}`"
-              v-model="location.minLimitTemperatureCelsius"
+              v-model="location.minTemperatureLimitCelsius"
               :class="{
                 'form-control': true,
                 'form-control-sm': true,
@@ -124,13 +124,13 @@ onMounted(async () => {
               }"
               type="number"
             />
-            {{ formatTempWithUnit(location.minLimitTemperatureCelsius, useFahrenheit) }}
+            {{ formatTempWithUnit(location.minTemperatureLimitCelsius, useFahrenheit) }}
           </td>
           <td>
             <label class="visually-hidden" :for="`max-${location.id}`">Max temp limit (°C)</label>
             <input
               :id="`max-${location.id}`"
-              v-model="location.maxLimitTemperatureCelsius"
+              v-model="location.maxTemperatureLimitCelsius"
               :class="{
                 'form-control': true,
                 'form-control-sm': true,
@@ -138,7 +138,7 @@ onMounted(async () => {
               }"
               type="number"
             />
-            {{ formatTempWithUnit(location.maxLimitTemperatureCelsius, useFahrenheit) }}
+            {{ formatTempWithUnit(location.maxTemperatureLimitCelsius, useFahrenheit) }}
           </td>
           <td>
             <button class="btn btn-sm btn-primary" @click="updateLocation(location)">Save</button>
