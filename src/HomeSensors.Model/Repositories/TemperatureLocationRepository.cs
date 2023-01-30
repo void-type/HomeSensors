@@ -50,7 +50,6 @@ public class TemperatureLocationRepository : RepositoryBase
             var dbReadingsSinceQuery = _data.TemperatureReadings
                 .TagWith(GetTag())
                 .AsNoTracking()
-                .Include(x => x.TemperatureLocation)
                 .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id);
 
             var min = await GetMinExceeded(location, dbReadingsSinceQuery);

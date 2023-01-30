@@ -10,6 +10,7 @@ public class HomeSensorsContext : DbContext
     public HomeSensorsContext(DbContextOptions<HomeSensorsContext> options)
         : base(options)
     {
+        ChangeTracker.LazyLoadingEnabled = false;
     }
 
     public virtual DbSet<TemperatureDevice> TemperatureDevices { get; set; }

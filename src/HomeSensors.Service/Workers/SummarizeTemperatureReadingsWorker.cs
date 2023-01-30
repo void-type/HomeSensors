@@ -35,17 +35,17 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                var data = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
+                var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
                 var cutoffLimit = _dateTimeService.MomentWithOffset
                     .Add(_summarizeCutoff)
                     .RoundDownMinutes(SummarizeIntervalMinutes);
 
-                var devices = await data.TemperatureDevices
+                var devices = await dbContext.TemperatureDevices
                     .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
                     .ToListAsync(stoppingToken);
 
-                var oldReadings = await data.TemperatureReadings
+                var oldReadings = await dbContext.TemperatureReadings
                     .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
                     .AsNoTracking()
                     .WhereShouldBeSummarized(cutoffLimit)
@@ -73,12 +73,12 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                         }))
                     .ToList();
 
-                data.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
+                dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
 
-                data.TemperatureReadings.AddRange(newReadings);
-                await data.SaveChangesAsync(stoppingToken);
+                dbContext.TemperatureReadings.AddRange(newReadings);
+                await dbContext.SaveChangesAsync(stoppingToken);
 
-                await data.TemperatureReadings
+                await dbContext.TemperatureReadings
                     .WhereShouldBeSummarized(cutoffLimit)
                     .ExecuteDeleteAsync(stoppingToken);
 
