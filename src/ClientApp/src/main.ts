@@ -5,7 +5,6 @@ import 'bootstrap';
 // @ts-ignore
 import App from '@/App.vue';
 import router from '@/router';
-// import { DatePicker } from 'v-calendar';
 import SetupCalendar, { DatePicker } from 'v-calendar';
 
 const app = createApp(App);

@@ -23,6 +23,7 @@ public class ReadingsApiController : ControllerBase
 
     [HttpPost]
     [Route("current")]
+    [IgnoreAntiforgeryToken]
     [ProducesResponseType(typeof(List<Reading>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetCurrentReadings()
@@ -33,6 +34,7 @@ public class ReadingsApiController : ControllerBase
 
     [HttpPost]
     [Route("time-series")]
+    [IgnoreAntiforgeryToken]
     [ProducesResponseType(typeof(List<GraphTimeSeries>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetTimeSeries([FromBody] GraphTimeSeriesRequest request)

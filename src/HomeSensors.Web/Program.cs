@@ -2,16 +2,18 @@
 using HomeSensors.Model.Data;
 using HomeSensors.Model.Repositories;
 using HomeSensors.Web.Auth;
+using HomeSensors.Web.Configuration;
 using HomeSensors.Web.Hubs;
 using HomeSensors.Web.Repositories;
 using HomeSensors.Web.Workers;
 using LazyCache;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using System.Reflection;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Configuration;
+using VoidCore.AspNet.Logging;
 using VoidCore.AspNet.Routing;
+using VoidCore.AspNet.Security;
 using VoidCore.Model.Auth;
 using VoidCore.Model.Configuration;
 using VoidCore.Model.Time;
@@ -32,21 +34,23 @@ try
 {
     Log.Information("Configuring host for {Name} v{Version}", ThisAssembly.AssemblyTitle, ThisAssembly.AssemblyInformationalVersion);
 
+    // Settings
     services.AddSettingsSingleton<WebApplicationSettings>(config, true).Validate();
     services.AddSettingsSingleton<CachingSettings>(config);
 
-    services.AddControllersWithViews();
+    // Infrastructure
+    services.AddControllers();
+    services.AddSpaSecurityServices(env);
     services.AddApiExceptionFilter();
-    services.AddHttpContextAccessor();
-    services.AddEndpointsApiExplorer();
-    services.AddSwaggerGen(c =>
-    {
-        // Set the comments path for the Swagger JSON and UI.
-        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-        c.IncludeXmlComments(xmlPath);
-    });
 
+    // Authorization
+
+    // Dependencies
+    services.AddHttpContextAccessor();
+    services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
+    services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
+
+    config.GetRequiredConnectionString<HomeSensorsContext>();
     services.AddDbContext<HomeSensorsContext>(options => options
         .UseSqlServer("Name=HomeSensors", b => b.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName)));
 
@@ -64,23 +68,26 @@ try
 
     services.AddScoped<TemperatureCachedRepository>();
 
-    services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
-    services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
-
-    services.AddDomainEvents(ServiceLifetime.Scoped, typeof(GetWebClientInfo).Assembly);
+    services.AddDomainEvents(
+        ServiceLifetime.Scoped,
+        typeof(GetWebClientInfo).Assembly);
 
     services.AddSignalR();
     services.AddHostedService<PushTemperatureCurrentReadingsWorker>();
 
+    services.AddSwaggerWithCsp(env);
+
     var app = builder.Build();
 
-    app.UseHttpsRedirection();
+    app.UseSpaExceptionPage(env);
+    app.UseSecureTransport(env);
+    app.UseSecurityHeaders(env);
     app.UseStaticFiles();
     app.UseRouting();
+    app.UseRequestLoggingScope();
     app.UseSerilogRequestLogging();
-    app.UseAuthorization();
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.DocumentTitle = env.ApplicationName + " API");
+    app.UseCurrentUserLogging();
+    app.UseSwaggerAndUi(env);
     app.MapHub<TemperatureHub>("/hub/temperatures");
     app.UseSpaEndpoints();
 

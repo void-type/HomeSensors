@@ -1,26 +1,12 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import useAppStore from '@/stores/appStore';
+import type { HTMLInputEvent } from '@/models/HTMLInputEvent';
 
 const appStore = useAppStore();
-const { applicationName, user, useFahrenheit, useDarkMode, showHumidity } = storeToRefs(appStore);
+const { applicationName, user, useDarkMode, useFahrenheit, showHumidity } = storeToRefs(appStore);
 const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
-
-watch(
-  () => [useDarkMode.value],
-  () => appStore.setUseDarkMode(useDarkMode.value)
-);
-
-watch(
-  () => [useFahrenheit.value],
-  () => appStore.setUseFahrenheit(useFahrenheit.value)
-);
-
-watch(
-  () => [showHumidity.value],
-  () => appStore.setShowHumidity(showHumidity.value)
-);
 </script>
 
 <template>
@@ -63,13 +49,26 @@ watch(
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
               <li class="dropdown-item">Roles: {{ userRoles }}</li>
               <li class="dropdown-item">
+                <div class="form-check form-switch" title="Toggle dark mode">
+                  <label class="form-check-label" for="useDarkMode">🌙</label>
+                  <input
+                    id="useDarkMode"
+                    :checked="useDarkMode"
+                    class="form-check-input"
+                    type="checkbox"
+                    @change="(e) => appStore.setDarkMode((e as HTMLInputEvent).target?.checked === true)"
+                  />
+                </div>
+              </li>
+              <li class="dropdown-item">
                 <div class="form-check form-switch" title="Toggle Fahrenheit">
                   <label class="form-check-label" for="useFahrenheit">🇺🇸</label>
                   <input
                     id="useFahrenheit"
-                    v-model="useFahrenheit"
+                    :checked="useFahrenheit"
                     class="form-check-input"
                     type="checkbox"
+                    @change="(e) => appStore.setUseFahrenheit((e as HTMLInputEvent).target?.checked === true)"
                   />
                 </div>
               </li>
@@ -78,20 +77,10 @@ watch(
                   <label class="form-check-label" for="showHumidity">%</label>
                   <input
                     id="showHumidity"
-                    v-model="showHumidity"
+                    :checked="showHumidity"
                     class="form-check-input"
                     type="checkbox"
-                  />
-                </div>
-              </li>
-              <li class="dropdown-item">
-                <div class="form-check form-switch" title="Toggle dark mode">
-                  <label class="form-check-label" for="useDarkMode">🌙</label>
-                  <input
-                    id="useDarkMode"
-                    v-model="useDarkMode"
-                    class="form-check-input"
-                    type="checkbox"
+                    @change="(e) => appStore.setShowHumidity((e as HTMLInputEvent).target?.checked === true)"
                   />
                 </div>
               </li>

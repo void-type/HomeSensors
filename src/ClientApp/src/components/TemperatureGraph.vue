@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Api } from '@/api/Api';
+import ApiHelpers from '@/models/ApiHelpers';
 import useAppStore from '@/stores/appStore';
 import type { GraphPoint, GraphTimeSeries, Location } from '@/api/data-contracts';
 import { onMounted, reactive, watch, computed } from 'vue';
@@ -8,12 +8,13 @@ import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } f
 import 'chartjs-adapter-date-fns';
 import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
-import { formatTemp, formatTempWithUnit, tempUnit } from '@/models/FormatHelpers';
+import { formatTemp, formatTempWithUnit, tempUnit } from '@/models/TempFormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
 
 Chart.register(...registerables);
 
 const appStore = useAppStore();
+const api = ApiHelpers.client;
 
 const { useFahrenheit, useDarkMode } = storeToRefs(appStore);
 
@@ -203,7 +204,7 @@ async function getTimeSeries() {
   };
 
   try {
-    const response = await new Api().temperaturesReadingsTimeSeriesCreate(parameters);
+    const response = await api().temperaturesReadingsTimeSeriesCreate(parameters);
     data.graphSeries = response.data;
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -212,7 +213,7 @@ async function getTimeSeries() {
 
 async function getLocations() {
   try {
-    const response = await new Api().temperaturesLocationsAllCreate();
+    const response = await api().temperaturesLocationsAllCreate();
     data.locations = response.data;
     data.graphRange.locationIds = data.locations.map((x) => x.id as number);
   } catch (error) {

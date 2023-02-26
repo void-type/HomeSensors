@@ -2,12 +2,14 @@
 import useAppStore from '@/stores/appStore';
 import type { IFailureIItemSet, Location } from '@/api/data-contracts';
 import { storeToRefs } from 'pinia';
-import { formatTempWithUnit, toNumberOrNull } from '@/models/FormatHelpers';
+import { toNumberOrNull } from '@/models/FormatHelpers';
+import { formatTempWithUnit } from '@/models/TempFormatHelpers';
 import { onMounted, reactive } from 'vue';
-import { Api } from '@/api/Api';
+import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
 
 const appStore = useAppStore();
+const api = ApiHelpers.client;
 
 const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
 
@@ -23,7 +25,7 @@ const data = reactive({
 
 async function getLocations() {
   try {
-    const response = await new Api().temperaturesLocationsAllCreate();
+    const response = await api().temperaturesLocationsAllCreate();
     data.locations = response.data;
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -42,7 +44,7 @@ async function updateLocation(location: Location) {
   };
 
   try {
-    const response = await new Api().temperaturesLocationsUpdateCreate(request);
+    const response = await api().temperaturesLocationsUpdateCreate(request);
     if (response.data.message) {
       appStore.setSuccessMessage(response.data.message);
     }
@@ -67,7 +69,7 @@ async function createLocation() {
   };
 
   try {
-    const response = await new Api().temperaturesLocationsCreateCreate(request);
+    const response = await api().temperaturesLocationsCreateCreate(request);
     if (response.data.message) {
       appStore.setSuccessMessage(response.data.message);
       await getLocations();

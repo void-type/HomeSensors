@@ -24,6 +24,7 @@ public class DevicesApiController : ControllerBase
 
     [HttpPost]
     [Route("all")]
+    [IgnoreAntiforgeryToken]
     [ProducesResponseType(typeof(List<Device>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAll()
@@ -34,6 +35,7 @@ public class DevicesApiController : ControllerBase
 
     [HttpPost]
     [Route("update")]
+    [IgnoreAntiforgeryToken]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> Update([FromBody] UpdateDeviceRequest request)

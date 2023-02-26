@@ -8,6 +8,9 @@ import type {
 } from '@/api/data-contracts';
 import type { HttpResponse } from '@/api/http-client';
 import { isNil } from '@/models/FormatHelpers';
+import type { ModalParameters } from '@/models/ModalParameters';
+import DarkModeHelpers from '@/models/DarkModeHelpers';
+import UserSettingHelpers from '@/models/UserSettingHelpers';
 
 interface AppStoreState {
   applicationName: string;
@@ -17,42 +20,12 @@ interface AppStoreState {
   user: DomainUser;
   isInitialized: boolean;
   version: string;
-  useFahrenheit: boolean;
   useDarkMode: boolean;
+  modalIsActive: boolean;
+  modalParameters: ModalParameters;
+  useFahrenheit: boolean;
   showHumidity: boolean;
 }
-
-interface UserMessage {
-  message: string;
-}
-
-const settingKeyDisableDarkMode = 'disableDarkMode';
-const settingKeyDisableFahrenheit = 'disableFahrenheit';
-const settingKeyDisableHumidity = 'disableHumidity';
-
-const initialDarkModeSetting = localStorage.getItem(settingKeyDisableDarkMode) === null;
-
-function setUseDarkMode(setting: boolean) {
-  const { body } = document;
-
-  if (setting) {
-    body.classList.add('bg-dark');
-    body.classList.add('text-light');
-    body.classList.remove('bg-light');
-    body.classList.remove('text-dark');
-
-    localStorage.removeItem(settingKeyDisableDarkMode);
-  } else {
-    body.classList.remove('bg-dark');
-    body.classList.remove('text-light');
-    body.classList.add('bg-light');
-    body.classList.add('text-dark');
-
-    localStorage.setItem(settingKeyDisableDarkMode, 'true');
-  }
-}
-
-setUseDarkMode(initialDarkModeSetting);
 
 export const useAppStore = defineStore('app', {
   state: (): AppStoreState => ({
@@ -66,9 +39,16 @@ export const useAppStore = defineStore('app', {
     },
     isInitialized: false,
     version: '',
-    useFahrenheit: localStorage.getItem(settingKeyDisableFahrenheit) === null,
-    useDarkMode: initialDarkModeSetting,
-    showHumidity: localStorage.getItem(settingKeyDisableHumidity) === null,
+    useDarkMode: false,
+    modalIsActive: false,
+    modalParameters: {
+      title: '',
+      description: '',
+      okAction: undefined,
+      cancelAction: undefined,
+    },
+    useFahrenheit: true,
+    showHumidity: true,
   }),
 
   getters: {
@@ -93,8 +73,8 @@ export const useAppStore = defineStore('app', {
       } else if (response.status === 404) {
         this.setErrorMessage('Server responded with endpoint not found.');
       } else if (response.status >= 500) {
-        const userMessage = response.error as UserMessage;
-        this.setErrorMessage(userMessage.message);
+        const userMessage = response.error as IFailure;
+        this.setErrorMessage(userMessage.message || '');
       } else {
         const failureSet = response.error as IFailureIItemSet;
         if (failureSet !== undefined && failureSet !== null) {
@@ -154,22 +134,38 @@ export const useAppStore = defineStore('app', {
       this.messages = messages.filter(notEmpty);
     },
 
-    setUseDarkMode,
+    setDarkMode(setting: boolean) {
+      DarkModeHelpers.setDarkMode(setting);
+      this.useDarkMode = setting;
+    },
+
+    showModal(modalParameters: ModalParameters) {
+      if (this.modalIsActive) {
+        return;
+      }
+
+      this.modalIsActive = true;
+      this.modalParameters = modalParameters;
+    },
+
+    hideModal() {
+      this.modalIsActive = false;
+      this.modalParameters = {
+        title: '',
+        description: '',
+        okAction: undefined,
+        cancelAction: undefined,
+      };
+    },
 
     setUseFahrenheit(setting: boolean) {
-      if (setting) {
-        localStorage.removeItem(settingKeyDisableFahrenheit);
-      } else {
-        localStorage.setItem(settingKeyDisableFahrenheit, 'true');
-      }
+      UserSettingHelpers.setFahrenheit(setting);
+      this.useFahrenheit = setting;
     },
 
     setShowHumidity(setting: boolean) {
-      if (setting) {
-        localStorage.removeItem(settingKeyDisableHumidity);
-      } else {
-        localStorage.setItem(settingKeyDisableHumidity, 'true');
-      }
+      UserSettingHelpers.setHumidity(setting);
+      this.showHumidity = setting;
     },
   },
 });

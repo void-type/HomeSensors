@@ -2,13 +2,14 @@
 import useAppStore from '@/stores/appStore';
 import type { Device, IFailureIItemSet, Location } from '@/api/data-contracts';
 import { storeToRefs } from 'pinia';
-import { formatTempWithUnit } from '@/models/FormatHelpers';
+import { formatTempWithUnit } from '@/models/TempFormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
 import { onMounted, reactive } from 'vue';
-import { Api } from '@/api/Api';
+import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
 
 const appStore = useAppStore();
+const api = ApiHelpers.client;
 
 const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
 
@@ -34,7 +35,7 @@ function getStatus(device: Device) {
 
 async function getDevices() {
   try {
-    const response = await new Api().temperaturesDevicesAllCreate();
+    const response = await api().temperaturesDevicesAllCreate();
     data.devices = response.data;
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -43,7 +44,7 @@ async function getDevices() {
 
 async function getLocations() {
   try {
-    const response = await new Api().temperaturesLocationsAllCreate();
+    const response = await api().temperaturesLocationsAllCreate();
     data.locations = response.data;
   } catch (error) {
     appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -60,7 +61,7 @@ async function updateDevice(device: Device) {
   };
 
   try {
-    const response = await new Api().temperaturesDevicesUpdateCreate(request);
+    const response = await api().temperaturesDevicesUpdateCreate(request);
     if (response.data.message) {
       appStore.setSuccessMessage(response.data.message);
     }
@@ -74,7 +75,7 @@ async function updateDevice(device: Device) {
 
   // Update statuses
   try {
-    const response = await new Api().temperaturesDevicesAllCreate();
+    const response = await api().temperaturesDevicesAllCreate();
     const newDevices = response.data;
 
     data.devices.forEach((x) => {

@@ -5,7 +5,7 @@ import { onMounted, reactive } from 'vue';
 import { format } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
 import { storeToRefs } from 'pinia';
-import { formatTempWithUnit } from '@/models/FormatHelpers';
+import { formatTempWithUnit } from '@/models/TempFormatHelpers';
 
 const appStore = useAppStore();
 

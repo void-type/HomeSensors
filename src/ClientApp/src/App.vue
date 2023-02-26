@@ -1,30 +1,44 @@
 <script lang="ts" setup>
 import { onMounted } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
-import { Api } from '@/api/Api';
 import useAppStore from '@/stores/appStore';
 import AppHeader from '@/components/AppHeader.vue';
 import AppNav from '@/components/AppNav.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import AppMessageCenter from '@/components/AppMessageCenter.vue';
 import RouterHelpers from '@/models/RouterHelpers';
+import AppModal from './components/AppModal.vue';
+import ApiHelpers from './models/ApiHelpers';
+import DarkModeHelpers from './models/DarkModeHelpers';
+import UserSettingHelpers from './models/UserSettingHelpers';
 
 const appStore = useAppStore();
-
-const { clearMessages } = appStore;
-
 const route = useRoute();
+const api = ApiHelpers.client;
 
 onMounted(() => {
-  new Api()
+  appStore.setDarkMode(DarkModeHelpers.getInitialDarkModeSetting());
+  appStore.setUseFahrenheit(UserSettingHelpers.getInitialFahrenheitSetting());
+  appStore.setShowHumidity(UserSettingHelpers.getInitialHumiditySetting());
+
+  api()
     .appInfoList()
     .then((response) => {
       appStore.setApplicationInfo(response.data);
       RouterHelpers.setTitle(route);
+
+      if (response.data.antiforgeryToken) {
+        ApiHelpers.setHeader(
+          response.data.antiforgeryTokenHeaderName || 'X-Csrf-Token',
+          response.data.antiforgeryToken
+        );
+      }
     })
     .catch((response) => appStore.setApiFailureMessages(response));
 
-  new Api().appVersionList().then((response) => appStore.setVersionInfo(response.data));
+  api()
+    .appVersionList()
+    .then((response) => appStore.setVersionInfo(response.data));
 });
 </script>
 
@@ -42,9 +56,10 @@ onMounted(() => {
     </AppHeader>
     <AppMessageCenter class="d-print-none" />
     <main id="main" class="mb-4" tabindex="-1">
-      <RouterView @keydown.stop.prevent.esc="clearMessages()" />
+      <RouterView />
     </main>
-    <AppFooter />
+    <AppModal />
+    <AppFooter class="mt-2" />
   </div>
 </template>
 
@@ -63,6 +78,7 @@ body,
 #app-inner {
   display: flex;
   flex-direction: column;
+  overflow-y: scroll;
 }
 main {
   flex: 1 0 auto;
@@ -81,29 +97,27 @@ a.btn,
 }
 
 footer {
-  border-top: $gray-500 1px solid;
+  border-top: var(--bs-gray-500) 1px solid;
 }
 
 body.bg-dark {
   footer {
-    border-top: $gray-800 1px solid;
+    border-top: var(--bs-gray-800) 1px solid;
   }
 }
 
 .card {
-  outline: $gray-500 1px solid;
-
   &.card-hover:hover:not(.active),
   .card-hover:hover:not(.active) {
-    background-color: $gray-200;
+    background-color: var(--bs-gray-200);
   }
 
   .card-link {
     text-decoration: none;
     color: unset;
 
-    & > img {
-      max-height: 350px;
+    & > .img-fluid {
+      max-height: 16rem;
     }
   }
 }
@@ -114,11 +128,11 @@ body.bg-dark {
   .list-group-item:not(.active) {
     background-color: inherit;
     color: inherit;
-    outline: $gray-800 1px solid;
+    outline: var(--bs-gray-800) 1px solid;
 
     &.card-hover:hover:not(.active),
     .card-hover:hover:not(.active) {
-      background-color: $gray-800;
+      background-color: var(--bs-gray-800);
 
       .card-link:hover {
         background-color: inherit;
@@ -129,16 +143,37 @@ body.bg-dark {
 
   .form-control,
   .form-select {
-    background-color: $dark;
-    color: $light;
+    background-color: var(--bs-dark);
+    color: var(--bs-white);
+  }
+
+  .modal-content {
+    color: var(--bs-dark);
+  }
+
+  .pagination {
+    --bs-pagination-color: unset;
+    --bs-pagination-bg: unset;
+    --bs-pagination-disabled-bg: unset;
+    --bs-pagination-disabled-border-color: unset;
+  }
+
+  .accordion {
+    --bs-accordion-color: unset;
+    --bs-accordion-bg: unset;
+    --bs-accordion-btn-color: var(--bs-white);
+    --bs-accordion-active-color: var(--bs-white);
+    --bs-accordion-active-bg: var(--bs-gray-800);
+    --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    --bs-accordion-btn-active-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
   }
 
   .form-check-input {
-    background-color: $dark;
-    border-color: $light;
+    background-color: var(--bs-dark);
+    border-color: var(--bs-light);
 
     &:checked {
-      background-color: $primary;
+      background-color: var(--bs-primary);
     }
   }
 }
@@ -146,7 +181,7 @@ body.bg-dark {
 // Printable screens
 @media print {
   div {
-    background-color: $white;
+    background-color: var(--bs-white);
   }
 
   button,
@@ -160,7 +195,7 @@ body.bg-dark {
   h2,
   h3,
   h4 {
-    color: $black;
+    color: var(--bs-black);
   }
 }
 </style>

@@ -27,6 +27,7 @@ public class LocationsApiController : ControllerBase
 
     [HttpPost]
     [Route("all")]
+    [IgnoreAntiforgeryToken]
     [ProducesResponseType(typeof(List<Location>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAll()
@@ -37,6 +38,7 @@ public class LocationsApiController : ControllerBase
 
     [HttpPost]
     [Route("check-limits")]
+    [IgnoreAntiforgeryToken]
     [ProducesResponseType(typeof(List<CheckLimitResult>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> CheckLimits(DateTimeOffset lastCheck)
