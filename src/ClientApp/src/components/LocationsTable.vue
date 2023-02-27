@@ -150,9 +150,9 @@ onMounted(async () => {
     </table>
     <div v-if="data.locations.length < 1" class="text-center">No locations.</div>
   </div>
-  <div class="mt-4 row g-3">
+  <div class="grid mt-4">
     <h2>New location</h2>
-    <div class="col-md-6">
+    <div class="g-col-12 g-col-md-6">
       <label for="name-new">Name</label>
       <input
         id="name-new"
@@ -165,7 +165,7 @@ onMounted(async () => {
         }"
       />
     </div>
-    <div class="col-md-3">
+    <div class="g-col-12 g-col-md-3">
       <label for="min-new">Min temp (°C)</label>
       <input
         id="min-new"
@@ -179,7 +179,7 @@ onMounted(async () => {
       />
       {{ formatTempWithUnit(data.newLocation.min, useFahrenheit) }}
     </div>
-    <div class="col-md-3">
+    <div class="g-col-12 g-col-md-3">
       <label for="max-new">Max temp (°C)</label>
       <input
         id="max-new"
@@ -193,7 +193,7 @@ onMounted(async () => {
       />
       {{ formatTempWithUnit(data.newLocation.max, useFahrenheit) }}
     </div>
-    <div class="col-md-12">
+    <div class="g-col-12 g-col-md-12">
       <button class="btn btn-sm btn-primary" @click="createLocation()">Add</button>
     </div>
   </div>

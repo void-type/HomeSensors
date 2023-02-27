@@ -5,7 +5,11 @@ import 'bootstrap';
 // @ts-ignore
 import App from '@/App.vue';
 import router from '@/router';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import SetupCalendar, { DatePicker } from 'v-calendar';
+
+library.add(faTriangleExclamation);
 
 const app = createApp(App);
 

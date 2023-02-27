@@ -238,8 +238,8 @@ watch(
 </script>
 
 <template>
-  <div class="row mt-4">
-    <div class="col-md-6 mb-3">
+  <div class="grid mt-4">
+    <div class="g-col-12 g-col-md-6 mb-3">
       <label for="startDate" class="form-label">Start date</label>
       <v-date-picker
         v-model="data.graphRange.start"
@@ -253,7 +253,7 @@ watch(
         </template>
       </v-date-picker>
     </div>
-    <div class="col-md-6 mb-3">
+    <div class="g-col-12 g-col-md-6 mb-3">
       <label for="endDate" class="form-label">End date</label>
       <v-date-picker
         v-model="data.graphRange.end"

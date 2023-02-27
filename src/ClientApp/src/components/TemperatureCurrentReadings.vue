@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
 import { storeToRefs } from 'pinia';
 import { formatTempWithUnit } from '@/models/TempFormatHelpers';
+import { toNumberOrNull } from '@/models/FormatHelpers';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 const appStore = useAppStore();
 
@@ -43,21 +45,48 @@ async function connectToHub() {
   connectInternal();
 }
 
+function isOutOfLimit(reading: Reading) {
+  const current = toNumberOrNull(reading.temperatureCelsius);
+
+  if (current === null) {
+    return false;
+  }
+
+  const max = toNumberOrNull(reading.location?.maxTemperatureLimitCelsius);
+
+  if (max !== null && current > max) {
+    return true;
+  }
+
+  const min = toNumberOrNull(reading.location?.minTemperatureLimitCelsius);
+
+  if (min !== null && current < min) {
+    return true;
+  }
+
+  return false;
+}
+
 onMounted(async () => {
   await connectToHub();
 });
 </script>
 
 <template>
-  <div class="row mt-4 px-2">
+  <div class="grid mt-4">
     <div
       v-for="(currentTemp, i) in data.currentReadings"
       :key="i"
-      class="col-sm-6 col-md-4 mb-3 px-2"
+      class="g-col-12 g-col-sm-6 g-col-md-4"
     >
       <div class="card text-center">
         <div class="card-body">
           <div class="h4 mb-2">
+            <font-awesome-icon
+              v-if="isOutOfLimit(currentTemp)"
+              icon="fa-triangle-exclamation"
+              class="text-danger blink me-2"
+            />
             {{ currentTemp.location?.name }}
           </div>
           <div class="h3">
@@ -79,4 +108,14 @@ onMounted(async () => {
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.blink {
+  animation: blink-animation 2s steps(5, start) infinite;
+}
+
+@keyframes blink-animation {
+  to {
+    visibility: hidden;
+  }
+}
+</style>
