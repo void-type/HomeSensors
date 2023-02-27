@@ -17,32 +17,69 @@ const data = reactive({
   currentReadings: [] as Array<Reading>,
 });
 
+function getRetryMilliseconds(elapsedMilliseconds: number) {
+  // Within the first minute, wait between 0 and 10 seconds.
+  if (elapsedMilliseconds < 60000) {
+    return Math.random() * 10000;
+  }
+
+  // Within the first hour, try between 0 and 5 minutes.
+  if (elapsedMilliseconds < 3600000) {
+    return Math.random() * 5 * 60000;
+  }
+
+  // Within the first day, try every 30 minutes with an offset of 0 to 3 minutes.
+  if (elapsedMilliseconds < 86400000) {
+    return (Math.random() * 3 + 30) * 60000;
+  }
+
+  // After a day, stop trying to reconnect.
+  return null;
+}
+
 let connection: signalR.HubConnection | null = null;
 
 async function connectToHub() {
-  async function connectInternal() {
+  const startTimeMilliseconds = Date.now();
+
+  async function onConnectedToHub() {
+    const response = await connection?.invoke('getCurrentReadings');
+    data.currentReadings = response;
+  }
+
+  async function startConnection() {
     if (connection !== null) {
       try {
         await connection.start();
-        const response = await connection?.invoke('getCurrentReadings');
-        data.currentReadings = response;
+        await onConnectedToHub();
       } catch {
-        setTimeout(connectInternal, 2000);
+        // If we fail to start the connection, retry after delay.
+        const elapsedMilliseconds = Date.now() - startTimeMilliseconds;
+        const delay = getRetryMilliseconds(elapsedMilliseconds);
+        if (delay !== null) {
+          setTimeout(startConnection, delay);
+        }
       }
     }
   }
 
   if (connection === null) {
-    connection = new signalR.HubConnectionBuilder().withUrl('/hub/temperatures').build();
+    connection = new signalR.HubConnectionBuilder()
+      .withUrl('/hub/temperatures')
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: (retryContext) =>
+          getRetryMilliseconds(retryContext.elapsedMilliseconds),
+      })
+      .build();
 
     connection.on('updateCurrentReadings', (currentReadings) => {
       data.currentReadings = currentReadings;
     });
 
-    connection.onclose(connectInternal);
+    connection.onreconnected(onConnectedToHub);
   }
 
-  connectInternal();
+  startConnection();
 }
 
 function isOutOfLimit(reading: Reading) {
