@@ -12,7 +12,7 @@ HomeSensors.Service - A service for performing scheduled or continuous actions.
 
 HomeSensors.Web - A web app for working with the data.
 
-* Shows live current readings on a dashboard via SignalR.
+* Shows live current readings on a dashboard via SignalR. If a reading is out of limit, a warning indicator flashes.
 * Time series line graph with selectable date range and locations using Chart.js.
 * Time series also populates a table showing min, max and average temps of each location queried.
 * API data is cached using LazyCache.
