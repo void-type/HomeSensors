@@ -2,7 +2,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.3" />
-        <PackageReference Include="VoidCore.Model" Version="9.1.5-g1ca1d5b8d1" />
+        <PackageReference Include="VoidCore.Model" Version="9.1.5" />
     </ItemGroup>
 
 </Project>
