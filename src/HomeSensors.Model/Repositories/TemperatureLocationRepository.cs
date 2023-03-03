@@ -47,13 +47,8 @@ public class TemperatureLocationRepository : RepositoryBase
 
         foreach (var location in locations)
         {
-            var dbReadingsSinceQuery = _data.TemperatureReadings
-                .TagWith(GetTag())
-                .AsNoTracking()
-                .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id);
-
-            var min = await GetMinExceeded(location, dbReadingsSinceQuery);
-            var max = await GetMaxExceeded(location, dbReadingsSinceQuery);
+            var min = await GetMinExceeded(location, lastCheck);
+            var max = await GetMaxExceeded(location, lastCheck);
 
             results.Add(new CheckLimitResult(location, min, max));
         }
@@ -124,30 +119,36 @@ public class TemperatureLocationRepository : RepositoryBase
         return Result.Ok();
     }
 
-    private static async Task<Reading?> GetMinExceeded(Location location, IQueryable<TemperatureReading> dbReadingsSince)
+    private async Task<Reading?> GetMinExceeded(Location location, DateTimeOffset lastCheck)
     {
         if (!location.MinTemperatureLimitCelsius.HasValue)
         {
             return null;
         }
 
-        var min = await dbReadingsSince
+        var min = await _data.TemperatureReadings
+            .TagWith(GetTag())
+            .AsNoTracking()
+            .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id && x.TemperatureCelsius < location.MinTemperatureLimitCelsius)
             .OrderBy(x => x.TemperatureCelsius)
-            .FirstOrDefaultAsync(x => x.TemperatureCelsius < location.MinTemperatureLimitCelsius);
+            .FirstOrDefaultAsync();
 
         return min?.ToReading();
     }
 
-    private static async Task<Reading?> GetMaxExceeded(Location location, IQueryable<TemperatureReading> dbReadingsSince)
+    private async Task<Reading?> GetMaxExceeded(Location location, DateTimeOffset lastCheck)
     {
         if (!location.MaxTemperatureLimitCelsius.HasValue)
         {
             return null;
         }
 
-        var max = await dbReadingsSince
+        var max = await _data.TemperatureReadings
+            .TagWith(GetTag())
+            .AsNoTracking()
+            .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id && x.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
             .OrderByDescending(x => x.TemperatureCelsius)
-            .FirstOrDefaultAsync(x => x.TemperatureCelsius > location.MaxTemperatureLimitCelsius);
+            .FirstOrDefaultAsync();
 
         return max?.ToReading();
     }
