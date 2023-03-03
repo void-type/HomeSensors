@@ -87,12 +87,12 @@ public class TemperatureLocationRepository : RepositoryBase
                     .Map(x => Maybe.From(x))
                     .ToResult(new Failure("Location does not exist.", "id"));
             })
-            .TeeOnSuccessAsync(x =>
+            .TeeOnSuccessAsync(async x =>
             {
                 x.Name = request.Name;
                 x.MinTemperatureLimitCelsius = request.MinTemperatureLimitCelsius;
                 x.MaxTemperatureLimitCelsius = request.MaxTemperatureLimitCelsius;
-                _data.SaveChanges();
+                await _data.SaveChangesAsync();
             })
             .SelectAsync(x => EntityMessage.Create("Location saved.", x.Id));
     }

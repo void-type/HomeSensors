@@ -71,11 +71,11 @@ public class TemperatureDeviceRepository : RepositoryBase
             .FirstOrDefaultAsync(x => x.Id == request.Id)
             .MapAsync(x => Maybe.From(x))
             .ToResultAsync(new Failure("Device does not exist.", "id"))
-            .TeeOnSuccessAsync(x =>
+            .TeeOnSuccessAsync(async x =>
             {
                 x.IsRetired = request.IsRetired;
                 x.CurrentTemperatureLocationId = request.CurrentLocationId;
-                _data.SaveChanges();
+                await _data.SaveChangesAsync();
             })
             .SelectAsync(x => EntityMessage.Create("Device saved.", x.Id));
     }
