@@ -78,8 +78,10 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                 dbContext.TemperatureReadings.AddRange(newReadings);
                 await dbContext.SaveChangesAsync(stoppingToken);
 
+                var oldReadingIds = oldReadings.Select(x => x.Id);
+
                 await dbContext.TemperatureReadings
-                    .WhereShouldBeSummarized(cutoffLimit)
+                    .Where(x => oldReadingIds.Contains(x.Id))
                     .ExecuteDeleteAsync(stoppingToken);
 
                 _logger.LogInformation("Summarized data older than {Cutoff}. Compressed {OldCount} rows to {NewCount} rows.", cutoffLimit.ToString("o"), oldReadings.Count, newReadings.Count);
