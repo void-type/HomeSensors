@@ -32,7 +32,6 @@ async function getLocations() {
   }
 }
 
-// TODO: finish these API calls
 async function updateLocation(location: Location) {
   data.errors = [];
 
@@ -89,7 +88,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="mt-4">
+  <div>
     <table :class="{ table: true, 'table-dark': useDarkMode }">
       <thead>
         <tr>
@@ -150,8 +149,8 @@ onMounted(async () => {
     </table>
     <div v-if="data.locations.length < 1" class="text-center">No locations.</div>
   </div>
-  <div class="grid mt-4">
-    <h2>New location</h2>
+  <h2 class="mt-5 mb-4">New location</h2>
+  <div class="grid">
     <div class="g-col-12 g-col-md-6">
       <label for="name-new">Name</label>
       <input

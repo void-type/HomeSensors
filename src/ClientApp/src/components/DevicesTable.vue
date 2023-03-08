@@ -125,8 +125,10 @@ onMounted(async () => {
           <td>{{ device.id }}</td>
           <td>{{ device.deviceModel }}/{{ device.deviceId }}/{{ device.deviceChannel }}</td>
           <td>
-            {{ formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit) }} on
-            {{ DateHelpers.dateTimeShortForView(device.lastReading?.time) }}
+            <span v-if="device.lastReading">
+              {{ formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit) }} on
+              {{ DateHelpers.dateTimeShortForView(device.lastReading?.time || '') }}
+            </span>
           </td>
           <td>
             <div v-for="status in getStatus(device)" :key="status" class="badge bg-danger">

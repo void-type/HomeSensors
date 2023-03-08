@@ -1,4 +1,5 @@
 import { format, formatISO, formatISO9075 } from 'date-fns';
+import { isNil } from './FormatHelpers';
 
 const formatStrings = {
   // apiDate: 'yyyy-MM-dd',
@@ -9,23 +10,31 @@ const formatStrings = {
 };
 
 export default class DateHelpers {
-  static dateForApi(value: Date | string | null | undefined) {
+  static dateForApi(value: Date) {
     return formatISO(value as Date, { representation: 'date' });
   }
 
-  static dateTimeForApi(value: Date | null | undefined) {
-    return formatISO(value as Date);
+  static dateTimeForApi(value: Date) {
+    return formatISO(value);
   }
 
-  static dateForView(value: Date | null | undefined) {
+  static dateForView(value: Date) {
     return formatISO9075(value as Date, { representation: 'date' });
   }
 
-  static dateTimeForView(value: Date | string | null | undefined) {
+  static dateTimeForView(value: Date) {
     return formatISO9075(value as Date);
   }
 
-  static dateTimeShortForView(value: Date | string | null | undefined) {
-    return format(new Date(value as string), formatStrings.viewDateTimeShort);
+  static dateTimeShortForView(value: Date | string): string {
+    if (typeof value === 'string') {
+      if (isNil(value)) {
+        return '';
+      }
+
+      return this.dateTimeShortForView(new Date(value));
+    }
+
+    return format(value, formatStrings.viewDateTimeShort);
   }
 }

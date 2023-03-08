@@ -2,12 +2,13 @@
 import useAppStore from '@/stores/appStore';
 import type { Reading } from '@/api/data-contracts';
 import { onMounted, reactive } from 'vue';
-import { format } from 'date-fns';
+import { addMinutes, format, isPast } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
 import { storeToRefs } from 'pinia';
 import { formatTempWithUnit } from '@/models/TempFormatHelpers';
 import { toNumberOrNull } from '@/models/FormatHelpers';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import ApiHelpers from '@/models/ApiHelpers';
 
 const appStore = useAppStore();
 
@@ -16,26 +17,6 @@ const { useFahrenheit, showHumidity } = storeToRefs(appStore);
 const data = reactive({
   currentReadings: [] as Array<Reading>,
 });
-
-function getRetryMilliseconds(elapsedMilliseconds: number) {
-  // Within the first minute, wait between 0 and 10 seconds.
-  if (elapsedMilliseconds < 60000) {
-    return Math.random() * 10000;
-  }
-
-  // Within the first hour, try between 0 and 5 minutes.
-  if (elapsedMilliseconds < 3600000) {
-    return Math.random() * 5 * 60000;
-  }
-
-  // Within the first day, try every 30 minutes with an offset of 0 to 3 minutes.
-  if (elapsedMilliseconds < 86400000) {
-    return (Math.random() * 3 + 30) * 60000;
-  }
-
-  // After a day, stop trying to reconnect.
-  return null;
-}
 
 let connection: signalR.HubConnection | null = null;
 
@@ -55,7 +36,7 @@ async function connectToHub() {
       } catch {
         // If we fail to start the connection, retry after delay.
         const elapsedMilliseconds = Date.now() - startTimeMilliseconds;
-        const delay = getRetryMilliseconds(elapsedMilliseconds);
+        const delay = ApiHelpers.getRetryMilliseconds(elapsedMilliseconds);
         if (delay !== null) {
           setTimeout(startConnection, delay);
         }
@@ -68,7 +49,7 @@ async function connectToHub() {
       .withUrl('/hub/temperatures')
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) =>
-          getRetryMilliseconds(retryContext.elapsedMilliseconds),
+          ApiHelpers.getRetryMilliseconds(retryContext.elapsedMilliseconds),
       })
       .build();
 
@@ -82,7 +63,7 @@ async function connectToHub() {
   startConnection();
 }
 
-function isOutOfLimit(reading: Reading) {
+function isHot(reading: Reading) {
   const current = toNumberOrNull(reading.temperatureCelsius);
 
   if (current === null) {
@@ -91,17 +72,29 @@ function isOutOfLimit(reading: Reading) {
 
   const max = toNumberOrNull(reading.location?.maxTemperatureLimitCelsius);
 
-  if (max !== null && current > max) {
-    return true;
+  return max !== null && current > max;
+}
+
+function isCold(reading: Reading) {
+  const current = toNumberOrNull(reading.temperatureCelsius);
+
+  if (current === null) {
+    return false;
   }
 
   const min = toNumberOrNull(reading.location?.minTemperatureLimitCelsius);
 
-  if (min !== null && current < min) {
-    return true;
-  }
+  return min !== null && current < min;
+}
 
-  return false;
+const staleLimitMinutes = 20;
+
+function isStale(reading: Reading) {
+  const readingDate = new Date(reading.time as string);
+
+  const result = isPast(addMinutes(readingDate, staleLimitMinutes));
+
+  return result;
 }
 
 onMounted(async () => {
@@ -119,14 +112,21 @@ onMounted(async () => {
       <div class="card text-center">
         <div class="card-body">
           <div class="h4 mb-2">
-            <font-awesome-icon
-              v-if="isOutOfLimit(currentTemp)"
-              icon="fa-triangle-exclamation"
-              class="text-danger blink me-2"
-            />
             {{ currentTemp.location?.name }}
           </div>
           <div class="h3">
+            <font-awesome-icon
+              v-if="isHot(currentTemp)"
+              icon="fa-temperature-full"
+              class="hot blink me-2"
+              title="Hotter than limit."
+            />
+            <font-awesome-icon
+              v-if="isCold(currentTemp)"
+              icon="fa-snowflake"
+              class="cold blink me-2"
+              title="Colder than limit."
+            />
             <span class="fw-bold">{{
               formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit)
             }}</span>
@@ -135,6 +135,12 @@ onMounted(async () => {
             >
           </div>
           <div>
+            <font-awesome-icon
+              v-if="isStale(currentTemp)"
+              icon="fa-clock"
+              class="text-muted blink me-2"
+              :title="`Reading is more than ${staleLimitMinutes} minutes old.`"
+            />
             <small class="fw-light">{{
               format(new Date(currentTemp.time as string), 'HH:mm')
             }}</small>
@@ -146,8 +152,16 @@ onMounted(async () => {
 </template>
 
 <style lang="scss" scoped>
+.hot {
+  color: #df2020;
+}
+
+.cold {
+  color: #abc0ff;
+}
+
 .blink {
-  animation: blink-animation 2s steps(5, start) infinite;
+  animation: blink-animation 5s steps(5, start) infinite;
 }
 
 @keyframes blink-animation {

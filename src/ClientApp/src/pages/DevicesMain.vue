@@ -4,7 +4,7 @@ import DevicesTable from '@/components/DevicesTable.vue';
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-4 mb-0">Devices</h1>
+    <h1 class="mt-4 mb-4">Devices</h1>
     <DevicesTable />
   </div>
 </template>

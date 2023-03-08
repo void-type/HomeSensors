@@ -4,7 +4,7 @@ import LocationsTable from '@/components/LocationsTable.vue';
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-4 mb-0">Locations</h1>
+    <h1 class="mt-4 mb-4">Locations</h1>
     <LocationsTable />
   </div>
 </template>

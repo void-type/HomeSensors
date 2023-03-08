@@ -3,13 +3,15 @@ import { createPinia } from 'pinia';
 import 'bootstrap';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import App from '@/App.vue';
+import App from './App.vue';
 import router from '@/router';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faSnowflake, faTemperatureFull } from '@fortawesome/free-solid-svg-icons';
 import SetupCalendar, { DatePicker } from 'v-calendar';
 
-library.add(faTriangleExclamation);
+library.add(faTemperatureFull);
+library.add(faSnowflake);
+library.add(faClock);
 
 const app = createApp(App);
 
