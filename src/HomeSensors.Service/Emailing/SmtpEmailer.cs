@@ -29,6 +29,15 @@ public class SmtpEmailer : IEmailSender
     /// <param name="cancellationToken">A cancellation token</param>
     public async Task SendEmail(Email email, CancellationToken cancellationToken)
     {
+        if (!_notificationsSettings.IsEnabled)
+        {
+            _logger.LogWarning("Notifications are disabled. Not sending email \"{Subject}\" to {Recipients}",
+                email.Subject,
+                email.Recipients);
+
+            return;
+        }
+
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(_applicationSettings.Name, _notificationsSettings.FromAddress));
         message.Subject = email.Subject;
