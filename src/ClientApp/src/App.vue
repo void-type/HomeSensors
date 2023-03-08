@@ -67,6 +67,7 @@ onMounted(() => {
 @import '@/styles/theme';
 @import 'bootstrap/scss/bootstrap';
 @import 'v-calendar/dist/style.css';
+@import '@fortawesome/fontawesome-svg-core/styles.css';
 
 // Sticky footer
 html,
