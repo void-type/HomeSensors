@@ -12,7 +12,7 @@ namespace HomeSensors.Service.Workers;
 /// </summary>
 public class SummarizeTemperatureReadingsWorker : BackgroundService
 {
-    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(120);
+    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(60);
     private readonly TimeSpan _summarizeCutoff = TimeSpan.FromDays(-30);
     private const int SummarizeIntervalMinutes = 5;
     private readonly ILogger<SummarizeTemperatureReadingsWorker> _logger;
@@ -30,10 +30,15 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
     {
         var timer = new PeriodicTimer(_betweenTicks);
 
+        // Offset the schedule of this job from others
+        await Task.Delay(TimeSpan.FromMinutes(3), stoppingToken);
+
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
             try
             {
+                _logger.LogInformation($"{nameof(SummarizeTemperatureReadingsWorker)} job is starting.");
+
                 using var scope = _scopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
@@ -75,8 +80,13 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
 
                 dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
 
-                dbContext.TemperatureReadings.AddRange(newReadings);
-                await dbContext.SaveChangesAsync(stoppingToken);
+                // This takes more time, but may prevent deadlocks with other jobs.
+                // EF uses a MERGE statement that seems to conflict with reads on the same table.
+                foreach (var newReading in newReadings)
+                {
+                    dbContext.TemperatureReadings.Add(newReading);
+                    await dbContext.SaveChangesAsync(stoppingToken);
+                }
 
                 var oldReadingIds = oldReadings.Select(x => x.Id);
 
@@ -89,6 +99,10 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(SummarizeTemperatureReadingsWorker));
+            }
+            finally
+            {
+                _logger.LogInformation($"{nameof(SummarizeTemperatureReadingsWorker)} job is finished.");
             }
         }
     }

@@ -32,6 +32,8 @@ public class CheckTemperatureLimitsWorker : BackgroundService
         {
             try
             {
+                _logger.LogInformation($"{nameof(CheckTemperatureLimitsWorker)} job is starting.");
+
                 using var scope = _scopeFactory.CreateScope();
                 var locationRepository = scope.ServiceProvider.GetRequiredService<TemperatureLocationRepository>();
 
@@ -56,6 +58,10 @@ public class CheckTemperatureLimitsWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(CheckTemperatureLimitsWorker));
+            }
+            finally
+            {
+                _logger.LogInformation($"{nameof(CheckTemperatureLimitsWorker)} job is finished.");
             }
         }
     }

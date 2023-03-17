@@ -21,9 +21,7 @@ var host = Host.CreateDefaultBuilder(args)
 
         services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
             .UseSqlServer("Name=HomeSensors", sqlOptions => sqlOptions
-                .MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName)
-                // EF uses MERGE to batch inserts, which is causing deadlocks between Summarize and CheckLimits jobs.
-                .MaxBatchSize(1)));
+                .MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName)));
 
         services.AddScoped<TemperatureReadingRepository>();
         services.AddScoped<TemperatureDeviceRepository>();
