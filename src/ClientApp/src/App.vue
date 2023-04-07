@@ -43,24 +43,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="app-inner" tabindex="-1">
-    <div class="container-xxl visually-hidden-focusable">
-      <router-link class="d-inline-flex p-2 m-1" :to="{ hash: '#main', query: route.query }"
-        >Skip to main content</router-link
-      >
-    </div>
-    <AppHeader class="d-print-none">
-      <template #navItems>
-        <AppNav />
-      </template>
-    </AppHeader>
-    <AppMessageCenter class="d-print-none" />
-    <main id="main" class="mb-4" tabindex="-1">
-      <RouterView />
-    </main>
-    <AppModal />
-    <AppFooter class="mt-2" />
+  <div class="container-xxl visually-hidden-focusable">
+    <router-link class="d-inline-flex p-2 m-1" :to="{ hash: '#main', query: route.query }"
+      >Skip to main content</router-link
+    >
   </div>
+  <AppHeader class="d-print-none">
+    <template #navItems>
+      <AppNav />
+    </template>
+  </AppHeader>
+  <AppMessageCenter class="d-print-none" />
+  <main id="main" class="mb-4" tabindex="-1">
+    <RouterView />
+  </main>
+  <AppModal />
+  <AppFooter class="mt-2" />
 </template>
 
 <style lang="scss">
@@ -72,14 +70,13 @@ onMounted(() => {
 // Sticky footer
 html,
 body,
-#app,
-#app-inner {
+#app {
   height: 100%;
+  min-height: 100%;
 }
-#app-inner {
+#app {
   display: flex;
   flex-direction: column;
-  overflow-y: scroll;
 }
 main {
   flex: 1 0 auto;
@@ -101,12 +98,6 @@ footer {
   border-top: var(--bs-gray-500) 1px solid;
 }
 
-body.bg-dark {
-  footer {
-    border-top: var(--bs-gray-800) 1px solid;
-  }
-}
-
 .card {
   &.card-hover:hover:not(.active),
   .card-hover:hover:not(.active) {
@@ -124,6 +115,9 @@ body.bg-dark {
 }
 
 body.bg-dark {
+  --bs-link-color: #{lighten($primary, 20%)};
+  --bs-link-hover-color: #{lighten($primary, 10%)};
+
   .card,
   .list-group,
   .list-group-item:not(.active) {
@@ -176,6 +170,10 @@ body.bg-dark {
     &:checked {
       background-color: var(--bs-primary);
     }
+  }
+
+  footer {
+    border-top: var(--bs-gray-800) 1px solid;
   }
 }
 
