@@ -19,7 +19,7 @@ const data = reactive({
   errors: [] as Array<string>,
 });
 
-function getStatus(device: Device) {
+function getStatuses(device: Device) {
   const errors: Array<string> = [];
 
   if (device.isLost) {
@@ -102,11 +102,11 @@ onMounted(async () => {
 <template>
   <div class="mt-4">
     <p>
-      Inactive - device that hasn't saved a reading in the last 2 hours.
+      Inactive - device hasn't saved a reading in the last 20 minutes.
       <br />
-      Lost - device that doesn't have a location but will acquire new readings.
+      Lost - device doesn't have a location but will acquire new readings.
       <br />
-      Retired - device will not acquire new readings and statuses are suppressed.
+      Retired - device will not acquire new readings and other statuses are suppressed.
     </p>
     <table :class="{ table: true, 'table-dark': useDarkMode }">
       <thead>
@@ -131,7 +131,7 @@ onMounted(async () => {
             </span>
           </td>
           <td>
-            <div v-for="status in getStatus(device)" :key="status" class="badge bg-danger">
+            <div v-for="status in getStatuses(device)" :key="status" class="badge bg-danger">
               {{ status }}
             </div>
           </td>

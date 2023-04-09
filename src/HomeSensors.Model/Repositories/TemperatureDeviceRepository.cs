@@ -50,8 +50,8 @@ public class TemperatureDeviceRepository : RepositoryBase
             currentLocationId: x.CurrentLocationId,
             lastReading: x.LastReading?.ToReading(),
             isRetired: x.IsRetired,
-            isLost: x.CurrentLocationId is null && !x.IsRetired,
-            isInactive: (x.LastReading is null || x.LastReading.Time < _dateTimeService.MomentWithOffset.AddHours(-2)) && !x.IsRetired
+            isLost: !x.IsRetired && x.CurrentLocationId is null,
+            isInactive: !x.IsRetired && (x.LastReading is null || x.LastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20))
         ));
     }
 
