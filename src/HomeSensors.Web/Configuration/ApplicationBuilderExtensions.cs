@@ -6,11 +6,6 @@ public static class ApplicationBuilderExtensions
 {
     public static IApplicationBuilder UseSwaggerAndUi(this IApplicationBuilder app, IHostEnvironment environment)
     {
-        if (environment.IsProduction())
-        {
-            return app;
-        }
-
         return app
             .UseSwagger()
             .UseSwaggerUI(c => c.DocumentTitle = environment.ApplicationName + " API");

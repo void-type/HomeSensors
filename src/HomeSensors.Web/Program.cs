@@ -75,7 +75,7 @@ try
     services.AddSignalR();
     services.AddHostedService<PushTemperatureCurrentReadingsWorker>();
 
-    services.AddSwaggerWithCsp(env);
+    services.AddSwaggerWithCsp();
 
     var app = builder.Build();
 

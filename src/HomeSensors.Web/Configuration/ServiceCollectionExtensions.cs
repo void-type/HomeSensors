@@ -8,13 +8,8 @@ namespace HomeSensors.Web.Configuration;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSwaggerWithCsp(this IServiceCollection services, IHostEnvironment env)
+    public static IServiceCollection AddSwaggerWithCsp(this IServiceCollection services)
     {
-        if (env.IsProduction())
-        {
-            return services;
-        }
-
         services.AddHttpContextAccessor();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
