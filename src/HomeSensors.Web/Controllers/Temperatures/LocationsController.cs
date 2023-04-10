@@ -14,12 +14,12 @@ namespace HomeSensors.Web.Controllers.Temperatures;
 /// Exposes temperature data through web API
 /// </summary>
 [ApiRoute("temperatures/locations")]
-public class LocationsApiController : ControllerBase
+public class LocationsController : ControllerBase
 {
     private readonly TemperatureCachedRepository _cachedTemperatureRepository;
     private readonly TemperatureLocationRepository _locationRepository;
 
-    public LocationsApiController(TemperatureCachedRepository temperatureRepository, TemperatureLocationRepository locationRepository)
+    public LocationsController(TemperatureCachedRepository temperatureRepository, TemperatureLocationRepository locationRepository)
     {
         _cachedTemperatureRepository = temperatureRepository;
         _locationRepository = locationRepository;
