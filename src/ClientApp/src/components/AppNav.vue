@@ -3,6 +3,9 @@
 <template>
   <ul class="navbar-nav">
     <li class="nav-item">
+      <router-link :to="{ name: 'home' }" class="nav-link">Home</router-link>
+    </li>
+    <li class="nav-item">
       <router-link :to="{ name: 'devicesMain' }" class="nav-link">Devices</router-link>
     </li>
     <li class="nav-item">
