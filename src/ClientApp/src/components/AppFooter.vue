@@ -7,7 +7,7 @@ const { version } = storeToRefs(appStore);
 </script>
 
 <template>
-  <footer class="d-print-none">
+  <footer id="footer" class="d-print-none">
     <div>
       <a href="https://github.com/void-type/HomeSensors">
         HomeSensors {{ version }} is open source!</a
