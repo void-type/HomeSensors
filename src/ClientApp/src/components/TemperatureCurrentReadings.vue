@@ -6,7 +6,6 @@ import { addMinutes, format, isPast } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
 import { storeToRefs } from 'pinia';
 import { formatTempWithUnit } from '@/models/TempFormatHelpers';
-import { toNumberOrNull } from '@/models/FormatHelpers';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import ApiHelpers from '@/models/ApiHelpers';
 
@@ -63,30 +62,6 @@ async function connectToHub() {
   startConnection();
 }
 
-function isHot(reading: Reading) {
-  const current = toNumberOrNull(reading.temperatureCelsius);
-
-  if (current === null) {
-    return false;
-  }
-
-  const max = toNumberOrNull(reading.location?.maxTemperatureLimitCelsius);
-
-  return max !== null && current > max;
-}
-
-function isCold(reading: Reading) {
-  const current = toNumberOrNull(reading.temperatureCelsius);
-
-  if (current === null) {
-    return false;
-  }
-
-  const min = toNumberOrNull(reading.location?.minTemperatureLimitCelsius);
-
-  return min !== null && current < min;
-}
-
 const staleLimitMinutes = 20;
 
 function isStale(reading: Reading) {
@@ -116,13 +91,13 @@ onMounted(async () => {
           </div>
           <div class="h3">
             <font-awesome-icon
-              v-if="isHot(currentTemp)"
+              v-if="currentTemp.isHot"
               icon="fa-temperature-full"
               class="hot blink me-2"
               title="Hotter than limit."
             />
             <font-awesome-icon
-              v-if="isCold(currentTemp)"
+              v-if="currentTemp.isCold"
               icon="fa-snowflake"
               class="cold blink me-2"
               title="Colder than limit."

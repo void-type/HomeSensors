@@ -121,6 +121,8 @@ export interface Reading {
   /** @format double */
   temperatureCelsius?: number | null;
   location?: Location;
+  isHot?: boolean;
+  isCold?: boolean;
 }
 
 export interface UpdateDeviceRequest {

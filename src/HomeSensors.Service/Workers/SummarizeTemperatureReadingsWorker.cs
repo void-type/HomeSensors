@@ -12,12 +12,12 @@ namespace HomeSensors.Service.Workers;
 /// </summary>
 public class SummarizeTemperatureReadingsWorker : BackgroundService
 {
-    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(60);
-    private readonly TimeSpan _summarizeCutoff = TimeSpan.FromDays(-30);
-    private const int SummarizeIntervalMinutes = 5;
     private readonly ILogger<SummarizeTemperatureReadingsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDateTimeService _dateTimeService;
+    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(60);
+    private readonly TimeSpan _summarizeCutoff = TimeSpan.FromDays(30);
+    private const int SummarizeIntervalMinutes = 5;
 
     public SummarizeTemperatureReadingsWorker(ILogger<SummarizeTemperatureReadingsWorker> logger, IServiceScopeFactory scopeFactory, IDateTimeService dateTimeService)
     {
@@ -43,7 +43,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                 var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
                 var cutoffLimit = _dateTimeService.MomentWithOffset
-                    .Add(_summarizeCutoff)
+                    .Subtract(_summarizeCutoff)
                     .RoundDownMinutes(SummarizeIntervalMinutes);
 
                 var devices = await dbContext.TemperatureDevices

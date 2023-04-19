@@ -2,6 +2,7 @@
 using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
+using VoidCore.Model.Functional;
 using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Repositories;
@@ -39,6 +40,26 @@ public class TemperatureReadingRepository : RepositoryBase
             temperatureCelsius: x.TemperatureCelsius,
             location: x.TemperatureLocation!.ToLocation()
         ));
+    }
+
+    /// <summary>
+    /// Gets the latest reading for the location.
+    /// </summary>
+    public Task<Maybe<Reading>> GetCurrent(long locationId)
+    {
+        return _data.TemperatureReadings
+            .TagWith(GetTag())
+            .AsNoTracking()
+            .Include(x => x.TemperatureLocation)
+            .Where(x => x.TemperatureLocationId == locationId)
+            .OrderByDescending(x => x.Time)
+            .FirstOrDefaultAsync()
+            .MapAsync(Maybe.From)
+            .SelectAsync(x => new Reading(
+                time: x.Time,
+                humidity: x.Humidity,
+                temperatureCelsius: x.TemperatureCelsius,
+                location: x.TemperatureLocation!.ToLocation()));
     }
 
     /// <summary>

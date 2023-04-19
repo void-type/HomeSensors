@@ -31,7 +31,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags ApplicationApi
+   * @tags Application
    * @name AppInfoList
    * @summary Get information to bootstrap the SPA client like application name and user data.
    * @request GET:/api/app/info
@@ -47,7 +47,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags ApplicationApi
+   * @tags Application
    * @name AppVersionList
    * @summary Get the version of the application.
    * @request GET:/api/app/version
@@ -63,7 +63,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags DevicesApi
+   * @tags Devices
    * @name TemperaturesDevicesAllCreate
    * @request POST:/api/temperatures/devices/all
    * @response `200` `(Device)[]` Success
@@ -79,7 +79,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags DevicesApi
+   * @tags Devices
    * @name TemperaturesDevicesUpdateCreate
    * @request POST:/api/temperatures/devices/update
    * @response `200` `Int64EntityMessage` Success
@@ -97,7 +97,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags LocationsApi
+   * @tags Locations
    * @name TemperaturesLocationsAllCreate
    * @request POST:/api/temperatures/locations/all
    * @response `200` `(Location)[]` Success
@@ -113,7 +113,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags LocationsApi
+   * @tags Locations
    * @name TemperaturesLocationsCheckLimitsCreate
    * @request POST:/api/temperatures/locations/check-limits
    * @response `200` `(CheckLimitResult)[]` Success
@@ -133,7 +133,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags LocationsApi
+   * @tags Locations
    * @name TemperaturesLocationsCreateCreate
    * @request POST:/api/temperatures/locations/create
    * @response `200` `Int64EntityMessage` Success
@@ -151,7 +151,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags LocationsApi
+   * @tags Locations
    * @name TemperaturesLocationsUpdateCreate
    * @request POST:/api/temperatures/locations/update
    * @response `200` `Int64EntityMessage` Success
@@ -169,7 +169,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags ReadingsApi
+   * @tags Readings
    * @name TemperaturesReadingsCurrentCreate
    * @request POST:/api/temperatures/readings/current
    * @response `200` `(Reading)[]` Success
@@ -185,7 +185,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags ReadingsApi
+   * @tags Readings
    * @name TemperaturesReadingsTimeSeriesCreate
    * @request POST:/api/temperatures/readings/time-series
    * @response `200` `(GraphTimeSeries)[]` Success
