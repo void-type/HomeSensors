@@ -28,19 +28,19 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/pages/AppHome.vue'),
+      component: () => import('@/pages/HomePage.vue'),
       meta: { title: 'Home' },
     },
     {
       path: '/devices',
       name: 'devicesMain',
-      component: () => import('@/pages/DevicesMain.vue'),
+      component: () => import('@/pages/DevicesPage.vue'),
       meta: { title: 'Devices' },
     },
     {
       path: '/locations',
       name: 'locationsMain',
-      component: () => import('@/pages/LocationsMain.vue'),
+      component: () => import('@/pages/LocationsPage.vue'),
       meta: { title: 'Locations' },
     },
     {
