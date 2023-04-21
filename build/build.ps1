@@ -1,9 +1,11 @@
 [CmdletBinding()]
 param(
   [string] $Configuration = 'Release',
-  [switch] $SkipClient,
   [switch] $SkipFormat,
   [switch] $SkipOutdated,
+  [switch] $SkipClient,
+  [switch] $SkipTest,
+  [switch] $SkipTestReport,
   [switch] $SkipPublish
 )
 
@@ -80,6 +82,26 @@ try {
 
   dotnet build --configuration "$Configuration" --no-restore
   Stop-OnError
+
+  # if (-not $SkipTest) {
+  #   # Run tests, gather coverage
+  #   dotnet test "$testProjectFolder" `
+  #     --configuration "$Configuration" `
+  #     --no-build `
+  #     --results-directory './artifacts/testResults' `
+  #     --logger 'trx' `
+  #     --collect:'XPlat Code Coverage'
+  #   Stop-OnError
+
+  #   if (-not $SkipTestReport) {
+  #     # Generate code coverage report
+  #     dotnet reportgenerator `
+  #       '-reports:./artifacts/testResults/*/coverage.cobertura.xml' `
+  #       '-targetdir:./artifacts/testCoverage' `
+  #       '-reporttypes:HtmlInline_AzurePipelines'
+  #     Stop-OnError
+  #   }
+  # }
 
   if (-not $SkipPublish) {
     # Package build
