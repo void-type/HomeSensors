@@ -1,9 +1,9 @@
 # HomeSensors
 
 [![License](https://img.shields.io/github/license/void-type/HomeSensors.svg)](https://github.com/void-type/HomeSensors/blob/main/LICENSE.txt)
+[![ReleaseVersion](https://img.shields.io/github/release/void-type/HomeSensors.svg)](https://github.com/void-type/HomeSensors/releases)
 [![Build Status](https://img.shields.io/azure-devops/build/void-type/VoidCore/18/main)](https://dev.azure.com/void-type/VoidCore/_build/latest?definitionId=18&branchName=main)
 [![Test Coverage](https://img.shields.io/azure-devops/coverage/void-type/VoidCore/18/main)](https://dev.azure.com/void-type/VoidCore/_build/latest?definitionId=18&branchName=main)
-[![ReleaseVersion](https://img.shields.io/github/release/void-type/HomeSensors.svg)](https://github.com/void-type/HomeSensors/releases)
 
 A solution to gather data from various sensors and display it. Built using ASP.NET Core 7 and Vue 3.
 
