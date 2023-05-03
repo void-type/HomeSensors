@@ -138,7 +138,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
     {
         try
         {
-            var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+            var payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
 
             return JsonConvert.DeserializeObject<TemperatureMessage>(payload)
                 .EnsureNotNull();
