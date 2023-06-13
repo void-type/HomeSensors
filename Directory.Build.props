@@ -3,7 +3,5 @@
     <TargetFramework>net7.0</TargetFramework>
     <GenerateFullPaths>true</GenerateFullPaths>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- TODO: https://github.com/dotnet/format/issues/1800 -->
-    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
   </PropertyGroup>
 </Project>
