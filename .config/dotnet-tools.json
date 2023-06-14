@@ -3,19 +3,19 @@
   "isRoot": true,
   "tools": {
     "nbgv": {
-      "version": "3.6.128",
+      "version": "3.6.133",
       "commands": [
         "nbgv"
       ]
     },
     "dotnet-outdated-tool": {
-      "version": "4.5.1",
+      "version": "4.5.2",
       "commands": [
         "dotnet-outdated"
       ]
     },
     "dotnet-ef": {
-      "version": "7.0.5",
+      "version": "7.0.7",
       "commands": [
         "dotnet-ef"
       ]
