@@ -88,7 +88,7 @@ public class CheckTemperatureLimitsWorker : BackgroundService
 
     private static bool AlertExists(List<Alert> latchedAlerts, CheckLimitResult failedResult, string status)
     {
-        return latchedAlerts.Any(x => x.Result.Location.Id == failedResult.Location.Id && x.Status == status);
+        return latchedAlerts.Exists(x => x.Result.Location.Id == failedResult.Location.Id && x.Status == status);
     }
 
     private void AddAlert(List<Alert> latchedAlerts, CheckLimitResult failedResult, string status, DateTimeOffset now)
@@ -99,7 +99,7 @@ public class CheckTemperatureLimitsWorker : BackgroundService
     private async Task CleanClearedAlerts(TemperatureReadingRepository temperatureRepository, List<Alert> latchedAlerts, CheckLimitResult[] failedResults, CancellationToken stoppingToken)
     {
         var clearedAlerts = latchedAlerts
-            .Where(alert => !failedResults.Any(x => AlertIsForThisResult(alert, x)))
+            .Where(alert => !Array.Exists(failedResults, x => AlertIsForThisResult(alert, x)))
             .ToArray();
 
         foreach (var alert in clearedAlerts)
