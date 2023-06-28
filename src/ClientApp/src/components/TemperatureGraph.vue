@@ -10,10 +10,12 @@ import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
 import { formatTemp, formatTempWithUnit, tempUnit } from '@/models/TempFormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
+import useMessageStore from '@/stores/messageStore';
 
 Chart.register(...registerables);
 
 const appStore = useAppStore();
+const messageStore = useMessageStore();
 const api = ApiHelpers.client;
 
 const { useFahrenheit, useDarkMode } = storeToRefs(appStore);
@@ -207,7 +209,7 @@ async function getTimeSeries() {
     const response = await api().temperaturesReadingsTimeSeriesCreate(parameters);
     data.graphSeries = response.data;
   } catch (error) {
-    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
@@ -217,7 +219,7 @@ async function getLocations() {
     data.locations = response.data;
     data.graphRange.locationIds = data.locations.map((x) => x.id as number);
   } catch (error) {
-    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 

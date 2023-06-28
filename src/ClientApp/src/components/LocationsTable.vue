@@ -7,8 +7,10 @@ import { formatTempWithUnit } from '@/models/TempFormatHelpers';
 import { onMounted, reactive } from 'vue';
 import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
+import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
+const messageStore = useMessageStore();
 const api = ApiHelpers.client;
 
 const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
@@ -28,7 +30,7 @@ async function getLocations() {
     const response = await api().temperaturesLocationsAllCreate();
     data.locations = response.data;
   } catch (error) {
-    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
@@ -45,11 +47,11 @@ async function updateLocation(location: Location) {
   try {
     const response = await api().temperaturesLocationsUpdateCreate(request);
     if (response.data.message) {
-      appStore.setSuccessMessage(response.data.message);
+      messageStore.setSuccessMessage(response.data.message);
     }
   } catch (error) {
     const response = error as HttpResponse<unknown, unknown>;
-    appStore.setApiFailureMessages(response);
+    messageStore.setApiFailureMessages(response);
 
     const failures = (response.error as IFailureIItemSet).items || [];
     failures.forEach((x) => data.errors.push(`${x.uiHandle}-${location.id}`));
@@ -70,12 +72,12 @@ async function createLocation() {
   try {
     const response = await api().temperaturesLocationsCreateCreate(request);
     if (response.data.message) {
-      appStore.setSuccessMessage(response.data.message);
+      messageStore.setSuccessMessage(response.data.message);
       await getLocations();
     }
   } catch (error) {
     const response = error as HttpResponse<unknown, unknown>;
-    appStore.setApiFailureMessages(response);
+    messageStore.setApiFailureMessages(response);
 
     const failures = (response.error as IFailureIItemSet).items || [];
     failures.forEach((x) => data.errors.push(`${x.uiHandle}-new`));

@@ -7,8 +7,10 @@ import DateHelpers from '@/models/DateHelpers';
 import { onMounted, reactive } from 'vue';
 import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
+import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
+const messageStore = useMessageStore();
 const api = ApiHelpers.client;
 
 const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
@@ -38,7 +40,7 @@ async function getDevices() {
     const response = await api().temperaturesDevicesAllCreate();
     data.devices = response.data;
   } catch (error) {
-    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
@@ -47,7 +49,7 @@ async function getLocations() {
     const response = await api().temperaturesLocationsAllCreate();
     data.locations = response.data;
   } catch (error) {
-    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
@@ -63,11 +65,11 @@ async function updateDevice(device: Device) {
   try {
     const response = await api().temperaturesDevicesUpdateCreate(request);
     if (response.data.message) {
-      appStore.setSuccessMessage(response.data.message);
+      messageStore.setSuccessMessage(response.data.message);
     }
   } catch (error) {
     const response = error as HttpResponse<unknown, unknown>;
-    appStore.setApiFailureMessages(response);
+    messageStore.setApiFailureMessages(response);
 
     const failures = (response.error as IFailureIItemSet).items || [];
     failures.forEach((x) => data.errors.push(`${x.uiHandle}-${device.id}`));
@@ -89,7 +91,7 @@ async function updateDevice(device: Device) {
       }
     });
   } catch (error) {
-    appStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 

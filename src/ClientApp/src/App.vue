@@ -7,12 +7,14 @@ import AppNav from '@/components/AppNav.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import AppMessageCenter from '@/components/AppMessageCenter.vue';
 import RouterHelpers from '@/models/RouterHelpers';
-import AppModal from './components/AppModal.vue';
-import ApiHelpers from './models/ApiHelpers';
-import DarkModeHelpers from './models/DarkModeHelpers';
-import UserSettingHelpers from './models/UserSettingHelpers';
+import AppModal from '@/components/AppModal.vue';
+import ApiHelpers from '@/models/ApiHelpers';
+import DarkModeHelpers from '@/models/DarkModeHelpers';
+import UserSettingHelpers from '@/models/UserSettingHelpers';
+import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
+const messageStore = useMessageStore();
 const route = useRoute();
 const api = ApiHelpers.client;
 
@@ -34,7 +36,7 @@ onMounted(() => {
         );
       }
     })
-    .catch((response) => appStore.setApiFailureMessages(response));
+    .catch((response) => messageStore.setApiFailureMessages(response));
 
   api()
     .appVersionList()
