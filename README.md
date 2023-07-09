@@ -24,6 +24,7 @@ HomeSensors.Web - A web app for working with the data.
 * Web API is automatically documented using Swashbuckle and Swagger.
 
 ClientApp - A browser frontend for HomeSensors.Web.
+
 * Uses swagger-typescript-api to generate an API client from the swagger endpoint.
 * Settings under the user name for temperature unit, show/hide humidity, and dark theme.
 * Responsive UI made with Bootstrap grid.
