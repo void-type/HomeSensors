@@ -11,24 +11,26 @@ A solution to gather data from various sensors and display it. Built using ASP.N
 
 HomeSensors.Service - A service for performing scheduled or continuous actions.
 
-* Gathers temperature data from an external MQTT feed using MQTTnet. There are scripts to setup an SDR, RTL_433 and Mosquitto on a Raspberry PI.
-* Performs temperature limit checks per-location. Will notify via email when limit is exceeded.
-* Compresses historical data (> 30 days ago) into 5 minute intervals. This can save significant space as some of these sensors can poll every few seconds.
+- Gathers temperature data from an external MQTT feed using MQTTnet.
+  - Can auto discover new devices if subscribed to a parent topic such as "rtl_433/#" or a make/model like "rtl_433/Acurite-986/#". You just need to add a location once the device is discovered. To disable auto-discovery, subscribe to your particular device's feed.
+  - There are scripts to setup an SDR, RTL_433 and Mosquitto on a Raspberry PI in the build folder.
+- Performs temperature limit checks per-location. Will notify via email when limit is exceeded.
+- Compresses historical data (> 30 days ago) into 5 minute interval averages. This can save significant space as some of these sensors can poll every few seconds.
 
 HomeSensors.Web - A web app for working with the data.
 
-* Shows live current readings on a dashboard via SignalR. If a reading is out of limit, a warning indicator flashes.
-* Time series line graph with selectable date range and locations using Chart.js.
-* Time series also populates a table showing min, max and average temps of each location queried.
-* API data is cached using LazyCache.
-* Web API is automatically documented using Swashbuckle and Swagger.
+- Shows live current readings on a dashboard via SignalR. If a reading is out of limit, a warning indicator flashes.
+- Time series line graph with selectable date range and locations using Chart.js.
+- Time series also populates a table showing min, max and average temps of each location queried.
+- API data is cached using LazyCache.
+- Web API is automatically documented using Swashbuckle and Swagger.
 
 ClientApp - A browser frontend for HomeSensors.Web.
 
-* Uses swagger-typescript-api to generate an API client from the swagger endpoint.
-* Settings under the user name for temperature unit, show/hide humidity, and dark theme.
-* Responsive UI made with Bootstrap grid.
-* See screenshots [here](docs/screenshots.md).
+- Uses swagger-typescript-api to generate an API client from the swagger endpoint.
+- Settings under the user name for temperature unit, show/hide humidity, and dark theme.
+- Responsive UI made with Bootstrap grid.
+- See screenshots [here](docs/screenshots.md).
 
 ## Build tools
 
