@@ -9,8 +9,9 @@ param (
 
 $headers = @{
   'Authorization' = "Bearer $ApiKey"
+  'Accept' = 'application/json'
 }
-$headers.Add('accept', 'application/json')
+
 $response = Invoke-RestMethod -Uri 'https://api.rach.io/1/public/person/info' -Method GET -Headers $headers
 [string]$personId = $response.id
 
