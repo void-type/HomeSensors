@@ -29,6 +29,6 @@ export function trimAndTitleCase(value: string) {
     .join(' ');
 }
 
-export function isNil(value: string | null | undefined) {
-  return value === null || value === undefined || value === '';
+export function isNil(value: string | null | undefined | object | number) {
+  return value === null || typeof value === 'undefined' || value === '';
 }
