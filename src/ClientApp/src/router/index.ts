@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import RouterHelpers from '@/models/RouterHelpers';
 import useMessageStore from '@/stores/messageStore';
+import { Collapse } from 'bootstrap';
 
 const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
@@ -58,6 +59,8 @@ router.beforeEach((to, from, next) => {
 });
 
 router.afterEach((to) => {
+  const element = `#navbar-menu`;
+  Collapse.getOrCreateInstance(element).hide();
   RouterHelpers.setTitle(to);
 });
 
