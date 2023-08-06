@@ -59,8 +59,8 @@ router.beforeEach((to, from, next) => {
 });
 
 router.afterEach((to) => {
-  const element = `#navbar-menu`;
-  Collapse.getOrCreateInstance(element).hide();
+  Collapse.getOrCreateInstance('#navbar-menu', { toggle: false }).hide();
+
   RouterHelpers.setTitle(to);
 });
 
