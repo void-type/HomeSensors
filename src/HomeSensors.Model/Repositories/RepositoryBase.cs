@@ -11,5 +11,15 @@ public class RepositoryBase
         ThisClassName = GetType().Name;
     }
 
-    protected virtual string GetTag([CallerMemberName] string callerMemberName = "unknown") => $"Query called from {ThisClassName}.{callerMemberName}.";
+    protected string GetCaller([CallerMemberName] string callerMemberName = "unknown")
+    {
+        return $"{ThisClassName}.{callerMemberName}";
+    }
+
+    protected virtual string GetTag([CallerMemberName] string callerMemberName = "unknown") => $"Query called from {GetCaller(callerMemberName)}.";
+
+    protected static string BuildCacheKey(params string[] cacheKeyParts)
+    {
+        return string.Join("|", cacheKeyParts);
+    }
 }

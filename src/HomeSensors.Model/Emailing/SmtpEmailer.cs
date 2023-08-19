@@ -1,10 +1,11 @@
 ﻿using MailKit.Net.Smtp;
+using Microsoft.Extensions.Logging;
 using MimeKit;
 using VoidCore.Model.Configuration;
 using VoidCore.Model.Emailing;
 using VoidCore.Model.Functional;
 
-namespace HomeSensors.Service.Emailing;
+namespace HomeSensors.Model.Emailing;
 
 /// <summary>
 /// Send emails using SMTP. Users can be overridden in sub-prod using the Notifications.OverrideEmailRecipients configuration item.
@@ -15,7 +16,7 @@ public class SmtpEmailer : IEmailSender
     private readonly ApplicationSettings _applicationSettings;
     private readonly ILogger _logger;
 
-    public SmtpEmailer(NotificationsSettings notificationsSettings, ApplicationSettings applicationSettings, ILogger<SmtpEmailer> logger)
+    public SmtpEmailer(ILogger<SmtpEmailer> logger, NotificationsSettings notificationsSettings, ApplicationSettings applicationSettings)
     {
         _applicationSettings = applicationSettings;
         _logger = logger;

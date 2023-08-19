@@ -1,6 +1,7 @@
 ﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Emailing;
 using HomeSensors.Model.Repositories;
-using HomeSensors.Service.Emailing;
+using HomeSensors.Service;
 using HomeSensors.Service.Mqtt;
 using HomeSensors.Service.Workers;
 using Microsoft.EntityFrameworkCore;
@@ -33,8 +34,11 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
         services.AddSingleton<MqttFactory>();
 
+        services.AddScoped<CheckTemperatureLimitsService>();
+        services.AddScoped<CheckDevicesService>();
+
+        services.AddHostedService<AlertsWorker>();
         services.AddHostedService<GetMqttTemperaturesWorker>();
-        services.AddHostedService<CheckTemperatureLimitsWorker>();
         services.AddHostedService<SummarizeTemperatureReadingsWorker>();
     })
     .Build();

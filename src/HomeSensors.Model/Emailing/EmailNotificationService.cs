@@ -1,7 +1,7 @@
 ﻿using VoidCore.Model.Emailing;
 using VoidCore.Model.Text;
 
-namespace HomeSensors.Service.Emailing;
+namespace HomeSensors.Model.Emailing;
 
 /// <summary>
 /// This simplifies dependencies for emailing and adds recipients from configuration.

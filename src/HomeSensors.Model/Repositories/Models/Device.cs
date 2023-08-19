@@ -5,7 +5,7 @@ public class Device
     public Device(
         long id, string? deviceModel, string? deviceId, string? deviceChannel,
         long? currentLocationId, Reading? lastReading,
-        bool isRetired, bool isLost, bool isInactive
+        bool isRetired, bool isLost, bool isInactive, bool isBatteryLevelLow
         )
     {
         Id = id;
@@ -17,6 +17,7 @@ public class Device
         IsRetired = isRetired;
         IsLost = isLost;
         IsInactive = isInactive;
+        IsBatteryLevelLow = isBatteryLevelLow;
     }
 
     public long Id { get; }
@@ -28,4 +29,5 @@ public class Device
     public bool IsRetired { get; }
     public bool IsLost { get; }
     public bool IsInactive { get; }
+    public bool IsBatteryLevelLow { get; }
 }

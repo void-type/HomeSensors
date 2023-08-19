@@ -53,7 +53,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                 var oldReadings = await dbContext.TemperatureReadings
                     .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
                     .AsNoTracking()
-                    .WhereShouldBeSummarized(cutoffLimit)
+                    .Where(x => !x.IsSummary && x.Time < cutoffLimit)
                     .ToListAsync(stoppingToken);
 
                 if (oldReadings.Count == 0)

@@ -12,7 +12,7 @@ namespace HomeSensors.Web.Repositories;
 /// <summary>
 /// A repository that caches calls from other repositories.
 /// </summary>
-public class TemperatureCachedRepository : CachedRepositoryBase
+public class TemperatureCachedRepository : RepositoryBase
 {
     private readonly TemperatureReadingRepository _readingRepository;
     private readonly TemperatureLocationRepository _locationRepository;
@@ -38,7 +38,7 @@ public class TemperatureCachedRepository : CachedRepositoryBase
     /// <param name="forceRefresh">When true, the cache will be refreshed.</param>
     public async Task<List<Reading>> GetCurrentReadings(bool forceRefresh = false)
     {
-        var cacheKey = GetCacheKeyPrefix();
+        var cacheKey = GetCaller();
 
         if (forceRefresh)
         {
@@ -69,7 +69,7 @@ public class TemperatureCachedRepository : CachedRepositoryBase
         }
 
         var cacheKey = BuildCacheKey(
-            GetCacheKeyPrefix(),
+            GetCaller(),
             request.StartTime.ToString("o"),
             request.EndTime.ToString("o"),
             string.Join(",", request.LocationIds.OrderBy(x => x)));
@@ -80,7 +80,7 @@ public class TemperatureCachedRepository : CachedRepositoryBase
 
     public Task<List<Location>> GetAllLocations()
     {
-        var cacheKey = GetCacheKeyPrefix();
+        var cacheKey = GetCaller();
 
         return _cache.GetOrAddAsync(cacheKey,
             async _ => await _locationRepository.GetAll());
@@ -88,7 +88,7 @@ public class TemperatureCachedRepository : CachedRepositoryBase
 
     public Task<List<Device>> GetAllDevices()
     {
-        var cacheKey = GetCacheKeyPrefix();
+        var cacheKey = GetCaller();
 
         return _cache.GetOrAddAsync(cacheKey,
             async _ => await _deviceRepository.GetAll());
@@ -96,21 +96,21 @@ public class TemperatureCachedRepository : CachedRepositoryBase
 
     public Task<IResult<EntityMessage<long>>> UpdateDevice(UpdateDeviceRequest request)
     {
-        _cache.Remove(GetCacheKeyPrefix(nameof(GetAllDevices)));
+        _cache.Remove(GetCaller(nameof(GetAllDevices)));
 
         return _deviceRepository.Update(request);
     }
 
     public Task<IResult<EntityMessage<long>>> CreateLocation(CreateLocationRequest request)
     {
-        _cache.Remove(GetCacheKeyPrefix(nameof(GetAllLocations)));
+        _cache.Remove(GetCaller(nameof(GetAllLocations)));
 
         return _locationRepository.Create(request);
     }
 
     public Task<IResult<EntityMessage<long>>> UpdateLocation(UpdateLocationRequest request)
     {
-        _cache.Remove(GetCacheKeyPrefix(nameof(GetAllLocations)));
+        _cache.Remove(GetCaller(nameof(GetAllLocations)));
 
         return _locationRepository.Update(request);
     }

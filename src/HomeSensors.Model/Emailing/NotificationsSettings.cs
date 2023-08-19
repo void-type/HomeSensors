@@ -1,7 +1,7 @@
 ﻿using MailKit.Security;
 using VoidCore.Model.Guards;
 
-namespace HomeSensors.Service.Emailing;
+namespace HomeSensors.Model.Emailing;
 
 public class NotificationsSettings
 {

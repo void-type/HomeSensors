@@ -51,7 +51,8 @@ public class TemperatureDeviceRepository : RepositoryBase
             lastReading: x.LastReading?.ToReading(),
             isRetired: x.IsRetired,
             isLost: !x.IsRetired && x.CurrentLocationId is null,
-            isInactive: !x.IsRetired && (x.LastReading is null || x.LastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20))
+            isInactive: !x.IsRetired && (x.LastReading is null || x.LastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20)),
+            isBatteryLevelLow: !x.IsRetired && x.LastReading?.DeviceBatteryLevel is not null && x.LastReading?.DeviceBatteryLevel != 1
         ));
     }
 
