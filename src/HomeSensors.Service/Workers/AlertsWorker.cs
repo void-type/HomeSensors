@@ -10,8 +10,8 @@ public class AlertsWorker : BackgroundService
     private readonly ILogger<AlertsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDateTimeService _dateTimeService;
-    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(2);
-    private readonly TimeSpan _betweenNotifications = TimeSpan.FromMinutes(4);
+    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(20);
+    private readonly TimeSpan _betweenNotifications = TimeSpan.FromMinutes(120);
 
     public AlertsWorker(ILogger<AlertsWorker> logger, IServiceScopeFactory scopeFactory, IDateTimeService dateTimeService)
     {
