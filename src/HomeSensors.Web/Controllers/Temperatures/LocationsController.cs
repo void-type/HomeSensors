@@ -1,6 +1,5 @@
 ﻿using HomeSensors.Model.Repositories;
 using HomeSensors.Model.Repositories.Models;
-using HomeSensors.Web.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -16,12 +15,10 @@ namespace HomeSensors.Web.Controllers.Temperatures;
 [ApiRoute("temperatures/locations")]
 public class LocationsController : ControllerBase
 {
-    private readonly TemperatureCachedRepository _cachedTemperatureRepository;
     private readonly TemperatureLocationRepository _locationRepository;
 
-    public LocationsController(TemperatureCachedRepository temperatureRepository, TemperatureLocationRepository locationRepository)
+    public LocationsController(TemperatureLocationRepository locationRepository)
     {
-        _cachedTemperatureRepository = temperatureRepository;
         _locationRepository = locationRepository;
     }
 
@@ -32,7 +29,7 @@ public class LocationsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAll()
     {
-        var series = await _cachedTemperatureRepository.GetAllLocations();
+        var series = await _locationRepository.GetAll();
         return HttpResponder.Respond(series);
     }
 
@@ -53,7 +50,7 @@ public class LocationsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> Create([FromBody] CreateLocationRequest request)
     {
-        var result = await _cachedTemperatureRepository.CreateLocation(request);
+        var result = await _locationRepository.Create(request);
         return HttpResponder.Respond(result);
     }
 
@@ -63,7 +60,7 @@ public class LocationsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> Update([FromBody] UpdateLocationRequest request)
     {
-        var result = await _cachedTemperatureRepository.UpdateLocation(request);
+        var result = await _locationRepository.Update(request);
         return HttpResponder.Respond(result);
     }
 }

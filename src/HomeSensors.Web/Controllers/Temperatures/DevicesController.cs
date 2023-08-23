@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.Repositories.Models;
-using HomeSensors.Web.Repositories;
+﻿using HomeSensors.Model.Repositories;
+using HomeSensors.Model.Repositories.Models;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -15,11 +15,11 @@ namespace HomeSensors.Web.Controllers.Temperatures;
 [ApiRoute("temperatures/devices")]
 public class DevicesController : ControllerBase
 {
-    private readonly TemperatureCachedRepository _cachedTemperatureRepository;
+    private readonly TemperatureDeviceRepository _deviceRepository;
 
-    public DevicesController(TemperatureCachedRepository temperatureRepository)
+    public DevicesController(TemperatureDeviceRepository deviceRepository)
     {
-        _cachedTemperatureRepository = temperatureRepository;
+        _deviceRepository = deviceRepository;
     }
 
     [HttpPost]
@@ -29,7 +29,7 @@ public class DevicesController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAll()
     {
-        var readings = await _cachedTemperatureRepository.GetAllDevices();
+        var readings = await _deviceRepository.GetAll();
         return HttpResponder.Respond(readings);
     }
 
@@ -40,7 +40,7 @@ public class DevicesController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> Update([FromBody] UpdateDeviceRequest request)
     {
-        var result = await _cachedTemperatureRepository.UpdateDevice(request);
+        var result = await _deviceRepository.Update(request);
         return HttpResponder.Respond(result);
     }
 }

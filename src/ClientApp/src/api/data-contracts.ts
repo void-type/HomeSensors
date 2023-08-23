@@ -46,6 +46,7 @@ export interface Device {
   isRetired?: boolean;
   isLost?: boolean;
   isInactive?: boolean;
+  isBatteryLevelLow?: boolean;
 }
 
 export interface DomainUser {

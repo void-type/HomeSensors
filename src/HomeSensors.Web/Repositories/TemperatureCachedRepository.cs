@@ -2,9 +2,6 @@
 using HomeSensors.Model.Repositories;
 using HomeSensors.Model.Repositories.Models;
 using LazyCache;
-using Microsoft.Extensions.Caching.Memory;
-using VoidCore.Model.Functional;
-using VoidCore.Model.Responses.Messages;
 using VoidCore.Model.Time;
 
 namespace HomeSensors.Web.Repositories;
@@ -15,49 +12,37 @@ namespace HomeSensors.Web.Repositories;
 public class TemperatureCachedRepository : RepositoryBase
 {
     private readonly TemperatureReadingRepository _readingRepository;
-    private readonly TemperatureLocationRepository _locationRepository;
-    private readonly TemperatureDeviceRepository _deviceRepository;
     private readonly IAppCache _cache;
     private readonly IDateTimeService _dateTimeService;
+    private readonly TimeSpan _defaultCacheTime;
     private readonly TimeSpan _currentReadingsCacheTime;
 
-    public TemperatureCachedRepository(TemperatureReadingRepository readingRepository, IAppCache cache, IDateTimeService dateTimeService,
-        CachingSettings cachingSettings, TemperatureLocationRepository locationRepository, TemperatureDeviceRepository deviceRepository)
+    public TemperatureCachedRepository(TemperatureReadingRepository readingRepository, IAppCache cache,
+        IDateTimeService dateTimeService, CachingSettings cachingSettings)
     {
         _readingRepository = readingRepository;
         _cache = cache;
         _dateTimeService = dateTimeService;
-        _locationRepository = locationRepository;
-        _deviceRepository = deviceRepository;
+        _defaultCacheTime = TimeSpan.FromMinutes(cachingSettings.DefaultMinutes);
         _currentReadingsCacheTime = TimeSpan.FromSeconds(cachingSettings.CurrentReadingsSeconds);
     }
 
     /// <summary>
     /// If called from the timer service, then force a refresh. Otherwise all other clients will get cached data upon connection or REST query.
     /// </summary>
-    /// <param name="forceRefresh">When true, the cache will be refreshed.</param>
-    public async Task<List<Reading>> GetCurrentReadings(bool forceRefresh = false)
+    /// <param name="refreshCache">When true, the cache will be refreshed.</param>
+    public Task<List<Reading>> GetCurrentReadings(bool refreshCache = false)
     {
         var cacheKey = GetCaller();
 
-        if (forceRefresh)
+        if (refreshCache)
         {
-            var item = await _readingRepository.GetCurrent();
-
-            _cache.Add(cacheKey, item, new MemoryCacheEntryOptions()
-            {
-                AbsoluteExpirationRelativeToNow = _currentReadingsCacheTime,
-            });
-
-            return item;
+            _cache.Remove(cacheKey);
         }
 
-        return await _cache.GetOrAddAsync(cacheKey,
-            async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = _currentReadingsCacheTime;
-                return await _readingRepository.GetCurrent();
-            });
+        return _cache.GetOrAddAsync(cacheKey,
+            _readingRepository.GetCurrent,
+            _currentReadingsCacheTime);
     }
 
     public Task<List<GraphTimeSeries>> GetTimeSeriesReadings(GraphTimeSeriesRequest request)
@@ -75,43 +60,9 @@ public class TemperatureCachedRepository : RepositoryBase
             string.Join(",", request.LocationIds.OrderBy(x => x)));
 
         return _cache.GetOrAddAsync(cacheKey,
-            async _ => await _readingRepository.GetTimeSeries(request));
-    }
-
-    public Task<List<Location>> GetAllLocations()
-    {
-        var cacheKey = GetCaller();
-
-        return _cache.GetOrAddAsync(cacheKey,
-            async _ => await _locationRepository.GetAll());
-    }
-
-    public Task<List<Device>> GetAllDevices()
-    {
-        var cacheKey = GetCaller();
-
-        return _cache.GetOrAddAsync(cacheKey,
-            async _ => await _deviceRepository.GetAll());
-    }
-
-    public Task<IResult<EntityMessage<long>>> UpdateDevice(UpdateDeviceRequest request)
-    {
-        _cache.Remove(GetCaller(nameof(GetAllDevices)));
-
-        return _deviceRepository.Update(request);
-    }
-
-    public Task<IResult<EntityMessage<long>>> CreateLocation(CreateLocationRequest request)
-    {
-        _cache.Remove(GetCaller(nameof(GetAllLocations)));
-
-        return _locationRepository.Create(request);
-    }
-
-    public Task<IResult<EntityMessage<long>>> UpdateLocation(UpdateLocationRequest request)
-    {
-        _cache.Remove(GetCaller(nameof(GetAllLocations)));
-
-        return _locationRepository.Update(request);
+            async () => await _readingRepository.GetTimeSeries(request),
+            // Prevent memory build up as there can be any number of keys.
+            LazyCacheEntryOptions
+                .WithImmediateAbsoluteExpiration(_defaultCacheTime));
     }
 }

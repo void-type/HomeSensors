@@ -32,6 +32,10 @@ function getStatuses(device: Device) {
     errors.push('Inactive');
   }
 
+  if (device.isBatteryLevelLow) {
+    errors.push('Battery');
+  }
+
   return errors;
 }
 
@@ -133,11 +137,15 @@ onMounted(async () => {
             </span>
           </td>
           <td>
-            <div v-for="status in getStatuses(device)" :key="status" class="badge bg-danger">
+            <div
+              v-for="status in getStatuses(device)"
+              :key="status"
+              class="badge bg-danger d-block"
+            >
               {{ status }}
             </div>
           </td>
-          <td>
+          <td class="text-center">
             <label class="visually-hidden" :for="`retired-${device.id}`">Retired</label>
             <input
               :id="`retired-${device.id}`"
@@ -180,5 +188,9 @@ onMounted(async () => {
 <style lang="scss" scoped>
 table .btn.btn-sm {
   min-width: 0;
+}
+
+.badge.d-block:not(:last-child) {
+  margin-bottom: 0.25rem;
 }
 </style>

@@ -16,9 +16,9 @@ public class ReadingsController : ControllerBase
 {
     private readonly TemperatureCachedRepository _cachedTemperatureRepository;
 
-    public ReadingsController(TemperatureCachedRepository temperatureRepository)
+    public ReadingsController(TemperatureCachedRepository cachedRepository)
     {
-        _cachedTemperatureRepository = temperatureRepository;
+        _cachedTemperatureRepository = cachedRepository;
     }
 
     [HttpPost]
