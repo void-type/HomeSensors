@@ -1,4 +1,5 @@
-﻿using HomeSensors.Web.Hubs;
+﻿using HomeSensors.Model.Workers;
+using HomeSensors.Web.Hubs;
 using HomeSensors.Web.Repositories;
 using Microsoft.AspNetCore.SignalR;
 
@@ -11,16 +12,19 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
 {
     private const string MessageName = "updateCurrentReadings";
 
-    private readonly TimeSpan _betweenTicks = TimeSpan.FromSeconds(30);
+    private readonly TimeSpan _betweenTicks;
     private readonly ILogger<PushTemperatureCurrentReadingsWorker> _logger;
     private readonly IHubContext<TemperatureHub> _tempHubContext;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public PushTemperatureCurrentReadingsWorker(ILogger<PushTemperatureCurrentReadingsWorker> logger, IHubContext<TemperatureHub> tempHubContext, IServiceScopeFactory scopeFactory)
+    public PushTemperatureCurrentReadingsWorker(ILogger<PushTemperatureCurrentReadingsWorker> logger,
+        IHubContext<TemperatureHub> tempHubContext, IServiceScopeFactory scopeFactory,
+        WorkersSettings workersSettings)
     {
         _logger = logger;
         _tempHubContext = tempHubContext;
         _scopeFactory = scopeFactory;
+        _betweenTicks = TimeSpan.FromSeconds(workersSettings.PushTemperatureCurrentReadingsBetweenTicksSeconds);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

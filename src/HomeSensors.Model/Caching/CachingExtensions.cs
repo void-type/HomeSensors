@@ -1,6 +1,6 @@
 ﻿using VoidCore.Model.Responses.Collections;
 
-namespace HomeSensors.Model.Helpers;
+namespace HomeSensors.Model.Caching;
 
 public static class CachingExtensions
 {

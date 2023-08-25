@@ -4,11 +4,11 @@ using HomeSensors.Model.Repositories;
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.Extensions.Logging;
 
-namespace HomeSensors.Service;
+namespace HomeSensors.Model.Alerts;
 
-public class CheckTemperatureLimitsService
+public class AlertTemperatureLimitsService
 {
-    private readonly ILogger<CheckTemperatureLimitsService> _logger;
+    private readonly ILogger<AlertTemperatureLimitsService> _logger;
     private readonly TemperatureLocationRepository _locationRepository;
     private readonly TemperatureReadingRepository _temperatureRepository;
     private readonly EmailNotificationService _emailNotificationService;
@@ -18,7 +18,7 @@ public class CheckTemperatureLimitsService
     private const string MinStatus = "minimum";
     private const string MaxStatus = "maximum";
 
-    public CheckTemperatureLimitsService(ILogger<CheckTemperatureLimitsService> logger,
+    public AlertTemperatureLimitsService(ILogger<AlertTemperatureLimitsService> logger,
         TemperatureLocationRepository locationRepository, TemperatureReadingRepository temperatureRepository,
         EmailNotificationService emailNotificationService)
     {
@@ -65,7 +65,7 @@ public class CheckTemperatureLimitsService
         return latchedAlerts.Exists(x => x.Result.Location.Id == failedResult.Location.Id && x.Status == status);
     }
 
-    private void AddAlert(List<TemperatureLimitAlert> latchedAlerts, CheckLimitResult failedResult, string status, DateTimeOffset now, TimeSpan betweenAlerts)
+    private static void AddAlert(List<TemperatureLimitAlert> latchedAlerts, CheckLimitResult failedResult, string status, DateTimeOffset now, TimeSpan betweenAlerts)
     {
         latchedAlerts.Add(new TemperatureLimitAlert(failedResult, status, now.Add(betweenAlerts)));
     }

@@ -1,9 +1,9 @@
-﻿using HomeSensors.Model.Data;
+﻿using HomeSensors.Model.Alerts;
+using HomeSensors.Model.Data;
 using HomeSensors.Model.Emailing;
+using HomeSensors.Model.Mqtt;
 using HomeSensors.Model.Repositories;
-using HomeSensors.Service;
-using HomeSensors.Service.Mqtt;
-using HomeSensors.Service.Workers;
+using HomeSensors.Model.Workers;
 using Microsoft.EntityFrameworkCore;
 using MQTTnet;
 using Serilog;
@@ -19,6 +19,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSettingsSingleton<ApplicationSettings>(context.Configuration, true).Validate();
         services.AddSettingsSingleton<MqttSettings>(context.Configuration);
         services.AddSettingsSingleton<NotificationsSettings>(context.Configuration);
+        var workersSettings = services.AddSettingsSingleton<WorkersSettings>(context.Configuration);
 
         services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
             .UseSqlServer("Name=HomeSensors", sqlOptions => sqlOptions
@@ -34,12 +35,22 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
         services.AddSingleton<MqttFactory>();
 
-        services.AddScoped<CheckTemperatureLimitsService>();
-        services.AddScoped<CheckDevicesService>();
+        services.AddScoped<AlertTemperatureLimitsService>();
+        services.AddScoped<AlertDevicesService>();
 
-        services.AddHostedService<AlertsWorker>();
-        services.AddHostedService<GetMqttTemperaturesWorker>();
-        services.AddHostedService<SummarizeTemperatureReadingsWorker>();
+        if (workersSettings.AlertsEnabled)
+        {
+            services.AddHostedService<AlertsWorker>();
+        }
+        if (workersSettings.MqttTemperaturesEnabled)
+        {
+            services.AddHostedService<MqttTemperaturesWorker>();
+        }
+
+        if (workersSettings.SummarizeTemperatureReadingsEnabled)
+        {
+            services.AddHostedService<SummarizeTemperatureReadingsWorker>();
+        }
     })
     .Build();
 

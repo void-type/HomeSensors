@@ -1,20 +1,19 @@
 ﻿using HomeSensors.Model.Emailing;
 using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Repositories;
-using HomeSensors.Model.Repositories.Models;
 using Microsoft.Extensions.Logging;
 using VoidCore.Model.Functional;
 
-namespace HomeSensors.Service;
+namespace HomeSensors.Model.Alerts;
 
-public class CheckDevicesService
+public class AlertDevicesService
 {
-    private readonly ILogger<CheckTemperatureLimitsService> _logger;
+    private readonly ILogger<AlertTemperatureLimitsService> _logger;
     private readonly TemperatureLocationRepository _locationRepository;
     private readonly TemperatureDeviceRepository _deviceRepository;
     private readonly EmailNotificationService _emailNotificationService;
 
-    public CheckDevicesService(ILogger<CheckTemperatureLimitsService> logger,
+    public AlertDevicesService(ILogger<AlertTemperatureLimitsService> logger,
         TemperatureLocationRepository locationRepository, TemperatureDeviceRepository deviceRepository,
         EmailNotificationService emailNotificationService)
     {
@@ -35,7 +34,7 @@ public class CheckDevicesService
         var inactiveAlerts = devices
             .Where(d => d.IsInactive)
             .Select(d => new DeviceAlert(
-                AlertType.DeviceInactive,
+                DeviceAlertType.DeviceInactive,
                 d,
                 locations.Find(l => l.Id == d.CurrentLocationId),
                 resendAfter));
@@ -43,7 +42,7 @@ public class CheckDevicesService
         var lowBatteryAlert = devices
             .Where(d => d.IsBatteryLevelLow)
             .Select(d => new DeviceAlert(
-                AlertType.DeviceLowBattery,
+                DeviceAlertType.DeviceLowBattery,
                 d,
                 locations.Find(l => l.Id == d.CurrentLocationId),
                 resendAfter));
@@ -61,11 +60,11 @@ public class CheckDevicesService
         {
             switch (alert.Type)
             {
-                case AlertType.DeviceInactive:
+                case DeviceAlertType.DeviceInactive:
                     await NotifyInactiveClear(alert, stoppingToken);
                     break;
 
-                case AlertType.DeviceLowBattery:
+                case DeviceAlertType.DeviceLowBattery:
                     await NotifyLowBatteryClear(alert, stoppingToken);
                     break;
             }
@@ -84,11 +83,11 @@ public class CheckDevicesService
         {
             switch (alert.Type)
             {
-                case AlertType.DeviceInactive:
+                case DeviceAlertType.DeviceInactive:
                     await NotifyInactiveAlert(alert, stoppingToken);
                     break;
 
-                case AlertType.DeviceLowBattery:
+                case DeviceAlertType.DeviceLowBattery:
                     await NotifyLowBatteryAlert(alert, stoppingToken);
                     break;
             }
@@ -165,32 +164,4 @@ public class CheckDevicesService
             e.AddLine($"    Time: {readingTime}");
         }, stoppingToken);
     }
-}
-
-public class DeviceAlert : ValueObject
-{
-    public DeviceAlert(AlertType type, Device device, Location? location, DateTimeOffset resendAfter)
-    {
-        Type = type;
-        Device = device;
-        Location = location;
-        ResendAfter = resendAfter;
-    }
-
-    public AlertType Type { get; }
-    public Device Device { get; }
-    public Location? Location { get; }
-    public DateTimeOffset ResendAfter { get; }
-
-    protected override IEnumerable<object> GetEqualityComponents()
-    {
-        yield return Type;
-        yield return Device.Id;
-    }
-}
-
-public enum AlertType
-{
-    DeviceInactive,
-    DeviceLowBattery,
 }

@@ -1,6 +1,10 @@
-﻿using VoidCore.Model.Time;
+﻿using HomeSensors.Model.Alerts;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using VoidCore.Model.Time;
 
-namespace HomeSensors.Service.Workers;
+namespace HomeSensors.Model.Workers;
 
 /// <summary>
 /// This worker checks for limit outliers and sends an email.
@@ -10,14 +14,17 @@ public class AlertsWorker : BackgroundService
     private readonly ILogger<AlertsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDateTimeService _dateTimeService;
-    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(20);
-    private readonly TimeSpan _betweenNotifications = TimeSpan.FromMinutes(120);
+    private readonly TimeSpan _betweenTicks;
+    private readonly TimeSpan _betweenNotifications;
 
-    public AlertsWorker(ILogger<AlertsWorker> logger, IServiceScopeFactory scopeFactory, IDateTimeService dateTimeService)
+    public AlertsWorker(ILogger<AlertsWorker> logger, IServiceScopeFactory scopeFactory, IDateTimeService dateTimeService,
+        WorkersSettings workersSettings)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
         _dateTimeService = dateTimeService;
+        _betweenTicks = TimeSpan.FromMinutes(workersSettings.AlertsBetweenTicksMinutes);
+        _betweenNotifications = TimeSpan.FromMinutes(workersSettings.AlertsBetweenNotificationsMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,8 +46,8 @@ public class AlertsWorker : BackgroundService
 
                 using var scope = _scopeFactory.CreateScope();
 
-                var limitsService = scope.ServiceProvider.GetRequiredService<CheckTemperatureLimitsService>();
-                var devicesService = scope.ServiceProvider.GetRequiredService<CheckDevicesService>();
+                var limitsService = scope.ServiceProvider.GetRequiredService<AlertTemperatureLimitsService>();
+                var devicesService = scope.ServiceProvider.GetRequiredService<AlertDevicesService>();
 
                 await limitsService.Process(latchedLimitAlerts, now, lastTick, _betweenNotifications, stoppingToken);
                 await devicesService.Process(latchedDeviceAlerts, now, _betweenNotifications, stoppingToken);

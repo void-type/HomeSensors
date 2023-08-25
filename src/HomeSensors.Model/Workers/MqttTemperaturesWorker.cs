@@ -1,30 +1,38 @@
 ﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Data.Models;
-using HomeSensors.Service.Mqtt;
+using HomeSensors.Model.Json;
+using HomeSensors.Model.Mqtt;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet.Packets;
-using Newtonsoft.Json;
 using System.Text;
+using System.Text.Json;
 using VoidCore.Model.Guards;
 
-namespace HomeSensors.Service.Workers;
+namespace HomeSensors.Model.Workers;
 
-public class GetMqttTemperaturesWorker : BackgroundService
+public class MqttTemperaturesWorker : BackgroundService
 {
-    private readonly ILogger<GetMqttTemperaturesWorker> _logger;
+    private readonly ILogger<MqttTemperaturesWorker> _logger;
     private readonly MqttSettings _configuration;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
+    private readonly WorkersSettings _workersSettings;
+    private static readonly JsonSerializerOptions _serializerOptions = JsonHelpers.GetOptions();
 
-    public GetMqttTemperaturesWorker(ILogger<GetMqttTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory, MqttFactory mqttFactory)
+    public MqttTemperaturesWorker(ILogger<MqttTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory,
+        MqttFactory mqttFactory, WorkersSettings workersSettings)
     {
         _logger = logger;
         _configuration = configuration;
         _scopeFactory = scopeFactory;
         _mqttFactory = mqttFactory;
+        _workersSettings = workersSettings;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -60,7 +68,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(GetMqttTemperaturesWorker));
+            _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttTemperaturesWorker));
         }
     }
 
@@ -74,7 +82,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
         var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
         var device = await dbContext.TemperatureDevices
-            .TagWith($"Query called from {nameof(GetMqttTemperaturesWorker)}.")
+            .TagWith($"Query called from {nameof(MqttTemperaturesWorker)}.")
             .FirstOrDefaultAsync(x => x.DeviceModel == message.Model && x.DeviceId == message.Id && x.DeviceChannel == message.Channel);
 
         if (device?.IsRetired == true)
@@ -101,7 +109,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
 
         // If we already have a reading for this device at this time, don't save because duplicate.
         var readingExists = await dbContext.TemperatureReadings
-            .TagWith($"Query called from {nameof(GetMqttTemperaturesWorker)}.")
+            .TagWith($"Query called from {nameof(MqttTemperaturesWorker)}.")
             .AnyAsync(x => x.Time == message.Time && x.TemperatureDeviceId == device.Id && !x.IsSummary);
 
         if (readingExists)
@@ -124,7 +132,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
         await dbContext.SaveChangesAsync();
     }
 
-    private void LogMessage(MqttApplicationMessageReceivedEventArgs e, TemperatureMessage message)
+    private void LogMessage(MqttApplicationMessageReceivedEventArgs e, MqttTemperatureMessage message)
     {
         if (!_configuration.LogMessages)
         {
@@ -134,13 +142,13 @@ public class GetMqttTemperaturesWorker : BackgroundService
         _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} | {message.Time.ToLocalTime()} | {message.Model}/{message.Id}/{message.Channel} | {message.Temperature_C} C | {message.Humidity} %");
     }
 
-    private TemperatureMessage DeserializeMessage(MqttApplicationMessageReceivedEventArgs e)
+    private MqttTemperatureMessage DeserializeMessage(MqttApplicationMessageReceivedEventArgs e)
     {
         try
         {
             var payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
 
-            return JsonConvert.DeserializeObject<TemperatureMessage>(payload)
+            return JsonSerializer.Deserialize<MqttTemperatureMessage>(payload, _serializerOptions)
                 .EnsureNotNull();
         }
         catch (Exception ex)
@@ -154,7 +162,7 @@ public class GetMqttTemperaturesWorker : BackgroundService
     {
         var topicFilters = new List<MqttTopicFilter>();
 
-        foreach (var topic in _configuration.Topics)
+        foreach (var topic in _workersSettings.MqttTemperaturesTopics)
         {
             _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
 

@@ -2,10 +2,13 @@
 using HomeSensors.Model.Data.Models;
 using HomeSensors.Model.Helpers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Time;
 
-namespace HomeSensors.Service.Workers;
+namespace HomeSensors.Model.Workers;
 
 /// <summary>
 /// This worker compresses older data by summarizing into regular average intervals.
@@ -15,15 +18,18 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
     private readonly ILogger<SummarizeTemperatureReadingsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDateTimeService _dateTimeService;
-    private readonly TimeSpan _betweenTicks = TimeSpan.FromMinutes(60);
-    private readonly TimeSpan _summarizeCutoff = TimeSpan.FromDays(30);
+    private readonly TimeSpan _betweenTicks;
+    private readonly TimeSpan _summarizeCutoff;
     private const int SummarizeIntervalMinutes = 5;
 
-    public SummarizeTemperatureReadingsWorker(ILogger<SummarizeTemperatureReadingsWorker> logger, IServiceScopeFactory scopeFactory, IDateTimeService dateTimeService)
+    public SummarizeTemperatureReadingsWorker(ILogger<SummarizeTemperatureReadingsWorker> logger, IServiceScopeFactory scopeFactory,
+        IDateTimeService dateTimeService, WorkersSettings workersSettings)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
         _dateTimeService = dateTimeService;
+        _betweenTicks = TimeSpan.FromMinutes(workersSettings.SummarizeTemperatureReadingsBetweenTicksMinutes);
+        _summarizeCutoff = TimeSpan.FromDays(workersSettings.SummarizeTemperatureReadingsSummarizeCutoffDays);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

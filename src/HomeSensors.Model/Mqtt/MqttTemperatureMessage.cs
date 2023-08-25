@@ -1,6 +1,6 @@
-﻿namespace HomeSensors.Service.Mqtt;
+﻿namespace HomeSensors.Model.Mqtt;
 
-public class TemperatureMessage
+public class MqttTemperatureMessage
 {
     public DateTimeOffset Time { get; set; }
     public string Model { get; set; } = string.Empty;

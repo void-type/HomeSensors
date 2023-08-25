@@ -1,6 +1,7 @@
 ﻿using HomeSensors.Model.Caching;
 using HomeSensors.Model.Data;
 using HomeSensors.Model.Repositories;
+using HomeSensors.Model.Workers;
 using HomeSensors.Web.Auth;
 using HomeSensors.Web.Configuration;
 using HomeSensors.Web.Hubs;
@@ -37,6 +38,7 @@ try
     // Settings
     services.AddSettingsSingleton<WebApplicationSettings>(config, true).Validate();
     services.AddSettingsSingleton<CachingSettings>(config);
+    var workersSettings = services.AddSettingsSingleton<WorkersSettings>(config);
 
     // Infrastructure
     services.AddControllers();
@@ -73,7 +75,11 @@ try
         typeof(GetWebClientInfo).Assembly);
 
     services.AddSignalR();
-    services.AddHostedService<PushTemperatureCurrentReadingsWorker>();
+
+    if (workersSettings.PushTemperatureCurrentReadingsEnabled)
+    {
+        services.AddHostedService<PushTemperatureCurrentReadingsWorker>();
+    }
 
     services.AddSwaggerWithCsp();
 

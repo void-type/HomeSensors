@@ -1,4 +1,4 @@
-﻿namespace HomeSensors.Service.Mqtt;
+﻿namespace HomeSensors.Model.Mqtt;
 
 public class MqttSettings
 {
@@ -6,6 +6,5 @@ public class MqttSettings
     public int? Port { get; set; }
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    public string[] Topics { get; set; } = Array.Empty<string>();
     public bool LogMessages { get; set; }
 }
