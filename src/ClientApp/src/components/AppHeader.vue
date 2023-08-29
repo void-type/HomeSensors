@@ -56,7 +56,9 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                     :checked="useDarkMode"
                     class="form-check-input"
                     type="checkbox"
-                    @change="(e) => appStore.setDarkMode((e as HTMLInputEvent).target?.checked === true)"
+                    @change="
+                      (e) => appStore.setDarkMode((e as HTMLInputEvent).target?.checked === true)
+                    "
                   />
                 </div>
               </li>
@@ -68,7 +70,10 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                     :checked="useFahrenheit"
                     class="form-check-input"
                     type="checkbox"
-                    @change="(e) => appStore.setUseFahrenheit((e as HTMLInputEvent).target?.checked === true)"
+                    @change="
+                      (e) =>
+                        appStore.setUseFahrenheit((e as HTMLInputEvent).target?.checked === true)
+                    "
                   />
                 </div>
               </li>
@@ -80,7 +85,10 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                     :checked="showHumidity"
                     class="form-check-input"
                     type="checkbox"
-                    @change="(e) => appStore.setShowHumidity((e as HTMLInputEvent).target?.checked === true)"
+                    @change="
+                      (e) =>
+                        appStore.setShowHumidity((e as HTMLInputEvent).target?.checked === true)
+                    "
                   />
                 </div>
               </li>

@@ -1,4 +1,4 @@
-import { fileURLToPath, URL } from 'url';
+import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
@@ -23,7 +23,7 @@ export default defineConfig(({ command, mode }) => {
       sourcemap: mode === 'development',
     },
     watch: {
-      include: './src/**'
-    }
+      include: './src/**',
+    },
   };
 });

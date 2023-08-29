@@ -9,13 +9,13 @@
       ]
     },
     "dotnet-outdated-tool": {
-      "version": "4.5.2",
+      "version": "4.5.3",
       "commands": [
         "dotnet-outdated"
       ]
     },
     "dotnet-ef": {
-      "version": "7.0.8",
+      "version": "7.0.10",
       "commands": [
         "dotnet-ef"
       ]
