@@ -100,8 +100,8 @@ public class AlertDevicesService
     {
         var locationName = alert.Location?.Name ?? "Unknown";
 
-        var subject = $"{locationName} temperature sensor is inactive";
-        var body = $"{locationName} hasn't sent a reading in a while.";
+        var subject = $"{locationName} is inactive";
+        var body = $"The temperature sensor at {locationName} hasn't sent a reading in a while.";
 
         _logger.LogWarning("Alert: {Subject}", subject);
 
@@ -112,8 +112,8 @@ public class AlertDevicesService
     {
         var locationName = alert.Location?.Name ?? "Unknown";
 
-        var subject = $"{locationName} temperature sensor is no longer inactive";
-        var body = $"{locationName} became active again.";
+        var subject = $"{locationName} is active again";
+        var body = $"The temperature sensor at {locationName} is sending readings again.";
 
         _logger.LogWarning("Alert clear: {Subject}", subject);
 
@@ -124,8 +124,8 @@ public class AlertDevicesService
     {
         var locationName = alert.Location?.Name ?? "Unknown";
 
-        var subject = $"{locationName} temperature sensor has a low battery";
-        var body = $"{locationName} has a low battery.";
+        var subject = $"{locationName} has a low battery";
+        var body = $"The temperature sensor at {locationName} has a low battery.";
 
         _logger.LogWarning("Alert: {Subject}", subject);
 
@@ -136,8 +136,8 @@ public class AlertDevicesService
     {
         var locationName = alert.Location?.Name ?? "Unknown";
 
-        var subject = $"{locationName} temperature sensor no longer has a low battery";
-        var body = $"{locationName} no longer has a low battery.";
+        var subject = $"{locationName} no longer has a low battery";
+        var body = $"The temperature sensor at {locationName} no longer has a low battery.";
 
         _logger.LogWarning("Alert clear: {Subject}", subject);
 
