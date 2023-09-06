@@ -101,7 +101,7 @@ public class AlertDevicesService
         var locationName = alert.Location?.Name ?? "Unknown";
 
         var subject = $"{locationName} is inactive";
-        var body = $"The temperature sensor at {locationName} hasn't sent a reading in a while.";
+        var body = $"The temperature sensor in {locationName} hasn't sent a reading in a while.";
 
         _logger.LogWarning("Alert: {Subject}", subject);
 
@@ -113,7 +113,7 @@ public class AlertDevicesService
         var locationName = alert.Location?.Name ?? "Unknown";
 
         var subject = $"{locationName} is active again";
-        var body = $"The temperature sensor at {locationName} is sending readings again.";
+        var body = $"The temperature sensor in {locationName} is sending readings again.";
 
         _logger.LogWarning("Alert clear: {Subject}", subject);
 
@@ -125,7 +125,7 @@ public class AlertDevicesService
         var locationName = alert.Location?.Name ?? "Unknown";
 
         var subject = $"{locationName} has a low battery";
-        var body = $"The temperature sensor at {locationName} has a low battery.";
+        var body = $"The temperature sensor in {locationName} has a low battery.";
 
         _logger.LogWarning("Alert: {Subject}", subject);
 
@@ -137,7 +137,7 @@ public class AlertDevicesService
         var locationName = alert.Location?.Name ?? "Unknown";
 
         var subject = $"{locationName} no longer has a low battery";
-        var body = $"The temperature sensor at {locationName} no longer has a low battery.";
+        var body = $"The temperature sensor in {locationName} no longer has a low battery.";
 
         _logger.LogWarning("Alert clear: {Subject}", subject);
 
@@ -155,13 +155,15 @@ public class AlertDevicesService
         {
             e.SetSubject(subject);
 
+            const string indent = "&nbsp;&nbsp;&nbsp;&nbsp;";
+
             e.AddLine(body);
             e.AddLine();
-            e.AddLine($"Device: {deviceName}");
-            e.AddLine();
-            e.AddLine("Last reading:");
-            e.AddLine($"    Temperature: {readingTempString}");
-            e.AddLine($"    Time: {readingTime}");
+            e.AddLine("Device:");
+            e.AddLine($"{indent}Name (model/id/channel): {deviceName}");
+            e.AddLine($"{indent}Last reading:");
+            e.AddLine($"{indent}{indent}Temperature: {readingTempString}");
+            e.AddLine($"{indent}{indent}Time: {readingTime}");
         }, stoppingToken);
     }
 }
