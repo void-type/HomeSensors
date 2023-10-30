@@ -5,7 +5,9 @@ try {
   Set-Location -Path $projectRoot
   . ./build/buildSettings.ps1
 
-  dotnet watch run --project "$webProjectFolder" --configuration 'Debug' --launch-profile 'Kestrel (Development)'
+  Set-Location $serviceProjectFolder
+
+  dotnet watch
 
 } finally {
   Set-Location $originalLocation
