@@ -30,4 +30,6 @@ public class Device
     public bool IsLost { get; }
     public bool IsInactive { get; }
     public bool IsBatteryLevelLow { get; }
+
+    public string DisplayName => $"{DeviceModel}/{DeviceId}/{DeviceChannel}";
 }

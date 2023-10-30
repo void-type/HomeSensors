@@ -113,7 +113,7 @@ onMounted(async () => {
             <font-awesome-icon
               v-if="isStale(currentTemp)"
               icon="fa-clock"
-              class="text-muted blink me-2"
+              class="stale blink me-2"
               :title="`Reading is more than ${staleLimitMinutes} minutes old.`"
             />
             <small class="fw-light">{{
@@ -133,6 +133,10 @@ onMounted(async () => {
 
 .cold {
   color: #abc0ff;
+}
+
+.stale {
+  color: inherit;
 }
 
 .blink {

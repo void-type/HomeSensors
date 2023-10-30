@@ -11,7 +11,7 @@ public class TemperatureReading
     public bool IsSummary { get; set; }
 
     public long TemperatureDeviceId { get; set; }
-    public TemperatureDevice TemperatureDevice { get; set; } = new();
+    public TemperatureDevice? TemperatureDevice { get; set; }
 
     public long? TemperatureLocationId { get; set; }
     public TemperatureLocation? TemperatureLocation { get; set; }

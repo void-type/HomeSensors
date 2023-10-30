@@ -52,6 +52,27 @@
             }
         },
         {
+            "label": "build-debug-service",
+            "command": "dotnet",
+            "args": ["build"],
+            "options": {
+                "cwd": "./src/HomeSensors.Service/"
+            },
+            "type": "shell",
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false,
+                "group": "build"
+            }
+        },
+        {
             "label": "format",
             "command": "./format.ps1",
             "options": {

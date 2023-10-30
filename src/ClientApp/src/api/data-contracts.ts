@@ -47,6 +47,7 @@ export interface Device {
   isLost?: boolean;
   isInactive?: boolean;
   isBatteryLevelLow?: boolean;
+  displayName?: string | null;
 }
 
 export interface DomainUser {

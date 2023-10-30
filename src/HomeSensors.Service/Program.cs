@@ -22,8 +22,11 @@ var host = Host.CreateDefaultBuilder(args)
         var workersSettings = services.AddSettingsSingleton<WorkersSettings>(context.Configuration);
 
         services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
-            .UseSqlServer("Name=HomeSensors", sqlOptions => sqlOptions
-                .MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName)));
+            .UseSqlServer("Name=HomeSensors", sqlOptions =>
+            {
+                sqlOptions.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName);
+                sqlOptions.CommandTimeout(120);
+            }));
 
         services.AddScoped<TemperatureReadingRepository>();
         services.AddScoped<TemperatureDeviceRepository>();
@@ -42,6 +45,7 @@ var host = Host.CreateDefaultBuilder(args)
         {
             services.AddHostedService<AlertsWorker>();
         }
+
         if (workersSettings.MqttTemperaturesEnabled)
         {
             services.AddHostedService<MqttTemperaturesWorker>();

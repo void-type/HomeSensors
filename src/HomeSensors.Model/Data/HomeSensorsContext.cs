@@ -19,14 +19,19 @@ public class HomeSensorsContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<TemperatureReading>()
-            .HasIndex(r => r.Time);
+        modelBuilder.Entity<TemperatureReading>(entity =>
+        {
+            entity.HasIndex(r => r.Time);
+            entity.HasIndex(r => r.IsSummary);
+            entity.HasIndex(r => new { r.Time, r.TemperatureLocationId });
+            entity.HasIndex(r => new { r.Time, r.TemperatureDeviceId, r.IsSummary });
 
-        modelBuilder.Entity<TemperatureReading>()
-            .HasIndex(r => r.IsSummary);
+        });
 
-        modelBuilder.Entity<TemperatureLocation>()
-            .HasIndex(r => r.Name)
-            .IsUnique();
+        modelBuilder.Entity<TemperatureLocation>(entity =>
+        {
+            entity.HasIndex(r => r.Name)
+                .IsUnique();
+        });
     }
 }

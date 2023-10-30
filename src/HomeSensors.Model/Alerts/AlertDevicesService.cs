@@ -147,7 +147,7 @@ public class AlertDevicesService
     private Task SendEmail(string subject, string body, DeviceAlert alert, CancellationToken stoppingToken)
     {
         var device = alert.Device;
-        var deviceName = $"{device.DeviceModel}/{device.DeviceId}/{device.DeviceChannel}";
+        var deviceName = device.DisplayName;
         var readingTempString = TemperatureHelpers.GetDualTempString(alert.Device.LastReading?.TemperatureCelsius);
         var readingTime = alert.Device.LastReading?.Time;
 

@@ -15,4 +15,6 @@ public class WorkersSettings
     public bool SummarizeTemperatureReadingsEnabled { get; set; } = true;
     public int SummarizeTemperatureReadingsBetweenTicksMinutes { get; set; } = 60;
     public int SummarizeTemperatureReadingsSummarizeCutoffDays { get; set; } = 30;
+    public int SummarizeTemperatureReadingsChunkSize { get; set; } = 5;
+    public int SummarizeTemperatureReadingsDelayFirstTickMinutes { get; set; } = 5;
 }

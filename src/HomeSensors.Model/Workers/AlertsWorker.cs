@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Workers;
@@ -37,6 +38,8 @@ public class AlertsWorker : BackgroundService
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
+            var startTime = Stopwatch.GetTimestamp();
+
             try
             {
                 _logger.LogInformation($"{nameof(AlertsWorker)} job is starting.");
@@ -58,7 +61,7 @@ public class AlertsWorker : BackgroundService
             }
             finally
             {
-                _logger.LogInformation($"{nameof(AlertsWorker)} job is finished.");
+                _logger.LogInformation($"{nameof(AlertsWorker)} job is finished in {{ElapsedTime}}.", Stopwatch.GetElapsedTime(startTime));
             }
         }
     }

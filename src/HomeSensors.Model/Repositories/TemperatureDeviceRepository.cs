@@ -23,10 +23,16 @@ public class TemperatureDeviceRepository : RepositoryBase
     /// </summary>
     public async Task<List<Device>> GetAll()
     {
-        var data = await _data.TemperatureDevices
+        var lastReadings = await _data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
-            .Include(x => x.TemperatureReadings)
+            .GroupBy(x => x.TemperatureDeviceId)
+            .Select(g => g.OrderByDescending(x => x.Time).First())
+            .ToListAsync();
+
+        var data = (await _data.TemperatureDevices
+            .TagWith(GetTag())
+            .AsNoTracking()
             .OrderBy(x => x.IsRetired)
             .ThenBy(x => x.Id)
             .Select(x => new
@@ -37,9 +43,19 @@ public class TemperatureDeviceRepository : RepositoryBase
                 x.DeviceChannel,
                 x.IsRetired,
                 CurrentLocationId = x.CurrentTemperatureLocationId,
-                LastReading = x.TemperatureReadings.OrderByDescending(x => x.Time).FirstOrDefault()
             })
-            .ToListAsync();
+            .ToListAsync())
+            .ConvertAll(x => new
+            {
+                x.Id,
+                x.DeviceModel,
+                x.DeviceId,
+                x.DeviceChannel,
+                x.IsRetired,
+                x.CurrentLocationId,
+                LastReading = lastReadings.Find(r => r.TemperatureDeviceId == x.Id)
+            })
+;
 
         return data.ConvertAll(x => new Device
         (

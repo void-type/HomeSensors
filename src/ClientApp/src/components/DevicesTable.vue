@@ -129,7 +129,7 @@ onMounted(async () => {
       <tbody>
         <tr v-for="device in data.devices" :key="device.id">
           <td>{{ device.id }}</td>
-          <td>{{ device.deviceModel }}/{{ device.deviceId }}/{{ device.deviceChannel }}</td>
+          <td>{{ device.displayName }}</td>
           <td>
             <span v-if="device.lastReading">
               {{ formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit) }} on
