@@ -1,4 +1,4 @@
--- Create a CTE to identify duplicate records
+-- Create a CTE to identify duplicate records caused by deadlocks.
 WITH DuplicateCTE AS (
   SELECT
     [Time],
