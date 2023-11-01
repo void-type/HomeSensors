@@ -27,18 +27,17 @@ steps:
     arguments: '-SkipTestReport'
     workingDirectory: 'build'
 
-# TODO: no tests
-# - task: PublishCodeCoverageResults@1
-#   displayName: 'Publish Code Coverage'
-#   inputs:
-#     codeCoverageTool: 'cobertura'
-#     summaryFileLocation: 'artifacts/testResults/*/coverage.cobertura.xml'
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publish Code Coverage'
+  inputs:
+    codeCoverageTool: 'cobertura'
+    summaryFileLocation: 'artifacts/testResults/*/coverage.cobertura.xml'
 
-# - task: PublishTestResults@2
-#   displayName: 'Publish Test Results'
-#   inputs:
-#     testResultsFormat: 'VSTest'
-#     testResultsFiles: 'artifacts/testResults/*.trx'
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results'
+  inputs:
+    testResultsFormat: 'VSTest'
+    testResultsFiles: 'artifacts/testResults/*.trx'
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifacts'
