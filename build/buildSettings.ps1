@@ -12,3 +12,5 @@ $serviceProjectFolder = "./src/$projectName.Service"
 $serviceDirectoryProduction = "\\server2\DeployedApps\apps\$projectName.Service"
 $serviceSettingsDirectoryProduction = "\\server2\Servers\AppConfigs\$projectName\Service"
 $serviceReleaseFolder = './artifacts/dist/release/service'
+
+$testProjectFolder = "./tests/$projectName.Test"
