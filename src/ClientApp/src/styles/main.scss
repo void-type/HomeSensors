@@ -37,29 +37,70 @@ a.btn,
   min-width: 5rem;
 }
 
+// Bootstrap hide nav-link focus ring
+.nav-link:focus-visible {
+  outline: auto;
+}
+
 footer {
   border-top: var(--bs-gray-500) 1px solid;
 }
 
 .card {
-  &.card-hover:hover:not(.active),
-  .card-hover:hover:not(.active) {
-    background-color: var(--bs-gray-200);
+  --bs-accordion-btn-icon-width: #{$accordion-icon-width};
+  --bs-accordion-btn-icon: #{escape-svg($accordion-button-icon)};
+  --bs-accordion-btn-icon-transition: #{$accordion-icon-transition};
+  --bs-accordion-btn-active-icon: #{escape-svg($accordion-button-active-icon)};
+  --bs-accordion-btn-icon-transform: #{$accordion-icon-transform};
+  --bs-accordion-btn-padding-y: #{$accordion-button-padding-y};
+  --bs-accordion-btn-padding-x: #{$accordion-button-padding-x};
+  --bs-accordion-btn-color: #{$accordion-button-color};
+  --bs-accordion-btn-bg: #{$accordion-button-bg};
+
+  &.card-hover,
+  .card-hover {
+    &:hover:not(.active),
+    &:focus-visible {
+      background-color: var(--bs-gray-200);
+    }
+
+    &:focus-visible {
+      outline: auto;
+    }
   }
 
   .card-link {
     text-decoration: none;
     color: unset;
+  }
 
-    & > .img-fluid {
-      max-height: 16rem;
-    }
+  .card-floating-toolbar {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+  .btn-card-control {
+    padding: 0.5rem var(--bs-card-cap-padding-x);
+    display: inline-block;
   }
 }
 
 body.bg-dark {
   --bs-link-color: #{lighten($primary, 20%)};
   --bs-link-hover-color: #{lighten($primary, 10%)};
+  --bs-border-color: var(--bs-gray-800);
+
+  .text-muted,
+  .form-control::placeholder {
+    --bs-text-opacity: 1;
+    color: var(--bs-gray-600) !important;
+  }
+
+  .page-link.active,
+  .active > .page-link {
+    border-color: unset;
+  }
 
   .card,
   .list-group,
@@ -68,25 +109,46 @@ body.bg-dark {
     color: inherit;
     outline: var(--bs-gray-800) 1px solid;
 
-    &.card-hover:hover:not(.active),
-    .card-hover:hover:not(.active) {
-      background-color: var(--bs-gray-800);
+    &.card-hover,
+    .card-hover {
+      &:hover:not(.active),
+      &:focus-visible {
+        background-color: var(--bs-gray-800);
 
-      .card-link:hover {
-        background-color: inherit;
-        color: inherit;
+        .card-link:hover {
+          background-color: inherit;
+          color: inherit;
+        }
+      }
+
+      &:focus-visible {
+        outline: auto;
       }
     }
   }
 
   .form-control,
-  .form-select {
+  .form-select,
+  .dropdown-menu {
     background-color: var(--bs-dark);
     color: var(--bs-white);
   }
 
+  .dropdown-item {
+    color: var(--bs-white);
+
+    &:hover {
+      background-color: var(--bs-gray-800);
+    }
+  }
+
   .modal-content {
-    color: var(--bs-dark);
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+
+    .modal-header .btn-close {
+      --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23e6e6e6'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
+    }
   }
 
   .pagination {
@@ -96,7 +158,8 @@ body.bg-dark {
     --bs-pagination-disabled-border-color: unset;
   }
 
-  .accordion {
+  .accordion,
+  .card {
     --bs-accordion-color: unset;
     --bs-accordion-bg: unset;
     --bs-accordion-btn-color: var(--bs-white);

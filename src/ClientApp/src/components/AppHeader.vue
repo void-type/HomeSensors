@@ -50,8 +50,15 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
               <li class="dropdown-item">Roles: {{ userRoles }}</li>
               <li class="dropdown-item">
-                <div class="form-check form-switch" title="Toggle dark mode">
-                  <label class="form-check-label" for="useDarkMode">🌙</label>
+                <div class="form-check form-switch" title="Use dark mode">
+                  <label
+                    class="form-check-label"
+                    for="useDarkMode"
+                    title="Use dark mode"
+                    aria-label="Use dark mode"
+                    @click.stop
+                    >🌙</label
+                  >
                   <input
                     id="useDarkMode"
                     :checked="useDarkMode"
@@ -64,8 +71,15 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                 </div>
               </li>
               <li class="dropdown-item">
-                <div class="form-check form-switch" title="Toggle Fahrenheit">
-                  <label class="form-check-label" for="useFahrenheit">🇺🇸</label>
+                <div class="form-check form-switch" title="Use Fahrenheit">
+                  <label
+                    class="form-check-label"
+                    for="useFahrenheit"
+                    title="Use Fahrenheit"
+                    aria-label="Use Fahrenheit"
+                    @click.stop
+                    >🇺🇸</label
+                  >
                   <input
                     id="useFahrenheit"
                     :checked="useFahrenheit"
@@ -79,8 +93,15 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                 </div>
               </li>
               <li class="dropdown-item">
-                <div class="form-check form-switch" title="Toggle Humidity">
-                  <label class="form-check-label" for="showHumidity">%</label>
+                <div class="form-check form-switch" title="Show Humidity">
+                  <label
+                    class="form-check-label"
+                    for="showHumidity"
+                    title="Show Humidity"
+                    aria-label="Show Humidity"
+                    @click.stop
+                    >%</label
+                  >
                   <input
                     id="showHumidity"
                     :checked="showHumidity"
@@ -101,4 +122,8 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
   </header>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.form-check-label {
+  width: 100%;
+}
+</style>
