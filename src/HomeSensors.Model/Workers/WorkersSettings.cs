@@ -7,7 +7,7 @@ public class WorkersSettings
     public int AlertsBetweenNotificationsMinutes { get; set; } = 120;
 
     public bool MqttTemperaturesEnabled { get; set; } = true;
-    public string[] MqttTemperaturesTopics { get; set; } = Array.Empty<string>();
+    public string[] MqttTemperaturesTopics { get; set; } = [];
 
     public bool PushTemperatureCurrentReadingsEnabled { get; set; } = true;
     public int PushTemperatureCurrentReadingsBetweenTicksSeconds { get; set; } = 30;

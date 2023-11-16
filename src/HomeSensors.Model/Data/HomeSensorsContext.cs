@@ -25,7 +25,6 @@ public class HomeSensorsContext : DbContext
             entity.HasIndex(r => r.IsSummary);
             entity.HasIndex(r => new { r.Time, r.TemperatureLocationId });
             entity.HasIndex(r => new { r.Time, r.TemperatureDeviceId, r.IsSummary });
-
         });
 
         modelBuilder.Entity<TemperatureLocation>(entity =>

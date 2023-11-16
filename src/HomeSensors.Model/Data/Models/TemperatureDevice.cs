@@ -11,7 +11,7 @@ public class TemperatureDevice
     public long? CurrentTemperatureLocationId { get; set; }
     public virtual TemperatureLocation? CurrentTemperatureLocation { get; set; }
 
-    public virtual List<TemperatureReading> TemperatureReadings { get; set; } = new();
+    public virtual List<TemperatureReading> TemperatureReadings { get; set; } = [];
 
     public string DisplayName => $"{DeviceModel}/{DeviceId}/{DeviceChannel}";
 }

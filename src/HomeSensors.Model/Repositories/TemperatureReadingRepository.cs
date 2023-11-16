@@ -70,7 +70,7 @@ public class TemperatureReadingRepository : RepositoryBase
     {
         if (request.LocationIds.Count == 0)
         {
-            return new();
+            return [];
         }
 
         var dbReadings = await _data.TemperatureReadings
@@ -85,7 +85,7 @@ public class TemperatureReadingRepository : RepositoryBase
 
         if (dbReadings.Count == 0)
         {
-            return new();
+            return [];
         }
 
         // Depending on the total span of data returned, we will create averages over intervals to prevent overloading the client with too many data points.

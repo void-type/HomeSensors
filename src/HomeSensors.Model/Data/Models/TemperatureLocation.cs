@@ -7,5 +7,5 @@ public class TemperatureLocation
     public double? MinTemperatureLimitCelsius { get; set; }
     public double? MaxTemperatureLimitCelsius { get; set; }
 
-    public virtual List<TemperatureReading> TemperatureReadings { get; set; } = new();
+    public virtual List<TemperatureReading> TemperatureReadings { get; set; } = [];
 }
