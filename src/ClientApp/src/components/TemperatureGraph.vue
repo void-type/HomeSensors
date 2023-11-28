@@ -2,7 +2,7 @@
 import ApiHelpers from '@/models/ApiHelpers';
 import useAppStore from '@/stores/appStore';
 import type { GraphPoint, GraphTimeSeries, Location } from '@/api/data-contracts';
-import { onMounted, reactive, watch, computed } from 'vue';
+import { onMounted, reactive, watch, computed, watchEffect } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-date-fns';
@@ -11,6 +11,7 @@ import { storeToRefs } from 'pinia';
 import { formatTemp, formatTempWithUnit, tempUnit } from '@/models/TempFormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
 import useMessageStore from '@/stores/messageStore';
+import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
 
 Chart.register(...registerables);
 
@@ -23,26 +24,25 @@ const { useFahrenheit, useDarkMode } = storeToRefs(appStore);
 const initialTime = startOfMinute(new Date());
 
 const data = reactive({
-  graphRange: {
-    start: addHours(initialTime, -48),
-    end: initialTime,
-    locationIds: [] as Array<number>,
-  },
   locations: [] as Array<Location>,
   graphSeries: [] as Array<GraphTimeSeries>,
 });
 
-const tempUnitComputed = computed(() => tempUnit(useFahrenheit.value));
+const timeSeriesInputs: ITimeSeriesInputs = reactive({
+  start: addHours(initialTime, -48),
+  end: initialTime,
+  locationIds: [] as Array<number>,
+});
 
 const areAllLocationsSelected = computed(() =>
-  data.locations.every((value) => data.graphRange.locationIds.includes(value.id as number))
+  data.locations.every((value) => timeSeriesInputs.locationIds.includes(value.id as number))
 );
 
 function onSelectAllClick() {
   if (areAllLocationsSelected.value) {
-    data.graphRange.locationIds = [];
+    timeSeriesInputs.locationIds = [];
   } else {
-    data.graphRange.locationIds = data.locations.map((x) => x.id as number);
+    timeSeriesInputs.locationIds = data.locations.map((x) => x.id as number);
   }
 }
 
@@ -97,7 +97,7 @@ function getColor(categoryName: string) {
   return randomColor;
 }
 
-function setGraphData(series: Array<GraphTimeSeries>) {
+function setGraphData(series: Array<GraphTimeSeries>, useF: boolean) {
   const element = document.getElementById('tempGraph') as HTMLCanvasElement;
 
   if (element === null) {
@@ -128,7 +128,7 @@ function setGraphData(series: Array<GraphTimeSeries>) {
       ?.filter((p: GraphPoint) => p.temperatureCelsius)
       .map((p: GraphPoint) => ({
         x: p.time,
-        y: formatTemp(p.temperatureCelsius, useFahrenheit.value),
+        y: formatTemp(p.temperatureCelsius, useF),
       })),
     hidden: oldHiddenCategories.includes(s.location?.name),
   }));
@@ -153,7 +153,7 @@ function setGraphData(series: Array<GraphTimeSeries>) {
         tooltip: {
           callbacks: {
             label: (item: TooltipItem<'line'>) =>
-              `${item.dataset.label}: ${item.formattedValue}${tempUnitComputed.value}`,
+              `${item.dataset.label}: ${item.formattedValue}${tempUnit(useF)}`,
           },
         },
       },
@@ -198,11 +198,11 @@ function setGraphData(series: Array<GraphTimeSeries>) {
   lineChart = new Chart(element, config as any);
 }
 
-async function getTimeSeries() {
+async function getTimeSeries(inputs: ITimeSeriesInputs) {
   const parameters = {
-    startTime: DateHelpers.dateTimeForApi(data.graphRange.start),
-    endTime: DateHelpers.dateTimeForApi(data.graphRange.end),
-    locationIds: data.graphRange.locationIds,
+    startTime: DateHelpers.dateTimeForApi(inputs.start),
+    endTime: DateHelpers.dateTimeForApi(inputs.end),
+    locationIds: inputs.locationIds,
   };
 
   try {
@@ -217,26 +217,19 @@ async function getLocations() {
   try {
     const response = await api().temperaturesLocationsAllCreate();
     data.locations = response.data;
-    data.graphRange.locationIds = data.locations.map((x) => x.id as number);
+    timeSeriesInputs.locationIds = data.locations.map((x) => x.id as number);
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
 onMounted(async () => {
-  await getTimeSeries();
   await getLocations();
 });
 
-watch(
-  () => [data.graphRange.start, data.graphRange.end, data.graphRange.locationIds],
-  () => getTimeSeries()
-);
+watch(timeSeriesInputs, (inputs) => getTimeSeries(inputs), { immediate: true });
 
-watch(
-  () => [data.graphSeries, useFahrenheit.value],
-  () => setGraphData(data.graphSeries)
-);
+watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value));
 </script>
 
 <template>
@@ -244,7 +237,7 @@ watch(
     <div class="g-col-12 g-col-md-6 mb-3">
       <label for="startDate" class="form-label">Start date</label>
       <v-date-picker
-        v-model="data.graphRange.start"
+        v-model="timeSeriesInputs.start"
         mode="dateTime"
         :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
         :update-on-input="false"
@@ -258,7 +251,7 @@ watch(
     <div class="g-col-12 g-col-md-6 mb-3">
       <label for="endDate" class="form-label">End date</label>
       <v-date-picker
-        v-model="data.graphRange.end"
+        v-model="timeSeriesInputs.end"
         mode="dateTime"
         :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
         :update-on-input="false"
@@ -279,7 +272,7 @@ watch(
     <div v-for="location in data.locations" :key="location.id" class="form-check form-check-inline">
       <input
         :id="`locationSelect-${location.id}`"
-        v-model="data.graphRange.locationIds"
+        v-model="timeSeriesInputs.locationIds"
         :value="location.id"
         class="form-check-input"
         type="checkbox"
