@@ -264,7 +264,7 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value));
     </div>
   </div>
   <div class="text-center mb-1">
-    <button id="selectAllButton" class="btn btn-sm btn-secondary" @click="onSelectAllClick">
+    <button id="selectAllButton" class="btn btn-sm btn-outline-light" @click="onSelectAllClick">
       {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
     </button>
   </div>
