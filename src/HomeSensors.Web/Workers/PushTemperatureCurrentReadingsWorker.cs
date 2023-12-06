@@ -10,15 +10,13 @@ namespace HomeSensors.Web.Workers;
 /// </summary>
 public class PushTemperatureCurrentReadingsWorker : BackgroundService
 {
-    private const string MessageName = "updateCurrentReadings";
-
     private readonly TimeSpan _betweenTicks;
     private readonly ILogger<PushTemperatureCurrentReadingsWorker> _logger;
-    private readonly IHubContext<TemperatureHub> _tempHubContext;
+    private readonly IHubContext<TemperaturesHub> _tempHubContext;
     private readonly IServiceScopeFactory _scopeFactory;
 
     public PushTemperatureCurrentReadingsWorker(ILogger<PushTemperatureCurrentReadingsWorker> logger,
-        IHubContext<TemperatureHub> tempHubContext, IServiceScopeFactory scopeFactory,
+        IHubContext<TemperaturesHub> tempHubContext, IServiceScopeFactory scopeFactory,
         WorkersSettings workersSettings)
     {
         _logger = logger;
@@ -40,7 +38,7 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
 
                 var currentReadings = await temperatureRepository.GetCurrentReadings(true);
 
-                await _tempHubContext.Clients.All.SendAsync(MessageName, currentReadings, cancellationToken: stoppingToken);
+                await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.UpdateCurrentReadingsMessageName, currentReadings, cancellationToken: stoppingToken);
             }
             catch (Exception ex)
             {

@@ -233,7 +233,7 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value));
 </script>
 
 <template>
-  <div class="grid mt-4">
+  <div class="grid">
     <div class="g-col-12 g-col-md-6 mb-3">
       <label for="startDate" class="form-label">Start date</label>
       <v-date-picker

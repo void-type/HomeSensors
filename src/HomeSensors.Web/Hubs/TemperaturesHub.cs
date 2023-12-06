@@ -7,11 +7,14 @@ namespace HomeSensors.Web.Hubs;
 /// <summary>
 /// SignalR hub that clients can connect to for real-time temperature data.
 /// </summary>
-public class TemperatureHub : Hub
+public class TemperaturesHub : Hub
 {
+    public const string newMessageMessageName = "newDiscoveryMessage";
+    public const string UpdateCurrentReadingsMessageName = "updateCurrentReadings";
+
     private readonly TemperatureCachedRepository _temperatureRepository;
 
-    public TemperatureHub(TemperatureCachedRepository temperatureRepository)
+    public TemperaturesHub(TemperatureCachedRepository temperatureRepository)
     {
         _temperatureRepository = temperatureRepository;
     }

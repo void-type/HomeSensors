@@ -1,6 +1,5 @@
 ﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Data.Models;
-using HomeSensors.Model.Json;
 using HomeSensors.Model.Mqtt;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,10 +8,6 @@ using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
-using MQTTnet.Packets;
-using System.Text;
-using System.Text.Json;
-using VoidCore.Model.Guards;
 
 namespace HomeSensors.Model.Workers;
 
@@ -23,7 +18,6 @@ public class MqttTemperaturesWorker : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
     private readonly WorkersSettings _workersSettings;
-    private static readonly JsonSerializerOptions _serializerOptions = JsonHelpers.GetOptions();
 
     public MqttTemperaturesWorker(ILogger<MqttTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory,
         MqttFactory mqttFactory, WorkersSettings workersSettings)
@@ -44,8 +38,14 @@ public class MqttTemperaturesWorker : BackgroundService
         client.ConnectingFailedAsync += LogConnectionFailure;
         client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
 
-        await client.StartAsync(BuildOptions());
-        await client.SubscribeAsync(BuildTopicFilters());
+        await client.StartAsync(MqttHelpers.BuildOptions(_configuration));
+
+        foreach (var topic in _workersSettings.MqttTemperaturesTopics)
+        {
+            _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
+        }
+
+        await client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, _workersSettings.MqttTemperaturesTopics));
 
         // The client is still running, we just loop here and the Delay will listen for the stop token.
         while (!stoppingToken.IsCancellationRequested)
@@ -74,9 +74,14 @@ public class MqttTemperaturesWorker : BackgroundService
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
-        var message = DeserializeMessage(e);
+        var message = MqttHelpers.DeserializeMessage(e);
 
-        LogMessage(e, message);
+        var readableMessage = MqttHelpers.GetReadableMessage(message);
+
+        if (_configuration.LogMessages)
+        {
+            _logger.LogInformation("{Output}", readableMessage);
+        }
 
         using var scope = _scopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
@@ -130,67 +135,5 @@ public class MqttTemperaturesWorker : BackgroundService
             });
 
         await dbContext.SaveChangesAsync();
-    }
-
-    private void LogMessage(MqttApplicationMessageReceivedEventArgs e, MqttTemperatureMessage message)
-    {
-        if (!_configuration.LogMessages)
-        {
-            return;
-        }
-
-        _logger.LogInformation("{Output}", $"{e.ApplicationMessage.Topic} | {message.Time.ToLocalTime()} | {message.Model}/{message.Id}/{message.Channel} | {message.Temperature_C} C | {message.Humidity} %");
-    }
-
-    private MqttTemperatureMessage DeserializeMessage(MqttApplicationMessageReceivedEventArgs e)
-    {
-        try
-        {
-            var payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
-
-            return JsonSerializer.Deserialize<MqttTemperatureMessage>(payload, _serializerOptions)
-                .EnsureNotNull();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deserializing payload.");
-            throw;
-        }
-    }
-
-    private List<MqttTopicFilter> BuildTopicFilters()
-    {
-        var topicFilters = new List<MqttTopicFilter>();
-
-        foreach (var topic in _workersSettings.MqttTemperaturesTopics)
-        {
-            _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
-
-            var topicFilter = _mqttFactory
-                .CreateTopicFilterBuilder()
-                .WithTopic(topic)
-                .Build();
-
-            topicFilters.Add(topicFilter);
-        }
-
-        return topicFilters;
-    }
-
-    private ManagedMqttClientOptions BuildOptions()
-    {
-        var clientOptionsBuilder = new MqttClientOptionsBuilder()
-            .WithTcpServer(_configuration.Server, _configuration.Port);
-
-        if (!string.IsNullOrWhiteSpace(_configuration.Username))
-        {
-            clientOptionsBuilder.WithCredentials(_configuration.Username, _configuration.Password);
-        }
-
-        var clientOptions = clientOptionsBuilder.Build();
-
-        return new ManagedMqttClientOptionsBuilder()
-            .WithClientOptions(clientOptions)
-            .Build();
     }
 }

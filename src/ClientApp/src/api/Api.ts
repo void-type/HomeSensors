@@ -12,6 +12,7 @@
 import type {
   AppVersion,
   CheckLimitResult,
+  ClientStatus,
   CreateLocationRequest,
   Device,
   GraphTimeSeries,
@@ -20,6 +21,7 @@ import type {
   Int64EntityMessage,
   Location,
   Reading,
+  SetupRequest,
   TemperaturesLocationsCheckLimitsCreateParams,
   UpdateDeviceRequest,
   UpdateLocationRequest,
@@ -163,6 +165,54 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
       method: 'POST',
       body: data,
       type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags MqttFeedDiscovery
+   * @name TemperaturesMqttFeedDiscoveryStatusList
+   * @request GET:/api/temperatures/mqtt-feed-discovery/status
+   * @response `200` `ClientStatus` Success
+   */
+  temperaturesMqttFeedDiscoveryStatusList = (params: RequestParams = {}) =>
+    this.request<ClientStatus, any>({
+      path: `/api/temperatures/mqtt-feed-discovery/status`,
+      method: 'GET',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags MqttFeedDiscovery
+   * @name TemperaturesMqttFeedDiscoverySetupCreate
+   * @request POST:/api/temperatures/mqtt-feed-discovery/setup
+   * @response `200` `ClientStatus` Success
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesMqttFeedDiscoverySetupCreate = (data: SetupRequest, params: RequestParams = {}) =>
+    this.request<ClientStatus, IFailureIItemSet>({
+      path: `/api/temperatures/mqtt-feed-discovery/setup`,
+      method: 'POST',
+      body: data,
+      type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags MqttFeedDiscovery
+   * @name TemperaturesMqttFeedDiscoveryTeardownCreate
+   * @request POST:/api/temperatures/mqtt-feed-discovery/teardown
+   * @response `200` `ClientStatus` Success
+   */
+  temperaturesMqttFeedDiscoveryTeardownCreate = (params: RequestParams = {}) =>
+    this.request<ClientStatus, any>({
+      path: `/api/temperatures/mqtt-feed-discovery/teardown`,
+      method: 'POST',
       format: 'json',
       ...params,
     });

@@ -26,6 +26,11 @@ export interface CheckLimitResult {
   maxReading?: Reading;
 }
 
+export interface ClientStatus {
+  isCreated?: boolean;
+  isConnected?: boolean;
+}
+
 export interface CreateLocationRequest {
   name?: string | null;
   /** @format double */
@@ -125,6 +130,10 @@ export interface Reading {
   location?: Location;
   isHot?: boolean;
   isCold?: boolean;
+}
+
+export interface SetupRequest {
+  topics?: string[] | null;
 }
 
 export interface UpdateDeviceRequest {

@@ -1,14 +1,17 @@
 ﻿using HomeSensors.Model.Caching;
 using HomeSensors.Model.Data;
+using HomeSensors.Model.Mqtt;
 using HomeSensors.Model.Repositories;
 using HomeSensors.Model.Workers;
 using HomeSensors.Web.Auth;
 using HomeSensors.Web.Configuration;
 using HomeSensors.Web.Hubs;
 using HomeSensors.Web.Repositories;
+using HomeSensors.Web.Services;
 using HomeSensors.Web.Workers;
 using LazyCache;
 using Microsoft.EntityFrameworkCore;
+using MQTTnet;
 using Serilog;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Configuration;
@@ -37,6 +40,7 @@ try
 
     // Settings
     services.AddSettingsSingleton<WebApplicationSettings>(config, true).Validate();
+    services.AddSettingsSingleton<MqttSettings>(config);
     services.AddSettingsSingleton<CachingSettings>(config);
     var workersSettings = services.AddSettingsSingleton<WorkersSettings>(config);
 
@@ -51,6 +55,8 @@ try
     services.AddHttpContextAccessor();
     services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
     services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
+    services.AddSingleton<MqttFeedDiscoveryService>();
+    services.AddSingleton<MqttFactory>();
 
     config.GetRequiredConnectionString<HomeSensorsContext>();
     services.AddDbContext<HomeSensorsContext>(options => options
@@ -95,7 +101,7 @@ try
     app.UseSerilogRequestLogging();
     app.UseCurrentUserLogging();
     app.UseSwaggerAndUi(env);
-    app.MapHub<TemperatureHub>("/hub/temperatures");
+    app.MapHub<TemperaturesHub>("/hub/temperatures");
     app.UseSpaEndpoints();
 
     Log.Information("Starting host.");

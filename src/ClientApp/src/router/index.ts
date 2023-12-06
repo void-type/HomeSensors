@@ -45,6 +45,12 @@ const router = createRouter({
       meta: { title: 'Locations' },
     },
     {
+      path: '/discovery',
+      name: 'discoveryMain',
+      component: () => import('@/pages/DiscoveryPage.vue'),
+      meta: { title: 'Discovery' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: { name: 'home' },
       meta: { title: 'Home' },

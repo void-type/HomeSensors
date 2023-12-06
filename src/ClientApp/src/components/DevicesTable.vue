@@ -106,7 +106,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="mt-4">
+  <div>
     <p>
       Inactive - device hasn't saved a reading in the last 20 minutes.
       <br />

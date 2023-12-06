@@ -78,7 +78,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="grid mt-4">
+  <div class="grid">
     <div
       v-for="(currentTemp, i) in data.currentReadings"
       :key="i"
