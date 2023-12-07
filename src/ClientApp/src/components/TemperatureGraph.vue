@@ -242,6 +242,8 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value));
         :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
         :update-on-input="false"
         is24hr
+        :is-dark="useDarkMode"
+        color="blue"
         is-required
         ><template #default="{ inputValue, inputEvents }">
           <input id="startDate" class="form-control" :value="inputValue" v-on="inputEvents" />
@@ -256,6 +258,8 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value));
         :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
         :update-on-input="false"
         is24hr
+        :is-dark="useDarkMode"
+        color="blue"
         is-required
         ><template #default="{ inputValue, inputEvents }">
           <input id="endDate" class="form-control" :value="inputValue" v-on="inputEvents" />
