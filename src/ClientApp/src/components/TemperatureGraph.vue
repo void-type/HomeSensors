@@ -12,6 +12,7 @@ import { formatTemp, formatTempWithUnit, tempUnit } from '@/models/TempFormatHel
 import DateHelpers from '@/models/DateHelpers';
 import useMessageStore from '@/stores/messageStore';
 import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
+import AppDateTimePicker from './AppDateTimePicker.vue';
 
 Chart.register(...registerables);
 
@@ -236,35 +237,11 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value));
   <div class="grid">
     <div class="g-col-12 g-col-md-6 mb-3">
       <label for="startDate" class="form-label">Start date</label>
-      <v-date-picker
-        v-model="timeSeriesInputs.start"
-        mode="dateTime"
-        :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
-        :update-on-input="false"
-        is24hr
-        :is-dark="useDarkMode"
-        color="blue"
-        is-required
-        ><template #default="{ inputValue, inputEvents }">
-          <input id="startDate" class="form-control" :value="inputValue" v-on="inputEvents" />
-        </template>
-      </v-date-picker>
+      <app-date-time-picker v-model="timeSeriesInputs.start" />
     </div>
     <div class="g-col-12 g-col-md-6 mb-3">
       <label for="endDate" class="form-label">End date</label>
-      <v-date-picker
-        v-model="timeSeriesInputs.end"
-        mode="dateTime"
-        :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
-        :update-on-input="false"
-        is24hr
-        :is-dark="useDarkMode"
-        color="blue"
-        is-required
-        ><template #default="{ inputValue, inputEvents }">
-          <input id="endDate" class="form-control" :value="inputValue" v-on="inputEvents" />
-        </template>
-      </v-date-picker>
+      <app-date-time-picker v-model="timeSeriesInputs.end" />
     </div>
   </div>
   <div class="text-center mb-1">

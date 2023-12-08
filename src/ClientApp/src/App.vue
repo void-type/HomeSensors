@@ -63,4 +63,4 @@ onMounted(() => {
   <AppFooter class="mt-2" />
 </template>
 
-<style lang="scss"></style>
+<style lang="scss" scoped></style>

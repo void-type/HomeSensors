@@ -1,7 +1,7 @@
 @import '@/styles/theme';
 @import 'bootstrap/scss/bootstrap';
-@import 'v-calendar/dist/style.css';
 @import '@fortawesome/fontawesome-svg-core/styles.css';
+@import 'v-calendar/style.css';
 
 // Sticky footer
 html,
@@ -40,10 +40,6 @@ a.btn,
 // Bootstrap hides nav-link focus ring
 .nav-link:focus-visible {
   outline: auto;
-}
-
-footer {
-  border-top: var(--bs-border-width) solid var(--bs-border-color);
 }
 
 .card {
@@ -163,4 +159,31 @@ html[data-bs-theme='dark'] {
   h4 {
     color: var(--bs-black);
   }
+}
+
+// v-calendar custom color based on --bs-primary
+.vc-primary {
+  --vc-accent-50: #d2e4f5;
+  --vc-accent-100: #a3c8eb;
+  --vc-accent-200: #75ace0;
+  --vc-accent-300: #478fd6;
+  --vc-accent-400: #1963cb;
+  --vc-accent-500: #004daa;
+  --vc-accent-600: #004091;
+  --vc-accent-700: #003476;
+  --vc-accent-800: #00285c;
+  --vc-accent-900: #001d41;
+}
+
+.vc-container {
+  button {
+    background-color: transparent;
+  }
+
+  select {
+    border: none;
+  }
+
+  --vc-bg: var(--bs-body-bg);
+  --vc-time-select-group-bg: transparent;
 }

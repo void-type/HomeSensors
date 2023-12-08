@@ -23,5 +23,6 @@ const { version } = storeToRefs(appStore);
 footer {
   padding: 1em 0rem;
   text-align: center;
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
 }
 </style>
