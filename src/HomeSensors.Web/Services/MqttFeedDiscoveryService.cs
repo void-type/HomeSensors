@@ -92,16 +92,14 @@ public class MqttFeedDiscoveryService
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
-        var message = MqttHelpers.DeserializeMessage(e);
-
-        var readableMessage = MqttHelpers.GetReadableMessage(message);
+        var payload = MqttHelpers.GetPayloadString(e);
 
         if (_configuration.LogMessages)
         {
-            _logger.LogInformation("{Output}", readableMessage);
+            _logger.LogInformation("{Output}", payload);
         }
 
-        await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.newMessageMessageName, readableMessage);
+        await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.newMessageMessageName, payload);
     }
 
     public record ClientStatus(bool IsCreated, bool IsConnected);

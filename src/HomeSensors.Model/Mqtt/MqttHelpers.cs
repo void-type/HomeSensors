@@ -48,15 +48,20 @@ public static class MqttHelpers
             .Build();
     }
 
-    public static MqttTemperatureMessage DeserializeMessage(MqttApplicationMessageReceivedEventArgs e)
+    public static string GetPayloadString(MqttApplicationMessageReceivedEventArgs e)
     {
-        var payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
+        return Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
+    }
+
+    public static MqttTemperatureMessage DeserializeTemperatureMessage(MqttApplicationMessageReceivedEventArgs e)
+    {
+        var payload = GetPayloadString(e);
 
         return JsonSerializer.Deserialize<MqttTemperatureMessage>(payload, _serializerOptions)
             .EnsureNotNull();
     }
 
-    public static string GetReadableMessage(MqttTemperatureMessage message)
+    public static string GetReadableTemperatureMessage(MqttTemperatureMessage message)
     {
         return $"{message.Time.ToLocalTime()} | {message.Model}/{message.Id}/{message.Channel} | {TemperatureHelpers.FormatTemp(message.Temperature_C ?? -1000)} | {message.Humidity}%";
     }

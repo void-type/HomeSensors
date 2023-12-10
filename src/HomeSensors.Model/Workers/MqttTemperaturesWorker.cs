@@ -74,12 +74,11 @@ public class MqttTemperaturesWorker : BackgroundService
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
-        var message = MqttHelpers.DeserializeMessage(e);
-
-        var readableMessage = MqttHelpers.GetReadableMessage(message);
+        var message = MqttHelpers.DeserializeTemperatureMessage(e);
 
         if (_configuration.LogMessages)
         {
+            var readableMessage = MqttHelpers.GetReadableTemperatureMessage(message);
             _logger.LogInformation("{Output}", readableMessage);
         }
 

@@ -45,7 +45,8 @@ async function connectToHub() {
       .build();
 
     connection.on('newDiscoveryMessage', (message) => {
-      data.feed.unshift(message);
+      const formattedMessage = `------------------------------\n${message}`;
+      data.feed.unshift(formattedMessage);
     });
   }
 
@@ -90,21 +91,28 @@ onMounted(async () => {
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-4">Discovery</h1>
-    <div>
-      <div>Status: {{ data.status.isConnected ? 'Running' : 'Not running' }}</div>
-      <div class="btn-toolbar mt-3">
-        <button class="btn btn-primary me-2" @click.prevent.stop="onStart">Start</button>
-        <button class="btn btn-outline-light me-2" @click.prevent.stop="onEnd">End</button>
-        <button class="btn btn-outline-light me-2" @click.prevent.stop="onRefresh">
-          Refresh status
-        </button>
-        <button class="btn btn-outline-light me-2" @click.prevent.stop="onClear">Clear</button>
-      </div>
-      <div class="mt-3">
-        <label for="topics" class="form-label"> </label>
-        Topics (one per line)
-        <textarea id="topics" v-model="data.topics" rows="3" class="form-control" />
-      </div>
+    <p>See MQTT messages from the specified topics. New messages appear on top.</p>
+    <div class="btn-toolbar mt-3">
+      <button class="btn btn-primary me-2" @click.prevent.stop="onStart">Start</button>
+      <button class="btn btn-outline-light me-2" @click.prevent.stop="onEnd">End</button>
+      <button class="btn btn-outline-light me-2" @click.prevent.stop="onRefresh">
+        Refresh status
+      </button>
+      <button class="btn btn-outline-light me-2" @click.prevent.stop="onClear">Clear</button>
+    </div>
+    <div class="mt-3">
+      <label for="status" class="form-label">Status</label>
+      <input
+        id="status"
+        class="form-control"
+        type="text"
+        disabled
+        :value="data.status.isConnected ? 'Running' : 'Not running'"
+      />
+    </div>
+    <div class="mt-3">
+      <label for="topics" class="form-label">Topics (one per line)</label>
+      <textarea id="topics" v-model="data.topics" rows="3" class="form-control" />
     </div>
     <div class="mt-3">
       <label for="feed" class="form-label">
