@@ -27,6 +27,7 @@ export interface CheckLimitResult {
 }
 
 export interface ClientStatus {
+  topics?: string[] | null;
   isCreated?: boolean;
   isConnected?: boolean;
 }

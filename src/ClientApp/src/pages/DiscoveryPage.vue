@@ -5,11 +5,13 @@ import ApiHelpers from '@/models/ApiHelpers';
 import type { ClientStatus } from '@/api/data-contracts';
 import useMessageStore from '@/stores/messageStore';
 import type { HttpResponse } from '@/api/http-client';
+import DateHelpers from '@/models/DateHelpers';
+import { parseISO } from 'date-fns';
 
 const data = reactive({
-  topics: 'rtl_433/#',
+  topics: 'rtl_433/#\nzigbee2mqtt/#',
   feed: [] as Array<string>,
-  status: { exists: false, isConnected: false } as ClientStatus,
+  status: { topics: [] as Array<string>, exists: false, isConnected: false } as ClientStatus,
 });
 
 const messageStore = useMessageStore();
@@ -45,7 +47,9 @@ async function connectToHub() {
       .build();
 
     connection.on('newDiscoveryMessage', (message) => {
-      const formattedMessage = `------------------------------\n${message}`;
+      const formattedMessage = `${DateHelpers.dateTimeForApi(parseISO(message.time))}: ${
+        message.topic
+      }\n${message.payload}\n`;
       data.feed.unshift(formattedMessage);
     });
   }
@@ -85,6 +89,12 @@ async function onClear() {
 onMounted(async () => {
   await connectToHub();
   await onRefresh();
+
+  const { topics } = data.status;
+
+  if (topics) {
+    data.topics = topics.join('\n');
+  }
 });
 </script>
 
@@ -95,10 +105,10 @@ onMounted(async () => {
     <div class="btn-toolbar mt-3">
       <button class="btn btn-primary me-2" @click.prevent.stop="onStart">Start</button>
       <button class="btn btn-outline-light me-2" @click.prevent.stop="onEnd">End</button>
+      <button class="btn btn-outline-light me-2" @click.prevent.stop="onClear">Clear</button>
       <button class="btn btn-outline-light me-2" @click.prevent.stop="onRefresh">
         Refresh status
       </button>
-      <button class="btn btn-outline-light me-2" @click.prevent.stop="onClear">Clear</button>
     </div>
     <div class="mt-3">
       <label for="status" class="form-label">Status</label>

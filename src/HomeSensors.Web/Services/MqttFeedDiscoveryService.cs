@@ -5,6 +5,7 @@ using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using VoidCore.Model.Functional;
+using VoidCore.Model.Time;
 
 namespace HomeSensors.Web.Services;
 
@@ -14,59 +15,62 @@ public class MqttFeedDiscoveryService
     private readonly MqttSettings _configuration;
     private readonly MqttFactory _mqttFactory;
     private readonly IHubContext<TemperaturesHub> _tempHubContext;
-    private IManagedMqttClient? _client;
-
-    public bool ClientExists => _client is not null;
+    private readonly IDateTimeService _dateTimeService;
+    private ClientState? _clientState;
 
     public MqttFeedDiscoveryService(ILogger<MqttFeedDiscoveryService> logger, MqttSettings configuration,
-        MqttFactory mqttFactory, IHubContext<TemperaturesHub> tempHubContext)
+        MqttFactory mqttFactory, IHubContext<TemperaturesHub> tempHubContext, IDateTimeService dateTimeService)
     {
         _logger = logger;
         _configuration = configuration;
         _mqttFactory = mqttFactory;
         _tempHubContext = tempHubContext;
+        _dateTimeService = dateTimeService;
         _tempHubContext = tempHubContext;
     }
 
     public ClientStatus GetClientStatus()
     {
         return new ClientStatus(
-            IsCreated: _client is not null,
-            IsConnected: _client?.IsConnected ?? false);
+            Topics: _clientState?.Topics,
+            IsCreated: _clientState?.Client is not null,
+            IsConnected: _clientState?.Client?.IsConnected ?? false);
     }
 
     public async Task<IResult<ClientStatus>> SetupClient(SetupRequest request)
     {
-        if (_client is not null)
+        if (_clientState is not null)
         {
-            return Result.Fail<ClientStatus>(new Failure("Client already exists. Tear down before setting up a new one."));
+            return Result.Fail<ClientStatus>(new Failure("Client already exists. End existing before setting up a new one."));
         }
 
-        _client = _mqttFactory.CreateManagedMqttClient();
+        var client = _mqttFactory.CreateManagedMqttClient();
+
+        _clientState = new(request.Topics, client);
 
         _logger.LogInformation("Connecting Managed MQTT client.");
 
-        _client.ConnectingFailedAsync += LogConnectionFailure;
-        _client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
+        client.ConnectingFailedAsync += LogConnectionFailure;
+        client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
 
-        await _client.StartAsync(MqttHelpers.BuildOptions(_configuration));
+        await client.StartAsync(MqttHelpers.BuildOptions(_configuration));
 
         foreach (var topic in request.Topics)
         {
             _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
         }
 
-        await _client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, request.Topics));
+        await client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, request.Topics));
 
         return Result.Ok(GetClientStatus());
     }
 
     public ClientStatus TeardownClient()
     {
-        if (_client is not null)
+        if (_clientState is not null)
         {
-            _client.Dispose();
-            _client = null;
+            _clientState.Client.Dispose();
+            _clientState = null;
         }
 
         return GetClientStatus();
@@ -99,9 +103,13 @@ public class MqttFeedDiscoveryService
             _logger.LogInformation("{Output}", payload);
         }
 
-        await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.newMessageMessageName, payload);
+        var message = new DiscoveryMessage(_dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);
+
+        await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.newMessageMessageName, message);
     }
 
-    public record ClientStatus(bool IsCreated, bool IsConnected);
+    public record ClientState(string[] Topics, IManagedMqttClient Client);
+    public record ClientStatus(string[]? Topics, bool IsCreated, bool IsConnected);
     public record SetupRequest(string[] Topics);
+    public record DiscoveryMessage(DateTimeOffset Time, string Topic, string Payload);
 }
