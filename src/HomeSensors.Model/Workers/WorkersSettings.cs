@@ -9,6 +9,9 @@ public class WorkersSettings
     public bool MqttTemperaturesEnabled { get; set; } = true;
     public string[] MqttTemperaturesTopics { get; set; } = [];
 
+    public bool MqttWaterLeaksEnabled { get; set; } = true;
+    public string[] MqttWaterLeaksTopics { get; set; } = [];
+
     public bool PushTemperatureCurrentReadingsEnabled { get; set; } = true;
     public int PushTemperatureCurrentReadingsBetweenTicksSeconds { get; set; } = 30;
 

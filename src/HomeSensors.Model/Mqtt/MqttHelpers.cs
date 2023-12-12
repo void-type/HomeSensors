@@ -65,4 +65,17 @@ public static class MqttHelpers
     {
         return $"{message.Time.ToLocalTime()} | {message.Model}/{message.Id}/{message.Channel} | {TemperatureHelpers.FormatTemp(message.Temperature_C ?? -1000)} | {message.Humidity}%";
     }
+
+    public static MqttWaterLeakMessage DeserializeWaterLeakMessage(MqttApplicationMessageReceivedEventArgs e)
+    {
+        var payload = GetPayloadString(e);
+
+        return JsonSerializer.Deserialize<MqttWaterLeakMessage>(payload, _serializerOptions)
+            .EnsureNotNull();
+    }
+
+    public static string GetReadableWaterLeakMessage(MqttWaterLeakMessage message)
+    {
+        return $"Leak: {message.Water_Leak} | Battery low: {message.Battery_Low} | Battery: {message.Battery}%";
+    }
 }
