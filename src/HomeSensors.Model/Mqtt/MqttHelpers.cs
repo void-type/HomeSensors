@@ -66,16 +66,16 @@ public static class MqttHelpers
         return $"{message.Time.ToLocalTime()} | {message.Model}/{message.Id}/{message.Channel} | {TemperatureHelpers.FormatTemp(message.Temperature_C ?? -1000)} | {message.Humidity}%";
     }
 
-    public static MqttWaterLeakMessage DeserializeWaterLeakMessage(MqttApplicationMessageReceivedEventArgs e)
+    public static MqttWaterLeakMessagePayload DeserializeWaterLeakMessage(MqttApplicationMessageReceivedEventArgs e)
     {
         var payload = GetPayloadString(e);
 
-        return JsonSerializer.Deserialize<MqttWaterLeakMessage>(payload, _serializerOptions)
+        return JsonSerializer.Deserialize<MqttWaterLeakMessagePayload>(payload, _serializerOptions)
             .EnsureNotNull();
     }
 
     public static string GetReadableWaterLeakMessage(MqttWaterLeakMessage message)
     {
-        return $"Leak: {message.Water_Leak} | Battery low: {message.Battery_Low} | Battery: {message.Battery}%";
+        return $"Location: {message.LocationName} | Water leak: {message.Payload.Water_Leak} | Battery low: {message.Payload.Battery_Low} | Battery: {message.Payload.Battery}%";
     }
 }

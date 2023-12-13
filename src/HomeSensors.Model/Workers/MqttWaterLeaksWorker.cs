@@ -1,4 +1,4 @@
-﻿using HomeSensors.Model.Emailing;
+﻿using HomeSensors.Model.Alerts;
 using HomeSensors.Model.Mqtt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
-using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Workers;
 
@@ -16,20 +15,16 @@ public class MqttWaterLeaksWorker : BackgroundService
     private readonly MqttSettings _configuration;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
-    private readonly WorkersSettings _workersSettings;
-    private readonly IDateTimeService _dateTimeService;
-    private readonly EmailNotificationService _emailNotificationService;
+    private readonly MqttWaterLeaksSettings _workerSettings;
 
     public MqttWaterLeaksWorker(ILogger<MqttWaterLeaksWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory,
-        MqttFactory mqttFactory, WorkersSettings workersSettings, IDateTimeService dateTimeService, EmailNotificationService emailNotificationService)
+        MqttFactory mqttFactory, MqttWaterLeaksSettings workerSettings)
     {
         _logger = logger;
         _configuration = configuration;
         _scopeFactory = scopeFactory;
         _mqttFactory = mqttFactory;
-        _workersSettings = workersSettings;
-        _dateTimeService = dateTimeService;
-        _emailNotificationService = emailNotificationService;
+        _workerSettings = workerSettings;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,12 +38,14 @@ public class MqttWaterLeaksWorker : BackgroundService
 
         await client.StartAsync(MqttHelpers.BuildOptions(_configuration));
 
-        foreach (var topic in _workersSettings.MqttWaterLeaksTopics)
+        var topics = _workerSettings.Sensors.Select(x => x.Topic).ToArray();
+
+        foreach (var topic in topics)
         {
             _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
         }
 
-        await client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, _workersSettings.MqttWaterLeaksTopics));
+        await client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, topics));
 
         // The client is still running, we just loop here and the Delay will listen for the stop token.
         while (!stoppingToken.IsCancellationRequested)
@@ -77,7 +74,13 @@ public class MqttWaterLeaksWorker : BackgroundService
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
-        var message = MqttHelpers.DeserializeWaterLeakMessage(e);
+        var payload = MqttHelpers.DeserializeWaterLeakMessage(e);
+
+        var name = Array.Find(_workerSettings.Sensors, x => x.Topic == e.ApplicationMessage.Topic)?.Name ??
+            e.ApplicationMessage.Topic.Split("/").LastOrDefault() ??
+            "Unknown";
+
+        var message = new MqttWaterLeakMessage(name, payload);
 
         if (_configuration.LogMessages)
         {
@@ -86,54 +89,8 @@ public class MqttWaterLeaksWorker : BackgroundService
         }
 
         using var scope = _scopeFactory.CreateScope();
+        var waterLeakAlertService = scope.ServiceProvider.GetRequiredService<WaterLeakAlertService>();
 
-        var locationName = e.ApplicationMessage.Topic.Split("/").LastOrDefault() ?? "Unknown";
-
-        // TODO: handle alert latching with dictionary
-        if (message.Water_Leak)
-        {
-            await NotifyLeak(locationName, message);
-        }
-
-        if (message.Battery_Low)
-        {
-            await NotifyBatteryLow(locationName, message);
-        }
-
+        await waterLeakAlertService.Process(message, _workerSettings.BetweenNotificationsMinutes);
     }
-
-    private Task NotifyLeak(string locationName, MqttWaterLeakMessage message)
-    {
-        var time = _dateTimeService.MomentWithOffset;
-
-        _logger.LogWarning("Water leak detected: {LocationName}", locationName);
-
-        return _emailNotificationService.Send(e =>
-        {
-            e.SetSubject($"Water leak detected: {locationName}");
-
-            e.AddLine($"Water leak detected at {locationName}.");
-            e.AddLine();
-            e.AddLine($"Time: {time}");
-            e.AddLine($"Battery: {message.Battery}%");
-        }, default);
-    }
-
-    private Task NotifyBatteryLow(string locationName, MqttWaterLeakMessage message)
-    {
-        var time = _dateTimeService.MomentWithOffset;
-
-        _logger.LogWarning("Water leak sensor battery low: {LocationName}", locationName);
-
-        return _emailNotificationService.Send(e =>
-        {
-            e.SetSubject($"Water leak sensor battery low: {locationName}");
-
-            e.AddLine($"Water leak sensor battery low at {locationName}.");
-            e.AddLine();
-            e.AddLine($"Time: {time}");
-            e.AddLine($"Battery: {message.Battery}%");
-        }, default);
-    }
-
 }

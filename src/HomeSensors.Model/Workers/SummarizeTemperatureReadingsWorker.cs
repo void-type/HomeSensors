@@ -22,25 +22,27 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
     private readonly TimeSpan _betweenTicks;
     private readonly TimeSpan _summarizeCutoff;
     private const int SummarizeIntervalMinutes = 5;
-    private readonly WorkersSettings _workersSettings;
+    private readonly SummarizeTemperatureReadingsSettings _workerSettings;
+    private readonly AlertsSettings _alertsSettings;
 
     public SummarizeTemperatureReadingsWorker(ILogger<SummarizeTemperatureReadingsWorker> logger, IServiceScopeFactory scopeFactory,
-        IDateTimeService dateTimeService, WorkersSettings workersSettings)
+        IDateTimeService dateTimeService, SummarizeTemperatureReadingsSettings workerSettings, AlertsSettings alertsSettings)
     {
-        _workersSettings = workersSettings;
+        _workerSettings = workerSettings;
+        _alertsSettings = alertsSettings;
         _logger = logger;
         _scopeFactory = scopeFactory;
         _dateTimeService = dateTimeService;
-        _betweenTicks = TimeSpan.FromMinutes(workersSettings.SummarizeTemperatureReadingsBetweenTicksMinutes);
-        _summarizeCutoff = TimeSpan.FromDays(workersSettings.SummarizeTemperatureReadingsSummarizeCutoffDays);
+        _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
+        _summarizeCutoff = TimeSpan.FromDays(workerSettings.SummarizeCutoffDays);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Offset the schedule of this job from others
-        if (_workersSettings.AlertsEnabled)
+        if (_alertsSettings.IsEnabled)
         {
-            await Task.Delay(TimeSpan.FromMinutes(_workersSettings.SummarizeTemperatureReadingsDelayFirstTickMinutes), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(_workerSettings.DelayFirstTickMinutes), stoppingToken);
         }
 
         var timer = new PeriodicTimer(_betweenTicks);
@@ -103,7 +105,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
 
                         // This takes more time, but may prevent deadlocks with other jobs.
                         // EF uses a MERGE statement that seems to conflict with reads on the same table when it take a long time.
-                        foreach (var newReadingChunk in newReadings.Chunk(_workersSettings.SummarizeTemperatureReadingsChunkSize))
+                        foreach (var newReadingChunk in newReadings.Chunk(_workerSettings.ChunkSize))
                         {
                             var readingsToCreate = newReadingChunk
                                 .Select(x => x.NewReading)

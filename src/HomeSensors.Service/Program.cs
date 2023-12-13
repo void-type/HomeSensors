@@ -16,10 +16,11 @@ var host = Host.CreateDefaultBuilder(args)
     .UseSerilog()
     .ConfigureServices((context, services) =>
     {
-        services.AddSettingsSingleton<ApplicationSettings>(context.Configuration, true).Validate();
-        services.AddSettingsSingleton<MqttSettings>(context.Configuration);
-        services.AddSettingsSingleton<NotificationsSettings>(context.Configuration);
-        var workersSettings = services.AddSettingsSingleton<WorkersSettings>(context.Configuration);
+        var config = context.Configuration;
+
+        services.AddSettingsSingleton<ApplicationSettings>(config, true).Validate();
+        services.AddSettingsSingleton<MqttSettings>(config);
+        services.AddSettingsSingleton<NotificationsSettings>(config);
 
         services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
             .UseSqlServer("Name=HomeSensors", sqlOptions =>
@@ -38,22 +39,34 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
         services.AddSingleton<MqttFactory>();
 
-        services.AddScoped<AlertTemperatureLimitsService>();
-        services.AddScoped<AlertDevicesService>();
+        services.AddScoped<TemperatureLimitAlertService>();
+        services.AddScoped<DeviceAlertService>();
+        services.AddSingleton<WaterLeakAlertService>();
 
-        if (workersSettings.AlertsEnabled)
+        var workersConfig = config.GetSection("Workers");
+
+        var alertsSettings = services.AddSettingsSingleton<AlertsSettings>(workersConfig);
+        if (alertsSettings.IsEnabled)
         {
             services.AddHostedService<AlertsWorker>();
         }
 
-        if (workersSettings.MqttTemperaturesEnabled)
+        var mqttTemperaturesSettings = services.AddSettingsSingleton<MqttTemperaturesSettings>(workersConfig);
+        if (mqttTemperaturesSettings.IsEnabled)
         {
             services.AddHostedService<MqttTemperaturesWorker>();
         }
 
-        if (workersSettings.SummarizeTemperatureReadingsEnabled)
+        var summarizeSettings = services.AddSettingsSingleton<SummarizeTemperatureReadingsSettings>(workersConfig);
+        if (summarizeSettings.IsEnabled)
         {
             services.AddHostedService<SummarizeTemperatureReadingsWorker>();
+        }
+
+        var mqttWaterLeaksSettings = services.AddSettingsSingleton<MqttWaterLeaksSettings>(workersConfig);
+        if (mqttWaterLeaksSettings.IsEnabled)
+        {
+            services.AddHostedService<MqttWaterLeaksWorker>();
         }
     })
     .Build();

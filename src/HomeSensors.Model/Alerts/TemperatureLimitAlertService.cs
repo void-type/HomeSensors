@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace HomeSensors.Model.Alerts;
 
-public class AlertTemperatureLimitsService
+public class TemperatureLimitAlertService
 {
-    private readonly ILogger<AlertTemperatureLimitsService> _logger;
+    private readonly ILogger<TemperatureLimitAlertService> _logger;
     private readonly TemperatureLocationRepository _locationRepository;
     private readonly TemperatureReadingRepository _temperatureRepository;
     private readonly EmailNotificationService _emailNotificationService;
@@ -18,7 +18,7 @@ public class AlertTemperatureLimitsService
     private const string MinStatus = "minimum";
     private const string MaxStatus = "maximum";
 
-    public AlertTemperatureLimitsService(ILogger<AlertTemperatureLimitsService> logger,
+    public TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> logger,
         TemperatureLocationRepository locationRepository, TemperatureReadingRepository temperatureRepository,
         EmailNotificationService emailNotificationService)
     {
@@ -155,5 +155,3 @@ public class AlertTemperatureLimitsService
         }, stoppingToken);
     }
 }
-
-public sealed record TemperatureLimitAlert(CheckLimitResult Result, string Status, DateTimeOffset Expiry);

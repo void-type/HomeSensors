@@ -17,16 +17,16 @@ public class MqttTemperaturesWorker : BackgroundService
     private readonly MqttSettings _configuration;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
-    private readonly WorkersSettings _workersSettings;
+    private readonly MqttTemperaturesSettings _workerSettings;
 
     public MqttTemperaturesWorker(ILogger<MqttTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory,
-        MqttFactory mqttFactory, WorkersSettings workersSettings)
+        MqttFactory mqttFactory, MqttTemperaturesSettings workerSettings)
     {
         _logger = logger;
         _configuration = configuration;
         _scopeFactory = scopeFactory;
         _mqttFactory = mqttFactory;
-        _workersSettings = workersSettings;
+        _workerSettings = workerSettings;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -40,12 +40,12 @@ public class MqttTemperaturesWorker : BackgroundService
 
         await client.StartAsync(MqttHelpers.BuildOptions(_configuration));
 
-        foreach (var topic in _workersSettings.MqttTemperaturesTopics)
+        foreach (var topic in _workerSettings.Topics)
         {
             _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
         }
 
-        await client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, _workersSettings.MqttTemperaturesTopics));
+        await client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, _workerSettings.Topics));
 
         // The client is still running, we just loop here and the Delay will listen for the stop token.
         while (!stoppingToken.IsCancellationRequested)

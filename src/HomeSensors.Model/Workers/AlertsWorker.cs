@@ -19,13 +19,13 @@ public class AlertsWorker : BackgroundService
     private readonly TimeSpan _betweenNotifications;
 
     public AlertsWorker(ILogger<AlertsWorker> logger, IServiceScopeFactory scopeFactory, IDateTimeService dateTimeService,
-        WorkersSettings workersSettings)
+        AlertsSettings workerSettings)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
         _dateTimeService = dateTimeService;
-        _betweenTicks = TimeSpan.FromMinutes(workersSettings.AlertsBetweenTicksMinutes);
-        _betweenNotifications = TimeSpan.FromMinutes(workersSettings.AlertsBetweenNotificationsMinutes);
+        _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
+        _betweenNotifications = TimeSpan.FromMinutes(workerSettings.BetweenNotificationsMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -49,8 +49,8 @@ public class AlertsWorker : BackgroundService
 
                 using var scope = _scopeFactory.CreateScope();
 
-                var limitsService = scope.ServiceProvider.GetRequiredService<AlertTemperatureLimitsService>();
-                var devicesService = scope.ServiceProvider.GetRequiredService<AlertDevicesService>();
+                var limitsService = scope.ServiceProvider.GetRequiredService<TemperatureLimitAlertService>();
+                var devicesService = scope.ServiceProvider.GetRequiredService<DeviceAlertService>();
 
                 await limitsService.Process(latchedLimitAlerts, now, lastTick, _betweenNotifications, stoppingToken);
                 await devicesService.Process(latchedDeviceAlerts, now, _betweenNotifications, stoppingToken);

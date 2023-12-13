@@ -2,7 +2,6 @@
 using HomeSensors.Model.Data;
 using HomeSensors.Model.Mqtt;
 using HomeSensors.Model.Repositories;
-using HomeSensors.Model.Workers;
 using HomeSensors.Web.Auth;
 using HomeSensors.Web.Configuration;
 using HomeSensors.Web.Hubs;
@@ -42,7 +41,6 @@ try
     services.AddSettingsSingleton<WebApplicationSettings>(config, true).Validate();
     services.AddSettingsSingleton<MqttSettings>(config);
     services.AddSettingsSingleton<CachingSettings>(config);
-    var workersSettings = services.AddSettingsSingleton<WorkersSettings>(config);
 
     // Infrastructure
     services.AddControllers();
@@ -82,12 +80,15 @@ try
 
     services.AddSignalR();
 
-    if (workersSettings.PushTemperatureCurrentReadingsEnabled)
+    services.AddSwaggerWithCsp();
+
+    var workersConfig = config.GetSection("Workers");
+
+    var pushTempsSettings = services.AddSettingsSingleton<PushTemperatureCurrentReadingsSettings>(workersConfig);
+    if (pushTempsSettings.IsEnabled)
     {
         services.AddHostedService<PushTemperatureCurrentReadingsWorker>();
     }
-
-    services.AddSwaggerWithCsp();
 
     var app = builder.Build();
 

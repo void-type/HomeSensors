@@ -6,14 +6,14 @@ using VoidCore.Model.Functional;
 
 namespace HomeSensors.Model.Alerts;
 
-public class AlertDevicesService
+public class DeviceAlertService
 {
-    private readonly ILogger<AlertTemperatureLimitsService> _logger;
+    private readonly ILogger<TemperatureLimitAlertService> _logger;
     private readonly TemperatureLocationRepository _locationRepository;
     private readonly TemperatureDeviceRepository _deviceRepository;
     private readonly EmailNotificationService _emailNotificationService;
 
-    public AlertDevicesService(ILogger<AlertTemperatureLimitsService> logger,
+    public DeviceAlertService(ILogger<TemperatureLimitAlertService> logger,
         TemperatureLocationRepository locationRepository, TemperatureDeviceRepository deviceRepository,
         EmailNotificationService emailNotificationService)
     {

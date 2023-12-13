@@ -26,7 +26,7 @@
       "request": "launch",
       "preLaunchTask": "build-debug-service",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/src/HomeSensors.Service/bin/Debug/net7.0/HomeSensors.Service.dll",
+      "program": "${workspaceFolder}/src/HomeSensors.Service/bin/Debug/net8.0/HomeSensors.Service.dll",
       "args": [],
       "cwd": "${workspaceFolder}/src/HomeSensors.Service",
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
