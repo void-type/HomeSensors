@@ -1,4 +1,5 @@
 ﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Functional;
@@ -72,7 +73,7 @@ public class TemperatureDeviceRepository : RepositoryBase
         ));
     }
 
-    public async Task<IResult<EntityMessage<long>>> Update(UpdateDeviceRequest request)
+    public async Task<IResult<EntityMessage<long>>> Update(DeviceUpdateRequest request)
     {
         if (request.CurrentLocationId is not null)
         {

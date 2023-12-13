@@ -1,6 +1,6 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class UpdateDeviceRequest
+public class DeviceUpdateRequest
 {
     public long Id { get; init; }
     public long? CurrentLocationId { get; init; }

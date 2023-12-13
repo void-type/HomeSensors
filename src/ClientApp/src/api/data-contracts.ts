@@ -32,14 +32,6 @@ export interface ClientStatus {
   isConnected?: boolean;
 }
 
-export interface CreateLocationRequest {
-  name?: string | null;
-  /** @format double */
-  minTemperatureLimitCelsius?: number | null;
-  /** @format double */
-  maxTemperatureLimitCelsius?: number | null;
-}
-
 export interface Device {
   /** @format int64 */
   id?: number;
@@ -56,35 +48,17 @@ export interface Device {
   displayName?: string | null;
 }
 
+export interface DeviceUpdateRequest {
+  /** @format int64 */
+  id?: number;
+  /** @format int64 */
+  currentLocationId?: number | null;
+  isRetired?: boolean;
+}
+
 export interface DomainUser {
   login?: string | null;
   authorizedAs?: string[] | null;
-}
-
-export interface GraphPoint {
-  /** @format date-time */
-  time?: string;
-  /** @format double */
-  temperatureCelsius?: number | null;
-}
-
-export interface GraphTimeSeries {
-  location?: Location;
-  /** @format double */
-  minTemperatureCelsius?: number | null;
-  /** @format double */
-  maxTemperatureCelsius?: number | null;
-  /** @format double */
-  averageTemperatureCelsius?: number | null;
-  points?: GraphPoint[] | null;
-}
-
-export interface GraphTimeSeriesRequest {
-  /** @format date-time */
-  startTime?: string;
-  /** @format date-time */
-  endTime?: string;
-  locationIds?: number[] | null;
 }
 
 export interface IFailure {
@@ -121,6 +95,24 @@ export interface Location {
   maxTemperatureLimitCelsius?: number | null;
 }
 
+export interface LocationCreateRequest {
+  name?: string | null;
+  /** @format double */
+  minTemperatureLimitCelsius?: number | null;
+  /** @format double */
+  maxTemperatureLimitCelsius?: number | null;
+}
+
+export interface LocationUpdateRequest {
+  /** @format int64 */
+  id?: number;
+  name?: string | null;
+  /** @format double */
+  minTemperatureLimitCelsius?: number | null;
+  /** @format double */
+  maxTemperatureLimitCelsius?: number | null;
+}
+
 export interface Reading {
   /** @format date-time */
   time?: string;
@@ -137,22 +129,30 @@ export interface SetupRequest {
   topics?: string[] | null;
 }
 
-export interface UpdateDeviceRequest {
-  /** @format int64 */
-  id?: number;
-  /** @format int64 */
-  currentLocationId?: number | null;
-  isRetired?: boolean;
+export interface TimeSeries {
+  location?: Location;
+  /** @format double */
+  minTemperatureCelsius?: number | null;
+  /** @format double */
+  maxTemperatureCelsius?: number | null;
+  /** @format double */
+  averageTemperatureCelsius?: number | null;
+  points?: TimeSeriesPoint[] | null;
 }
 
-export interface UpdateLocationRequest {
-  /** @format int64 */
-  id?: number;
-  name?: string | null;
+export interface TimeSeriesPoint {
+  /** @format date-time */
+  time?: string;
   /** @format double */
-  minTemperatureLimitCelsius?: number | null;
-  /** @format double */
-  maxTemperatureLimitCelsius?: number | null;
+  temperatureCelsius?: number | null;
+}
+
+export interface TimeSeriesRequest {
+  /** @format date-time */
+  startTime?: string;
+  /** @format date-time */
+  endTime?: string;
+  locationIds?: number[] | null;
 }
 
 export interface WebClientInfo {

@@ -38,7 +38,7 @@ public class DevicesController : ControllerBase
     [IgnoreAntiforgeryToken]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Update([FromBody] UpdateDeviceRequest request)
+    public async Task<IActionResult> Update([FromBody] DeviceUpdateRequest request)
     {
         var result = await _deviceRepository.Update(request);
         return HttpResponder.Respond(result);

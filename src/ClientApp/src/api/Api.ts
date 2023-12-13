@@ -13,18 +13,18 @@ import type {
   AppVersion,
   CheckLimitResult,
   ClientStatus,
-  CreateLocationRequest,
   Device,
-  GraphTimeSeries,
-  GraphTimeSeriesRequest,
+  DeviceUpdateRequest,
   IFailureIItemSet,
   Int64EntityMessage,
   Location,
+  LocationCreateRequest,
+  LocationUpdateRequest,
   Reading,
   SetupRequest,
   TemperaturesLocationsCheckLimitsCreateParams,
-  UpdateDeviceRequest,
-  UpdateLocationRequest,
+  TimeSeries,
+  TimeSeriesRequest,
   WebClientInfo,
 } from './data-contracts';
 import { ContentType, HttpClient, type RequestParams } from './http-client';
@@ -87,7 +87,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `Int64EntityMessage` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesDevicesUpdateCreate = (data: UpdateDeviceRequest, params: RequestParams = {}) =>
+  temperaturesDevicesUpdateCreate = (data: DeviceUpdateRequest, params: RequestParams = {}) =>
     this.request<Int64EntityMessage, IFailureIItemSet>({
       path: `/api/temperatures/devices/update`,
       method: 'POST',
@@ -141,7 +141,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `Int64EntityMessage` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesLocationsCreateCreate = (data: CreateLocationRequest, params: RequestParams = {}) =>
+  temperaturesLocationsCreateCreate = (data: LocationCreateRequest, params: RequestParams = {}) =>
     this.request<Int64EntityMessage, IFailureIItemSet>({
       path: `/api/temperatures/locations/create`,
       method: 'POST',
@@ -159,7 +159,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `Int64EntityMessage` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesLocationsUpdateCreate = (data: UpdateLocationRequest, params: RequestParams = {}) =>
+  temperaturesLocationsUpdateCreate = (data: LocationUpdateRequest, params: RequestParams = {}) =>
     this.request<Int64EntityMessage, IFailureIItemSet>({
       path: `/api/temperatures/locations/update`,
       method: 'POST',
@@ -238,14 +238,11 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags Readings
    * @name TemperaturesReadingsTimeSeriesCreate
    * @request POST:/api/temperatures/readings/time-series
-   * @response `200` `(GraphTimeSeries)[]` Success
+   * @response `200` `(TimeSeries)[]` Success
    * @response `400` `IFailureIItemSet` Bad Request
    */
-  temperaturesReadingsTimeSeriesCreate = (
-    data: GraphTimeSeriesRequest,
-    params: RequestParams = {}
-  ) =>
-    this.request<GraphTimeSeries[], IFailureIItemSet>({
+  temperaturesReadingsTimeSeriesCreate = (data: TimeSeriesRequest, params: RequestParams = {}) =>
+    this.request<TimeSeries[], IFailureIItemSet>({
       path: `/api/temperatures/readings/time-series`,
       method: 'POST',
       body: data,

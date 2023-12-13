@@ -66,7 +66,7 @@ public class TemperatureReadingRepository : RepositoryBase
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
     /// <param name="request">GraphTimeSeriesRequest</param>
-    public async Task<List<GraphTimeSeries>> GetTimeSeries(GraphTimeSeriesRequest request)
+    public async Task<List<TimeSeries>> GetTimeSeries(TimeSeriesRequest request)
     {
         if (request.LocationIds.Count == 0)
         {
@@ -113,7 +113,7 @@ public class TemperatureReadingRepository : RepositoryBase
 
                 var allValues = readingsForLocation.Select(x => x.TemperatureCelsius);
 
-                return new GraphTimeSeries(
+                return new TimeSeries(
                     location: readingsForLocation.First().TemperatureLocation!.ToLocation(),
                     min: allValues.Min(),
                     max: allValues.Max(),

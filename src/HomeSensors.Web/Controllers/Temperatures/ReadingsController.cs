@@ -35,9 +35,9 @@ public class ReadingsController : ControllerBase
     [HttpPost]
     [Route("time-series")]
     [IgnoreAntiforgeryToken]
-    [ProducesResponseType(typeof(List<GraphTimeSeries>), 200)]
+    [ProducesResponseType(typeof(List<TimeSeries>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetTimeSeries([FromBody] GraphTimeSeriesRequest request)
+    public async Task<IActionResult> GetTimeSeries([FromBody] TimeSeriesRequest request)
     {
         var series = await _cachedTemperatureRepository.GetTimeSeriesReadings(request);
         return HttpResponder.Respond(series);

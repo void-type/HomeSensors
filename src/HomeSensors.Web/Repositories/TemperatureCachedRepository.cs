@@ -28,7 +28,7 @@ public class TemperatureCachedRepository : RepositoryBase
     }
 
     /// <summary>
-    /// If called from the timer service, then force a refresh. Otherwise all other clients will get cached data upon connection or REST query.
+    /// If called from the PushTemperatureCurrentReadingsWorker, then force a refresh. Otherwise all other clients will get cached data upon connection or REST query.
     /// </summary>
     /// <param name="refreshCache">When true, the cache will be refreshed.</param>
     public Task<List<Reading>> GetCurrentReadings(bool refreshCache = false)
@@ -45,7 +45,7 @@ public class TemperatureCachedRepository : RepositoryBase
             _currentReadingsCacheTime);
     }
 
-    public Task<List<GraphTimeSeries>> GetTimeSeriesReadings(GraphTimeSeriesRequest request)
+    public Task<List<TimeSeries>> GetTimeSeriesReadings(TimeSeriesRequest request)
     {
         // Prevent caching time spans that are incomplete
         if (request.EndTime >= _dateTimeService.MomentWithOffset)

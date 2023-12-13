@@ -1,8 +1,8 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class GraphTimeSeries
+public class TimeSeries
 {
-    public GraphTimeSeries(Location location, double? min, double? max, double? average, IEnumerable<GraphPoint> points)
+    public TimeSeries(Location location, double? min, double? max, double? average, IEnumerable<TimeSeriesPoint> points)
     {
         Location = location;
         MinTemperatureCelsius = min;
@@ -15,5 +15,5 @@ public class GraphTimeSeries
     public double? MinTemperatureCelsius { get; }
     public double? MaxTemperatureCelsius { get; }
     public double? AverageTemperatureCelsius { get; }
-    public IEnumerable<GraphPoint> Points { get; }
+    public IEnumerable<TimeSeriesPoint> Points { get; }
 }

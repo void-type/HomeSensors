@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Data.Models;
+using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Functional;
@@ -56,7 +57,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return results;
     }
 
-    public Task<IResult<EntityMessage<long>>> Create(CreateLocationRequest request)
+    public Task<IResult<EntityMessage<long>>> Create(LocationCreateRequest request)
     {
         return ValidateName(request.Name)
             .ThenAsync(() => ValidateNameIsAvailableAsync(request.Name))
@@ -78,7 +79,7 @@ public class TemperatureLocationRepository : RepositoryBase
             .SelectAsync(x => EntityMessage.Create("Location added.", x.Entity.Id));
     }
 
-    public Task<IResult<EntityMessage<long>>> Update(UpdateLocationRequest request)
+    public Task<IResult<EntityMessage<long>>> Update(LocationUpdateRequest request)
     {
         return ValidateName(request.Name)
             .ThenAsync(async () =>

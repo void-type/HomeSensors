@@ -1,8 +1,8 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class GraphPoint
+public class TimeSeriesPoint
 {
-    public GraphPoint(DateTimeOffset time, double? temperatureCelsius)
+    public TimeSeriesPoint(DateTimeOffset time, double? temperatureCelsius)
     {
         Time = time;
         TemperatureCelsius = temperatureCelsius;

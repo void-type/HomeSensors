@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ApiHelpers from '@/models/ApiHelpers';
 import useAppStore from '@/stores/appStore';
-import type { GraphPoint, GraphTimeSeries, Location } from '@/api/data-contracts';
+import type { TimeSeriesPoint, TimeSeries, Location } from '@/api/data-contracts';
 import { onMounted, reactive, watch, computed, watchEffect } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
@@ -26,7 +26,7 @@ const initialTime = startOfMinute(new Date());
 
 const data = reactive({
   locations: [] as Array<Location>,
-  graphSeries: [] as Array<GraphTimeSeries>,
+  graphSeries: [] as Array<TimeSeries>,
 });
 
 const timeSeriesInputs: ITimeSeriesInputs = reactive({
@@ -98,7 +98,7 @@ function getColor(categoryName: string) {
   return randomColor;
 }
 
-function setGraphData(series: Array<GraphTimeSeries>, useF: boolean) {
+function setGraphData(series: Array<TimeSeries>, useF: boolean) {
   const element = document.getElementById('tempGraph') as HTMLCanvasElement;
 
   if (element === null) {
@@ -126,8 +126,8 @@ function setGraphData(series: Array<GraphTimeSeries>, useF: boolean) {
     label: s.location?.name,
     borderColor: getColor(s.location?.name || 'unknown'),
     data: s.points
-      ?.filter((p: GraphPoint) => p.temperatureCelsius)
-      .map((p: GraphPoint) => ({
+      ?.filter((p: TimeSeriesPoint) => p.temperatureCelsius)
+      .map((p: TimeSeriesPoint) => ({
         x: p.time,
         y: formatTemp(p.temperatureCelsius, useF),
       })),

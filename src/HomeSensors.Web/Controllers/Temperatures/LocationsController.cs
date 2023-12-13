@@ -48,7 +48,7 @@ public class LocationsController : ControllerBase
     [Route("create")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Create([FromBody] CreateLocationRequest request)
+    public async Task<IActionResult> Create([FromBody] LocationCreateRequest request)
     {
         var result = await _locationRepository.Create(request);
         return HttpResponder.Respond(result);
@@ -58,7 +58,7 @@ public class LocationsController : ControllerBase
     [Route("update")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Update([FromBody] UpdateLocationRequest request)
+    public async Task<IActionResult> Update([FromBody] LocationUpdateRequest request)
     {
         var result = await _locationRepository.Update(request);
         return HttpResponder.Respond(result);

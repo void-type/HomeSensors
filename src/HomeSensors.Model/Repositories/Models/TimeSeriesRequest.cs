@@ -1,6 +1,6 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class GraphTimeSeriesRequest
+public class TimeSeriesRequest
 {
     public DateTimeOffset StartTime { get; init; } = DateTimeOffset.Now.AddHours(-48);
     public DateTimeOffset EndTime { get; init; } = DateTimeOffset.Now;
