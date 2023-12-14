@@ -16,7 +16,7 @@ const { useDarkMode } = storeToRefs(appStore);
     v-model="modelValue"
     is-required
     mode="dateTime"
-    :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:MM' }"
+    :masks="{ inputDateTime24hr: 'YYYY-MM-DD HH:mm' }"
     :update-on-input="false"
     is24hr
     hide-time-header
