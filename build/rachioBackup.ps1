@@ -1,3 +1,5 @@
+# Run this process at the end of a season.
+
 # https://rachio.readme.io/reference/getting-started
 # Note that rate limit is 1,700 calls per day, or just over one per minute.
 
