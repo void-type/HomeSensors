@@ -1,3 +1,5 @@
+# This script helps you install mosquitto, rtl_433, and zigbee2mqtt.
+
 # Build and install rtl_433
 sudo apt-get update
 sudo apt install -y libtool libusb-1.0-0-dev librtlsdr-dev rtl-sdr build-essential autoconf cmake pkg-config doxygen
@@ -39,9 +41,8 @@ sudo systemctl enable mosquitto
 sudo systemctl status mosquitto
 
 # Setup rtl_433 as a service
-# Review and copy the service config to the server.
-scp ./rtl_433.service pi@raspberrypi:/home/pi/
-sudo mv /home/pi/rtl_433.service /etc/systemd/system/rtl_433.service
+# Review and copy the service.
+sudo mv ~/rtl_433.service /etc/systemd/system/rtl_433.service
 sudo chmod 664 /etc/systemd/system/rtl_433.service
 
 # Edit if needed, save to string above
@@ -78,10 +79,11 @@ cd /opt/zigbee2mqtt
 npm ci
 npm run build
 
-# Review and copy the zigbee2mqtt configuration and service to the server.
-scp ./zigbee2mqtt.configuration.yaml pi@raspberrypi:/opt/zigbee2mqtt/data/configuration.yaml
-scp ./zigbee2mqtt.service pi@raspberrypi:/home/pi/
-sudo mv /home/pi/zigbee2mqtt.service /etc/systemd/system/zigbee2mqtt.service
+# Review and copy the zigbee2mqtt configuration. You will need your MQTT credentials for the zigbee2mqtt user.
+mv ~/zigbee2mqtt.configuration.yaml /opt/zigbee2mqtt/data/configuration.yaml
+
+# Review and copy the zigbee2mqtt service.
+sudo mv ~/zigbee2mqtt.service /etc/systemd/system/zigbee2mqtt.service
 sudo chmod 664 /etc/systemd/system/zigbee2mqtt.service
 
 # Test app
@@ -98,3 +100,5 @@ sudo systemctl status zigbee2mqtt
 sudo journalctl -u zigbee2mqtt -f
 sudo journalctl -u rtl_433 -f
 sudo journalctl -u mosquitto -f
+
+# Use the web frontend to make future zigbee2mqtt configuration changes, including pairing new devices, at http://localhost:8080
