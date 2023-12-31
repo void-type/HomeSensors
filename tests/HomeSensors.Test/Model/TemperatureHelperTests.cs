@@ -6,7 +6,6 @@ namespace HomeSensors.Test.Model;
 
 public class TemperatureHelperTests
 {
-
     [Fact]
     public void Average_0_minute_readings()
     {
@@ -50,6 +49,7 @@ public class TemperatureHelperTests
 
         Assert.Equal(8, averages.Count);
     }
+
     [Fact]
     public void Average_5_minute_readings()
     {

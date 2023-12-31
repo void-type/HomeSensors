@@ -32,14 +32,25 @@ public class DateTimeExtensionsTests
     [InlineData(60, 20, 0, 20, 0)]
     public void Minutes_round_down_to_nearest_10(int interval, int expectedHour, int expectedMinute, int actualHour, int actualMinute)
     {
+        // Ensure the offset is preserved, ticks and microseconds are cleared out.
+        var actual = new DateTimeOffset(2023, 10, 31, actualHour, actualMinute, 23, 17, 13, TimeSpan.FromHours(-6))
+            .AddTicks(7)
+            .RoundDownMinutes(interval);
+
         Assert.Equal(
-            new DateTimeOffset(2023, 10, 31, expectedHour, expectedMinute, 00, 00, new TimeSpan()),
-            new DateTimeOffset(2023, 10, 31, actualHour, actualMinute, 00, 00, new TimeSpan()).RoundDownMinutes(interval));
+            new DateTimeOffset(2023, 10, 31, expectedHour, expectedMinute, 00, 00, TimeSpan.FromHours(-6)),
+            actual);
     }
 
     [Fact]
     public void Throws_when_interval_above_60()
     {
         Assert.Throws<ArgumentException>(() => new DateTimeOffset(2023, 10, 31, 20, 30, 00, 00, new TimeSpan()).RoundDownMinutes(62));
+    }
+
+    [Fact]
+    public void Throws_when_interval_below_1()
+    {
+        Assert.Throws<ArgumentException>(() => new DateTimeOffset(2023, 10, 31, 20, 30, 00, 00, new TimeSpan()).RoundDownMinutes(0));
     }
 }

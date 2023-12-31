@@ -2,12 +2,14 @@
 
 public class TimeSeriesPoint
 {
-    public TimeSeriesPoint(DateTimeOffset time, double? temperatureCelsius)
+    public TimeSeriesPoint(DateTimeOffset time, double? temperatureCelsius, double? humidity)
     {
         Time = time;
         TemperatureCelsius = temperatureCelsius;
+        Humidity = humidity;
     }
 
     public DateTimeOffset Time { get; }
     public double? TemperatureCelsius { get; }
+    public double? Humidity { get; }
 }

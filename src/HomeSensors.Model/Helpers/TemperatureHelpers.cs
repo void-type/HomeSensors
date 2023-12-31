@@ -19,14 +19,15 @@ public static class TemperatureHelpers
                 .Select(reading => new TimeSeriesPoint
                 (
                     reading.Time,
-                    reading.TemperatureCelsius
+                    reading.TemperatureCelsius,
+                    reading.Humidity
                 ))
                 .ToList();
         }
 
         return readingsForLocation
             .GroupBy(r => r.Time.RoundDownMinutes(intervalMinutes))
-            .Select(timeGroup => new TimeSeriesPoint(timeGroup.Key, timeGroup.Average(s => s.TemperatureCelsius)))
+            .Select(timeGroup => new TimeSeriesPoint(timeGroup.Key, timeGroup.Average(s => s.TemperatureCelsius), timeGroup.Average(s => s.Humidity)))
             .ToList();
     }
 

@@ -11,10 +11,10 @@ public static class DateTimeExtensions
     /// <param name="intervalMinutes">The interval of minutes to round down to</param>
     public static DateTimeOffset RoundDownMinutes(this DateTimeOffset time, int intervalMinutes)
     {
-        intervalMinutes.Ensure(x => x <= 60);
+        intervalMinutes.Ensure(x => x > 0 && x <= 60);
 
-        // Round down to the last interval.
-        var totalMilliseconds = time.Millisecond + (1000 * time.Second) + (60000 * (time.Minute % intervalMinutes));
-        return time.AddMilliseconds(-totalMilliseconds);
+        var differenceTicks = time.Ticks % (intervalMinutes * TimeSpan.TicksPerMinute);
+
+        return time.AddTicks(-differenceTicks);
     }
 }

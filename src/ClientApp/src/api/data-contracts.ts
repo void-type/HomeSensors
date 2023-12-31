@@ -145,6 +145,8 @@ export interface TimeSeriesPoint {
   time?: string;
   /** @format double */
   temperatureCelsius?: number | null;
+  /** @format double */
+  humidity?: number | null;
 }
 
 export interface TimeSeriesRequest {
