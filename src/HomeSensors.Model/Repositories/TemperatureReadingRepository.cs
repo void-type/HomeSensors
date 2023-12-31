@@ -111,13 +111,24 @@ public class TemperatureReadingRepository : RepositoryBase
             {
                 var avgGraphPoints = readingsForLocation.GetIntervalAverages(intervalMinutes);
 
-                var allValues = readingsForLocation.Select(x => x.TemperatureCelsius);
+                var allTemps = readingsForLocation.Select(x => x.TemperatureCelsius);
+
+                var tempAgg = new TimeSeriesAggregate(
+                    minimum: allTemps.Min(),
+                    maximum: allTemps.Max(),
+                    average: allTemps.Average());
+
+                var allHumidity = readingsForLocation.Select(x => x.Humidity);
+
+                var humidityAgg = new TimeSeriesAggregate(
+                    minimum: allHumidity.Min(),
+                    maximum: allHumidity.Max(),
+                    average: allHumidity.Average());
 
                 return new TimeSeries(
                     location: readingsForLocation.First().TemperatureLocation!.ToLocation(),
-                    min: allValues.Min(),
-                    max: allValues.Max(),
-                    average: allValues.Average(),
+                    tempAgg,
+                    humidityAgg,
                     points: avgGraphPoints
                 );
             });

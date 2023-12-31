@@ -5,7 +5,7 @@ import { onMounted, reactive } from 'vue';
 import { addMinutes, format, isPast } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
 import { storeToRefs } from 'pinia';
-import { formatTempWithUnit } from '@/models/TempFormatHelpers';
+import { formatTempWithUnit, formatHumidityWithUnit } from '@/models/TempFormatHelpers';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import ApiHelpers from '@/models/ApiHelpers';
 
@@ -105,9 +105,9 @@ onMounted(async () => {
             <span class="fw-bold">{{
               formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit)
             }}</span>
-            <span v-if="currentTemp.humidity !== null && showHumidity" class="ps-3"
-              >{{ currentTemp.humidity }}%</span
-            >
+            <span v-if="currentTemp.humidity !== null && showHumidity" class="ps-3">{{
+              formatHumidityWithUnit(currentTemp.humidity)
+            }}</span>
           </div>
           <div>
             <font-awesome-icon

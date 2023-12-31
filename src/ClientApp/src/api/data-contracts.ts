@@ -131,13 +131,18 @@ export interface SetupRequest {
 
 export interface TimeSeries {
   location?: Location;
-  /** @format double */
-  minTemperatureCelsius?: number | null;
-  /** @format double */
-  maxTemperatureCelsius?: number | null;
-  /** @format double */
-  averageTemperatureCelsius?: number | null;
+  temperatureAggregate?: TimeSeriesAggregate;
+  humidityAggregate?: TimeSeriesAggregate;
   points?: TimeSeriesPoint[] | null;
+}
+
+export interface TimeSeriesAggregate {
+  /** @format double */
+  minimum?: number | null;
+  /** @format double */
+  maximum?: number | null;
+  /** @format double */
+  average?: number | null;
 }
 
 export interface TimeSeriesPoint {

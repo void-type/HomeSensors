@@ -8,7 +8,13 @@ import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } f
 import 'chartjs-adapter-date-fns';
 import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
-import { formatTemp, formatTempWithUnit, tempUnit } from '@/models/TempFormatHelpers';
+import {
+  formatTemp,
+  formatTempWithUnit,
+  formatHumidity,
+  formatHumidityWithUnit,
+  tempUnit,
+} from '@/models/TempFormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
 import useMessageStore from '@/stores/messageStore';
 import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
@@ -27,6 +33,7 @@ const initialTime = startOfMinute(new Date());
 const data = reactive({
   locations: [] as Array<Location>,
   graphSeries: [] as Array<TimeSeries>,
+  showHumidity: false,
 });
 
 const timeSeriesInputs: ITimeSeriesInputs = reactive({
@@ -98,7 +105,7 @@ function getColor(categoryName: string) {
   return randomColor;
 }
 
-function setGraphData(series: Array<TimeSeries>, useF: boolean) {
+function setGraphData(series: Array<TimeSeries>, useF: boolean, showHumidity: boolean) {
   const element = document.getElementById('tempGraph') as HTMLCanvasElement;
 
   if (element === null) {
@@ -129,7 +136,7 @@ function setGraphData(series: Array<TimeSeries>, useF: boolean) {
       ?.filter((p: TimeSeriesPoint) => p.temperatureCelsius)
       .map((p: TimeSeriesPoint) => ({
         x: p.time,
-        y: formatTemp(p.temperatureCelsius, useF),
+        y: showHumidity ? formatHumidity(p.humidity) : formatTemp(p.temperatureCelsius, useF),
       })),
     hidden: oldHiddenCategories.includes(s.location?.name),
   }));
@@ -154,7 +161,7 @@ function setGraphData(series: Array<TimeSeries>, useF: boolean) {
         tooltip: {
           callbacks: {
             label: (item: TooltipItem<'line'>) =>
-              `${item.dataset.label}: ${item.formattedValue}${tempUnit(useF)}`,
+              `${item.dataset.label}: ${item.formattedValue}${showHumidity ? '%' : tempUnit(useF)}`,
           },
         },
       },
@@ -230,37 +237,52 @@ onMounted(async () => {
 
 watch(timeSeriesInputs, (inputs) => getTimeSeries(inputs), { immediate: true });
 
-watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value));
+watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showHumidity));
 </script>
 
 <template>
-  <div class="grid">
-    <div class="g-col-12 g-col-md-6 mb-3">
+  <div class="grid mb-3">
+    <div class="g-col-12 g-col-md-6">
       <label for="startDate" class="form-label">Start date</label>
       <app-date-time-picker v-model="timeSeriesInputs.start" />
     </div>
-    <div class="g-col-12 g-col-md-6 mb-3">
+    <div class="g-col-12 g-col-md-6">
       <label for="endDate" class="form-label">End date</label>
       <app-date-time-picker v-model="timeSeriesInputs.end" />
     </div>
-  </div>
-  <div class="text-center mb-1">
-    <button id="selectAllButton" class="btn btn-sm btn-outline-light" @click="onSelectAllClick">
-      {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
-    </button>
-  </div>
-  <div class="text-center">
-    <div v-for="location in data.locations" :key="location.id" class="form-check form-check-inline">
-      <input
-        :id="`locationSelect-${location.id}`"
-        v-model="timeSeriesInputs.locationIds"
-        :value="location.id"
-        class="form-check-input"
-        type="checkbox"
-      />
-      <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
-        location.name
-      }}</label>
+    <div class="g-col-12">
+      <button id="selectAllButton" class="btn btn-sm btn-outline-light" @click="onSelectAllClick">
+        {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
+      </button>
+    </div>
+    <div class="g-col-12">
+      <div
+        v-for="location in data.locations"
+        :key="location.id"
+        class="form-check form-check-inline"
+      >
+        <input
+          :id="`locationSelect-${location.id}`"
+          v-model="timeSeriesInputs.locationIds"
+          :value="location.id"
+          class="form-check-input"
+          type="checkbox"
+        />
+        <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
+          location.name
+        }}</label>
+      </div>
+    </div>
+    <div class="g-col-12">
+      <div class="form-check form-switch">
+        <label class="form-check-label" for="showHumidity" @click.stop>Humidity</label>
+        <input
+          id="showHumidity"
+          v-model="data.showHumidity"
+          class="form-check-input"
+          type="checkbox"
+        />
+      </div>
     </div>
   </div>
   <div class="chart-container mt-3">
@@ -276,11 +298,29 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value));
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(point, i) in data.graphSeries" :key="i">
-        <td>{{ point.location?.name }}</td>
-        <td>{{ formatTempWithUnit(point.minTemperatureCelsius, useFahrenheit) }}</td>
-        <td>{{ formatTempWithUnit(point.maxTemperatureCelsius, useFahrenheit) }}</td>
-        <td>{{ formatTempWithUnit(point.averageTemperatureCelsius, useFahrenheit) }}</td>
+      <tr v-for="(series, i) in data.graphSeries" :key="i">
+        <td>{{ series.location?.name }}</td>
+        <td>
+          {{
+            data.showHumidity
+              ? formatHumidityWithUnit(series.humidityAggregate?.minimum)
+              : formatTempWithUnit(series.temperatureAggregate?.minimum, useFahrenheit)
+          }}
+        </td>
+        <td>
+          {{
+            data.showHumidity
+              ? formatHumidityWithUnit(series.humidityAggregate?.maximum)
+              : formatTempWithUnit(series.temperatureAggregate?.maximum, useFahrenheit)
+          }}
+        </td>
+        <td>
+          {{
+            data.showHumidity
+              ? formatHumidityWithUnit(series.humidityAggregate?.average)
+              : formatTempWithUnit(series.temperatureAggregate?.average, useFahrenheit)
+          }}
+        </td>
       </tr>
     </tbody>
   </table>

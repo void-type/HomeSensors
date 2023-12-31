@@ -2,18 +2,16 @@
 
 public class TimeSeries
 {
-    public TimeSeries(Location location, double? min, double? max, double? average, IEnumerable<TimeSeriesPoint> points)
+    public TimeSeries(Location location, TimeSeriesAggregate temperatureAggregate, TimeSeriesAggregate humidityAggregate, IEnumerable<TimeSeriesPoint> points)
     {
         Location = location;
-        MinTemperatureCelsius = min;
-        MaxTemperatureCelsius = max;
-        AverageTemperatureCelsius = average;
+        TemperatureAggregate = temperatureAggregate;
+        HumidityAggregate = humidityAggregate;
         Points = points;
     }
 
     public Location Location { get; }
-    public double? MinTemperatureCelsius { get; }
-    public double? MaxTemperatureCelsius { get; }
-    public double? AverageTemperatureCelsius { get; }
+    public TimeSeriesAggregate TemperatureAggregate { get; }
+    public TimeSeriesAggregate HumidityAggregate { get; }
     public IEnumerable<TimeSeriesPoint> Points { get; }
 }
