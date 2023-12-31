@@ -1,8 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <!-- Generate documentation for Swagger/Swashbuckle and dismiss warning about undocumented public APIs -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <UserSecretsId>74bea8dd-350f-40e4-bbf9-ea1a76dbe07d</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
