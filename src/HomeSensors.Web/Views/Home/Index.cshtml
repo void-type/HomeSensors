@@ -1,47 +1,53 @@
 ﻿@using VoidCore.AspNet.Configuration
 @inject WebApplicationSettings appConfig
+@inject IConfiguration config
+@inject IHostEnvironment env
 @{
     ViewData["Title"] = $"Home | {appConfig.Name}";
+    var useVueDevServer = env.IsDevelopment() && !config.GetValue<bool>("DisableVueDevServer", false);
 }
 
 @section Style
 {
-    @* Dev assets *@
-    <environment include="Development">
+    @* Vue dev server *@
+    @if(useVueDevServer)
+    {
         <script type="module"
-            src="https://localhost:5173/@@vite/client">
+                src="https://localhost:5173/@@vite/client">
         </script>
         <link rel="stylesheet"
-            href="https://localhost:5173/src/styles/main.scss"
-            asp-fallback-href-include="~/assets/main-*.css" />
+              href="https://localhost:5173/src/styles/main.scss" />
         <script type="module"
-            src="https://localhost:5173/src/main.ts"
-            asp-fallback-src-include="~/assets/main-*.js">
+                src="https://localhost:5173/src/main.ts">
         </script>
-    </environment>
+    }
+
     @* Deployed styles *@
-    <environment exclude="Development">
+    @if(!useVueDevServer)
+    {
         <link rel="preload" as="style"
-            asp-href-include="~/assets/main-*.css"
-            asp-fallback-href-include="~/assets/main-*.css"
-            asp-suppress-fallback-integrity="true" />
+              asp-href-include="~/assets/main-*.css"
+              asp-fallback-href-include="~/assets/main-*.css"
+              asp-suppress-fallback-integrity="true" />
         <link rel="stylesheet"
-            asp-href-include="~/assets/main-*.css"
-            asp-fallback-href-include="~/assets/main-*.css"
-            asp-suppress-fallback-integrity="true" />
-    </environment>
+              asp-href-include="~/assets/main-*.css"
+              asp-fallback-href-include="~/assets/main-*.css"
+              asp-suppress-fallback-integrity="true" />
+    }
 }
 
 @section Script
+
 {
     @* Deployed scripts *@
-    <environment exclude="Development">
+    @if(!useVueDevServer)
+    {
         <script type="module"
                 asp-src-include="~/assets/main-*.js"
                 asp-fallback-src-include="~/assets/main-*.js"
                 asp-suppress-fallback-integrity="true">
-                </script>
-    </environment>
+        </script>
+    }
 }
 
 <noscript>

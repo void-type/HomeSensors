@@ -2,34 +2,51 @@
   "version": "0.2.0",
   "configurations": [
     {
-      // Use IntelliSense to find out which attributes exist for C# debugging
-      // Use hover for the description of the existing attributes
-      // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
-      "name": "Web .NET Core Launch (console)",
+      "name": "Web Client (npm run dev)",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/src/ClientApp",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "type": "node",
+      "presentation": {
+        "hidden": true
+      }
+    },
+    {
+      "name": "Web Client (Chrome debug)",
+      "request": "launch",
+      "type": "chrome",
+      "url": "https://localhost:5001",
+      "webRoot": "${workspaceFolder}/src/ClientApp",
+      "skipFiles": [
+        "**/node_modules/**",
+      ],
+      "presentation": {
+        "hidden": true
+      }
+    },
+    {
+      "name": "Web Server",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build-debug-web",
-      // If you have changed target frameworks, make sure to update the program path.
       "program": "${workspaceFolder}/src/HomeSensors.Web/bin/Debug/net8.0/HomeSensors.Web.dll",
       "args": [],
       "cwd": "${workspaceFolder}/src/HomeSensors.Web",
-      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "internalConsole",
-      "stopAtEntry": false
+      "stopAtEntry": false,
+      "presentation": {
+        "hidden": true
+      }
     },
     {
-      // Use IntelliSense to find out which attributes exist for C# debugging
-      // Use hover for the description of the existing attributes
-      // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
-      "name": "Service .NET Core Launch (console)",
+      "name": "Service",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build-debug-service",
-      // If you have changed target frameworks, make sure to update the program path.
       "program": "${workspaceFolder}/src/HomeSensors.Service/bin/Debug/net8.0/HomeSensors.Service.dll",
       "args": [],
       "cwd": "${workspaceFolder}/src/HomeSensors.Service",
-      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "internalConsole",
       "stopAtEntry": false
     },
@@ -38,6 +55,21 @@
       "type": "coreclr",
       "request": "attach",
       "processId": "${command:pickProcess}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Web",
+      "configurations": [
+        "Web Client (npm run dev)",
+        "Web Server",
+        "Web Client (Chrome debug)"
+      ],
+      "presentation": {
+        "hidden": false,
+        "group": "",
+        "order": 1
+      }
     }
   ]
 }
