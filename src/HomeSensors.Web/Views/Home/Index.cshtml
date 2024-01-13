@@ -12,27 +12,19 @@
     @* Vue dev server *@
     @if(useVueDevServer)
     {
-        <script type="module"
-                src="https://localhost:5173/@@vite/client">
-        </script>
-        <link rel="stylesheet"
-              href="https://localhost:5173/src/styles/main.scss" />
-        <script type="module"
-                src="https://localhost:5173/src/main.ts">
-        </script>
+        <script type="module" src="https://localhost:5173/@@vite/client"></script>
+        <link rel="stylesheet" href="https://localhost:5173/src/styles/styles-main.scss" />
+        <script type="module"src="https://localhost:5173/src/main.ts"></script>
     }
 
     @* Deployed styles *@
     @if(!useVueDevServer)
     {
-        <link rel="preload" as="style"
-              asp-href-include="~/assets/main-*.css"
-              asp-fallback-href-include="~/assets/main-*.css"
-              asp-suppress-fallback-integrity="true" />
-        <link rel="stylesheet"
-              asp-href-include="~/assets/main-*.css"
-              asp-fallback-href-include="~/assets/main-*.css"
-              asp-suppress-fallback-integrity="true" />
+        <link rel="preload" as="style" asp-href-include="~/assets/styles-main-*.css" />
+        <link rel="stylesheet" asp-href-include="~/assets/styles-main-*.css" />
+
+        <link rel="preload" as="style" asp-href-include="~/assets/main-*.css" />
+        <link rel="stylesheet" asp-href-include="~/assets/main-*.css" />
     }
 }
 
@@ -42,11 +34,7 @@
     @* Deployed scripts *@
     @if(!useVueDevServer)
     {
-        <script type="module"
-                asp-src-include="~/assets/main-*.js"
-                asp-fallback-src-include="~/assets/main-*.js"
-                asp-suppress-fallback-integrity="true">
-        </script>
+        <script type="module" asp-src-include="~/assets/main-*.js"></script>
     }
 }
 
