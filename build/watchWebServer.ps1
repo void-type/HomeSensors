@@ -1,8 +1,8 @@
 [CmdletBinding()]
 param (
-    [Parameter()]
-    [switch]
-    $DisableVueDevServer
+  [Parameter()]
+  [switch]
+  $DisableVueDevServer
 )
 
 $originalLocation = Get-Location
