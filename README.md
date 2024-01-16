@@ -5,7 +5,7 @@
 [![Build Status](https://img.shields.io/azure-devops/build/void-type/VoidCore/25/main)](https://dev.azure.com/void-type/VoidCore/_build/latest?definitionId=25&branchName=main)
 [![Test Coverage](https://img.shields.io/azure-devops/coverage/void-type/VoidCore/25/main)](https://dev.azure.com/void-type/VoidCore/_build/latest?definitionId=25&branchName=main)
 
-A solution to gather data from various sensors and display it. Built using ASP.NET Core 7 and Vue 3.
+A solution to gather data from various sensors and display it. Built using ASP.NET Core and Vue.
 
 ## Features
 
