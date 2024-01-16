@@ -3,7 +3,7 @@ import useAppStore from '@/stores/appStore';
 import type { IFailureIItemSet, Location } from '@/api/data-contracts';
 import { storeToRefs } from 'pinia';
 import { toNumberOrNull } from '@/models/FormatHelpers';
-import { formatTempWithUnit } from '@/models/TempFormatHelpers';
+import { formatTempWithUnitOrEmpty } from '@/models/TempFormatHelpers';
 import { onMounted, reactive } from 'vue';
 import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
@@ -127,7 +127,7 @@ onMounted(async () => {
               }"
               type="number"
             />
-            {{ formatTempWithUnit(location.minTemperatureLimitCelsius, useFahrenheit) }}
+            {{ formatTempWithUnitOrEmpty(location.minTemperatureLimitCelsius, useFahrenheit) }}
           </td>
           <td>
             <label class="visually-hidden" :for="`max-${location.id}`">Max temp limit (°C)</label>
@@ -141,7 +141,7 @@ onMounted(async () => {
               }"
               type="number"
             />
-            {{ formatTempWithUnit(location.maxTemperatureLimitCelsius, useFahrenheit) }}
+            {{ formatTempWithUnitOrEmpty(location.maxTemperatureLimitCelsius, useFahrenheit) }}
           </td>
           <td>
             <button class="btn btn-sm btn-primary" @click="updateLocation(location)">Save</button>
@@ -178,7 +178,7 @@ onMounted(async () => {
           'is-invalid': data.errors.includes('min-new'),
         }"
       />
-      {{ formatTempWithUnit(data.newLocation.min, useFahrenheit) }}
+      {{ formatTempWithUnitOrEmpty(data.newLocation.min, useFahrenheit) }}
     </div>
     <div class="g-col-12 g-col-md-3">
       <label for="max-new">Max temp (°C)</label>
@@ -192,7 +192,7 @@ onMounted(async () => {
           'is-invalid': data.errors.includes('max-new'),
         }"
       />
-      {{ formatTempWithUnit(data.newLocation.max, useFahrenheit) }}
+      {{ formatTempWithUnitOrEmpty(data.newLocation.max, useFahrenheit) }}
     </div>
     <div class="g-col-12 g-col-md-12">
       <button class="btn btn-sm btn-primary" @click="createLocation()">Add</button>

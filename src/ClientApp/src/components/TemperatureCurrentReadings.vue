@@ -11,7 +11,7 @@ import ApiHelpers from '@/models/ApiHelpers';
 
 const appStore = useAppStore();
 
-const { useFahrenheit, showHumidity } = storeToRefs(appStore);
+const { useFahrenheit, showHumidity, staleLimitMinutes } = storeToRefs(appStore);
 
 const data = reactive({
   currentReadings: [] as Array<Reading>,
@@ -62,12 +62,10 @@ async function connectToHub() {
   startConnection();
 }
 
-const staleLimitMinutes = 20;
-
 function isStale(reading: Reading) {
   const readingDate = new Date(reading.time as string);
 
-  const result = isPast(addMinutes(readingDate, staleLimitMinutes));
+  const result = isPast(addMinutes(readingDate, staleLimitMinutes.value));
 
   return result;
 }

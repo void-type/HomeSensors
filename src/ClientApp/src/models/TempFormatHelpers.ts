@@ -1,3 +1,5 @@
+import { isNil } from './FormatHelpers';
+
 export function tempUnit(useFahrenheit: boolean) {
   return useFahrenheit ? '°F' : '°C';
 }
@@ -14,6 +16,14 @@ export function formatTemp(tempCelsius: number | null | undefined, useFahrenheit
 
 export function formatTempWithUnit(tempCelsius: number | null | undefined, useFahrenheit: boolean) {
   return `${formatTemp(tempCelsius, useFahrenheit)}${tempUnit(useFahrenheit)}`;
+}
+
+export function formatTempWithUnitOrEmpty(tempCelsius: number | null | undefined, useFah: boolean) {
+  if (isNil(tempCelsius)) {
+    return '';
+  }
+
+  return formatTempWithUnit(tempCelsius, useFah);
 }
 
 export function formatHumidity(humidity: number | null | undefined) {

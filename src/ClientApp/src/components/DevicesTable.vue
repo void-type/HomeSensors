@@ -8,36 +8,19 @@ import { onMounted, reactive } from 'vue';
 import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
 import useMessageStore from '@/stores/messageStore';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
 const api = ApiHelpers.client;
 
-const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
+const { useDarkMode, useFahrenheit, staleLimitMinutes } = storeToRefs(appStore);
 
 const data = reactive({
   devices: [] as Array<Device>,
   locations: [] as Array<Location>,
   errors: [] as Array<string>,
 });
-
-function getStatuses(device: Device) {
-  const errors: Array<string> = [];
-
-  if (device.isLost) {
-    errors.push('Lost');
-  }
-
-  if (device.isInactive) {
-    errors.push('Inactive');
-  }
-
-  if (device.isBatteryLevelLow) {
-    errors.push('Battery');
-  }
-
-  return errors;
-}
 
 async function getDevices() {
   try {
@@ -107,13 +90,6 @@ onMounted(async () => {
 
 <template>
   <div>
-    <p>
-      Inactive - device hasn't saved a reading in the last 20 minutes.
-      <br />
-      Lost - device doesn't have a location but will acquire new readings.
-      <br />
-      Retired - device will not acquire new readings and other statuses are suppressed.
-    </p>
     <table :class="{ table: true, 'table-dark': useDarkMode }">
       <thead>
         <tr>
@@ -121,7 +97,11 @@ onMounted(async () => {
           <th>Radio Model/ID/Channel</th>
           <th>Last reading</th>
           <th>Status</th>
-          <th>Retired</th>
+          <th
+            title="A retired device will not acquire new readings and other statuses are suppressed."
+          >
+            Retired
+          </th>
           <th>Location</th>
           <th>Actions</th>
         </tr>
@@ -137,15 +117,26 @@ onMounted(async () => {
             </span>
           </td>
           <td>
-            <div
-              v-for="status in getStatuses(device)"
-              :key="status"
-              class="badge bg-danger d-block"
-            >
-              {{ status }}
-            </div>
+            <font-awesome-icon
+              v-if="device.isInactive"
+              icon="fa-clock"
+              class="text-danger blink me-2"
+              :title="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
+            />
+            <font-awesome-icon
+              v-if="device.isLost"
+              icon="fa-battery-quarter"
+              class="text-danger blink me-2"
+              title="Lost. Doesn't have location."
+            />
+            <font-awesome-icon
+              v-if="device.isBatteryLevelLow"
+              icon="fa-battery-quarter"
+              class="text-danger blink me-2"
+              title="Battery low."
+            />
           </td>
-          <td class="text-center">
+          <td>
             <label class="visually-hidden" :for="`retired-${device.id}`">Retired</label>
             <input
               :id="`retired-${device.id}`"

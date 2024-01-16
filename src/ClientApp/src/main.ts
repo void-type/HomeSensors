@@ -3,7 +3,12 @@ import { createPinia } from 'pinia';
 import 'bootstrap';
 import router from '@/router';
 import { library, config as fontAwesomeConfig } from '@fortawesome/fontawesome-svg-core';
-import { faClock, faSnowflake, faTemperatureFull } from '@fortawesome/free-solid-svg-icons';
+import {
+  faClock,
+  faSnowflake,
+  faTemperatureFull,
+  faBatteryQuarter,
+} from '@fortawesome/free-solid-svg-icons';
 import { setupCalendar, DatePicker } from 'v-calendar';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -12,7 +17,7 @@ import App from './App.vue';
 // Prevents inline styling to appease CSP.
 fontAwesomeConfig.autoAddCss = false;
 
-library.add(faTemperatureFull, faSnowflake, faClock);
+library.add(faClock, faSnowflake, faTemperatureFull, faBatteryQuarter);
 
 const app = createApp(App);
 

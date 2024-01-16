@@ -15,6 +15,7 @@ interface AppStoreState {
   modalParameters: ModalParameters;
   useFahrenheit: boolean;
   showHumidity: boolean;
+  staleLimitMinutes: number;
 }
 
 export const useAppStore = defineStore('app', {
@@ -37,6 +38,7 @@ export const useAppStore = defineStore('app', {
     },
     useFahrenheit: true,
     showHumidity: true,
+    staleLimitMinutes: 20,
   }),
 
   getters: {
