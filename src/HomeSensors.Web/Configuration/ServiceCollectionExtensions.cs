@@ -42,8 +42,8 @@ public static class ServiceCollectionExtensions
 
                     // Replace inline `<script>` and `<style>` tags by adding a `nonce` attribute to them
                     var newHtml = originalHtml
-                    .Replace("<script>", $"<script nonce=\"{nonce}\">", StringComparison.OrdinalIgnoreCase)
-                    .Replace("<style>", $"<style nonce=\"{nonce}\">", StringComparison.OrdinalIgnoreCase);
+                        .Replace("<script>", $"<script nonce=\"{nonce}\">", StringComparison.OrdinalIgnoreCase)
+                        .Replace("<style>", $"<style nonce=\"{nonce}\">", StringComparison.OrdinalIgnoreCase);
 
                     // Return a new Stream that contains our modified contents
                     return new MemoryStream(Encoding.UTF8.GetBytes(newHtml));
