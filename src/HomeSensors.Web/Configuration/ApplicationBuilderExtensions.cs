@@ -8,7 +8,8 @@ public static class ApplicationBuilderExtensions
     {
         return app
             .UseSwagger()
-            .UseSwaggerUI(c => {
+            .UseSwaggerUI(c =>
+            {
                 c.DocumentTitle = environment.ApplicationName + " API";
                 c.UseRequestInterceptor("(req) => { req.headers['X-Csrf-Token'] = localStorage.getItem('X-Csrf-Token'); return req; }");
             });
