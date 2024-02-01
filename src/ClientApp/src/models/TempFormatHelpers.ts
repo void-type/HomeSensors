@@ -9,7 +9,10 @@ export function formatTemp(tempCelsius: number | null | undefined, useFahrenheit
     return null;
   }
 
-  const decimals = useFahrenheit ? 0 : 1;
+  const fahDecimals = 0;
+  const celDecimals = 0;
+
+  const decimals = useFahrenheit ? fahDecimals : celDecimals;
   const convertedTemp = useFahrenheit ? (tempCelsius || 0) * 1.8 + 32 : tempCelsius || 0;
   return Math.round(convertedTemp * 10 ** decimals) / 10 ** decimals;
 }
