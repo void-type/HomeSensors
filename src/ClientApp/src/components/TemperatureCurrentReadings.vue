@@ -101,7 +101,7 @@ onMounted(async () => {
               title="Colder than limit."
             />
             <span class="fw-bold">{{
-              formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit)
+              formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit, 0)
             }}</span>
             <span v-if="currentTemp.humidity !== null && showHumidity" class="ps-3">{{
               formatHumidityWithUnit(currentTemp.humidity)
