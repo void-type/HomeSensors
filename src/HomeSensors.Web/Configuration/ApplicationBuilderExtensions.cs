@@ -11,7 +11,7 @@ public static class ApplicationBuilderExtensions
             .UseSwaggerUI(c =>
             {
                 c.DocumentTitle = environment.ApplicationName + " API";
-                c.UseRequestInterceptor("(req) => { req.headers['X-Csrf-Token'] = localStorage.getItem('X-Csrf-Token'); return req; }");
+                c.UseRequestInterceptor("(req) => { req.headers['X-Csrf-Token'] = window.vt_api_csrf_token; return req; }");
             });
     }
 
