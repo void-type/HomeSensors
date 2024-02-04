@@ -3,7 +3,7 @@ using HomeSensors.Model.Data;
 using HomeSensors.Model.Mqtt;
 using HomeSensors.Model.Repositories;
 using HomeSensors.Web.Auth;
-using HomeSensors.Web.Configuration;
+using HomeSensors.Web.Startup;
 using HomeSensors.Web.Hubs;
 using HomeSensors.Web.Repositories;
 using HomeSensors.Web.Services;

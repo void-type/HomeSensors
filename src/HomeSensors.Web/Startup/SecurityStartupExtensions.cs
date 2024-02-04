@@ -1,20 +1,9 @@
 ﻿using VoidCore.AspNet.Security;
 
-namespace HomeSensors.Web.Configuration;
+namespace HomeSensors.Web.Startup;
 
-public static class ApplicationBuilderExtensions
+public static class SecurityStartupExtensions
 {
-    public static IApplicationBuilder UseSwaggerAndUi(this IApplicationBuilder app, IHostEnvironment environment)
-    {
-        return app
-            .UseSwagger()
-            .UseSwaggerUI(c =>
-            {
-                c.DocumentTitle = environment.ApplicationName + " API";
-                c.UseRequestInterceptor("(req) => { req.headers['X-Csrf-Token'] = window.vt_api_csrf_token; return req; }");
-            });
-    }
-
     public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app, IHostEnvironment environment)
     {
         app.UseContentSecurityPolicy(options =>

@@ -4,9 +4,9 @@ using System.Text;
 using VoidCore.AspNet.Security;
 using VoidCore.Model.Guards;
 
-namespace HomeSensors.Web.Configuration;
+namespace HomeSensors.Web.Startup;
 
-public static class ServiceCollectionExtensions
+public static class SwaggerStartupExtensions
 {
     public static IServiceCollection AddSwaggerWithCsp(this IServiceCollection services)
     {
@@ -64,5 +64,16 @@ public static class ServiceCollectionExtensions
             });
 
         return services;
+    }
+
+    public static IApplicationBuilder UseSwaggerAndUi(this IApplicationBuilder app, IHostEnvironment environment)
+    {
+        return app
+            .UseSwagger()
+            .UseSwaggerUI(c =>
+            {
+                c.DocumentTitle = environment.ApplicationName + " API";
+                c.UseRequestInterceptor("(req) => { req.headers['X-Csrf-Token'] = window.vt_api_csrf_token; return req; }");
+            });
     }
 }
