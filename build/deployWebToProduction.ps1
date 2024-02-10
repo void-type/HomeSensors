@@ -13,12 +13,12 @@ try {
     throw 'No artifacts to deploy. Run build.ps1 before deploying.'
   }
 
-  if ($PSCmdlet.ShouldProcess("$iisDirectoryProduction", "Deploy $shortAppName.Web to Production.")) {
-    New-Item -Path "$iisDirectoryProduction\app_offline.htm" -Force
+  if ($PSCmdlet.ShouldProcess("$webDirectoryProduction", "Deploy $shortAppName.Web to Production.")) {
+    New-Item -Path "$webDirectoryProduction\app_offline.htm" -Force
     Start-Sleep 5
-    ROBOCOPY "$webReleaseFolder" "$iisDirectoryProduction" /MIR /XF "$iisDirectoryProduction\app_offline.htm"
-    Copy-Item -Path "$webSettingsDirectoryProduction\*" -Include "*.Production.json" -Recurse -Destination $iisDirectoryProduction
-    Remove-Item -Path "$iisDirectoryProduction\app_offline.htm"
+    ROBOCOPY "$webReleaseFolder" "$webDirectoryProduction" /MIR /XF "$webDirectoryProduction\app_offline.htm"
+    Copy-Item -Path "$webSettingsDirectoryProduction\*" -Include "*.Production.json" -Recurse -Destination $webDirectoryProduction
+    Remove-Item -Path "$webDirectoryProduction\app_offline.htm"
   }
 
 } finally {

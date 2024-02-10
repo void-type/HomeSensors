@@ -4,7 +4,7 @@
         <PackageReference Include="MailKit" Version="4.3.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.1" />
         <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.3.952" />
-        <PackageReference Include="VoidCore.Model" Version="12.1.2" />
+        <PackageReference Include="VoidCore.Model" Version="12.1.5" />
     </ItemGroup>
 
 </Project>
