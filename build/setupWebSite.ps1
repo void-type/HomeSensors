@@ -1,6 +1,8 @@
 #Requires -RunAsAdministrator
 #Requires -Modules WebAdministration
 
+# Deploy the app the your desired physical path. Then run this script to wire it up to an IIS website.
+
 [CmdletBinding()]
 param (
   # Add your certificate to the Local Machine store along with all intermediate and CA certs in the chain. Then put the thumbprint here.
