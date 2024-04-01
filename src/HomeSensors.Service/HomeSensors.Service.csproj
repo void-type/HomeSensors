@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <UserSecretsId>60226ee8-1cb2-4378-9edb-10d29f49a510</UserSecretsId>
+    <UserSecretsId>HomeSensors.Service</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
