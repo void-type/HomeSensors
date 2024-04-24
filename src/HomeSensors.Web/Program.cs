@@ -21,20 +21,21 @@ using VoidCore.Model.Auth;
 using VoidCore.Model.Configuration;
 using VoidCore.Model.Time;
 
-var builder = WebApplication.CreateBuilder(args);
-var config = builder.Configuration;
-var services = builder.Services;
-var env = builder.Environment;
-
-// Logging
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(config)
-    .CreateLogger();
-
-builder.Host.UseSerilog();
-
 try
 {
+    var builder = WebApplication.CreateBuilder(args);
+    var config = builder.Configuration;
+    var services = builder.Services;
+    var env = builder.Environment;
+
+    Log.Logger = new LoggerConfiguration()
+        // Set a default logger if none configured or configuration not found.
+        .WriteTo.Console()
+        .ReadFrom.Configuration(config)
+        .CreateLogger();
+
+    builder.Host.UseSerilog();
+
     Log.Information("Configuring host for {Name} v{Version}", ThisAssembly.AssemblyTitle, ThisAssembly.AssemblyInformationalVersion);
 
     // Settings
