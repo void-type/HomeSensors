@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
-using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 
 namespace HomeSensors.Web.Controllers;
@@ -8,7 +7,7 @@ namespace HomeSensors.Web.Controllers;
 /// <summary>
 /// Application metadata.
 /// </summary>
-[ApiRoute("app")]
+[Route("api/app")]
 public class ApplicationController : ControllerBase
 {
     /// <summary>

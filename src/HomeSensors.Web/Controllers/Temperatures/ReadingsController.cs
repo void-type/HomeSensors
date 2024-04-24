@@ -2,7 +2,6 @@
 using HomeSensors.Web.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
-using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
 
@@ -11,7 +10,7 @@ namespace HomeSensors.Web.Controllers.Temperatures;
 /// <summary>
 /// Exposes temperature data through web API
 /// </summary>
-[ApiRoute("temperatures/readings")]
+[Route("api/temperatures/readings")]
 public class ReadingsController : ControllerBase
 {
     private readonly TemperatureCachedRepository _cachedTemperatureRepository;
