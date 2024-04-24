@@ -53,7 +53,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
 
             try
             {
-                _logger.LogInformation($"{nameof(SummarizeTemperatureReadingsWorker)} job is starting.");
+                _logger.LogInformation("{JobName} job is starting.", nameof(SummarizeTemperatureReadingsWorker));
 
                 using var scope = _scopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
@@ -147,7 +147,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                 _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(SummarizeTemperatureReadingsWorker));
             }
 
-            _logger.LogInformation($"{nameof(SummarizeTemperatureReadingsWorker)} job is finished in {{ElapsedTime}}.", Stopwatch.GetElapsedTime(startTime));
+            _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(SummarizeTemperatureReadingsWorker), Stopwatch.GetElapsedTime(startTime));
         }
     }
 }

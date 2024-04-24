@@ -78,7 +78,7 @@ public class SmtpEmailer : IEmailSender
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"{nameof(SmtpEmailer)} threw an exception while trying to send email.");
+            _logger.LogError(ex, "{ClassName} threw an exception while trying to send email.", nameof(SmtpEmailer));
         }
     }
 

@@ -42,7 +42,7 @@ public class AlertsWorker : BackgroundService
 
             try
             {
-                _logger.LogInformation($"{nameof(AlertsWorker)} job is starting.");
+                _logger.LogInformation("{JobName} job is starting.", nameof(AlertsWorker));
 
                 var now = _dateTimeService.MomentWithOffset;
                 var lastTick = now.Subtract(_betweenTicks);
@@ -61,7 +61,7 @@ public class AlertsWorker : BackgroundService
             }
             finally
             {
-                _logger.LogInformation($"{nameof(AlertsWorker)} job is finished in {{ElapsedTime}}.", Stopwatch.GetElapsedTime(startTime));
+                _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(AlertsWorker), Stopwatch.GetElapsedTime(startTime));
             }
         }
     }

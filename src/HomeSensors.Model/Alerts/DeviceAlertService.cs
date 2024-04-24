@@ -8,12 +8,12 @@ namespace HomeSensors.Model.Alerts;
 
 public class DeviceAlertService
 {
-    private readonly ILogger<TemperatureLimitAlertService> _logger;
+    private readonly ILogger<DeviceAlertService> _logger;
     private readonly TemperatureLocationRepository _locationRepository;
     private readonly TemperatureDeviceRepository _deviceRepository;
     private readonly EmailNotificationService _emailNotificationService;
 
-    public DeviceAlertService(ILogger<TemperatureLimitAlertService> logger,
+    public DeviceAlertService(ILogger<DeviceAlertService> logger,
         TemperatureLocationRepository locationRepository, TemperatureDeviceRepository deviceRepository,
         EmailNotificationService emailNotificationService)
     {
