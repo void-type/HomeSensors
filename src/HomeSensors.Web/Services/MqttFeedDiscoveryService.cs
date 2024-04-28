@@ -1,4 +1,5 @@
-﻿using HomeSensors.Model.Mqtt;
+﻿using HomeSensors.Model.Helpers;
+using HomeSensors.Model.Mqtt;
 using HomeSensors.Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using MQTTnet;
@@ -9,7 +10,7 @@ using VoidCore.Model.Time;
 
 namespace HomeSensors.Web.Services;
 
-public class MqttFeedDiscoveryService
+public partial class MqttFeedDiscoveryService
 {
     private readonly ILogger<MqttFeedDiscoveryService> _logger;
     private readonly MqttSettings _configuration;
@@ -100,7 +101,7 @@ public class MqttFeedDiscoveryService
 
         if (_configuration.LogMessages)
         {
-            _logger.LogInformation("{Output}", payload);
+            LoggerMessages.LogMqttPayload(_logger, payload);
         }
 
         var message = new DiscoveryMessage(_dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);

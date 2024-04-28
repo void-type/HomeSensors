@@ -1,6 +1,7 @@
 ﻿using HomeSensors.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
+using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
 using static HomeSensors.Web.Services.MqttFeedDiscoveryService;
@@ -10,7 +11,7 @@ namespace HomeSensors.Web.Controllers.Temperatures;
 /// <summary>
 /// Exposes temperature data through web API
 /// </summary>
-[Route("api/temperatures/mqtt-feed-discovery")]
+[Route(ApiRouteAttribute.BasePath + "/temperatures/mqtt-feed-discovery")]
 public class MqttFeedDiscoveryController : ControllerBase
 {
     private readonly MqttFeedDiscoveryService _discoveryService;

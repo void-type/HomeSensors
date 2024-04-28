@@ -1,4 +1,5 @@
 ﻿using HomeSensors.Model.Alerts;
+using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Mqtt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -85,7 +86,7 @@ public class MqttWaterLeaksWorker : BackgroundService
         if (_configuration.LogMessages)
         {
             var readableMessage = MqttHelpers.GetReadableWaterLeakMessage(message);
-            _logger.LogInformation("{Output}", readableMessage);
+            LoggerMessages.LogMqttPayload(_logger, readableMessage);
         }
 
         using var scope = _scopeFactory.CreateScope();

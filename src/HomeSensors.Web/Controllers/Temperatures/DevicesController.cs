@@ -2,6 +2,7 @@
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
+using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
 using VoidCore.Model.Responses.Messages;
@@ -11,7 +12,7 @@ namespace HomeSensors.Web.Controllers.Temperatures;
 /// <summary>
 /// Exposes temperature data through web API
 /// </summary>
-[Route("api/temperatures/devices")]
+[Route(ApiRouteAttribute.BasePath + "/temperatures/devices")]
 public class DevicesController : ControllerBase
 {
     private readonly TemperatureDeviceRepository _deviceRepository;

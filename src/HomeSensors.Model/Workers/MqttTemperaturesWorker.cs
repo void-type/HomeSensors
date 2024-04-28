@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Data.Models;
+using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Mqtt;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -79,7 +80,7 @@ public class MqttTemperaturesWorker : BackgroundService
         if (_configuration.LogMessages)
         {
             var readableMessage = MqttHelpers.GetReadableTemperatureMessage(message);
-            _logger.LogInformation("{Output}", readableMessage);
+            LoggerMessages.LogMqttPayload(_logger, readableMessage);
         }
 
         using var scope = _scopeFactory.CreateScope();
