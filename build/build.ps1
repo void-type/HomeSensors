@@ -21,6 +21,9 @@ function Stop-OnError([string]$errorMessage) {
   exit $LASTEXITCODE
 }
 
+$stopwatch = New-Object System.Diagnostics.Stopwatch
+$stopwatch.Start()
+
 $originalLocation = Get-Location
 $projectRoot = "$PSScriptRoot/../"
 
@@ -108,7 +111,10 @@ try {
   }
 
   $projectVersion = (dotnet nbgv get-version -f json | ConvertFrom-Json).NuGetPackageVersion
-  Write-Output "`nBuilt $projectName $projectVersion`n"
+
+  $stopwatch.Stop()
+
+  Write-Output "`nBuilt $projectName $projectVersion in $($stopwatch.Elapsed)`n"
 
 } finally {
   Set-Location $originalLocation
