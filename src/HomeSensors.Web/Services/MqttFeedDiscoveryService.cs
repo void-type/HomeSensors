@@ -1,5 +1,4 @@
-﻿using HomeSensors.Model.Helpers;
-using HomeSensors.Model.Mqtt;
+﻿using HomeSensors.Model.Mqtt;
 using HomeSensors.Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using MQTTnet;
@@ -54,14 +53,14 @@ public partial class MqttFeedDiscoveryService
         client.ConnectingFailedAsync += LogConnectionFailure;
         client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
 
-        await client.StartAsync(MqttHelpers.BuildOptions(_configuration));
+        await client.StartAsync(_configuration.GetClientOptions());
 
         foreach (var topic in request.Topics)
         {
             _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
         }
 
-        await client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, request.Topics));
+        await client.SubscribeAsync(_mqttFactory.GetTopicFilters(request.Topics));
 
         return Result.Ok(GetClientStatus());
     }
@@ -97,11 +96,11 @@ public partial class MqttFeedDiscoveryService
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
-        var payload = MqttHelpers.GetPayloadString(e);
+        var payload = e.GetPayloadString();
 
         if (_configuration.LogMessages)
         {
-            LoggerMessages.LogMqttPayload(_logger, payload);
+            MqttHelpers.LogMqttPayload(_logger, payload);
         }
 
         var message = new DiscoveryMessage(_dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);

@@ -1,5 +1,4 @@
 ﻿using HomeSensors.Model.Alerts;
-using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Mqtt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -37,7 +36,7 @@ public class MqttWaterLeaksWorker : BackgroundService
         client.ConnectingFailedAsync += LogConnectionFailure;
         client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
 
-        await client.StartAsync(MqttHelpers.BuildOptions(_configuration));
+        await client.StartAsync(_configuration.GetClientOptions());
 
         var topics = _workerSettings.Sensors.Select(x => x.Topic).ToArray();
 
@@ -46,7 +45,7 @@ public class MqttWaterLeaksWorker : BackgroundService
             _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
         }
 
-        await client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, topics));
+        await client.SubscribeAsync(_mqttFactory.GetTopicFilters(topics));
 
         // The client is still running, we just loop here and the Delay will listen for the stop token.
         while (!stoppingToken.IsCancellationRequested)
@@ -75,7 +74,7 @@ public class MqttWaterLeaksWorker : BackgroundService
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
-        var payload = MqttHelpers.DeserializeWaterLeakMessage(e);
+        var payload = e.DeserializeWaterLeakMessage();
 
         var name = Array.Find(_workerSettings.Sensors, x => x.Topic == e.ApplicationMessage.Topic)?.Name ??
             e.ApplicationMessage.Topic.Split("/").LastOrDefault() ??
@@ -85,8 +84,8 @@ public class MqttWaterLeaksWorker : BackgroundService
 
         if (_configuration.LogMessages)
         {
-            var readableMessage = MqttHelpers.GetReadableWaterLeakMessage(message);
-            LoggerMessages.LogMqttPayload(_logger, readableMessage);
+            var readableMessage = message.GetReadableWaterLeakMessage();
+            MqttHelpers.LogMqttPayload(_logger, readableMessage);
         }
 
         using var scope = _scopeFactory.CreateScope();

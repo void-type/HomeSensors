@@ -1,6 +1,5 @@
 ﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Data.Models;
-using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Mqtt;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,14 +38,14 @@ public class MqttTemperaturesWorker : BackgroundService
         client.ConnectingFailedAsync += LogConnectionFailure;
         client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
 
-        await client.StartAsync(MqttHelpers.BuildOptions(_configuration));
+        await client.StartAsync(_configuration.GetClientOptions());
 
         foreach (var topic in _workerSettings.Topics)
         {
             _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
         }
 
-        await client.SubscribeAsync(MqttHelpers.BuildTopicFilters(_mqttFactory, _workerSettings.Topics));
+        await client.SubscribeAsync(_mqttFactory.GetTopicFilters(_workerSettings.Topics));
 
         // The client is still running, we just loop here and the Delay will listen for the stop token.
         while (!stoppingToken.IsCancellationRequested)
@@ -75,12 +74,12 @@ public class MqttTemperaturesWorker : BackgroundService
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
-        var message = MqttHelpers.DeserializeTemperatureMessage(e);
+        var message = e.DeserializeTemperatureMessage();
 
         if (_configuration.LogMessages)
         {
-            var readableMessage = MqttHelpers.GetReadableTemperatureMessage(message);
-            LoggerMessages.LogMqttPayload(_logger, readableMessage);
+            var readableMessage = message.GetReadableTemperatureMessage();
+            MqttHelpers.LogMqttPayload(_logger, readableMessage);
         }
 
         using var scope = _scopeFactory.CreateScope();
