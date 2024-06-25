@@ -88,7 +88,7 @@ try
     await host.RunAsync();
 
     Log.Information("Starting host.");
-    host.Run();
+    await host.RunAsync();
     return 0;
 }
 catch (Exception ex)
@@ -99,5 +99,5 @@ catch (Exception ex)
 finally
 {
     Log.Information("Stopping host.");
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }
