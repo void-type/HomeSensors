@@ -31,7 +31,7 @@ public class TemperatureDeviceRepository : RepositoryBase
             .Select(g => g.OrderByDescending(x => x.Time).First())
             .ToListAsync();
 
-        var data = (await _data.TemperatureDevices
+        return (await _data.TemperatureDevices
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.IsRetired)
@@ -39,38 +39,29 @@ public class TemperatureDeviceRepository : RepositoryBase
             .Select(x => new
             {
                 x.Id,
+                x.MqttTopic,
                 x.DeviceModel,
-                x.DeviceId,
-                x.DeviceChannel,
                 x.IsRetired,
                 CurrentLocationId = x.CurrentTemperatureLocationId,
             })
             .ToListAsync())
-            .ConvertAll(x => new
+            .ConvertAll(x =>
             {
-                x.Id,
-                x.DeviceModel,
-                x.DeviceId,
-                x.DeviceChannel,
-                x.IsRetired,
-                x.CurrentLocationId,
-                LastReading = lastReadings.Find(r => r.TemperatureDeviceId == x.Id)
-            })
-;
+                var lastReading = lastReadings.Find(r => r.TemperatureDeviceId == x.Id);
 
-        return data.ConvertAll(x => new Device
-        (
-            id: x.Id,
-            deviceModel: x.DeviceModel,
-            deviceId: x.DeviceId,
-            deviceChannel: x.DeviceChannel,
-            currentLocationId: x.CurrentLocationId,
-            lastReading: x.LastReading?.ToReading(),
-            isRetired: x.IsRetired,
-            isLost: !x.IsRetired && x.CurrentLocationId is null,
-            isInactive: !x.IsRetired && (x.LastReading is null || x.LastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20)),
-            isBatteryLevelLow: !x.IsRetired && x.LastReading?.DeviceBatteryLevel is not null && x.LastReading?.DeviceBatteryLevel < 1
-        ));
+                return new Device
+                (
+                    id: x.Id,
+                    mqttTopic: x.MqttTopic,
+                    deviceModel: x.DeviceModel,
+                    currentLocationId: x.CurrentLocationId,
+                    lastReading: lastReading?.ToReading(),
+                    isRetired: x.IsRetired,
+                    isLost: !x.IsRetired && x.CurrentLocationId is null,
+                    isInactive: !x.IsRetired && (lastReading is null || lastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20)),
+                    isBatteryLevelLow: !x.IsRetired && lastReading?.DeviceBatteryLevel is not null && lastReading.DeviceBatteryLevel < 1
+                );
+            });
     }
 
     public async Task<IResult<EntityMessage<long>>> Update(DeviceUpdateRequest request)

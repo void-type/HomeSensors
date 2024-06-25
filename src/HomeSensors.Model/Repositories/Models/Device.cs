@@ -3,15 +3,15 @@
 public class Device
 {
     public Device(
-        long id, string? deviceModel, string? deviceId, string? deviceChannel,
+        long id, string name, string mqttTopic, string deviceModel,
         long? currentLocationId, Reading? lastReading,
         bool isRetired, bool isLost, bool isInactive, bool isBatteryLevelLow
         )
     {
         Id = id;
+        Name = name;
+        MqttTopic = mqttTopic;
         DeviceModel = deviceModel;
-        DeviceId = deviceId;
-        DeviceChannel = deviceChannel;
         CurrentLocationId = currentLocationId;
         LastReading = lastReading;
         IsRetired = isRetired;
@@ -21,15 +21,16 @@ public class Device
     }
 
     public long Id { get; }
-    public string? DeviceModel { get; }
-    public string? DeviceId { get; }
-    public string? DeviceChannel { get; }
+    public string Name { get; set; }
+    public string MqttTopic { get; }
+    public string DeviceModel { get; }
     public long? CurrentLocationId { get; }
     public Reading? LastReading { get; }
     public bool IsRetired { get; }
     public bool IsLost { get; }
     public bool IsInactive { get; }
     public bool IsBatteryLevelLow { get; }
+    public DeviceType DeviceType { get; set; }
 
-    public string DisplayName => $"{DeviceModel}/{DeviceId}/{DeviceChannel}";
+    public string DisplayName => MqttTopic;
 }
