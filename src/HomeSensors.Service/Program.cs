@@ -24,6 +24,8 @@ try
             services.AddSettingsSingleton<MqttSettings>(config);
             services.AddSettingsSingleton<NotificationsSettings>(config);
 
+            config.GetRequiredConnectionString<HomeSensorsContext>();
+
             services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
                 .UseSqlServer("Name=HomeSensors", sqlOptions =>
                 {

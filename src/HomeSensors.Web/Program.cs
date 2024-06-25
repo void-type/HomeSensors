@@ -1,7 +1,10 @@
-﻿using HomeSensors.Model.Caching;
+﻿using HomeSensors.Model.Alerts;
+using HomeSensors.Model.Caching;
 using HomeSensors.Model.Data;
+using HomeSensors.Model.Emailing;
 using HomeSensors.Model.Mqtt;
 using HomeSensors.Model.Repositories;
+using HomeSensors.Model.Workers;
 using HomeSensors.Web.Auth;
 using HomeSensors.Web.Hubs;
 using HomeSensors.Web.Repositories;
@@ -19,6 +22,7 @@ using VoidCore.AspNet.Routing;
 using VoidCore.AspNet.Security;
 using VoidCore.Model.Auth;
 using VoidCore.Model.Configuration;
+using VoidCore.Model.Emailing;
 using VoidCore.Model.Time;
 
 try
@@ -40,8 +44,10 @@ try
 
     // Settings
     services.AddSettingsSingleton<WebApplicationSettings>(config, true).Validate();
+    services.AddSingleton<ApplicationSettings, WebApplicationSettings>();
     services.AddSettingsSingleton<MqttSettings>(config);
     services.AddSettingsSingleton<CachingSettings>(config);
+    services.AddSettingsSingleton<NotificationsSettings>(config);
 
     // Infrastructure
     services.AddControllers();
@@ -58,8 +64,13 @@ try
     services.AddSingleton<MqttFactory>();
 
     config.GetRequiredConnectionString<HomeSensorsContext>();
-    services.AddDbContext<HomeSensorsContext>(options => options
-        .UseSqlServer("Name=HomeSensors", b => b.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName)));
+
+    services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
+        .UseSqlServer("Name=HomeSensors", sqlOptions =>
+        {
+            sqlOptions.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName);
+            sqlOptions.CommandTimeout(120);
+        }));
 
     services.AddScoped<TemperatureReadingRepository>();
     services.AddScoped<TemperatureDeviceRepository>();
@@ -75,6 +86,16 @@ try
 
     services.AddScoped<TemperatureCachedRepository>();
 
+    services.AddSingleton<IEmailFactory, HtmlEmailFactory>();
+    services.AddSingleton<IEmailSender, SmtpEmailer>();
+    services.AddSingleton<EmailNotificationService>();
+    services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
+    services.AddSingleton<MqttFactory>();
+
+    services.AddScoped<TemperatureLimitAlertService>();
+    services.AddScoped<DeviceAlertService>();
+    services.AddSingleton<WaterLeakAlertService>();
+
     services.AddDomainEvents(
         ServiceLifetime.Scoped,
         typeof(GetWebClientInfo).Assembly);
@@ -89,6 +110,30 @@ try
     if (pushTempsSettings.IsEnabled)
     {
         services.AddHostedService<PushTemperatureCurrentReadingsWorker>();
+    }
+
+    var alertsSettings = services.AddSettingsSingleton<AlertsSettings>(workersConfig);
+    if (alertsSettings.IsEnabled)
+    {
+        services.AddHostedService<AlertsWorker>();
+    }
+
+    var mqttTemperaturesSettings = services.AddSettingsSingleton<MqttTemperaturesSettings>(workersConfig);
+    if (mqttTemperaturesSettings.IsEnabled)
+    {
+        services.AddHostedService<MqttTemperaturesWorker>();
+    }
+
+    var summarizeSettings = services.AddSettingsSingleton<SummarizeTemperatureReadingsSettings>(workersConfig);
+    if (summarizeSettings.IsEnabled)
+    {
+        services.AddHostedService<SummarizeTemperatureReadingsWorker>();
+    }
+
+    var mqttWaterLeaksSettings = services.AddSettingsSingleton<MqttWaterLeaksSettings>(workersConfig);
+    if (mqttWaterLeaksSettings.IsEnabled)
+    {
+        services.AddHostedService<MqttWaterLeaksWorker>();
     }
 
     var app = builder.Build();
