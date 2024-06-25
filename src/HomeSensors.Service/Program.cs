@@ -52,24 +52,34 @@ try
             var alertsSettings = services.AddSettingsSingleton<AlertsSettings>(workersConfig);
             if (alertsSettings.IsEnabled)
             {
+                Log.Information("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
+                    nameof(AlertsWorker),
+                    alertsSettings.BetweenTicksMinutes);
                 services.AddHostedService<AlertsWorker>();
             }
 
             var mqttTemperaturesSettings = services.AddSettingsSingleton<MqttTemperaturesSettings>(workersConfig);
             if (mqttTemperaturesSettings.IsEnabled)
             {
+                Log.Information("Enabling background job: {JobName}.",
+                    nameof(MqttTemperaturesWorker));
                 services.AddHostedService<MqttTemperaturesWorker>();
             }
 
             var summarizeSettings = services.AddSettingsSingleton<SummarizeTemperatureReadingsSettings>(workersConfig);
             if (summarizeSettings.IsEnabled)
             {
+                Log.Information("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
+                    nameof(SummarizeTemperatureReadingsSettings),
+                    summarizeSettings.BetweenTicksMinutes);
                 services.AddHostedService<SummarizeTemperatureReadingsWorker>();
             }
 
             var mqttWaterLeaksSettings = services.AddSettingsSingleton<MqttWaterLeaksSettings>(workersConfig);
             if (mqttWaterLeaksSettings.IsEnabled)
             {
+                Log.Information("Enabling background job: {JobName}.",
+                    nameof(MqttWaterLeaksSettings));
                 services.AddHostedService<MqttWaterLeaksWorker>();
             }
         })
