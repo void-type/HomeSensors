@@ -17,40 +17,59 @@ public class MqttTemperaturesWorker : BackgroundService
     private readonly MqttSettings _configuration;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
-    private readonly MqttTemperaturesSettings _workerSettings;
+    private IManagedMqttClient? _mqttClient;
+    private List<string> _currentTopics = [];
 
     public MqttTemperaturesWorker(ILogger<MqttTemperaturesWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory,
-        MqttFactory mqttFactory, MqttTemperaturesSettings workerSettings)
+        MqttFactory mqttFactory)
     {
         _logger = logger;
         _configuration = configuration;
         _scopeFactory = scopeFactory;
         _mqttFactory = mqttFactory;
-        _workerSettings = workerSettings;
+    }
+
+    public async Task RefreshTopicSubscriptions()
+    {
+        var newTopics = await GetTopics();
+
+        var topicsToUnsubscribe = _currentTopics.Except(newTopics).ToList();
+        await UnsubscribeFromTopics(topicsToUnsubscribe);
+
+        var topicsToSubscribe = newTopics.Except(_currentTopics).ToList();
+        await SubscribeToTopics(topicsToSubscribe);
+
+        _currentTopics = newTopics;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var client = _mqttFactory.CreateManagedMqttClient();
-
-        _logger.LogInformation("Connecting Managed MQTT client.");
-
-        client.ConnectingFailedAsync += LogConnectionFailure;
-        client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
-
-        await client.StartAsync(_configuration.GetClientOptions());
-
-        foreach (var topic in _workerSettings.Topics)
+        try
         {
-            _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
+            _mqttClient = _mqttFactory.CreateManagedMqttClient();
+
+            _logger.LogInformation("Connecting Managed MQTT client.");
+
+            _mqttClient.ConnectingFailedAsync += LogConnectionFailure;
+            _mqttClient.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
+
+            await _mqttClient.StartAsync(_configuration.GetClientOptions());
+
+            await RefreshTopicSubscriptions();
+
+            // The client is still running, we just loop here and the Delay will listen for the stop token.
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                await Task.Delay(300000, stoppingToken);
+
+                // Every 5 minutes, refresh topics (in case the job is running as a service and won't be notified of device changes).
+                await RefreshTopicSubscriptions();
+            }
         }
-
-        await client.SubscribeAsync(_mqttFactory.GetTopicFilters(_workerSettings.Topics));
-
-        // The client is still running, we just loop here and the Delay will listen for the stop token.
-        while (!stoppingToken.IsCancellationRequested)
+        finally
         {
-            await Task.Delay(100000000, stoppingToken);
+            _mqttClient?.Dispose();
+            _mqttClient = null;
         }
     }
 
@@ -87,28 +106,16 @@ public class MqttTemperaturesWorker : BackgroundService
 
         var device = await dbContext.TemperatureDevices
             .TagWith($"Query called from {nameof(MqttTemperaturesWorker)}.")
-            .FirstOrDefaultAsync(x => x.DeviceModel == message.Model && x.DeviceId == message.Id && x.DeviceChannel == message.Channel);
+            .FirstOrDefaultAsync(x => x.MqttTopic == e.ApplicationMessage.Topic);
 
-        if (device?.IsRetired == true)
+        if (device is null)
         {
             return;
         }
 
-        if (device is null)
+        if (device.IsRetired)
         {
-            _logger.LogWarning("Device not found in database. Creating new device. ({Model}/{Id}/{Channel})", message.Model, message.Id, message.Channel);
-
-            var savedDevice = dbContext.TemperatureDevices
-                .Add(new TemperatureDevice
-                {
-                    DeviceModel = message.Model,
-                    DeviceId = message.Id,
-                    DeviceChannel = message.Channel
-                });
-
-            await dbContext.SaveChangesAsync();
-
-            device = savedDevice.Entity;
+            return;
         }
 
         // If we already have a reading for this device at this time, don't save because duplicate.
@@ -130,9 +137,63 @@ public class MqttTemperaturesWorker : BackgroundService
                 Humidity = message.Humidity,
                 TemperatureCelsius = message.Temperature_C,
                 TemperatureDevice = device,
-                TemperatureLocationId = device.CurrentTemperatureLocationId
+                TemperatureLocationId = device.TemperatureLocationId
             });
 
         await dbContext.SaveChangesAsync();
+    }
+
+    private async Task<List<string>> GetTopics()
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
+
+        return await dbContext.TemperatureDevices
+            .TagWith($"Query called from {nameof(MqttTemperaturesWorker)}.")
+            .Where(x => !x.IsRetired && !string.IsNullOrWhiteSpace(x.MqttTopic))
+            .Select(x => x.MqttTopic)
+            .ToListAsync();
+    }
+
+    private async Task UnsubscribeFromTopics(List<string> topics)
+    {
+        if (_mqttClient is null)
+        {
+            return;
+        }
+
+        if (topics.Count < 1)
+        {
+            return;
+        }
+
+        foreach (var topic in topics)
+        {
+            _logger.LogInformation("Unsubscribing from MQTT topic {Topic}.", topic);
+        }
+
+        await _mqttClient.UnsubscribeAsync(topics);
+    }
+
+    private async Task SubscribeToTopics(List<string> topics)
+    {
+        if (_mqttClient is null)
+        {
+            return;
+        }
+
+        if (topics.Count < 1)
+        {
+            return;
+        }
+
+        var topicFilters = _mqttFactory.GetTopicFilters(topics);
+
+        foreach (var topicFilter in topicFilters)
+        {
+            _logger.LogInformation("Subscribing to MQTT topic {Topic}.", topicFilter.Topic);
+        }
+
+        await _mqttClient.SubscribeAsync(topicFilters);
     }
 }

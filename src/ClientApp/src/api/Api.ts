@@ -37,7 +37,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @name AppInfoList
    * @summary Get information to bootstrap the SPA client like application name and user data.
    * @request GET:/api/app/info
-   * @response `200` `WebClientInfo` Success
+   * @response `200` `WebClientInfo` OK
    */
   appInfoList = (params: RequestParams = {}) =>
     this.request<WebClientInfo, any>({
@@ -53,7 +53,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @name AppVersionList
    * @summary Get the version of the application.
    * @request GET:/api/app/version
-   * @response `200` `AppVersion` Success
+   * @response `200` `AppVersion` OK
    */
   appVersionList = (params: RequestParams = {}) =>
     this.request<AppVersion, any>({
@@ -68,7 +68,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags Devices
    * @name TemperaturesDevicesAllCreate
    * @request POST:/api/temperatures/devices/all
-   * @response `200` `(Device)[]` Success
+   * @response `200` `(Device)[]` OK
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesDevicesAllCreate = (params: RequestParams = {}) =>
@@ -84,7 +84,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags Devices
    * @name TemperaturesDevicesUpdateCreate
    * @request POST:/api/temperatures/devices/update
-   * @response `200` `Int64EntityMessage` Success
+   * @response `200` `Int64EntityMessage` OK
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesDevicesUpdateCreate = (data: DeviceUpdateRequest, params: RequestParams = {}) =>
@@ -99,10 +99,26 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
+   * @tags Devices
+   * @name TemperaturesDevicesDelete
+   * @request DELETE:/api/temperatures/devices/{id}
+   * @response `200` `Int64EntityMessage` OK
+   * @response `400` `IFailureIItemSet` Bad Request
+   */
+  temperaturesDevicesDelete = (id: number, params: RequestParams = {}) =>
+    this.request<Int64EntityMessage, IFailureIItemSet>({
+      path: `/api/temperatures/devices/${id}`,
+      method: 'DELETE',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
    * @tags Locations
    * @name TemperaturesLocationsAllCreate
    * @request POST:/api/temperatures/locations/all
-   * @response `200` `(Location)[]` Success
+   * @response `200` `(Location)[]` OK
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesLocationsAllCreate = (params: RequestParams = {}) =>
@@ -118,7 +134,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags Locations
    * @name TemperaturesLocationsCheckLimitsCreate
    * @request POST:/api/temperatures/locations/check-limits
-   * @response `200` `(CheckLimitResult)[]` Success
+   * @response `200` `(CheckLimitResult)[]` OK
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesLocationsCheckLimitsCreate = (
@@ -138,7 +154,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags Locations
    * @name TemperaturesLocationsCreateCreate
    * @request POST:/api/temperatures/locations/create
-   * @response `200` `Int64EntityMessage` Success
+   * @response `200` `Int64EntityMessage` OK
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesLocationsCreateCreate = (data: LocationCreateRequest, params: RequestParams = {}) =>
@@ -156,7 +172,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags Locations
    * @name TemperaturesLocationsUpdateCreate
    * @request POST:/api/temperatures/locations/update
-   * @response `200` `Int64EntityMessage` Success
+   * @response `200` `Int64EntityMessage` OK
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesLocationsUpdateCreate = (data: LocationUpdateRequest, params: RequestParams = {}) =>
@@ -174,7 +190,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags MqttFeedDiscovery
    * @name TemperaturesMqttFeedDiscoveryStatusList
    * @request GET:/api/temperatures/mqtt-feed-discovery/status
-   * @response `200` `ClientStatus` Success
+   * @response `200` `ClientStatus` OK
    */
   temperaturesMqttFeedDiscoveryStatusList = (params: RequestParams = {}) =>
     this.request<ClientStatus, any>({
@@ -189,7 +205,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags MqttFeedDiscovery
    * @name TemperaturesMqttFeedDiscoverySetupCreate
    * @request POST:/api/temperatures/mqtt-feed-discovery/setup
-   * @response `200` `ClientStatus` Success
+   * @response `200` `ClientStatus` OK
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesMqttFeedDiscoverySetupCreate = (data: SetupRequest, params: RequestParams = {}) =>
@@ -207,7 +223,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags MqttFeedDiscovery
    * @name TemperaturesMqttFeedDiscoveryTeardownCreate
    * @request POST:/api/temperatures/mqtt-feed-discovery/teardown
-   * @response `200` `ClientStatus` Success
+   * @response `200` `ClientStatus` OK
    */
   temperaturesMqttFeedDiscoveryTeardownCreate = (params: RequestParams = {}) =>
     this.request<ClientStatus, any>({
@@ -222,7 +238,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags Readings
    * @name TemperaturesReadingsCurrentCreate
    * @request POST:/api/temperatures/readings/current
-   * @response `200` `(Reading)[]` Success
+   * @response `200` `(Reading)[]` OK
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesReadingsCurrentCreate = (params: RequestParams = {}) =>
@@ -238,7 +254,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags Readings
    * @name TemperaturesReadingsTimeSeriesCreate
    * @request POST:/api/temperatures/readings/time-series
-   * @response `200` `(TimeSeries)[]` Success
+   * @response `200` `(TimeSeries)[]` OK
    * @response `400` `IFailureIItemSet` Bad Request
    */
   temperaturesReadingsTimeSeriesCreate = (data: TimeSeriesRequest, params: RequestParams = {}) =>

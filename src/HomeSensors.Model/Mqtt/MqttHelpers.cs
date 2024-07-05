@@ -15,21 +15,14 @@ public static partial class MqttHelpers
 {
     private static readonly JsonSerializerOptions _serializerOptions = JsonHelpers.GetOptions();
 
-    public static List<MqttTopicFilter> GetTopicFilters(this MqttFactory mqttFactory, string[] topics)
+    public static List<MqttTopicFilter> GetTopicFilters(this MqttFactory mqttFactory, IEnumerable<string> topics)
     {
-        var topicFilters = new List<MqttTopicFilter>();
-
-        foreach (var topic in topics)
-        {
-            var topicFilter = mqttFactory
+        return topics
+            .Select(x => mqttFactory
                 .CreateTopicFilterBuilder()
-                .WithTopic(topic)
-                .Build();
-
-            topicFilters.Add(topicFilter);
-        }
-
-        return topicFilters;
+                .WithTopic(x)
+                .Build())
+            .ToList();
     }
 
     public static ManagedMqttClientOptions GetClientOptions(this MqttSettings mqttSettings)

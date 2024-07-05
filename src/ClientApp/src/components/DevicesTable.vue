@@ -9,12 +9,14 @@ import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
 import useMessageStore from '@/stores/messageStore';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import type { ModalParameters } from '@/models/ModalParameters';
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
 const api = ApiHelpers.client;
 
-const { useDarkMode, useFahrenheit, staleLimitMinutes } = storeToRefs(appStore);
+const { isFieldInError } = appStore;
+const { useFahrenheit, staleLimitMinutes } = storeToRefs(appStore);
 
 const data = reactive({
   devices: [] as Array<Device>,
@@ -40,12 +42,56 @@ async function getLocations() {
   }
 }
 
+async function reallyDeleteDevice(device: Device) {
+  if (device.id === null || typeof device.id === 'undefined') {
+    return;
+  }
+
+  try {
+    const response = await api().temperaturesDevicesDelete(device.id);
+    if (response.data.message) {
+      messageStore.setSuccessMessage(response.data.message);
+    }
+
+    await getLocations();
+    await getDevices();
+  } catch (error) {
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+  }
+}
+
+async function newDevice() {
+  if (data.devices.findIndex((x) => (x.id || 0) < 1) > -1) {
+    return;
+  }
+
+  data.devices.unshift({
+    id: 0,
+    name: null,
+    mqttTopic: null,
+    locationId: null,
+    isRetired: false,
+  });
+}
+
+async function deleteDevice(device: Device) {
+  const parameters: ModalParameters = {
+    title: 'Delete device',
+    description: 'Do you really want to delete this device?',
+    okAction: () => reallyDeleteDevice(device),
+  };
+
+  appStore.showModal(parameters);
+}
+
 async function updateDevice(device: Device) {
   data.errors = [];
 
   const request = {
     id: device.id,
-    currentLocationId: device.currentLocationId || null,
+    name: device.name,
+    mqttTopic: device.mqttTopic,
+    locationId: device.locationId || null,
     isRetired: device.isRetired,
   };
 
@@ -54,6 +100,9 @@ async function updateDevice(device: Device) {
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
+
+    await getLocations();
+    await getDevices();
   } catch (error) {
     const response = error as HttpResponse<unknown, unknown>;
     messageStore.setApiFailureMessages(response);
@@ -89,74 +138,39 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <table :class="{ table: true, 'table-dark': useDarkMode }">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Radio Model/ID/Channel</th>
-          <th>Last reading</th>
-          <th>Status</th>
-          <th
-            title="A retired device will not acquire new readings and other statuses are suppressed."
-          >
-            Retired
-          </th>
-          <th>Location</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="device in data.devices" :key="device.id">
-          <td>{{ device.id }}</td>
-          <td>{{ device.displayName }}</td>
-          <td>
-            <span v-if="device.lastReading">
-              {{ formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit) }} on
-              {{ DateHelpers.dateTimeShortForView(device.lastReading?.time || '') }}
-            </span>
-          </td>
-          <td>
-            <font-awesome-icon
-              v-if="device.isInactive"
-              icon="fa-clock"
-              class="text-danger blink me-2"
-              :title="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
-            />
-            <font-awesome-icon
-              v-if="device.isLost"
-              icon="fa-battery-quarter"
-              class="text-danger blink me-2"
-              title="Lost. Doesn't have location."
-            />
-            <font-awesome-icon
-              v-if="device.isBatteryLevelLow"
-              icon="fa-battery-quarter"
-              class="text-danger blink me-2"
-              title="Battery low."
-            />
-          </td>
-          <td>
-            <label class="visually-hidden" :for="`retired-${device.id}`">Retired</label>
+  <button class="btn btn-primary" @click="newDevice()">New</button>
+  <div class="grid mt-4">
+    <div v-for="device in data.devices" :key="device.id" class="card g-col-12">
+      <div class="card-body">
+        <div class="grid">
+          <div v-if="!device.id" class="g-col-12">New device</div>
+          <div class="g-col-12 g-col-md-6">
+            <label :for="`name-${device.id}`" class="form-label">Name</label>
             <input
-              :id="`retired-${device.id}`"
-              v-model="device.isRetired"
-              class="form-check-input"
-              :class="{
-                'form-check-input': true,
-                'is-invalid': data.errors.includes(`retired-${device.id}`),
-              }"
-              type="checkbox"
+              :id="`name-${device.id}`"
+              v-model="device.name"
+              required
+              type="text"
+              :class="{ 'form-control': true, 'is-invalid': isFieldInError('name') }"
             />
-          </td>
-          <td>
-            <label class="visually-hidden" :for="`location-${device.id}`">Location</label>
+          </div>
+          <div class="g-col-12 g-col-md-6">
+            <label :for="`mqttTopic-${device.id}`" class="form-label">Topic</label>
+            <input
+              :id="`mqttTopic-${device.id}`"
+              v-model="device.mqttTopic"
+              required
+              type="text"
+              :class="{ 'form-control': true, 'is-invalid': isFieldInError('mqttTopic') }"
+            />
+          </div>
+          <div class="g-col-12 g-col-md-6">
+            <label :for="`location-${device.id}`" class="form-label">Location</label>
             <select
               :id="`location-${device.id}`"
-              v-model="device.currentLocationId"
+              v-model="device.locationId"
               :class="{
                 'form-select': true,
-                'form-select-sm': true,
                 'is-invalid': data.errors.includes(`location-${device.id}`),
               }"
             >
@@ -165,13 +179,63 @@ onMounted(async () => {
                 {{ location.name }}
               </option>
             </select>
-          </td>
-          <td>
-            <button class="btn btn-sm btn-primary" @click="updateDevice(device)">Save</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </div>
+          <div class="g-col-12">
+            <div class="form-check">
+              <input
+                :id="`retired-${device.id}`"
+                v-model="device.isRetired"
+                class="form-check-input"
+                :class="{
+                  'form-check-input': true,
+                  'is-invalid': data.errors.includes(`retired-${device.id}`),
+                }"
+                type="checkbox"
+              />
+              <label :for="`retired-${device.id}`" class="form-check-label">Retired</label>
+            </div>
+          </div>
+          <div class="g-col-12">
+            <div class="btn-toolbar">
+              <button class="btn btn-primary me-2" @click="updateDevice(device)">Save</button>
+              <button v-if="device.id" class="btn btn-danger ms-auto" @click="deleteDevice(device)">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="device.id" class="ms-3 mb-1">
+        <div>
+          <small class="text-body-secondary me-2">ID: {{ device.id }}</small>
+          <font-awesome-icon
+            v-if="device.isInactive"
+            icon="fa-clock"
+            class="text-danger me-2"
+            :title="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
+          />
+          <font-awesome-icon
+            v-if="device.isLost"
+            icon="fa-battery-quarter"
+            class="text-danger me-2"
+            title="Lost. Doesn't have location."
+          />
+          <font-awesome-icon
+            v-if="device.isBatteryLevelLow"
+            icon="fa-battery-quarter"
+            class="text-danger me-2"
+            title="Battery low."
+          />
+        </div>
+        <div>
+          <small v-if="device.lastReading"
+            >Last reading:
+            {{ formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit) }} on
+            {{ DateHelpers.dateTimeShortForView(device.lastReading?.time || '') }}
+          </small>
+        </div>
+      </div>
+    </div>
     <div v-if="data.devices.length < 1" class="text-center">No devices.</div>
   </div>
 </template>

@@ -4,6 +4,7 @@ using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Messages;
+using VoidCore.Model.Text;
 using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Repositories;
@@ -35,25 +36,23 @@ public class TemperatureDeviceRepository : RepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.IsRetired)
-            .ThenBy(x => x.Id)
+            .ThenBy(x => x.Name)
             .Select(x => new
             {
                 x.Id,
-                x.DeviceModel,
-                x.DeviceId,
-                x.DeviceChannel,
+                x.Name,
+                x.MqttTopic,
                 x.IsRetired,
-                CurrentLocationId = x.CurrentTemperatureLocationId,
+                LocationId = x.TemperatureLocationId,
             })
             .ToListAsync())
             .ConvertAll(x => new
             {
                 x.Id,
-                x.DeviceModel,
-                x.DeviceId,
-                x.DeviceChannel,
+                x.Name,
+                x.MqttTopic,
                 x.IsRetired,
-                x.CurrentLocationId,
+                x.LocationId,
                 LastReading = lastReadings.Find(r => r.TemperatureDeviceId == x.Id)
             })
 ;
@@ -61,13 +60,12 @@ public class TemperatureDeviceRepository : RepositoryBase
         return data.ConvertAll(x => new Device
         (
             id: x.Id,
-            deviceModel: x.DeviceModel,
-            deviceId: x.DeviceId,
-            deviceChannel: x.DeviceChannel,
-            currentLocationId: x.CurrentLocationId,
+            name: x.Name,
+            mqttTopic: x.MqttTopic,
+            locationId: x.LocationId,
             lastReading: x.LastReading?.ToReading(),
             isRetired: x.IsRetired,
-            isLost: !x.IsRetired && x.CurrentLocationId is null,
+            isLost: !x.IsRetired && x.LocationId is null,
             isInactive: !x.IsRetired && (x.LastReading is null || x.LastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20)),
             isBatteryLevelLow: !x.IsRetired && x.LastReading?.DeviceBatteryLevel is not null && x.LastReading?.DeviceBatteryLevel < 1
         ));
@@ -75,26 +73,66 @@ public class TemperatureDeviceRepository : RepositoryBase
 
     public async Task<IResult<EntityMessage<long>>> Update(DeviceUpdateRequest request)
     {
-        if (request.CurrentLocationId is not null)
+        var failures = new List<IFailure>();
+
+        if (request.LocationId is not null)
         {
-            var locationExists = await _data.TemperatureLocations.AnyAsync(x => x.Id == request.CurrentLocationId);
+            var locationExists = await _data.TemperatureLocations.AnyAsync(x => x.Id == request.LocationId);
 
             if (!locationExists)
             {
-                return Result.Fail<EntityMessage<long>>(new Failure("Location doesn't exist.", "location"));
+                failures.Add(new Failure("Location doesn't exist.", "location"));
             }
         }
 
-        return await _data.TemperatureDevices
-            .FirstOrDefaultAsync(x => x.Id == request.Id)
-            .MapAsync(x => Maybe.From(x))
-            .ToResultAsync(new Failure("Device does not exist.", "id"))
-            .TeeOnSuccessAsync(async x =>
-            {
-                x.IsRetired = request.IsRetired;
-                x.CurrentTemperatureLocationId = request.CurrentLocationId;
-                await _data.SaveChangesAsync();
-            })
-            .SelectAsync(x => EntityMessage.Create("Device saved.", x.Id));
+        if (request.Name.IsNullOrWhiteSpace())
+        {
+            failures.Add(new Failure("Device requires a name.", "name"));
+        }
+
+        if (request.MqttTopic.IsNullOrWhiteSpace())
+        {
+            failures.Add(new Failure("Device requires an MQTT Topic.", "mqttTopic"));
+        }
+
+        if (failures.Count > 0)
+        {
+            return Result.Fail<EntityMessage<long>>(failures);
+        }
+
+        var device = await _data.TemperatureDevices
+            .FirstOrDefaultAsync(x => x.Id == request.Id);
+
+        if (device is null)
+        {
+            device = new Data.Models.TemperatureDevice();
+            _data.TemperatureDevices.Add(device);
+        }
+
+        device.Name = request.Name;
+        device.MqttTopic = request.MqttTopic;
+        device.IsRetired = request.IsRetired;
+        device.TemperatureLocationId = request.LocationId;
+
+        await _data.SaveChangesAsync();
+
+        return Result.Ok(EntityMessage.Create("Device saved.", device.Id));
+    }
+
+    public async Task<IResult<EntityMessage<long>>> Delete(int id)
+    {
+        var device = await _data.TemperatureDevices
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (device is null)
+        {
+            return Result.Fail<EntityMessage<long>>(new Failure("Device not found"));
+        }
+
+        _data.TemperatureDevices.Remove(device);
+
+        await _data.SaveChangesAsync();
+
+        return Result.Ok(EntityMessage.Create("Device deleted.", device.Id));
     }
 }

@@ -36,7 +36,7 @@ public class DeviceAlertService
             .Select(d => new DeviceAlert(
                 DeviceAlertType.DeviceInactive,
                 d,
-                locations.Find(l => l.Id == d.CurrentLocationId),
+                locations.Find(l => l.Id == d.LocationId),
                 resendAfter));
 
         var lowBatteryAlert = devices
@@ -44,7 +44,7 @@ public class DeviceAlertService
             .Select(d => new DeviceAlert(
                 DeviceAlertType.DeviceLowBattery,
                 d,
-                locations.Find(l => l.Id == d.CurrentLocationId),
+                locations.Find(l => l.Id == d.LocationId),
                 resendAfter));
 
         var currentAlerts = inactiveAlerts
@@ -147,7 +147,7 @@ public class DeviceAlertService
     private Task SendEmail(string subject, string body, DeviceAlert alert, CancellationToken stoppingToken)
     {
         var device = alert.Device;
-        var deviceName = device.DisplayName;
+        var deviceName = $"{device.Name} ({device.MqttTopic})";
         var readingTempString = TemperatureHelpers.GetDualTempString(alert.Device.LastReading?.TemperatureCelsius);
         var readingTime = alert.Device.LastReading?.Time;
 
@@ -160,7 +160,7 @@ public class DeviceAlertService
             e.AddLine(body);
             e.AddLine();
             e.AddLine("Device:");
-            e.AddLine($"{indent}Name (model/id/channel): {deviceName}");
+            e.AddLine($"{indent}Name (topic): {deviceName}");
             e.AddLine($"{indent}Last reading:");
             e.AddLine($"{indent}{indent}Temperature: {readingTempString}");
             e.AddLine($"{indent}{indent}Time: {readingTime}");

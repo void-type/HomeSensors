@@ -4,6 +4,7 @@ using HomeSensors.Model.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HomeSensors.Model.Migrations
 {
     [DbContext(typeof(HomeSensorsContext))]
-    partial class HomeSensorsContextModelSnapshot : ModelSnapshot
+    [Migration("20240703035650_MqttTopicsInDb")]
+    partial class MqttTopicsInDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,6 +32,9 @@ namespace HomeSensors.Model.Migrations
                         .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("CurrentTemperatureLocationId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("DeviceChannel")
                         .HasColumnType("nvarchar(max)");
@@ -51,12 +57,9 @@ namespace HomeSensors.Model.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long?>("TemperatureLocationId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("TemperatureLocationId");
+                    b.HasIndex("CurrentTemperatureLocationId");
 
                     b.ToTable("TemperatureDevices");
                 });
@@ -138,11 +141,11 @@ namespace HomeSensors.Model.Migrations
 
             modelBuilder.Entity("HomeSensors.Model.Data.Models.TemperatureDevice", b =>
                 {
-                    b.HasOne("HomeSensors.Model.Data.Models.TemperatureLocation", "TemperatureLocation")
+                    b.HasOne("HomeSensors.Model.Data.Models.TemperatureLocation", "CurrentTemperatureLocation")
                         .WithMany()
-                        .HasForeignKey("TemperatureLocationId");
+                        .HasForeignKey("CurrentTemperatureLocationId");
 
-                    b.Navigation("TemperatureLocation");
+                    b.Navigation("CurrentTemperatureLocation");
                 });
 
             modelBuilder.Entity("HomeSensors.Model.Data.Models.TemperatureReading", b =>

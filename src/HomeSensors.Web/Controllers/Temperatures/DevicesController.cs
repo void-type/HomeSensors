@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Model.Repositories;
 using HomeSensors.Model.Repositories.Models;
+using HomeSensors.Model.Workers;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -16,10 +17,12 @@ namespace HomeSensors.Web.Controllers.Temperatures;
 public class DevicesController : ControllerBase
 {
     private readonly TemperatureDeviceRepository _deviceRepository;
+    private readonly IHttpContextAccessor _contextAccessor;
 
-    public DevicesController(TemperatureDeviceRepository deviceRepository)
+    public DevicesController(TemperatureDeviceRepository deviceRepository, IHttpContextAccessor contextAccessor)
     {
         _deviceRepository = deviceRepository;
+        _contextAccessor = contextAccessor;
     }
 
     [HttpPost]
@@ -41,6 +44,30 @@ public class DevicesController : ControllerBase
     public async Task<IActionResult> Update([FromBody] DeviceUpdateRequest request)
     {
         var result = await _deviceRepository.Update(request);
+
+        var worker = _contextAccessor?
+            .HttpContext?
+            .RequestServices?
+            .GetServices<IHostedService>()?
+            .OfType<MqttTemperaturesWorker>()
+            .FirstOrDefault();
+
+        if (worker is not null)
+        {
+            await worker.RefreshTopicSubscriptions();
+        }
+
+        return HttpResponder.Respond(result);
+    }
+
+    [HttpDelete]
+    [Route("{id}")]
+    [IgnoreAntiforgeryToken]
+    [ProducesResponseType(typeof(EntityMessage<long>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var result = await _deviceRepository.Delete(id);
         return HttpResponder.Respond(result);
     }
 }

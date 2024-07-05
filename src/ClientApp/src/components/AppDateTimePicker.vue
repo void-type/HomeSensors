@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { defineModel } from 'vue';
 import useAppStore from '@/stores/appStore';
 import 'chartjs-adapter-date-fns';
 import { storeToRefs } from 'pinia';

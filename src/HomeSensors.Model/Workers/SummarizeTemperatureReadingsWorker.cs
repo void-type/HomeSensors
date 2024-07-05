@@ -131,7 +131,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Exception thrown in {WorkerName} while processing device {Device}.", nameof(SummarizeTemperatureReadingsWorker), device.DisplayName);
+                        _logger.LogError(ex, "Exception thrown in {WorkerName} while processing device {Name} {MqTtTopic}.", nameof(SummarizeTemperatureReadingsWorker), device.Name, device.MqttTopic);
                     }
 
                     if (stoppingToken.IsCancellationRequested)

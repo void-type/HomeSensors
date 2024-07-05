@@ -35,24 +35,24 @@ export interface ClientStatus {
 export interface Device {
   /** @format int64 */
   id?: number;
-  deviceModel?: string | null;
-  deviceId?: string | null;
-  deviceChannel?: string | null;
+  name?: string | null;
+  mqttTopic?: string | null;
   /** @format int64 */
-  currentLocationId?: number | null;
+  locationId?: number | null;
   lastReading?: Reading;
   isRetired?: boolean;
   isLost?: boolean;
   isInactive?: boolean;
   isBatteryLevelLow?: boolean;
-  displayName?: string | null;
 }
 
 export interface DeviceUpdateRequest {
   /** @format int64 */
   id?: number;
+  name?: string | null;
+  mqttTopic?: string | null;
   /** @format int64 */
-  currentLocationId?: number | null;
+  locationId?: number | null;
   isRetired?: boolean;
 }
 

@@ -7,7 +7,7 @@ try {
 
   dotnet ef database update `
     --project "$modelProjectFolder" `
-    --startup-project  "$serviceProjectFolder"
+    --startup-project  "$webProjectFolder"
 
 } finally {
   Set-Location $originalLocation

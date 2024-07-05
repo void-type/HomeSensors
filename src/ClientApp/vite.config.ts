@@ -48,13 +48,7 @@ export default defineConfig(async ({ command, mode }) => {
   }
 
   return {
-    plugins: [
-      vue({
-        script: {
-          defineModel: true,
-        },
-      }),
-    ],
+    plugins: [vue()],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -136,14 +136,4 @@ onMounted(async () => {
 .stale {
   color: inherit;
 }
-
-.blink {
-  animation: blink-animation 5s steps(5, start) infinite;
-}
-
-@keyframes blink-animation {
-  to {
-    visibility: hidden;
-  }
-}
 </style>

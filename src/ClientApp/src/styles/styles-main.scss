@@ -187,3 +187,14 @@ html[data-bs-theme='dark'] {
   --vc-bg: var(--bs-body-bg);
   --vc-time-select-group-bg: transparent;
 }
+
+// Flashing status
+.blink {
+  animation: blink-animation 5s steps(5, start) infinite;
+}
+
+@keyframes blink-animation {
+  to {
+    visibility: hidden;
+  }
+}

@@ -13,7 +13,7 @@ try {
 
   dotnet ef migrations add "$MigrationName" `
     --project "$modelProjectFolder" `
-    --startup-project  "$serviceProjectFolder"
+    --startup-project  "$webProjectFolder"
 
 } finally {
   Set-Location $originalLocation

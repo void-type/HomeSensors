@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <PackageReference Include="MailKit" Version="4.6.0" />
+        <PackageReference Include="MailKit" Version="4.7.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
         <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.6.1152" />
         <PackageReference Include="VoidCore.Model" Version="14.0.6-gdf80f705a6" />
