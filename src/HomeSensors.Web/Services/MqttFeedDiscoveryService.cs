@@ -3,6 +3,7 @@ using HomeSensors.Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using MQTTnet;
 using MQTTnet.Client;
+using MQTTnet.Exceptions;
 using MQTTnet.Extensions.ManagedClient;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Time;
@@ -60,7 +61,15 @@ public partial class MqttFeedDiscoveryService
             _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
         }
 
-        await client.SubscribeAsync(_mqttFactory.GetTopicFilters(request.Topics));
+        try
+        {
+            await client.SubscribeAsync(_mqttFactory.GetTopicFilters(request.Topics));
+        }
+        catch (MqttProtocolViolationException ex)
+        {
+            TeardownClient();
+            return Result.Fail<ClientStatus>(new Failure(ex.Message, "topics"));
+        }
 
         return Result.Ok(GetClientStatus());
     }

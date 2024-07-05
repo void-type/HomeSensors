@@ -7,6 +7,7 @@ import useMessageStore from '@/stores/messageStore';
 import type { HttpResponse } from '@/api/http-client';
 import DateHelpers from '@/models/DateHelpers';
 import { parseISO } from 'date-fns';
+import useAppStore from '@/stores/appStore';
 
 const data = reactive({
   topics: 'rtl_433/#\nzigbee2mqtt/#',
@@ -14,8 +15,11 @@ const data = reactive({
   status: { topics: [] as Array<string>, exists: false, isConnected: false } as ClientStatus,
 });
 
+const appStore = useAppStore();
 const messageStore = useMessageStore();
 const api = ApiHelpers.client;
+
+const { isFieldInError } = appStore;
 
 let connection: signalR.HubConnection | null = null;
 
@@ -131,7 +135,13 @@ onMounted(async () => {
     </div>
     <div class="mt-3">
       <label for="feed" class="form-label"> Feed messages (Time: Topic \n Payload) </label>
-      <textarea id="feed" v-model="feed" rows="30" class="form-control" readonly />
+      <textarea
+        id="feed"
+        v-model="feed"
+        rows="30"
+        :class="{ 'form-control': true, 'is-invalid': isFieldInError('topics') }"
+        readonly
+      />
     </div>
   </div>
 </template>
