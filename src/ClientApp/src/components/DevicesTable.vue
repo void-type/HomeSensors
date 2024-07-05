@@ -15,7 +15,6 @@ const appStore = useAppStore();
 const messageStore = useMessageStore();
 const api = ApiHelpers.client;
 
-const { isFieldInError } = appStore;
 const { useFahrenheit, staleLimitMinutes } = storeToRefs(appStore);
 
 const data = reactive({
@@ -151,7 +150,10 @@ onMounted(async () => {
               v-model="device.name"
               required
               type="text"
-              :class="{ 'form-control': true, 'is-invalid': isFieldInError('name') }"
+              :class="{
+                'form-control': true,
+                'is-invalid': data.errors.includes(`name-${device.id}`),
+              }"
             />
           </div>
           <div class="g-col-12 g-col-md-6">
@@ -161,7 +163,10 @@ onMounted(async () => {
               v-model="device.mqttTopic"
               required
               type="text"
-              :class="{ 'form-control': true, 'is-invalid': isFieldInError('mqttTopic') }"
+              :class="{
+                'form-control': true,
+                'is-invalid': data.errors.includes(`mqttTopic-${device.id}`),
+              }"
             />
           </div>
           <div class="g-col-12 g-col-md-6">

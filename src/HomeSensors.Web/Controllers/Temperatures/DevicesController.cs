@@ -45,17 +45,7 @@ public class DevicesController : ControllerBase
     {
         var result = await _deviceRepository.Update(request);
 
-        var worker = _contextAccessor?
-            .HttpContext?
-            .RequestServices?
-            .GetServices<IHostedService>()?
-            .OfType<MqttTemperaturesWorker>()
-            .FirstOrDefault();
-
-        if (worker is not null)
-        {
-            await worker.RefreshTopicSubscriptions();
-        }
+        await RefreshTopicSubscriptions();
 
         return HttpResponder.Respond(result);
     }
@@ -68,6 +58,24 @@ public class DevicesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _deviceRepository.Delete(id);
+
+        await RefreshTopicSubscriptions();
+
         return HttpResponder.Respond(result);
+    }
+
+    private async Task RefreshTopicSubscriptions()
+    {
+        var worker = _contextAccessor?
+            .HttpContext?
+            .RequestServices?
+            .GetServices<IHostedService>()?
+            .OfType<MqttTemperaturesWorker>()
+            .FirstOrDefault();
+
+        if (worker is not null)
+        {
+            await worker.RefreshTopicSubscriptions();
+        }
     }
 }
