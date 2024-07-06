@@ -1,3 +1,3 @@
-namespace HomeSensors.Web.Services.MqttDiscovery;
+﻿namespace HomeSensors.Web.Services.MqttDiscovery;
 
 public record MqttDiscoveryClientStatus(string[]? Topics, bool IsCreated, bool IsConnected);

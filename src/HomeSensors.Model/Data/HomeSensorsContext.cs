@@ -21,6 +21,8 @@ public class HomeSensorsContext : DbContext
     {
         modelBuilder.Entity<TemperatureReading>(entity =>
         {
+            entity.ToTable(nameof(TemperatureReading));
+
             entity.HasIndex(r => r.Time);
             entity.HasIndex(r => r.IsSummary);
             entity.HasIndex(r => new { r.Time, r.TemperatureLocationId });
@@ -29,7 +31,17 @@ public class HomeSensorsContext : DbContext
 
         modelBuilder.Entity<TemperatureLocation>(entity =>
         {
+            entity.ToTable(nameof(TemperatureLocation));
+
             entity.HasIndex(r => r.Name)
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<TemperatureDevice>(entity =>
+        {
+            entity.ToTable(nameof(TemperatureDevice));
+
+            entity.HasIndex(r => r.MqttTopic)
                 .IsUnique();
         });
     }

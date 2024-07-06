@@ -1,4 +1,4 @@
-using MQTTnet.Extensions.ManagedClient;
+﻿using MQTTnet.Extensions.ManagedClient;
 
 namespace HomeSensors.Web.Services.MqttDiscovery;
 
