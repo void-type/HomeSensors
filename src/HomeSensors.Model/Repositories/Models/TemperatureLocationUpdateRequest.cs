@@ -1,6 +1,6 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class LocationUpdateRequest
+public class TemperatureLocationUpdateRequest
 {
     public long Id { get; init; }
     public string Name { get; init; } = string.Empty;

@@ -47,41 +47,7 @@ try
             services.AddScoped<DeviceAlertService>();
             services.AddSingleton<WaterLeakAlertService>();
 
-            var workersConfig = config.GetSection("Workers");
-
-            var alertsSettings = services.AddSettingsSingleton<AlertsSettings>(workersConfig);
-            if (alertsSettings.IsEnabled)
-            {
-                Log.Information("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
-                    nameof(AlertsWorker),
-                    alertsSettings.BetweenTicksMinutes);
-                services.AddHostedService<AlertsWorker>();
-            }
-
-            var mqttTemperaturesSettings = services.AddSettingsSingleton<MqttTemperaturesSettings>(workersConfig);
-            if (mqttTemperaturesSettings.IsEnabled)
-            {
-                Log.Information("Enabling background job: {JobName}.",
-                    nameof(MqttTemperaturesWorker));
-                services.AddHostedService<MqttTemperaturesWorker>();
-            }
-
-            var summarizeSettings = services.AddSettingsSingleton<SummarizeTemperatureReadingsSettings>(workersConfig);
-            if (summarizeSettings.IsEnabled)
-            {
-                Log.Information("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
-                    nameof(SummarizeTemperatureReadingsSettings),
-                    summarizeSettings.BetweenTicksMinutes);
-                services.AddHostedService<SummarizeTemperatureReadingsWorker>();
-            }
-
-            var mqttWaterLeaksSettings = services.AddSettingsSingleton<MqttWaterLeaksSettings>(workersConfig);
-            if (mqttWaterLeaksSettings.IsEnabled)
-            {
-                Log.Information("Enabling background job: {JobName}.",
-                    nameof(MqttWaterLeaksSettings));
-                services.AddHostedService<MqttWaterLeaksWorker>();
-            }
+            services.AddWorkersService(config);
         })
         .Build();
 
@@ -95,11 +61,14 @@ try
 
     Log.Information("Configuring host for {Name} v{Version}", ThisAssembly.AssemblyTitle, ThisAssembly.AssemblyInformationalVersion);
 
-    await host.RunAsync();
-
     Log.Information("Starting host.");
     await host.RunAsync();
     return 0;
+}
+catch (HostAbortedException)
+{
+    // For EF tooling, let the exception throw and the tooling will catch it.
+    throw;
 }
 catch (Exception ex)
 {

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
-import type { IFailureIItemSet, Location } from '@/api/data-contracts';
+import type { IItemSetOfIFailure, TemperatureLocationResponse } from '@/api/data-contracts';
 import { storeToRefs } from 'pinia';
 import { toNumberOrNull } from '@/models/FormatHelpers';
 import { formatTempWithUnitOrEmpty } from '@/models/TempFormatHelpers';
@@ -16,7 +16,7 @@ const api = ApiHelpers.client;
 const { useDarkMode, useFahrenheit } = storeToRefs(appStore);
 
 const data = reactive({
-  locations: [] as Array<Location>,
+  locations: [] as Array<TemperatureLocationResponse>,
   newLocation: {
     name: '',
     min: null as number | null,
@@ -27,14 +27,14 @@ const data = reactive({
 
 async function getLocations() {
   try {
-    const response = await api().temperaturesLocationsAllCreate();
+    const response = await api().temperatureLocationsGetAll();
     data.locations = response.data;
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
-async function updateLocation(location: Location) {
+async function updateLocation(location: TemperatureLocationResponse) {
   data.errors = [];
 
   const request = {
@@ -45,7 +45,7 @@ async function updateLocation(location: Location) {
   };
 
   try {
-    const response = await api().temperaturesLocationsUpdateCreate(request);
+    const response = await api().temperatureLocationsUpdate(request);
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
@@ -53,7 +53,7 @@ async function updateLocation(location: Location) {
     const response = error as HttpResponse<unknown, unknown>;
     messageStore.setApiFailureMessages(response);
 
-    const failures = (response.error as IFailureIItemSet).items || [];
+    const failures = (response.error as IItemSetOfIFailure).items || [];
     failures.forEach((x) => data.errors.push(`${x.uiHandle}-${location.id}`));
   }
 }
@@ -70,7 +70,7 @@ async function createLocation() {
   };
 
   try {
-    const response = await api().temperaturesLocationsCreateCreate(request);
+    const response = await api().temperatureLocationsCreate(request);
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
       await getLocations();
@@ -79,7 +79,7 @@ async function createLocation() {
     const response = error as HttpResponse<unknown, unknown>;
     messageStore.setApiFailureMessages(response);
 
-    const failures = (response.error as IFailureIItemSet).items || [];
+    const failures = (response.error as IItemSetOfIFailure).items || [];
     failures.forEach((x) => data.errors.push(`${x.uiHandle}-new`));
   }
 }

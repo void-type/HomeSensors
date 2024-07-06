@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive } from 'vue';
 import * as signalR from '@microsoft/signalr';
 import ApiHelpers from '@/models/ApiHelpers';
-import type { ClientStatus } from '@/api/data-contracts';
+import type { MqttDiscoveryClientStatus } from '@/api/data-contracts';
 import useMessageStore from '@/stores/messageStore';
 import type { HttpResponse } from '@/api/http-client';
 import DateHelpers from '@/models/DateHelpers';
@@ -12,7 +12,11 @@ import useAppStore from '@/stores/appStore';
 const data = reactive({
   topics: 'rtl_433/#\nzigbee2mqtt/#',
   feed: [] as Array<string>,
-  status: { topics: [] as Array<string>, exists: false, isConnected: false } as ClientStatus,
+  status: {
+    topics: [] as Array<string>,
+    exists: false,
+    isConnected: false,
+  } as MqttDiscoveryClientStatus,
 });
 
 const appStore = useAppStore();
@@ -64,12 +68,12 @@ async function connectToHub() {
 const feed = computed(() => data.feed.join('\n'));
 
 async function onRefresh() {
-  data.status = (await api().temperaturesMqttFeedDiscoveryStatusList())?.data;
+  data.status = (await api().mqttDiscoveryStatus())?.data;
 }
 
 async function onStart() {
   try {
-    const response = await api().temperaturesMqttFeedDiscoverySetupCreate({
+    const response = await api().mqttDiscoverySetup({
       topics: data.topics.split(/\r?\n/g),
     });
 
@@ -83,7 +87,7 @@ async function onStart() {
 }
 
 async function onEnd() {
-  data.status = (await api().temperaturesMqttFeedDiscoveryTeardownCreate())?.data;
+  data.status = (await api().mqttDiscoveryTeardown())?.data;
 }
 
 async function onClear() {

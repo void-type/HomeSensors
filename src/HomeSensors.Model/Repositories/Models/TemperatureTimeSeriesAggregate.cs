@@ -1,8 +1,8 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class TimeSeriesAggregate
+public class TemperatureTimeSeriesAggregate
 {
-    public TimeSeriesAggregate(double? minimum, double? maximum, double? average)
+    public TemperatureTimeSeriesAggregate(double? minimum, double? maximum, double? average)
     {
         Minimum = minimum;
         Maximum = maximum;

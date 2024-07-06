@@ -1,6 +1,6 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class DeviceUpdateRequest
+public class TemperatureDeviceSaveRequest
 {
     public long Id { get; init; }
     public string Name { get; set; } = string.Empty;

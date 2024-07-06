@@ -42,7 +42,7 @@ public class TemperatureLimitAlertService
         await ProcessAlerts(latchedAlerts, now, betweenAlerts, failedResults, stoppingToken);
     }
 
-    private async Task ProcessAlerts(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, TimeSpan betweenAlerts, CheckLimitResult[] failedResults, CancellationToken stoppingToken)
+    private async Task ProcessAlerts(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, TimeSpan betweenAlerts, TemperatureCheckLimitResponse[] failedResults, CancellationToken stoppingToken)
     {
         foreach (var failedResult in failedResults)
         {
@@ -60,17 +60,17 @@ public class TemperatureLimitAlertService
         }
     }
 
-    private static bool AlertExists(List<TemperatureLimitAlert> latchedAlerts, CheckLimitResult failedResult, string status)
+    private static bool AlertExists(List<TemperatureLimitAlert> latchedAlerts, TemperatureCheckLimitResponse failedResult, string status)
     {
         return latchedAlerts.Exists(x => x.Result.Location.Id == failedResult.Location.Id && x.Status == status);
     }
 
-    private static void AddAlert(List<TemperatureLimitAlert> latchedAlerts, CheckLimitResult failedResult, string status, DateTimeOffset now, TimeSpan betweenAlerts)
+    private static void AddAlert(List<TemperatureLimitAlert> latchedAlerts, TemperatureCheckLimitResponse failedResult, string status, DateTimeOffset now, TimeSpan betweenAlerts)
     {
         latchedAlerts.Add(new TemperatureLimitAlert(failedResult, status, now.Add(betweenAlerts)));
     }
 
-    private async Task CleanClearedAlerts(List<TemperatureLimitAlert> latchedAlerts, CheckLimitResult[] failedResults, CancellationToken stoppingToken)
+    private async Task CleanClearedAlerts(List<TemperatureLimitAlert> latchedAlerts, TemperatureCheckLimitResponse[] failedResults, CancellationToken stoppingToken)
     {
         var clearedAlerts = latchedAlerts
             .Where(alert => !Array.Exists(failedResults, x => AlertIsForThisResult(alert, x)))
@@ -105,7 +105,7 @@ public class TemperatureLimitAlertService
         }
     }
 
-    private static bool AlertIsForThisResult(TemperatureLimitAlert alert, CheckLimitResult result)
+    private static bool AlertIsForThisResult(TemperatureLimitAlert alert, TemperatureCheckLimitResponse result)
     {
         return alert.Result.Location.Id == result.Location.Id &&
         (
@@ -114,7 +114,7 @@ public class TemperatureLimitAlertService
         );
     }
 
-    private Task NotifyAlert(CheckLimitResult failedResult, string minOrMax, string hotOrCold, Reading reading, double? limit, CancellationToken stoppingToken)
+    private Task NotifyAlert(TemperatureCheckLimitResponse failedResult, string minOrMax, string hotOrCold, TemperatureReadingResponse reading, double? limit, CancellationToken stoppingToken)
     {
         var locationName = failedResult.Location.Name;
         var time = reading.Time;
@@ -134,7 +134,7 @@ public class TemperatureLimitAlertService
         }, stoppingToken);
     }
 
-    private Task NotifyClear(Reading reading, TemperatureLimitAlert alert, double? limit, string minOrMax, CancellationToken stoppingToken)
+    private Task NotifyClear(TemperatureReadingResponse reading, TemperatureLimitAlert alert, double? limit, string minOrMax, CancellationToken stoppingToken)
     {
         var location = alert.Result.Location;
 

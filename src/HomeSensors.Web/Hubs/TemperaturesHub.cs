@@ -19,7 +19,7 @@ public class TemperaturesHub : Hub
         _temperatureRepository = temperatureRepository;
     }
 
-    public Task<List<Reading>> GetCurrentReadings()
+    public Task<List<TemperatureReadingResponse>> GetCurrentReadings()
     {
         return _temperatureRepository.GetCurrentReadings();
     }

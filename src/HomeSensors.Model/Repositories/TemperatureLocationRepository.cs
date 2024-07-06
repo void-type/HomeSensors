@@ -20,7 +20,7 @@ public class TemperatureLocationRepository : RepositoryBase
     /// <summary>
     /// Get all locations.
     /// </summary>
-    public async Task<List<Location>> GetAll()
+    public async Task<List<TemperatureLocationResponse>> GetAll()
     {
         return (await _data.TemperatureLocations
             .TagWith(GetTag())
@@ -36,7 +36,7 @@ public class TemperatureLocationRepository : RepositoryBase
     /// </summary>
     /// <param name="lastCheck">The time of the last check.</param>
     /// <returns>List of results</returns>
-    public async Task<List<CheckLimitResult>> CheckLimits(DateTimeOffset lastCheck)
+    public async Task<List<TemperatureCheckLimitResponse>> CheckLimits(DateTimeOffset lastCheck)
     {
         var locations = (await _data.TemperatureLocations
             .TagWith(GetTag())
@@ -44,20 +44,20 @@ public class TemperatureLocationRepository : RepositoryBase
             .ToListAsync())
             .Select(x => x.ToLocation());
 
-        var results = new List<CheckLimitResult>();
+        var results = new List<TemperatureCheckLimitResponse>();
 
         foreach (var location in locations)
         {
             var min = await GetMinExceeded(location, lastCheck);
             var max = await GetMaxExceeded(location, lastCheck);
 
-            results.Add(new CheckLimitResult(location, min, max));
+            results.Add(new TemperatureCheckLimitResponse(location, min, max));
         }
 
         return results;
     }
 
-    public Task<IResult<EntityMessage<long>>> Create(LocationCreateRequest request)
+    public Task<IResult<EntityMessage<long>>> Create(TemperatureLocationCreateRequest request)
     {
         return ValidateName(request.Name)
             .ThenAsync(() => ValidateNameIsAvailableAsync(request.Name))
@@ -79,7 +79,7 @@ public class TemperatureLocationRepository : RepositoryBase
             .SelectAsync(x => EntityMessage.Create("Location added.", x.Entity.Id));
     }
 
-    public Task<IResult<EntityMessage<long>>> Update(LocationUpdateRequest request)
+    public Task<IResult<EntityMessage<long>>> Update(TemperatureLocationUpdateRequest request)
     {
         return ValidateName(request.Name)
             .ThenAsync(async () =>
@@ -120,7 +120,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return Result.Ok();
     }
 
-    private async Task<Reading?> GetMinExceeded(Location location, DateTimeOffset lastCheck)
+    private async Task<TemperatureReadingResponse?> GetMinExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck)
     {
         if (!location.MinTemperatureLimitCelsius.HasValue)
         {
@@ -137,7 +137,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return min?.ToReading();
     }
 
-    private async Task<Reading?> GetMaxExceeded(Location location, DateTimeOffset lastCheck)
+    private async Task<TemperatureReadingResponse?> GetMaxExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck)
     {
         if (!location.MaxTemperatureLimitCelsius.HasValue)
         {

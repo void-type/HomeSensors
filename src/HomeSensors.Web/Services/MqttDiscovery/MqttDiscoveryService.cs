@@ -8,18 +8,18 @@ using MQTTnet.Extensions.ManagedClient;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Time;
 
-namespace HomeSensors.Web.Services;
+namespace HomeSensors.Web.Services.MqttDiscovery;
 
-public partial class MqttFeedDiscoveryService
+public class MqttDiscoveryService
 {
-    private readonly ILogger<MqttFeedDiscoveryService> _logger;
+    private readonly ILogger<MqttDiscoveryService> _logger;
     private readonly MqttSettings _configuration;
     private readonly MqttFactory _mqttFactory;
     private readonly IHubContext<TemperaturesHub> _tempHubContext;
     private readonly IDateTimeService _dateTimeService;
-    private ClientState? _clientState;
+    private MqttDiscoveryClientState? _clientState;
 
-    public MqttFeedDiscoveryService(ILogger<MqttFeedDiscoveryService> logger, MqttSettings configuration,
+    public MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSettings configuration,
         MqttFactory mqttFactory, IHubContext<TemperaturesHub> tempHubContext, IDateTimeService dateTimeService)
     {
         _logger = logger;
@@ -30,19 +30,19 @@ public partial class MqttFeedDiscoveryService
         _tempHubContext = tempHubContext;
     }
 
-    public ClientStatus GetClientStatus()
+    public MqttDiscoveryClientStatus GetClientStatus()
     {
-        return new ClientStatus(
+        return new MqttDiscoveryClientStatus(
             Topics: _clientState?.Topics,
             IsCreated: _clientState?.Client is not null,
             IsConnected: _clientState?.Client?.IsConnected ?? false);
     }
 
-    public async Task<IResult<ClientStatus>> SetupClient(SetupRequest request)
+    public async Task<IResult<MqttDiscoveryClientStatus>> SetupClient(MqttDiscoverySetupRequest request)
     {
         if (_clientState is not null)
         {
-            return Result.Fail<ClientStatus>(new Failure("Client already exists. End existing before setting up a new one."));
+            return Result.Fail<MqttDiscoveryClientStatus>(new Failure("Client already exists. End existing before setting up a new one."));
         }
 
         var client = _mqttFactory.CreateManagedMqttClient();
@@ -68,13 +68,13 @@ public partial class MqttFeedDiscoveryService
         catch (MqttProtocolViolationException ex)
         {
             TeardownClient();
-            return Result.Fail<ClientStatus>(new Failure(ex.Message, "topics"));
+            return Result.Fail<MqttDiscoveryClientStatus>(new Failure(ex.Message, "topics"));
         }
 
         return Result.Ok(GetClientStatus());
     }
 
-    public ClientStatus TeardownClient()
+    public MqttDiscoveryClientStatus TeardownClient()
     {
         if (_clientState is not null)
         {
@@ -99,7 +99,7 @@ public partial class MqttFeedDiscoveryService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttFeedDiscoveryService));
+            _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttDiscoveryService));
         }
     }
 
@@ -112,13 +112,8 @@ public partial class MqttFeedDiscoveryService
             MqttHelpers.LogMqttPayload(_logger, payload);
         }
 
-        var message = new DiscoveryMessage(_dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);
+        var message = new MqttDiscoveryMessage(_dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);
 
         await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.newMessageMessageName, message);
     }
-
-    public record ClientState(string[] Topics, IManagedMqttClient Client);
-    public record ClientStatus(string[]? Topics, bool IsCreated, bool IsConnected);
-    public record SetupRequest(string[] Topics);
-    public record DiscoveryMessage(DateTimeOffset Time, string Topic, string Payload);
 }

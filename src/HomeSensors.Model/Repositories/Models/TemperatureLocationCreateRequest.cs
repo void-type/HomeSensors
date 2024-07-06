@@ -1,6 +1,6 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class LocationCreateRequest
+public class TemperatureLocationCreateRequest
 {
     public string Name { get; init; } = string.Empty;
     public double? MinTemperatureLimitCelsius { get; init; }

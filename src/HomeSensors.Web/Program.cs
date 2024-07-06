@@ -8,9 +8,8 @@ using HomeSensors.Model.Workers;
 using HomeSensors.Web.Auth;
 using HomeSensors.Web.Hubs;
 using HomeSensors.Web.Repositories;
-using HomeSensors.Web.Services;
+using HomeSensors.Web.Services.MqttDiscovery;
 using HomeSensors.Web.Startup;
-using HomeSensors.Web.Workers;
 using LazyCache;
 using Microsoft.EntityFrameworkCore;
 using MQTTnet;
@@ -28,9 +27,9 @@ using VoidCore.Model.Time;
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    var env = builder.Environment;
     var config = builder.Configuration;
     var services = builder.Services;
-    var env = builder.Environment;
 
     Log.Logger = new LoggerConfiguration()
         // Set a default logger if none configured or configuration not found.
@@ -53,18 +52,19 @@ try
     services.AddControllers();
     services.AddSpaSecurityServices(env);
     services.AddApiExceptionFilter();
+    services.AddSwagger(env);
+    services.AddSignalR();
 
     // Authorization
+    services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
 
     // Dependencies
     services.AddHttpContextAccessor();
-    services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
     services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
-    services.AddSingleton<MqttFeedDiscoveryService>();
+    services.AddSingleton<MqttDiscoveryService>();
     services.AddSingleton<MqttFactory>();
 
     config.GetRequiredConnectionString<HomeSensorsContext>();
-
     services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
         .UseSqlServer("Name=HomeSensors", sqlOptions =>
         {
@@ -76,6 +76,8 @@ try
     services.AddScoped<TemperatureDeviceRepository>();
     services.AddScoped<TemperatureLocationRepository>();
 
+    services.AddScoped<TemperatureCachedRepository>();
+
     services.AddLazyCache(sp =>
     {
         var cachingSettings = sp.GetRequiredService<CachingSettings>();
@@ -83,8 +85,6 @@ try
         cache.DefaultCachePolicy.DefaultCacheDurationSeconds = cachingSettings.DefaultMinutes * 60;
         return cache;
     });
-
-    services.AddScoped<TemperatureCachedRepository>();
 
     services.AddSingleton<IEmailFactory, HtmlEmailFactory>();
     services.AddSingleton<IEmailSender, SmtpEmailer>();
@@ -100,57 +100,13 @@ try
         ServiceLifetime.Scoped,
         typeof(GetWebClientInfo).Assembly);
 
-    services.AddSignalR();
-
-    services.AddSwaggerWithCsp();
-
-    var workersConfig = config.GetSection("Workers");
-
-    var pushTempsSettings = services.AddSettingsSingleton<PushTemperatureCurrentReadingsSettings>(workersConfig);
-    if (pushTempsSettings.IsEnabled)
-    {
-        Log.Information("Enabling background job: {JobName} every {BetweenTicksMinutes} seconds.",
-            nameof(PushTemperatureCurrentReadingsSettings),
-            pushTempsSettings.BetweenTicksSeconds);
-        services.AddHostedService<PushTemperatureCurrentReadingsWorker>();
-    }
-
-    var alertsSettings = services.AddSettingsSingleton<AlertsSettings>(workersConfig);
-    if (alertsSettings.IsEnabled)
-    {
-        Log.Information("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
-            nameof(AlertsWorker),
-            alertsSettings.BetweenTicksMinutes);
-        services.AddHostedService<AlertsWorker>();
-    }
-
-    var mqttTemperaturesSettings = services.AddSettingsSingleton<MqttTemperaturesSettings>(workersConfig);
-    if (mqttTemperaturesSettings.IsEnabled)
-    {
-        Log.Information("Enabling background job: {JobName}.",
-            nameof(MqttTemperaturesWorker));
-        services.AddHostedService<MqttTemperaturesWorker>();
-    }
-
-    var summarizeSettings = services.AddSettingsSingleton<SummarizeTemperatureReadingsSettings>(workersConfig);
-    if (summarizeSettings.IsEnabled)
-    {
-        Log.Information("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
-            nameof(SummarizeTemperatureReadingsSettings),
-            summarizeSettings.BetweenTicksMinutes);
-        services.AddHostedService<SummarizeTemperatureReadingsWorker>();
-    }
-
-    var mqttWaterLeaksSettings = services.AddSettingsSingleton<MqttWaterLeaksSettings>(workersConfig);
-    if (mqttWaterLeaksSettings.IsEnabled)
-    {
-        Log.Information("Enabling background job: {JobName}.",
-            nameof(MqttWaterLeaksSettings));
-        services.AddHostedService<MqttWaterLeaksWorker>();
-    }
+    // Workers and background services
+    services.AddWorkersWeb(config);
+    services.AddWorkersService(config);
 
     var app = builder.Build();
 
+    // Middleware pipeline
     app.UseAlwaysOnShortCircuit();
     app.UseSpaExceptionPage(env);
     app.UseSecureTransport(env);
@@ -160,13 +116,18 @@ try
     app.UseRequestLoggingScope();
     app.UseSerilogRequestLogging();
     app.UseCurrentUserLogging();
-    app.UseSwaggerAndUi(env);
+    app.UseSwaggerAndUi();
     app.MapHub<TemperaturesHub>("/hub/temperatures");
     app.UseSpaEndpoints();
 
     Log.Information("Starting host.");
     await app.RunAsync();
     return 0;
+}
+catch (HostAbortedException)
+{
+    // For EF tooling, let the exception throw and the tooling will catch it.
+    throw;
 }
 catch (Exception ex)
 {

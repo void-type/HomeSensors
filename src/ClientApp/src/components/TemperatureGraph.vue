@@ -1,7 +1,11 @@
 <script lang="ts" setup>
 import ApiHelpers from '@/models/ApiHelpers';
 import useAppStore from '@/stores/appStore';
-import type { TimeSeriesPoint, TimeSeries, Location } from '@/api/data-contracts';
+import type {
+  TemperatureTimeSeriesPoint,
+  TemperatureTimeSeriesResponse,
+  TemperatureLocationResponse,
+} from '@/api/data-contracts';
 import { onMounted, reactive, watch, computed, watchEffect } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
@@ -31,8 +35,8 @@ const { useFahrenheit, useDarkMode } = storeToRefs(appStore);
 const initialTime = startOfMinute(new Date());
 
 const data = reactive({
-  locations: [] as Array<Location>,
-  graphSeries: [] as Array<TimeSeries>,
+  locations: [] as Array<TemperatureLocationResponse>,
+  graphSeries: [] as Array<TemperatureTimeSeriesResponse>,
   showHumidity: false,
 });
 
@@ -105,7 +109,11 @@ function getColor(categoryName: string) {
   return randomColor;
 }
 
-function setGraphData(series: Array<TimeSeries>, useF: boolean, showHumidity: boolean) {
+function setGraphData(
+  series: Array<TemperatureTimeSeriesResponse>,
+  useF: boolean,
+  showHumidity: boolean
+) {
   const element = document.getElementById('tempGraph') as HTMLCanvasElement;
 
   if (element === null) {
@@ -133,8 +141,8 @@ function setGraphData(series: Array<TimeSeries>, useF: boolean, showHumidity: bo
     label: s.location?.name,
     borderColor: getColor(s.location?.name || 'unknown'),
     data: s.points
-      ?.filter((p: TimeSeriesPoint) => p.temperatureCelsius)
-      .map((p: TimeSeriesPoint) => ({
+      ?.filter((p: TemperatureTimeSeriesPoint) => p.temperatureCelsius)
+      .map((p: TemperatureTimeSeriesPoint) => ({
         x: p.time,
         y: showHumidity ? formatHumidity(p.humidity) : formatTemp(p.temperatureCelsius, useF),
       })),
@@ -214,7 +222,7 @@ async function getTimeSeries(inputs: ITimeSeriesInputs) {
   };
 
   try {
-    const response = await api().temperaturesReadingsTimeSeriesCreate(parameters);
+    const response = await api().temperatureReadingsGetTimeSeries(parameters);
     data.graphSeries = response.data;
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -223,7 +231,7 @@ async function getTimeSeries(inputs: ITimeSeriesInputs) {
 
 async function getLocations() {
   try {
-    const response = await api().temperaturesLocationsAllCreate();
+    const response = await api().temperatureLocationsGetAll();
     data.locations = response.data;
     timeSeriesInputs.locationIds = data.locations.map((x) => x.id as number);
   } catch (error) {

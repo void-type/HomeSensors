@@ -35,6 +35,10 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
         _dateTimeService = dateTimeService;
         _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
         _summarizeCutoff = TimeSpan.FromDays(workerSettings.SummarizeCutoffDays);
+
+        logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
+            nameof(SummarizeTemperatureReadingsWorker),
+            workerSettings.BetweenTicksMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

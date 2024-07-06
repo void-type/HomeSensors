@@ -1,8 +1,8 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class Location
+public class TemperatureLocationResponse
 {
-    public Location(long id, string name, double? minTemperatureLimitCelsius, double? maxTemperatureLimitCelsius)
+    public TemperatureLocationResponse(long id, string name, double? minTemperatureLimitCelsius, double? maxTemperatureLimitCelsius)
     {
         Id = id;
         Name = name;

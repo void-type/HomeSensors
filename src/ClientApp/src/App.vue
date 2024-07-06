@@ -24,7 +24,7 @@ onMounted(() => {
   appStore.setShowHumidity(UserSettingHelpers.getInitialHumiditySetting());
 
   api()
-    .appInfoList()
+    .appGetInfo()
     .then((response) => {
       appStore.setApplicationInfo(response.data);
       RouterHelpers.setTitle(route);
@@ -39,7 +39,7 @@ onMounted(() => {
     .catch((response) => messageStore.setApiFailureMessages(response));
 
   api()
-    .appVersionList()
+    .appGetVersion()
     .then((response) => appStore.setVersionInfo(response.data));
 });
 </script>

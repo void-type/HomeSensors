@@ -21,7 +21,7 @@ public class TemperatureReadingRepository : RepositoryBase
     /// <summary>
     /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
     /// </summary>
-    public async Task<List<Reading>> GetCurrent()
+    public async Task<List<TemperatureReadingResponse>> GetCurrent()
     {
         var data = await _data.TemperatureReadings
             .TagWith(GetTag())
@@ -34,7 +34,7 @@ public class TemperatureReadingRepository : RepositoryBase
             .Select(g => g.OrderByDescending(x => x.Time).First())
             .ToListAsync();
 
-        return data.ConvertAll(x => new Reading(
+        return data.ConvertAll(x => new TemperatureReadingResponse(
             time: x.Time,
             humidity: x.Humidity,
             temperatureCelsius: x.TemperatureCelsius,
@@ -45,7 +45,7 @@ public class TemperatureReadingRepository : RepositoryBase
     /// <summary>
     /// Gets the latest reading for the location.
     /// </summary>
-    public Task<Maybe<Reading>> GetCurrent(long locationId)
+    public Task<Maybe<TemperatureReadingResponse>> GetCurrent(long locationId)
     {
         return _data.TemperatureReadings
             .TagWith(GetTag())
@@ -55,7 +55,7 @@ public class TemperatureReadingRepository : RepositoryBase
             .OrderByDescending(x => x.Time)
             .FirstOrDefaultAsync()
             .MapAsync(Maybe.From)
-            .SelectAsync(x => new Reading(
+            .SelectAsync(x => new TemperatureReadingResponse(
                 time: x.Time,
                 humidity: x.Humidity,
                 temperatureCelsius: x.TemperatureCelsius,
@@ -66,7 +66,7 @@ public class TemperatureReadingRepository : RepositoryBase
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
     /// <param name="request">GraphTimeSeriesRequest</param>
-    public async Task<List<TimeSeries>> GetTimeSeries(TimeSeriesRequest request)
+    public async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeries(TemperatureTimeSeriesRequest request)
     {
         if (request.LocationIds.Count == 0)
         {
@@ -113,19 +113,19 @@ public class TemperatureReadingRepository : RepositoryBase
 
                 var allTemps = readingsForLocation.Select(x => x.TemperatureCelsius);
 
-                var tempAgg = new TimeSeriesAggregate(
+                var tempAgg = new TemperatureTimeSeriesAggregate(
                     minimum: allTemps.Min(),
                     maximum: allTemps.Max(),
                     average: allTemps.Average());
 
                 var allHumidity = readingsForLocation.Select(x => x.Humidity);
 
-                var humidityAgg = new TimeSeriesAggregate(
+                var humidityAgg = new TemperatureTimeSeriesAggregate(
                     minimum: allHumidity.Min(),
                     maximum: allHumidity.Max(),
                     average: allHumidity.Average());
 
-                return new TimeSeries(
+                return new TemperatureTimeSeriesResponse(
                     location: readingsForLocation.First().TemperatureLocation!.ToLocation(),
                     tempAgg,
                     humidityAgg,

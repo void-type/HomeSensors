@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
-import type { Reading } from '@/api/data-contracts';
+import type { TemperatureReadingResponse } from '@/api/data-contracts';
 import { onMounted, reactive } from 'vue';
 import { addMinutes, format, isPast } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
@@ -14,7 +14,7 @@ const appStore = useAppStore();
 const { useFahrenheit, showHumidity, staleLimitMinutes } = storeToRefs(appStore);
 
 const data = reactive({
-  currentReadings: [] as Array<Reading>,
+  currentReadings: [] as Array<TemperatureReadingResponse>,
 });
 
 let connection: signalR.HubConnection | null = null;
@@ -62,7 +62,7 @@ async function connectToHub() {
   startConnection();
 }
 
-function isStale(reading: Reading) {
+function isStale(reading: TemperatureReadingResponse) {
   const readingDate = new Date(reading.time as string);
 
   const result = isPast(addMinutes(readingDate, staleLimitMinutes.value));

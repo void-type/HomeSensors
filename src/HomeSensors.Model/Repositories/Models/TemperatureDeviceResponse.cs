@@ -1,10 +1,10 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class Device
+public class TemperatureDeviceResponse
 {
-    public Device(
+    public TemperatureDeviceResponse(
         long id, string name, string mqttTopic,
-        long? locationId, Reading? lastReading,
+        long? locationId, TemperatureReadingResponse? lastReading,
         bool isRetired, bool isLost, bool isInactive, bool isBatteryLevelLow
         )
     {
@@ -23,7 +23,7 @@ public class Device
     public string Name { get; }
     public string MqttTopic { get; }
     public long? LocationId { get; }
-    public Reading? LastReading { get; }
+    public TemperatureReadingResponse? LastReading { get; }
     public bool IsRetired { get; }
     public bool IsLost { get; }
     public bool IsInactive { get; }

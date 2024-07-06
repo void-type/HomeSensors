@@ -27,6 +27,9 @@ public class MqttTemperaturesWorker : BackgroundService
         _configuration = configuration;
         _scopeFactory = scopeFactory;
         _mqttFactory = mqttFactory;
+
+        logger.LogInformation("Enabling background job: {JobName}.",
+            nameof(MqttTemperaturesWorker));
     }
 
     public async Task RefreshTopicSubscriptions()

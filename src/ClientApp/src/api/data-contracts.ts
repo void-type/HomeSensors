@@ -9,67 +9,38 @@
  * ---------------------------------------------------------------
  */
 
+export interface WebClientInfo {
+  antiforgeryToken?: string;
+  antiforgeryTokenHeaderName?: string;
+  applicationName?: string;
+  user?: DomainUser;
+}
+
+export interface DomainUser {
+  login?: string;
+  authorizedAs?: string[];
+}
+
 export interface AppVersion {
   version?: string | null;
   isPublicRelease?: boolean;
   isPrerelease?: boolean;
-  gitCommitId?: string | null;
+  gitCommitId?: string;
   /** @format date-time */
   gitCommitDate?: string;
-  assemblyConfiguration?: string | null;
+  assemblyConfiguration?: string;
 }
 
-export interface CheckLimitResult {
-  location?: Location;
-  isFailed?: boolean;
-  minReading?: Reading;
-  maxReading?: Reading;
-}
-
-export interface ClientStatus {
+export interface MqttDiscoveryClientStatus {
   topics?: string[] | null;
   isCreated?: boolean;
   isConnected?: boolean;
 }
 
-export interface Device {
-  /** @format int64 */
-  id?: number;
-  name?: string | null;
-  mqttTopic?: string | null;
-  /** @format int64 */
-  locationId?: number | null;
-  lastReading?: Reading;
-  isRetired?: boolean;
-  isLost?: boolean;
-  isInactive?: boolean;
-  isBatteryLevelLow?: boolean;
-}
-
-export interface DeviceUpdateRequest {
-  /** @format int64 */
-  id?: number;
-  name?: string | null;
-  mqttTopic?: string | null;
-  /** @format int64 */
-  locationId?: number | null;
-  isRetired?: boolean;
-}
-
-export interface DomainUser {
-  login?: string | null;
-  authorizedAs?: string[] | null;
-}
-
-export interface IFailure {
-  message?: string | null;
-  uiHandle?: string | null;
-}
-
-export interface IFailureIItemSet {
+export interface IItemSetOfIFailure {
   /** @format int32 */
   count?: number;
-  items?: IFailure[] | null;
+  items?: IFailure[];
   isPagingEnabled?: boolean;
   /** @format int32 */
   page?: number;
@@ -79,64 +50,103 @@ export interface IFailureIItemSet {
   totalCount?: number;
 }
 
-export interface Int64EntityMessage {
-  message?: string | null;
+export interface IFailure {
+  message?: string;
+  uiHandle?: string | null;
+}
+
+export interface MqttDiscoverySetupRequest {
+  topics?: string[];
+}
+
+export interface TemperatureDeviceResponse {
   /** @format int64 */
   id?: number;
-}
-
-export interface Location {
+  name?: string;
+  mqttTopic?: string;
   /** @format int64 */
-  id?: number;
-  name?: string | null;
-  /** @format double */
-  minTemperatureLimitCelsius?: number | null;
-  /** @format double */
-  maxTemperatureLimitCelsius?: number | null;
+  locationId?: number | null;
+  lastReading?: TemperatureReadingResponse | null;
+  isRetired?: boolean;
+  isLost?: boolean;
+  isInactive?: boolean;
+  isBatteryLevelLow?: boolean;
 }
 
-export interface LocationCreateRequest {
-  name?: string | null;
-  /** @format double */
-  minTemperatureLimitCelsius?: number | null;
-  /** @format double */
-  maxTemperatureLimitCelsius?: number | null;
-}
-
-export interface LocationUpdateRequest {
-  /** @format int64 */
-  id?: number;
-  name?: string | null;
-  /** @format double */
-  minTemperatureLimitCelsius?: number | null;
-  /** @format double */
-  maxTemperatureLimitCelsius?: number | null;
-}
-
-export interface Reading {
+export interface TemperatureReadingResponse {
   /** @format date-time */
   time?: string;
   /** @format double */
   humidity?: number | null;
   /** @format double */
   temperatureCelsius?: number | null;
-  location?: Location;
+  location?: TemperatureLocationResponse | null;
   isHot?: boolean;
   isCold?: boolean;
 }
 
-export interface SetupRequest {
-  topics?: string[] | null;
+export interface TemperatureLocationResponse {
+  /** @format int64 */
+  id?: number;
+  name?: string;
+  /** @format double */
+  minTemperatureLimitCelsius?: number | null;
+  /** @format double */
+  maxTemperatureLimitCelsius?: number | null;
 }
 
-export interface TimeSeries {
-  location?: Location;
-  temperatureAggregate?: TimeSeriesAggregate;
-  humidityAggregate?: TimeSeriesAggregate;
-  points?: TimeSeriesPoint[] | null;
+export type EntityMessageOfLong = UserMessage & {
+  /** @format int64 */
+  id?: number;
+};
+
+export interface UserMessage {
+  message?: string;
 }
 
-export interface TimeSeriesAggregate {
+export interface TemperatureDeviceSaveRequest {
+  /** @format int64 */
+  id?: number;
+  name?: string;
+  mqttTopic?: string;
+  /** @format int64 */
+  locationId?: number | null;
+  isRetired?: boolean;
+}
+
+export interface TemperatureCheckLimitResponse {
+  location?: TemperatureLocationResponse;
+  isFailed?: boolean;
+  minReading?: TemperatureReadingResponse | null;
+  maxReading?: TemperatureReadingResponse | null;
+}
+
+export interface TemperatureLocationCreateRequest {
+  name?: string;
+  /** @format double */
+  minTemperatureLimitCelsius?: number | null;
+  /** @format double */
+  maxTemperatureLimitCelsius?: number | null;
+}
+
+export interface TemperatureLocationUpdateRequest {
+  /** @format int64 */
+  id?: number;
+  name?: string;
+  /** @format double */
+  minTemperatureLimitCelsius?: number | null;
+  /** @format double */
+  maxTemperatureLimitCelsius?: number | null;
+}
+
+export interface TemperatureTimeSeriesResponse {
+  location?: TemperatureLocationResponse;
+  temperatureAggregate?: TemperatureTimeSeriesAggregate;
+  humidityAggregate?: TemperatureTimeSeriesAggregate;
+  points?: TemperatureTimeSeriesPoint[];
+}
+
+export interface TemperatureTimeSeriesAggregate {
   /** @format double */
   minimum?: number | null;
   /** @format double */
@@ -145,7 +155,7 @@ export interface TimeSeriesAggregate {
   average?: number | null;
 }
 
-export interface TimeSeriesPoint {
+export interface TemperatureTimeSeriesPoint {
   /** @format date-time */
   time?: string;
   /** @format double */
@@ -154,22 +164,15 @@ export interface TimeSeriesPoint {
   humidity?: number | null;
 }
 
-export interface TimeSeriesRequest {
+export interface TemperatureTimeSeriesRequest {
   /** @format date-time */
   startTime?: string;
   /** @format date-time */
   endTime?: string;
-  locationIds?: number[] | null;
+  locationIds?: (number | null)[];
 }
 
-export interface WebClientInfo {
-  antiforgeryToken?: string | null;
-  antiforgeryTokenHeaderName?: string | null;
-  applicationName?: string | null;
-  user?: DomainUser;
-}
-
-export interface TemperaturesLocationsCheckLimitsCreateParams {
+export interface TemperatureLocationsCheckLimitsParams {
   /** @format date-time */
   lastCheck?: string;
 }

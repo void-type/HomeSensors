@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
-import type { Device, IFailureIItemSet, Location } from '@/api/data-contracts';
+import type {
+  TemperatureDeviceResponse,
+  IItemSetOfIFailure,
+  TemperatureLocationResponse,
+} from '@/api/data-contracts';
 import { storeToRefs } from 'pinia';
 import { formatTempWithUnit } from '@/models/TempFormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
@@ -18,14 +22,14 @@ const api = ApiHelpers.client;
 const { useFahrenheit, staleLimitMinutes } = storeToRefs(appStore);
 
 const data = reactive({
-  devices: [] as Array<Device>,
-  locations: [] as Array<Location>,
+  devices: [] as Array<TemperatureDeviceResponse>,
+  locations: [] as Array<TemperatureLocationResponse>,
   errors: [] as Array<string>,
 });
 
 async function getDevices() {
   try {
-    const response = await api().temperaturesDevicesAllCreate();
+    const response = await api().temperatureDevicesGetAll();
     data.devices = response.data;
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -34,20 +38,20 @@ async function getDevices() {
 
 async function getLocations() {
   try {
-    const response = await api().temperaturesLocationsAllCreate();
+    const response = await api().temperatureLocationsGetAll();
     data.locations = response.data;
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
-async function reallyDeleteDevice(device: Device) {
+async function reallyDeleteDevice(device: TemperatureDeviceResponse) {
   if (device.id === null || typeof device.id === 'undefined') {
     return;
   }
 
   try {
-    const response = await api().temperaturesDevicesDelete(device.id);
+    const response = await api().temperatureDevicesDelete(device.id);
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
@@ -66,14 +70,14 @@ async function newDevice() {
 
   data.devices.unshift({
     id: 0,
-    name: null,
-    mqttTopic: null,
+    name: '',
+    mqttTopic: '',
     locationId: null,
     isRetired: false,
   });
 }
 
-async function deleteDevice(device: Device) {
+async function deleteDevice(device: TemperatureDeviceResponse) {
   const parameters: ModalParameters = {
     title: 'Delete device',
     description: 'Do you really want to delete this device?',
@@ -83,7 +87,7 @@ async function deleteDevice(device: Device) {
   appStore.showModal(parameters);
 }
 
-async function updateDevice(device: Device) {
+async function saveDevice(device: TemperatureDeviceResponse) {
   data.errors = [];
 
   const request = {
@@ -95,7 +99,7 @@ async function updateDevice(device: Device) {
   };
 
   try {
-    const response = await api().temperaturesDevicesUpdateCreate(request);
+    const response = await api().temperatureDevicesSave(request);
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
@@ -106,27 +110,8 @@ async function updateDevice(device: Device) {
     const response = error as HttpResponse<unknown, unknown>;
     messageStore.setApiFailureMessages(response);
 
-    const failures = (response.error as IFailureIItemSet).items || [];
+    const failures = (response.error as IItemSetOfIFailure).items || [];
     failures.forEach((x) => data.errors.push(`${x.uiHandle}-${device.id}`));
-  }
-
-  // Update statuses
-  try {
-    const response = await api().temperaturesDevicesAllCreate();
-    const newDevices = response.data;
-
-    data.devices.forEach((x) => {
-      const d = newDevices.filter((y) => y.id === x.id)[0];
-
-      if (d) {
-        // eslint-disable-next-line no-param-reassign
-        x.isInactive = d.isInactive;
-        // eslint-disable-next-line no-param-reassign
-        x.isLost = d.isLost;
-      }
-    });
-  } catch (error) {
-    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
@@ -202,7 +187,7 @@ onMounted(async () => {
           </div>
           <div class="g-col-12">
             <div class="btn-toolbar">
-              <button class="btn btn-primary me-2" @click="updateDevice(device)">Save</button>
+              <button class="btn btn-primary me-2" @click="saveDevice(device)">Save</button>
               <button v-if="device.id" class="btn btn-danger ms-auto" @click="deleteDevice(device)">
                 Delete
               </button>

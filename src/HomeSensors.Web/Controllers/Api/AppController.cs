@@ -3,13 +3,13 @@ using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 
-namespace HomeSensors.Web.Controllers;
+namespace HomeSensors.Web.Controllers.Api;
 
 /// <summary>
 /// Application metadata.
 /// </summary>
 [Route(ApiRouteAttribute.BasePath + "/app")]
-public class ApplicationController : ControllerBase
+public class AppController : ControllerBase
 {
     /// <summary>
     /// Get information to bootstrap the SPA client like application name and user data.

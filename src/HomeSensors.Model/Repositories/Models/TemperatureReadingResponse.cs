@@ -1,8 +1,8 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class Reading
+public class TemperatureReadingResponse
 {
-    public Reading(DateTimeOffset time, double? humidity, double? temperatureCelsius, Location? location)
+    public TemperatureReadingResponse(DateTimeOffset time, double? humidity, double? temperatureCelsius, TemperatureLocationResponse? location)
     {
         Time = time;
         Humidity = humidity;
@@ -26,7 +26,7 @@ public class Reading
     public DateTimeOffset Time { get; }
     public double? Humidity { get; }
     public double? TemperatureCelsius { get; }
-    public Location? Location { get; }
+    public TemperatureLocationResponse? Location { get; }
     public bool IsHot { get; }
     public bool IsCold { get; }
 }

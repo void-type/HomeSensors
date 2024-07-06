@@ -7,25 +7,24 @@ using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
 using VoidCore.Model.Responses.Messages;
 
-namespace HomeSensors.Web.Controllers.Temperatures;
+namespace HomeSensors.Web.Controllers.Api;
 
 /// <summary>
 /// Exposes temperature data through web API
 /// </summary>
-[Route(ApiRouteAttribute.BasePath + "/temperatures/locations")]
-public class LocationsController : ControllerBase
+[Route(ApiRouteAttribute.BasePath + "/temperatures-locations")]
+public class TemperatureLocationsController : ControllerBase
 {
     private readonly TemperatureLocationRepository _locationRepository;
 
-    public LocationsController(TemperatureLocationRepository locationRepository)
+    public TemperatureLocationsController(TemperatureLocationRepository locationRepository)
     {
         _locationRepository = locationRepository;
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("all")]
-    [IgnoreAntiforgeryToken]
-    [ProducesResponseType(typeof(List<Location>), 200)]
+    [ProducesResponseType(typeof(List<TemperatureLocationResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAll()
     {
@@ -33,10 +32,9 @@ public class LocationsController : ControllerBase
         return HttpResponder.Respond(series);
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("check-limits")]
-    [IgnoreAntiforgeryToken]
-    [ProducesResponseType(typeof(List<CheckLimitResult>), 200)]
+    [ProducesResponseType(typeof(List<TemperatureCheckLimitResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> CheckLimits(DateTimeOffset lastCheck)
     {
@@ -48,7 +46,7 @@ public class LocationsController : ControllerBase
     [Route("create")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Create([FromBody] LocationCreateRequest request)
+    public async Task<IActionResult> Create([FromBody] TemperatureLocationCreateRequest request)
     {
         var result = await _locationRepository.Create(request);
         return HttpResponder.Respond(result);
@@ -58,7 +56,7 @@ public class LocationsController : ControllerBase
     [Route("update")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Update([FromBody] LocationUpdateRequest request)
+    public async Task<IActionResult> Update([FromBody] TemperatureLocationUpdateRequest request)
     {
         var result = await _locationRepository.Update(request);
         return HttpResponder.Respond(result);

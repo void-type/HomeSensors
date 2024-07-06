@@ -25,6 +25,9 @@ public class MqttWaterLeaksWorker : BackgroundService
         _scopeFactory = scopeFactory;
         _mqttFactory = mqttFactory;
         _workerSettings = workerSettings;
+
+        logger.LogInformation("Enabling background job: {JobName}.",
+            nameof(MqttWaterLeaksWorker));
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

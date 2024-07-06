@@ -11,20 +11,20 @@
 
 import type {
   AppVersion,
-  CheckLimitResult,
-  ClientStatus,
-  Device,
-  DeviceUpdateRequest,
-  IFailureIItemSet,
-  Int64EntityMessage,
-  Location,
-  LocationCreateRequest,
-  LocationUpdateRequest,
-  Reading,
-  SetupRequest,
-  TemperaturesLocationsCheckLimitsCreateParams,
-  TimeSeries,
-  TimeSeriesRequest,
+  EntityMessageOfLong,
+  IItemSetOfIFailure,
+  MqttDiscoveryClientStatus,
+  MqttDiscoverySetupRequest,
+  TemperatureCheckLimitResponse,
+  TemperatureDeviceResponse,
+  TemperatureDeviceSaveRequest,
+  TemperatureLocationCreateRequest,
+  TemperatureLocationResponse,
+  TemperatureLocationsCheckLimitsParams,
+  TemperatureLocationUpdateRequest,
+  TemperatureReadingResponse,
+  TemperatureTimeSeriesRequest,
+  TemperatureTimeSeriesResponse,
   WebClientInfo,
 } from './data-contracts';
 import { ContentType, HttpClient, type RequestParams } from './http-client';
@@ -33,13 +33,13 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags Application
-   * @name AppInfoList
+   * @tags App
+   * @name AppGetInfo
    * @summary Get information to bootstrap the SPA client like application name and user data.
    * @request GET:/api/app/info
-   * @response `200` `WebClientInfo` OK
+   * @response `200` `WebClientInfo`
    */
-  appInfoList = (params: RequestParams = {}) =>
+  appGetInfo = (params: RequestParams = {}) =>
     this.request<WebClientInfo, any>({
       path: `/api/app/info`,
       method: 'GET',
@@ -49,13 +49,13 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags Application
-   * @name AppVersionList
+   * @tags App
+   * @name AppGetVersion
    * @summary Get the version of the application.
    * @request GET:/api/app/version
-   * @response `200` `AppVersion` OK
+   * @response `200` `AppVersion`
    */
-  appVersionList = (params: RequestParams = {}) =>
+  appGetVersion = (params: RequestParams = {}) =>
     this.request<AppVersion, any>({
       path: `/api/app/version`,
       method: 'GET',
@@ -65,136 +65,14 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags Devices
-   * @name TemperaturesDevicesAllCreate
-   * @request POST:/api/temperatures/devices/all
-   * @response `200` `(Device)[]` OK
-   * @response `400` `IFailureIItemSet` Bad Request
+   * @tags MqttDiscovery
+   * @name MqttDiscoveryStatus
+   * @request GET:/api/mqtt-discovery/status
+   * @response `200` `MqttDiscoveryClientStatus`
    */
-  temperaturesDevicesAllCreate = (params: RequestParams = {}) =>
-    this.request<Device[], IFailureIItemSet>({
-      path: `/api/temperatures/devices/all`,
-      method: 'POST',
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Devices
-   * @name TemperaturesDevicesUpdateCreate
-   * @request POST:/api/temperatures/devices/update
-   * @response `200` `Int64EntityMessage` OK
-   * @response `400` `IFailureIItemSet` Bad Request
-   */
-  temperaturesDevicesUpdateCreate = (data: DeviceUpdateRequest, params: RequestParams = {}) =>
-    this.request<Int64EntityMessage, IFailureIItemSet>({
-      path: `/api/temperatures/devices/update`,
-      method: 'POST',
-      body: data,
-      type: ContentType.Json,
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Devices
-   * @name TemperaturesDevicesDelete
-   * @request DELETE:/api/temperatures/devices/{id}
-   * @response `200` `Int64EntityMessage` OK
-   * @response `400` `IFailureIItemSet` Bad Request
-   */
-  temperaturesDevicesDelete = (id: number, params: RequestParams = {}) =>
-    this.request<Int64EntityMessage, IFailureIItemSet>({
-      path: `/api/temperatures/devices/${id}`,
-      method: 'DELETE',
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Locations
-   * @name TemperaturesLocationsAllCreate
-   * @request POST:/api/temperatures/locations/all
-   * @response `200` `(Location)[]` OK
-   * @response `400` `IFailureIItemSet` Bad Request
-   */
-  temperaturesLocationsAllCreate = (params: RequestParams = {}) =>
-    this.request<Location[], IFailureIItemSet>({
-      path: `/api/temperatures/locations/all`,
-      method: 'POST',
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Locations
-   * @name TemperaturesLocationsCheckLimitsCreate
-   * @request POST:/api/temperatures/locations/check-limits
-   * @response `200` `(CheckLimitResult)[]` OK
-   * @response `400` `IFailureIItemSet` Bad Request
-   */
-  temperaturesLocationsCheckLimitsCreate = (
-    query: TemperaturesLocationsCheckLimitsCreateParams,
-    params: RequestParams = {}
-  ) =>
-    this.request<CheckLimitResult[], IFailureIItemSet>({
-      path: `/api/temperatures/locations/check-limits`,
-      method: 'POST',
-      query: query,
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Locations
-   * @name TemperaturesLocationsCreateCreate
-   * @request POST:/api/temperatures/locations/create
-   * @response `200` `Int64EntityMessage` OK
-   * @response `400` `IFailureIItemSet` Bad Request
-   */
-  temperaturesLocationsCreateCreate = (data: LocationCreateRequest, params: RequestParams = {}) =>
-    this.request<Int64EntityMessage, IFailureIItemSet>({
-      path: `/api/temperatures/locations/create`,
-      method: 'POST',
-      body: data,
-      type: ContentType.Json,
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags Locations
-   * @name TemperaturesLocationsUpdateCreate
-   * @request POST:/api/temperatures/locations/update
-   * @response `200` `Int64EntityMessage` OK
-   * @response `400` `IFailureIItemSet` Bad Request
-   */
-  temperaturesLocationsUpdateCreate = (data: LocationUpdateRequest, params: RequestParams = {}) =>
-    this.request<Int64EntityMessage, IFailureIItemSet>({
-      path: `/api/temperatures/locations/update`,
-      method: 'POST',
-      body: data,
-      type: ContentType.Json,
-      format: 'json',
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags MqttFeedDiscovery
-   * @name TemperaturesMqttFeedDiscoveryStatusList
-   * @request GET:/api/temperatures/mqtt-feed-discovery/status
-   * @response `200` `ClientStatus` OK
-   */
-  temperaturesMqttFeedDiscoveryStatusList = (params: RequestParams = {}) =>
-    this.request<ClientStatus, any>({
-      path: `/api/temperatures/mqtt-feed-discovery/status`,
+  mqttDiscoveryStatus = (params: RequestParams = {}) =>
+    this.request<MqttDiscoveryClientStatus, any>({
+      path: `/api/mqtt-discovery/status`,
       method: 'GET',
       format: 'json',
       ...params,
@@ -202,15 +80,15 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags MqttFeedDiscovery
-   * @name TemperaturesMqttFeedDiscoverySetupCreate
-   * @request POST:/api/temperatures/mqtt-feed-discovery/setup
-   * @response `200` `ClientStatus` OK
-   * @response `400` `IFailureIItemSet` Bad Request
+   * @tags MqttDiscovery
+   * @name MqttDiscoverySetup
+   * @request POST:/api/mqtt-discovery/setup
+   * @response `200` `MqttDiscoveryClientStatus`
+   * @response `400` `IItemSetOfIFailure`
    */
-  temperaturesMqttFeedDiscoverySetupCreate = (data: SetupRequest, params: RequestParams = {}) =>
-    this.request<ClientStatus, IFailureIItemSet>({
-      path: `/api/temperatures/mqtt-feed-discovery/setup`,
+  mqttDiscoverySetup = (data: MqttDiscoverySetupRequest, params: RequestParams = {}) =>
+    this.request<MqttDiscoveryClientStatus, IItemSetOfIFailure>({
+      path: `/api/mqtt-discovery/setup`,
       method: 'POST',
       body: data,
       type: ContentType.Json,
@@ -220,14 +98,14 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags MqttFeedDiscovery
-   * @name TemperaturesMqttFeedDiscoveryTeardownCreate
-   * @request POST:/api/temperatures/mqtt-feed-discovery/teardown
-   * @response `200` `ClientStatus` OK
+   * @tags MqttDiscovery
+   * @name MqttDiscoveryTeardown
+   * @request POST:/api/mqtt-discovery/teardown
+   * @response `200` `MqttDiscoveryClientStatus`
    */
-  temperaturesMqttFeedDiscoveryTeardownCreate = (params: RequestParams = {}) =>
-    this.request<ClientStatus, any>({
-      path: `/api/temperatures/mqtt-feed-discovery/teardown`,
+  mqttDiscoveryTeardown = (params: RequestParams = {}) =>
+    this.request<MqttDiscoveryClientStatus, any>({
+      path: `/api/mqtt-discovery/teardown`,
       method: 'POST',
       format: 'json',
       ...params,
@@ -235,32 +113,163 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   /**
    * No description
    *
-   * @tags Readings
-   * @name TemperaturesReadingsCurrentCreate
-   * @request POST:/api/temperatures/readings/current
-   * @response `200` `(Reading)[]` OK
-   * @response `400` `IFailureIItemSet` Bad Request
+   * @tags TemperatureDevices
+   * @name TemperatureDevicesGetAll
+   * @request GET:/api/temperatures-devices/all
+   * @response `200` `(TemperatureDeviceResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
    */
-  temperaturesReadingsCurrentCreate = (params: RequestParams = {}) =>
-    this.request<Reading[], IFailureIItemSet>({
-      path: `/api/temperatures/readings/current`,
-      method: 'POST',
+  temperatureDevicesGetAll = (params: RequestParams = {}) =>
+    this.request<TemperatureDeviceResponse[], IItemSetOfIFailure>({
+      path: `/api/temperatures-devices/all`,
+      method: 'GET',
       format: 'json',
       ...params,
     });
   /**
    * No description
    *
-   * @tags Readings
-   * @name TemperaturesReadingsTimeSeriesCreate
-   * @request POST:/api/temperatures/readings/time-series
-   * @response `200` `(TimeSeries)[]` OK
-   * @response `400` `IFailureIItemSet` Bad Request
+   * @tags TemperatureDevices
+   * @name TemperatureDevicesSave
+   * @request POST:/api/temperatures-devices
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
    */
-  temperaturesReadingsTimeSeriesCreate = (data: TimeSeriesRequest, params: RequestParams = {}) =>
-    this.request<TimeSeries[], IFailureIItemSet>({
-      path: `/api/temperatures/readings/time-series`,
+  temperatureDevicesSave = (data: TemperatureDeviceSaveRequest, params: RequestParams = {}) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/temperatures-devices`,
       method: 'POST',
+      body: data,
+      type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureDevices
+   * @name TemperatureDevicesDelete
+   * @request DELETE:/api/temperatures-devices/{id}
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  temperatureDevicesDelete = (id: number, params: RequestParams = {}) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/temperatures-devices/${id}`,
+      method: 'DELETE',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureLocations
+   * @name TemperatureLocationsGetAll
+   * @request GET:/api/temperatures-locations/all
+   * @response `200` `(TemperatureLocationResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  temperatureLocationsGetAll = (params: RequestParams = {}) =>
+    this.request<TemperatureLocationResponse[], IItemSetOfIFailure>({
+      path: `/api/temperatures-locations/all`,
+      method: 'GET',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureLocations
+   * @name TemperatureLocationsCheckLimits
+   * @request GET:/api/temperatures-locations/check-limits
+   * @response `200` `(TemperatureCheckLimitResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  temperatureLocationsCheckLimits = (
+    query: TemperatureLocationsCheckLimitsParams,
+    params: RequestParams = {}
+  ) =>
+    this.request<TemperatureCheckLimitResponse[], IItemSetOfIFailure>({
+      path: `/api/temperatures-locations/check-limits`,
+      method: 'GET',
+      query: query,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureLocations
+   * @name TemperatureLocationsCreate
+   * @request POST:/api/temperatures-locations/create
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  temperatureLocationsCreate = (
+    data: TemperatureLocationCreateRequest,
+    params: RequestParams = {}
+  ) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/temperatures-locations/create`,
+      method: 'POST',
+      body: data,
+      type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureLocations
+   * @name TemperatureLocationsUpdate
+   * @request POST:/api/temperatures-locations/update
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  temperatureLocationsUpdate = (
+    data: TemperatureLocationUpdateRequest,
+    params: RequestParams = {}
+  ) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/temperatures-locations/update`,
+      method: 'POST',
+      body: data,
+      type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureReadings
+   * @name TemperatureReadingsGetCurrentReadings
+   * @request GET:/api/temperatures-readings/current
+   * @response `200` `(TemperatureReadingResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  temperatureReadingsGetCurrentReadings = (params: RequestParams = {}) =>
+    this.request<TemperatureReadingResponse[], IItemSetOfIFailure>({
+      path: `/api/temperatures-readings/current`,
+      method: 'GET',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureReadings
+   * @name TemperatureReadingsGetTimeSeries
+   * @request GET:/api/temperatures-readings/time-series
+   * @response `200` `(TemperatureTimeSeriesResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  temperatureReadingsGetTimeSeries = (
+    data: TemperatureTimeSeriesRequest,
+    params: RequestParams = {}
+  ) =>
+    this.request<TemperatureTimeSeriesResponse[], IItemSetOfIFailure>({
+      path: `/api/temperatures-readings/time-series`,
+      method: 'GET',
       body: data,
       type: ContentType.Json,
       format: 'json',

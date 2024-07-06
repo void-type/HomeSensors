@@ -23,7 +23,7 @@ HomeSensors.Web - A web app for working with the data.
 - Time series line graph with selectable date range and locations using Chart.js.
 - Time series also populates a table showing min, max and average temps of each location queried.
 - API data is cached using LazyCache.
-- Web API is automatically documented using Swashbuckle and Swagger.
+- Web API is automatically documented using Swagger.
 
 ClientApp - A browser frontend for HomeSensors.Web.
 

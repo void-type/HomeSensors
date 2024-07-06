@@ -1,30 +1,28 @@
-﻿using HomeSensors.Web.Services;
+﻿using HomeSensors.Web.Services.MqttDiscovery;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
-using static HomeSensors.Web.Services.MqttFeedDiscoveryService;
 
-namespace HomeSensors.Web.Controllers.Temperatures;
+namespace HomeSensors.Web.Controllers.Api;
 
 /// <summary>
 /// Exposes temperature data through web API
 /// </summary>
-[Route(ApiRouteAttribute.BasePath + "/temperatures/mqtt-feed-discovery")]
-public class MqttFeedDiscoveryController : ControllerBase
+[Route(ApiRouteAttribute.BasePath + "/mqtt-discovery")]
+public class MqttDiscoveryController : ControllerBase
 {
-    private readonly MqttFeedDiscoveryService _discoveryService;
+    private readonly MqttDiscoveryService _discoveryService;
 
-    public MqttFeedDiscoveryController(MqttFeedDiscoveryService discoveryService)
+    public MqttDiscoveryController(MqttDiscoveryService discoveryService)
     {
         _discoveryService = discoveryService;
     }
 
     [HttpGet]
     [Route("status")]
-    [IgnoreAntiforgeryToken]
-    [ProducesResponseType(typeof(ClientStatus), 200)]
+    [ProducesResponseType(typeof(MqttDiscoveryClientStatus), 200)]
     public IActionResult Status()
     {
         return HttpResponder.Respond(_discoveryService.GetClientStatus());
@@ -32,18 +30,16 @@ public class MqttFeedDiscoveryController : ControllerBase
 
     [HttpPost]
     [Route("setup")]
-    [IgnoreAntiforgeryToken]
-    [ProducesResponseType(typeof(ClientStatus), 200)]
+    [ProducesResponseType(typeof(MqttDiscoveryClientStatus), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Setup([FromBody] SetupRequest request)
+    public async Task<IActionResult> Setup([FromBody] MqttDiscoverySetupRequest request)
     {
         return HttpResponder.Respond(await _discoveryService.SetupClient(request));
     }
 
     [HttpPost]
     [Route("teardown")]
-    [IgnoreAntiforgeryToken]
-    [ProducesResponseType(typeof(ClientStatus), 200)]
+    [ProducesResponseType(typeof(MqttDiscoveryClientStatus), 200)]
     public IActionResult Teardown()
     {
         return HttpResponder.Respond(_discoveryService.TeardownClient());

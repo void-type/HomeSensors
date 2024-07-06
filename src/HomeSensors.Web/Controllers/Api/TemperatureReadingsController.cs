@@ -6,25 +6,24 @@ using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
 
-namespace HomeSensors.Web.Controllers.Temperatures;
+namespace HomeSensors.Web.Controllers.Api;
 
 /// <summary>
 /// Exposes temperature data through web API
 /// </summary>
-[Route(ApiRouteAttribute.BasePath + "/temperatures/readings")]
-public class ReadingsController : ControllerBase
+[Route(ApiRouteAttribute.BasePath + "/temperatures-readings")]
+public class TemperatureReadingsController : ControllerBase
 {
     private readonly TemperatureCachedRepository _cachedTemperatureRepository;
 
-    public ReadingsController(TemperatureCachedRepository cachedRepository)
+    public TemperatureReadingsController(TemperatureCachedRepository cachedRepository)
     {
         _cachedTemperatureRepository = cachedRepository;
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("current")]
-    [IgnoreAntiforgeryToken]
-    [ProducesResponseType(typeof(List<Reading>), 200)]
+    [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetCurrentReadings()
     {
@@ -32,12 +31,11 @@ public class ReadingsController : ControllerBase
         return HttpResponder.Respond(readings);
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("time-series")]
-    [IgnoreAntiforgeryToken]
-    [ProducesResponseType(typeof(List<TimeSeries>), 200)]
+    [ProducesResponseType(typeof(List<TemperatureTimeSeriesResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetTimeSeries([FromBody] TimeSeriesRequest request)
+    public async Task<IActionResult> GetTimeSeries([FromBody] TemperatureTimeSeriesRequest request)
     {
         var series = await _cachedTemperatureRepository.GetTimeSeriesReadings(request);
         return HttpResponder.Respond(series);

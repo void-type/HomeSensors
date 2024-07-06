@@ -8,27 +8,26 @@ using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
 using VoidCore.Model.Responses.Messages;
 
-namespace HomeSensors.Web.Controllers.Temperatures;
+namespace HomeSensors.Web.Controllers.Api;
 
 /// <summary>
 /// Exposes temperature data through web API
 /// </summary>
-[Route(ApiRouteAttribute.BasePath + "/temperatures/devices")]
-public class DevicesController : ControllerBase
+[Route(ApiRouteAttribute.BasePath + "/temperatures-devices")]
+public class TemperatureDevicesController : ControllerBase
 {
     private readonly TemperatureDeviceRepository _deviceRepository;
     private readonly IHttpContextAccessor _contextAccessor;
 
-    public DevicesController(TemperatureDeviceRepository deviceRepository, IHttpContextAccessor contextAccessor)
+    public TemperatureDevicesController(TemperatureDeviceRepository deviceRepository, IHttpContextAccessor contextAccessor)
     {
         _deviceRepository = deviceRepository;
         _contextAccessor = contextAccessor;
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("all")]
-    [IgnoreAntiforgeryToken]
-    [ProducesResponseType(typeof(List<Device>), 200)]
+    [ProducesResponseType(typeof(List<TemperatureDeviceResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAll()
     {
@@ -37,13 +36,11 @@ public class DevicesController : ControllerBase
     }
 
     [HttpPost]
-    [Route("update")]
-    [IgnoreAntiforgeryToken]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Update([FromBody] DeviceUpdateRequest request)
+    public async Task<IActionResult> Save([FromBody] TemperatureDeviceSaveRequest request)
     {
-        var result = await _deviceRepository.Update(request);
+        var result = await _deviceRepository.Save(request);
 
         await RefreshTopicSubscriptions();
 
@@ -52,7 +49,6 @@ public class DevicesController : ControllerBase
 
     [HttpDelete]
     [Route("{id}")]
-    [IgnoreAntiforgeryToken]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> Delete(int id)

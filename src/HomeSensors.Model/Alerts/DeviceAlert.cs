@@ -5,7 +5,7 @@ namespace HomeSensors.Model.Alerts;
 
 public class DeviceAlert : ValueObject
 {
-    public DeviceAlert(DeviceAlertType type, Device device, Location? location, DateTimeOffset resendAfter)
+    public DeviceAlert(DeviceAlertType type, TemperatureDeviceResponse device, TemperatureLocationResponse? location, DateTimeOffset resendAfter)
     {
         Type = type;
         Device = device;
@@ -14,8 +14,8 @@ public class DeviceAlert : ValueObject
     }
 
     public DeviceAlertType Type { get; }
-    public Device Device { get; }
-    public Location? Location { get; }
+    public TemperatureDeviceResponse Device { get; }
+    public TemperatureLocationResponse? Location { get; }
     public DateTimeOffset ResendAfter { get; }
 
     protected override IEnumerable<object> GetEqualityComponents()

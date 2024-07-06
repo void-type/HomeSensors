@@ -22,6 +22,10 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
         _tempHubContext = tempHubContext;
         _scopeFactory = scopeFactory;
         _betweenTicks = TimeSpan.FromSeconds(workerSettings.BetweenTicksSeconds);
+
+        logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} seconds.",
+            nameof(PushTemperatureCurrentReadingsWorker),
+            workerSettings.BetweenTicksSeconds);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

@@ -26,6 +26,10 @@ public class AlertsWorker : BackgroundService
         _dateTimeService = dateTimeService;
         _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
         _betweenNotifications = TimeSpan.FromMinutes(workerSettings.BetweenNotificationsMinutes);
+
+        logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
+            nameof(AlertsWorker),
+            workerSettings.BetweenTicksMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

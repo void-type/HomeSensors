@@ -1,8 +1,8 @@
 ﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class TimeSeriesPoint
+public class TemperatureTimeSeriesPoint
 {
-    public TimeSeriesPoint(DateTimeOffset time, double? temperatureCelsius, double? humidity)
+    public TemperatureTimeSeriesPoint(DateTimeOffset time, double? temperatureCelsius, double? humidity)
     {
         Time = time;
         TemperatureCelsius = temperatureCelsius;
