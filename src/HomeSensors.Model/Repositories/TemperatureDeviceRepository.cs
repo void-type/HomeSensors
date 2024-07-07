@@ -58,7 +58,7 @@ public class TemperatureDeviceRepository : RepositoryBase
                 name: x.Name,
                 mqttTopic: x.MqttTopic,
                 locationId: x.LocationId,
-                lastReading: lastReading?.ToReading(),
+                lastReading: lastReading?.ToApiResponse(),
                 isRetired: x.IsRetired,
                 isInactive: !x.IsRetired && (lastReading is null || lastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20)),
                 isBatteryLevelLow: !x.IsRetired && lastReading?.DeviceBatteryLevel is not null && lastReading.DeviceBatteryLevel < 1

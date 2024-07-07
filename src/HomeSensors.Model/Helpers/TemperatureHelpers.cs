@@ -52,7 +52,7 @@ public static class TemperatureHelpers
         return $"{FormatTemp(tempCelsius.Value, true)} / {FormatTemp(tempCelsius.Value)}";
     }
 
-    public static TemperatureReadingResponse ToReading(this TemperatureReading a) => new(a.Time, a.Humidity, a.TemperatureCelsius, a.TemperatureLocation?.ToLocation());
+    public static TemperatureReadingResponse ToApiResponse(this TemperatureReading a) => new(a.Time, a.Humidity, a.TemperatureCelsius, a.TemperatureLocation?.ToApiResponse());
 
-    public static TemperatureLocationResponse ToLocation(this TemperatureLocation a) => new(a.Id, a.Name, a.MinTemperatureLimitCelsius, a.MaxTemperatureLimitCelsius);
+    public static TemperatureLocationResponse ToApiResponse(this TemperatureLocation a) => new(a.Id, a.Name, a.MinTemperatureLimitCelsius, a.MaxTemperatureLimitCelsius);
 }

@@ -38,7 +38,7 @@ public class TemperatureReadingRepository : RepositoryBase
             time: x.Time,
             humidity: x.Humidity,
             temperatureCelsius: x.TemperatureCelsius,
-            location: x.TemperatureLocation!.ToLocation()
+            location: x.TemperatureLocation!.ToApiResponse()
         ));
     }
 
@@ -59,7 +59,7 @@ public class TemperatureReadingRepository : RepositoryBase
                 time: x.Time,
                 humidity: x.Humidity,
                 temperatureCelsius: x.TemperatureCelsius,
-                location: x.TemperatureLocation!.ToLocation()));
+                location: x.TemperatureLocation!.ToApiResponse()));
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ public class TemperatureReadingRepository : RepositoryBase
                     average: allHumidity.Average());
 
                 return new TemperatureTimeSeriesResponse(
-                    location: readingsForLocation.First().TemperatureLocation!.ToLocation(),
+                    location: readingsForLocation.First().TemperatureLocation!.ToApiResponse(),
                     tempAgg,
                     humidityAgg,
                     points: avgGraphPoints

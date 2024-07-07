@@ -28,7 +28,7 @@ public class TemperatureLocationRepository : RepositoryBase
             .AsNoTracking()
             .OrderBy(x => x.Name)
             .ToListAsync())
-            .ConvertAll(x => x.ToLocation());
+            .ConvertAll(x => x.ToApiResponse());
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ public class TemperatureLocationRepository : RepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .ToListAsync())
-            .Select(x => x.ToLocation());
+            .Select(x => x.ToApiResponse());
 
         var results = new List<TemperatureCheckLimitResponse>();
 
@@ -144,7 +144,7 @@ public class TemperatureLocationRepository : RepositoryBase
             .OrderBy(x => x.TemperatureCelsius)
             .FirstOrDefaultAsync();
 
-        return min?.ToReading();
+        return min?.ToApiResponse();
     }
 
     private async Task<TemperatureReadingResponse?> GetMaxExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck)
@@ -161,6 +161,6 @@ public class TemperatureLocationRepository : RepositoryBase
             .OrderByDescending(x => x.TemperatureCelsius)
             .FirstOrDefaultAsync();
 
-        return max?.ToReading();
+        return max?.ToApiResponse();
     }
 }
