@@ -18,10 +18,9 @@ import type {
   TemperatureCheckLimitResponse,
   TemperatureDeviceResponse,
   TemperatureDeviceSaveRequest,
-  TemperatureLocationCreateRequest,
   TemperatureLocationResponse,
+  TemperatureLocationSaveRequest,
   TemperatureLocationsCheckLimitsParams,
-  TemperatureLocationUpdateRequest,
   TemperatureReadingResponse,
   TemperatureTimeSeriesRequest,
   TemperatureTimeSeriesResponse,
@@ -200,17 +199,14 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * No description
    *
    * @tags TemperatureLocations
-   * @name TemperatureLocationsCreate
-   * @request POST:/api/temperatures-locations/create
+   * @name TemperatureLocationsSave
+   * @request POST:/api/temperatures-locations
    * @response `200` `EntityMessageOfLong`
    * @response `400` `IItemSetOfIFailure`
    */
-  temperatureLocationsCreate = (
-    data: TemperatureLocationCreateRequest,
-    params: RequestParams = {}
-  ) =>
+  temperatureLocationsSave = (data: TemperatureLocationSaveRequest, params: RequestParams = {}) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
-      path: `/api/temperatures-locations/create`,
+      path: `/api/temperatures-locations`,
       method: 'POST',
       body: data,
       type: ContentType.Json,
@@ -221,20 +217,15 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * No description
    *
    * @tags TemperatureLocations
-   * @name TemperatureLocationsUpdate
-   * @request POST:/api/temperatures-locations/update
+   * @name TemperatureLocationsDelete
+   * @request DELETE:/api/temperatures-locations/{id}
    * @response `200` `EntityMessageOfLong`
    * @response `400` `IItemSetOfIFailure`
    */
-  temperatureLocationsUpdate = (
-    data: TemperatureLocationUpdateRequest,
-    params: RequestParams = {}
-  ) =>
+  temperatureLocationsDelete = (id: number, params: RequestParams = {}) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
-      path: `/api/temperatures-locations/update`,
-      method: 'POST',
-      body: data,
-      type: ContentType.Json,
+      path: `/api/temperatures-locations/${id}`,
+      method: 'DELETE',
       format: 'json',
       ...params,
     });
@@ -259,7 +250,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    *
    * @tags TemperatureReadings
    * @name TemperatureReadingsGetTimeSeries
-   * @request GET:/api/temperatures-readings/time-series
+   * @request POST:/api/temperatures-readings/time-series
    * @response `200` `(TemperatureTimeSeriesResponse)[]`
    * @response `400` `IItemSetOfIFailure`
    */
@@ -269,7 +260,7 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   ) =>
     this.request<TemperatureTimeSeriesResponse[], IItemSetOfIFailure>({
       path: `/api/temperatures-readings/time-series`,
-      method: 'GET',
+      method: 'POST',
       body: data,
       type: ContentType.Json,
       format: 'json',

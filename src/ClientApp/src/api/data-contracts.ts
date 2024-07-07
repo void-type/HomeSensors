@@ -65,7 +65,7 @@ export interface TemperatureDeviceResponse {
   name?: string;
   mqttTopic?: string;
   /** @format int64 */
-  locationId?: number | null;
+  locationId?: number;
   lastReading?: TemperatureReadingResponse | null;
   isRetired?: boolean;
   isLost?: boolean;
@@ -110,7 +110,7 @@ export interface TemperatureDeviceSaveRequest {
   name?: string;
   mqttTopic?: string;
   /** @format int64 */
-  locationId?: number | null;
+  locationId?: number;
   isRetired?: boolean;
 }
 
@@ -121,15 +121,7 @@ export interface TemperatureCheckLimitResponse {
   maxReading?: TemperatureReadingResponse | null;
 }
 
-export interface TemperatureLocationCreateRequest {
-  name?: string;
-  /** @format double */
-  minTemperatureLimitCelsius?: number | null;
-  /** @format double */
-  maxTemperatureLimitCelsius?: number | null;
-}
-
-export interface TemperatureLocationUpdateRequest {
+export interface TemperatureLocationSaveRequest {
   /** @format int64 */
   id?: number;
   name?: string;
@@ -169,7 +161,7 @@ export interface TemperatureTimeSeriesRequest {
   startTime?: string;
   /** @format date-time */
   endTime?: string;
-  locationIds?: (number | null)[];
+  locationIds?: number[];
 }
 
 export interface TemperatureLocationsCheckLimitsParams {

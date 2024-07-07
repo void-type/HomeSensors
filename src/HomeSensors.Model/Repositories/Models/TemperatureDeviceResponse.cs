@@ -4,8 +4,8 @@ public class TemperatureDeviceResponse
 {
     public TemperatureDeviceResponse(
         long id, string name, string mqttTopic,
-        long? locationId, TemperatureReadingResponse? lastReading,
-        bool isRetired, bool isLost, bool isInactive, bool isBatteryLevelLow
+        long locationId, TemperatureReadingResponse? lastReading,
+        bool isRetired, bool isInactive, bool isBatteryLevelLow
         )
     {
         Id = id;
@@ -14,7 +14,6 @@ public class TemperatureDeviceResponse
         LocationId = locationId;
         LastReading = lastReading;
         IsRetired = isRetired;
-        IsLost = isLost;
         IsInactive = isInactive;
         IsBatteryLevelLow = isBatteryLevelLow;
     }
@@ -22,7 +21,7 @@ public class TemperatureDeviceResponse
     public long Id { get; }
     public string Name { get; }
     public string MqttTopic { get; }
-    public long? LocationId { get; }
+    public long LocationId { get; }
     public TemperatureReadingResponse? LastReading { get; }
     public bool IsRetired { get; }
     public bool IsLost { get; }

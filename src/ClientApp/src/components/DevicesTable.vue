@@ -45,6 +45,20 @@ async function getLocations() {
   }
 }
 
+async function newDevice() {
+  if (data.devices.findIndex((x) => (x.id || 0) < 1) > -1) {
+    return;
+  }
+
+  data.devices.unshift({
+    id: 0,
+    name: '',
+    mqttTopic: '',
+    locationId: 0,
+    isRetired: false,
+  });
+}
+
 async function reallyDeleteDevice(device: TemperatureDeviceResponse) {
   if (device.id === null || typeof device.id === 'undefined') {
     return;
@@ -63,24 +77,10 @@ async function reallyDeleteDevice(device: TemperatureDeviceResponse) {
   }
 }
 
-async function newDevice() {
-  if (data.devices.findIndex((x) => (x.id || 0) < 1) > -1) {
-    return;
-  }
-
-  data.devices.unshift({
-    id: 0,
-    name: '',
-    mqttTopic: '',
-    locationId: null,
-    isRetired: false,
-  });
-}
-
 async function deleteDevice(device: TemperatureDeviceResponse) {
   const parameters: ModalParameters = {
     title: 'Delete device',
-    description: 'Do you really want to delete this device?',
+    description: 'Do you really want to delete this device? All related readings will be removed!',
     okAction: () => reallyDeleteDevice(device),
   };
 
@@ -94,7 +94,7 @@ async function saveDevice(device: TemperatureDeviceResponse) {
     id: device.id,
     name: device.name,
     mqttTopic: device.mqttTopic,
-    locationId: device.locationId || null,
+    locationId: device.locationId,
     isRetired: device.isRetired,
   };
 
@@ -126,9 +126,9 @@ onMounted(async () => {
   <div class="grid mt-4">
     <div v-for="device in data.devices" :key="device.id" class="card g-col-12">
       <div class="card-body">
-        <div class="grid">
+        <div class="grid gap-sm">
           <div v-if="!device.id" class="g-col-12">New device</div>
-          <div class="g-col-12 g-col-md-6">
+          <div class="g-col-12 g-col-md-6 g-col-lg-4">
             <label :for="`name-${device.id}`" class="form-label">Name</label>
             <input
               :id="`name-${device.id}`"
@@ -137,11 +137,12 @@ onMounted(async () => {
               type="text"
               :class="{
                 'form-control': true,
+                'form-control-sm': true,
                 'is-invalid': data.errors.includes(`name-${device.id}`),
               }"
             />
           </div>
-          <div class="g-col-12 g-col-md-6">
+          <div class="g-col-12 g-col-md-6 g-col-lg-4">
             <label :for="`mqttTopic-${device.id}`" class="form-label">Topic</label>
             <input
               :id="`mqttTopic-${device.id}`"
@@ -150,21 +151,23 @@ onMounted(async () => {
               type="text"
               :class="{
                 'form-control': true,
+                'form-control-sm': true,
                 'is-invalid': data.errors.includes(`mqttTopic-${device.id}`),
               }"
             />
           </div>
-          <div class="g-col-12 g-col-md-6">
+          <div class="g-col-12 g-col-md-6 g-col-lg-4">
             <label :for="`location-${device.id}`" class="form-label">Location</label>
             <select
               :id="`location-${device.id}`"
               v-model="device.locationId"
               :class="{
                 'form-select': true,
+                'form-select-sm': true,
                 'is-invalid': data.errors.includes(`location-${device.id}`),
               }"
             >
-              <option value=""></option>
+              <option :value="0"></option>
               <option v-for="location in data.locations" :key="location.id" :value="location.id">
                 {{ location.name }}
               </option>
@@ -185,57 +188,53 @@ onMounted(async () => {
               <label :for="`retired-${device.id}`" class="form-check-label">Retired</label>
             </div>
           </div>
+          <div v-if="device.id" class="g-col-12">
+            <div>
+              <small class="text-body-secondary me-2">ID: {{ device.id }}</small>
+              <font-awesome-icon
+                v-if="device.isInactive"
+                icon="fa-clock"
+                class="text-danger me-2"
+                :title="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
+              />
+              <font-awesome-icon
+                v-if="device.isLost"
+                icon="fa-battery-quarter"
+                class="text-danger me-2"
+                title="Lost. Doesn't have location."
+              />
+              <font-awesome-icon
+                v-if="device.isBatteryLevelLow"
+                icon="fa-battery-quarter"
+                class="text-danger me-2"
+                title="Battery low."
+              />
+            </div>
+            <div>
+              <small v-if="device.lastReading"
+                >Last reading:
+                {{ formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit) }} on
+                {{ DateHelpers.dateTimeShortForView(device.lastReading?.time || '') }}
+              </small>
+            </div>
+          </div>
           <div class="g-col-12">
             <div class="btn-toolbar">
-              <button class="btn btn-primary me-2" @click="saveDevice(device)">Save</button>
-              <button v-if="device.id" class="btn btn-danger ms-auto" @click="deleteDevice(device)">
+              <button class="btn btn-sm btn-primary me-2" @click="saveDevice(device)">Save</button>
+              <button
+                v-if="device.id"
+                class="btn btn-sm btn-danger ms-auto"
+                @click="deleteDevice(device)"
+              >
                 Delete
               </button>
             </div>
           </div>
         </div>
       </div>
-      <div v-if="device.id" class="ms-3 mb-1">
-        <div>
-          <small class="text-body-secondary me-2">ID: {{ device.id }}</small>
-          <font-awesome-icon
-            v-if="device.isInactive"
-            icon="fa-clock"
-            class="text-danger me-2"
-            :title="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
-          />
-          <font-awesome-icon
-            v-if="device.isLost"
-            icon="fa-battery-quarter"
-            class="text-danger me-2"
-            title="Lost. Doesn't have location."
-          />
-          <font-awesome-icon
-            v-if="device.isBatteryLevelLow"
-            icon="fa-battery-quarter"
-            class="text-danger me-2"
-            title="Battery low."
-          />
-        </div>
-        <div>
-          <small v-if="device.lastReading"
-            >Last reading:
-            {{ formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit) }} on
-            {{ DateHelpers.dateTimeShortForView(device.lastReading?.time || '') }}
-          </small>
-        </div>
-      </div>
     </div>
-    <div v-if="data.devices.length < 1" class="text-center">No devices.</div>
+    <div v-if="data.devices.length < 1" class="g-col-12 text-center">No devices.</div>
   </div>
 </template>
 
-<style lang="scss" scoped>
-table .btn.btn-sm {
-  min-width: 0;
-}
-
-.badge.d-block:not(:last-child) {
-  margin-bottom: 0.25rem;
-}
-</style>
+<style lang="scss" scoped></style>

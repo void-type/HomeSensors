@@ -7,9 +7,6 @@ using VoidCore.Model.Responses.Collections;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-/// <summary>
-/// Exposes temperature data through web API
-/// </summary>
 [Route(ApiRouteAttribute.BasePath + "/mqtt-discovery")]
 public class MqttDiscoveryController : ControllerBase
 {

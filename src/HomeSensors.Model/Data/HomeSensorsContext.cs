@@ -27,13 +27,17 @@ public class HomeSensorsContext : DbContext
             entity.HasIndex(r => r.IsSummary);
             entity.HasIndex(r => new { r.Time, r.TemperatureLocationId });
             entity.HasIndex(r => new { r.Time, r.TemperatureDeviceId, r.IsSummary });
+
+            entity.HasOne(x => x.TemperatureLocation)
+                .WithMany(x => x.TemperatureReadings)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<TemperatureLocation>(entity =>
         {
             entity.ToTable(nameof(TemperatureLocation));
 
-            entity.HasIndex(r => r.Name)
+            entity.HasIndex(l => l.Name)
                 .IsUnique();
         });
 
@@ -41,7 +45,7 @@ public class HomeSensorsContext : DbContext
         {
             entity.ToTable(nameof(TemperatureDevice));
 
-            entity.HasIndex(r => r.MqttTopic)
+            entity.HasIndex(d => d.MqttTopic)
                 .IsUnique();
         });
     }

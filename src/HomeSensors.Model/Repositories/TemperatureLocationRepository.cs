@@ -5,6 +5,7 @@ using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Messages;
+using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.Repositories;
 
@@ -25,8 +26,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return (await _data.TemperatureLocations
             .TagWith(GetTag())
             .AsNoTracking()
-            .OrderBy(x => x.Name != "Outside")
-            .ThenBy(x => x.Name)
+            .OrderBy(x => x.Name)
             .ToListAsync())
             .ConvertAll(x => x.ToLocation());
     }
@@ -57,67 +57,77 @@ public class TemperatureLocationRepository : RepositoryBase
         return results;
     }
 
-    public Task<IResult<EntityMessage<long>>> Create(TemperatureLocationCreateRequest request)
+    public async Task<IResult<EntityMessage<long>>> Save(TemperatureLocationSaveRequest request)
     {
-        return ValidateName(request.Name)
-            .ThenAsync(() => ValidateNameIsAvailableAsync(request.Name))
-            .SelectAsync(async () =>
-            {
-                var newLocation = new TemperatureLocation()
-                {
-                    Name = request.Name,
-                    MinTemperatureLimitCelsius = request.MinTemperatureLimitCelsius,
-                    MaxTemperatureLimitCelsius = request.MaxTemperatureLimitCelsius,
-                };
+        var failures = new List<IFailure>();
 
-                var savedLocationEntity = _data.TemperatureLocations.Add(newLocation);
-
-                await _data.SaveChangesAsync();
-
-                return savedLocationEntity;
-            })
-            .SelectAsync(x => EntityMessage.Create("Location added.", x.Entity.Id));
-    }
-
-    public Task<IResult<EntityMessage<long>>> Update(TemperatureLocationUpdateRequest request)
-    {
-        return ValidateName(request.Name)
-            .ThenAsync(async () =>
-            {
-                return (await _data.TemperatureLocations.FirstOrDefaultAsync(x => x.Id == request.Id))
-                    .Map(x => Maybe.From(x))
-                    .ToResult(new Failure("Location does not exist.", "id"));
-            })
-            .TeeOnSuccessAsync(async x =>
-            {
-                x.Name = request.Name;
-                x.MinTemperatureLimitCelsius = request.MinTemperatureLimitCelsius;
-                x.MaxTemperatureLimitCelsius = request.MaxTemperatureLimitCelsius;
-                await _data.SaveChangesAsync();
-            })
-            .SelectAsync(x => EntityMessage.Create("Location saved.", x.Id));
-    }
-
-    private static IResult ValidateName(string newName)
-    {
-        if (string.IsNullOrWhiteSpace(newName))
+        if (request.Name.IsNullOrWhiteSpace())
         {
-            return Result.Fail(new Failure("Name is required.", "name"));
+            failures.Add(new Failure("Name is required.", "name"));
         }
 
-        return Result.Ok();
-    }
+        var nameUsedByAnother = await _data.TemperatureLocations
+            .AnyAsync(x => x.Name == request.Name && x.Id != request.Id);
 
-    private async Task<IResult> ValidateNameIsAvailableAsync(string newName)
-    {
-        var nameExists = await _data.TemperatureLocations.AnyAsync(x => x.Name == newName);
-
-        if (nameExists)
+        if (nameUsedByAnother)
         {
-            return Result.Fail(new Failure("Name already exists.", "name"));
+            failures.Add(new Failure("Name already exists.", "name"));
         }
 
-        return Result.Ok();
+        if (failures.Count > 0)
+        {
+            return Result.Fail<EntityMessage<long>>(failures);
+        }
+
+        var location = await _data.TemperatureLocations
+            .FirstOrDefaultAsync(x => x.Id == request.Id);
+
+        if (location is null)
+        {
+            location = new TemperatureLocation();
+            _data.TemperatureLocations.Add(location);
+        }
+
+        location.Name = request.Name;
+        location.MinTemperatureLimitCelsius = request.MinTemperatureLimitCelsius;
+        location.MaxTemperatureLimitCelsius = request.MaxTemperatureLimitCelsius;
+
+        await _data.SaveChangesAsync();
+
+        return Result.Ok(EntityMessage.Create("Location saved.", location.Id));
+    }
+
+    public async Task<IResult<EntityMessage<long>>> Delete(int id)
+    {
+        var location = await _data.TemperatureLocations
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (location is null)
+        {
+            return Result.Fail<EntityMessage<long>>(new Failure("Location not found."));
+        }
+
+        var anyLocationReadings = await _data.TemperatureReadings
+            .AnyAsync(x => x.TemperatureLocationId == id);
+
+        if (anyLocationReadings)
+        {
+            return Result.Fail<EntityMessage<long>>(new Failure("Location has readings and cannot be deleted."));
+        }
+
+        var anyLocationDevices = await _data.TemperatureDevices
+            .AnyAsync(x => x.TemperatureLocationId == id);
+
+        if (anyLocationDevices)
+        {
+            return Result.Fail<EntityMessage<long>>(new Failure("Location is related to a device. Change the device's location before deleting the location."));
+        }
+
+        _data.TemperatureLocations.Remove(location);
+
+        await _data.SaveChangesAsync();
+
+        return Result.Ok(EntityMessage.Create("Location deleted.", location.Id));
     }
 
     private async Task<TemperatureReadingResponse?> GetMinExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck)

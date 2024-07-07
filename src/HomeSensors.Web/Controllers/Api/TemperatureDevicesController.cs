@@ -10,9 +10,6 @@ using VoidCore.Model.Responses.Messages;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-/// <summary>
-/// Exposes temperature data through web API
-/// </summary>
 [Route(ApiRouteAttribute.BasePath + "/temperatures-devices")]
 public class TemperatureDevicesController : ControllerBase
 {

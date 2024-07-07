@@ -9,9 +9,6 @@ using VoidCore.Model.Responses.Messages;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-/// <summary>
-/// Exposes temperature data through web API
-/// </summary>
 [Route(ApiRouteAttribute.BasePath + "/temperatures-locations")]
 public class TemperatureLocationsController : ControllerBase
 {
@@ -43,22 +40,22 @@ public class TemperatureLocationsController : ControllerBase
     }
 
     [HttpPost]
-    [Route("create")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Create([FromBody] TemperatureLocationCreateRequest request)
+    public async Task<IActionResult> Save([FromBody] TemperatureLocationSaveRequest request)
     {
-        var result = await _locationRepository.Create(request);
+        var result = await _locationRepository.Save(request);
         return HttpResponder.Respond(result);
     }
 
-    [HttpPost]
-    [Route("update")]
+    [HttpDelete]
+    [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Update([FromBody] TemperatureLocationUpdateRequest request)
+    public async Task<IActionResult> Delete(int id)
     {
-        var result = await _locationRepository.Update(request);
+        var result = await _locationRepository.Delete(id);
+
         return HttpResponder.Respond(result);
     }
 }

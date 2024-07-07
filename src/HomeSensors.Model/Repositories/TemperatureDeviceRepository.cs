@@ -1,4 +1,5 @@
 ﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Data.Models;
 using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,7 @@ public class TemperatureDeviceRepository : RepositoryBase
             .Select(g => g.OrderByDescending(x => x.Time).First())
             .ToListAsync();
 
-        var data = (await _data.TemperatureDevices
+        var data = await _data.TemperatureDevices
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.IsRetired)
@@ -45,44 +46,35 @@ public class TemperatureDeviceRepository : RepositoryBase
                 x.IsRetired,
                 LocationId = x.TemperatureLocationId,
             })
-            .ToListAsync())
-            .ConvertAll(x => new
-            {
-                x.Id,
-                x.Name,
-                x.MqttTopic,
-                x.IsRetired,
-                x.LocationId,
-                LastReading = lastReadings.Find(r => r.TemperatureDeviceId == x.Id)
-            })
-;
+            .ToListAsync();
 
-        return data.ConvertAll(x => new TemperatureDeviceResponse
-        (
-            id: x.Id,
-            name: x.Name,
-            mqttTopic: x.MqttTopic,
-            locationId: x.LocationId,
-            lastReading: x.LastReading?.ToReading(),
-            isRetired: x.IsRetired,
-            isLost: !x.IsRetired && x.LocationId is null,
-            isInactive: !x.IsRetired && (x.LastReading is null || x.LastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20)),
-            isBatteryLevelLow: !x.IsRetired && x.LastReading?.DeviceBatteryLevel is not null && x.LastReading?.DeviceBatteryLevel < 1
-        ));
+        return data.ConvertAll(x =>
+        {
+            var lastReading = lastReadings.Find(r => r.TemperatureDeviceId == x.Id);
+
+            return new TemperatureDeviceResponse
+            (
+                id: x.Id,
+                name: x.Name,
+                mqttTopic: x.MqttTopic,
+                locationId: x.LocationId,
+                lastReading: lastReading?.ToReading(),
+                isRetired: x.IsRetired,
+                isInactive: !x.IsRetired && (lastReading is null || lastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20)),
+                isBatteryLevelLow: !x.IsRetired && lastReading?.DeviceBatteryLevel is not null && lastReading.DeviceBatteryLevel < 1
+            );
+        });
     }
 
     public async Task<IResult<EntityMessage<long>>> Save(TemperatureDeviceSaveRequest request)
     {
         var failures = new List<IFailure>();
 
-        if (request.LocationId is not null)
-        {
-            var locationExists = await _data.TemperatureLocations.AnyAsync(x => x.Id == request.LocationId);
+        var locationExists = await _data.TemperatureLocations.AnyAsync(x => x.Id == request.LocationId);
 
-            if (!locationExists)
-            {
-                failures.Add(new Failure("Location doesn't exist.", "location"));
-            }
+        if (!locationExists)
+        {
+            failures.Add(new Failure("Location doesn't exist.", "location"));
         }
 
         if (request.Name.IsNullOrWhiteSpace())
@@ -105,7 +97,7 @@ public class TemperatureDeviceRepository : RepositoryBase
 
         if (device is null)
         {
-            device = new Data.Models.TemperatureDevice();
+            device = new TemperatureDevice();
             _data.TemperatureDevices.Add(device);
         }
 
@@ -126,7 +118,7 @@ public class TemperatureDeviceRepository : RepositoryBase
 
         if (device is null)
         {
-            return Result.Fail<EntityMessage<long>>(new Failure("Device not found"));
+            return Result.Fail<EntityMessage<long>>(new Failure("Device not found."));
         }
 
         _data.TemperatureDevices.Remove(device);

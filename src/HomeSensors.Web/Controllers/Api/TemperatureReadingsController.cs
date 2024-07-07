@@ -8,9 +8,6 @@ using VoidCore.Model.Responses.Collections;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-/// <summary>
-/// Exposes temperature data through web API
-/// </summary>
 [Route(ApiRouteAttribute.BasePath + "/temperatures-readings")]
 public class TemperatureReadingsController : ControllerBase
 {
@@ -31,7 +28,7 @@ public class TemperatureReadingsController : ControllerBase
         return HttpResponder.Respond(readings);
     }
 
-    [HttpGet]
+    [HttpPost]
     [Route("time-series")]
     [ProducesResponseType(typeof(List<TemperatureTimeSeriesResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]

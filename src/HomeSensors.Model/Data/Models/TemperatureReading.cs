@@ -13,6 +13,6 @@ public class TemperatureReading
     public long TemperatureDeviceId { get; set; }
     public TemperatureDevice? TemperatureDevice { get; set; }
 
-    public long? TemperatureLocationId { get; set; }
+    public long TemperatureLocationId { get; set; }
     public TemperatureLocation? TemperatureLocation { get; set; }
 }
