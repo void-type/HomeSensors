@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
 import type { IItemSetOfIFailure, TemperatureLocationResponse } from '@/api/data-contracts';
-import { storeToRefs } from 'pinia';
 import { toNumberOrNull } from '@/models/FormatHelpers';
 import { formatTempWithUnitOrEmpty } from '@/models/TempFormatHelpers';
 import { onMounted, reactive } from 'vue';
@@ -13,8 +12,6 @@ import type { ModalParameters } from '@/models/ModalParameters';
 const appStore = useAppStore();
 const messageStore = useMessageStore();
 const api = ApiHelpers.client;
-
-const { useFahrenheit } = storeToRefs(appStore);
 
 const data = reactive({
   locations: [] as Array<TemperatureLocationResponse>,
@@ -139,7 +136,7 @@ onMounted(async () => {
               }"
               type="number"
             />
-            {{ formatTempWithUnitOrEmpty(location.minTemperatureLimitCelsius, useFahrenheit) }}
+            {{ formatTempWithUnitOrEmpty(location.minTemperatureLimitCelsius, true) }}
           </div>
           <div class="g-col-12 g-col-md-6 g-col-lg-4">
             <label :for="`max-${location.id}`">Max temp limit (°C)</label>
@@ -153,7 +150,7 @@ onMounted(async () => {
               }"
               type="number"
             />
-            {{ formatTempWithUnitOrEmpty(location.maxTemperatureLimitCelsius, useFahrenheit) }}
+            {{ formatTempWithUnitOrEmpty(location.maxTemperatureLimitCelsius, true) }}
           </div>
           <div v-if="location.id" class="g-col-12">
             <div>
