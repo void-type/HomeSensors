@@ -4,7 +4,7 @@ import TemperatureCurrentReadings from '@/components/TemperatureCurrentReadings.
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-4 mb-4">Current Temperatures</h1>
+    <h1 class="mt-4 mb-4">Current temperatures</h1>
     <TemperatureCurrentReadings />
   </div>
 </template>

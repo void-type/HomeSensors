@@ -4,7 +4,7 @@ import TemperatureGraph from '@/components/TemperatureGraph.vue';
 
 <template>
   <div class="container-xxl">
-    <h2 class="mt-5 mb-4">Time series</h2>
+    <h1 class="mt-4 mb-4">Time series</h1>
     <TemperatureGraph />
   </div>
 </template>
