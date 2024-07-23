@@ -11,8 +11,11 @@ public static class SecurityStartupExtensions
             options.BaseUri
                 .AllowSelf();
 
-            options.FrameAncestors
+            options.Custom("frame-src")
                 .AllowNone();
+
+            options.FrameAncestors
+                .Allow("https://hass.void-type.net");
 
             options.DefaultSources
                 .AllowSelf();
@@ -30,9 +33,6 @@ public static class SecurityStartupExtensions
 
             options.StyleSources
                 .AllowSelf();
-
-            options.FrameAncestors
-                .AllowNone();
 
             if (environment.IsDevelopment())
             {

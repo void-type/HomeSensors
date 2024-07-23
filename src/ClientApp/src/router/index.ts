@@ -29,8 +29,14 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/pages/HomePage.vue'),
+      component: () => import('@/pages/CurrentTemperaturesPage.vue'),
       meta: { title: 'Home' },
+    },
+    {
+      path: '/time-series',
+      name: 'timeSeries',
+      component: () => import('@/pages/TimeSeriesPage.vue'),
+      meta: { title: 'Time Series' },
     },
     {
       path: '/devices',

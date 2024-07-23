@@ -80,7 +80,7 @@ onMounted(async () => {
     <div
       v-for="(currentTemp, i) in data.currentReadings"
       :key="i"
-      class="g-col-12 g-col-sm-6 g-col-md-4"
+      class="g-col-6 g-col-md-4 g-col-lg-3"
     >
       <div class="card text-center">
         <div class="card-body">
