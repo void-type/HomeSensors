@@ -144,7 +144,7 @@ function setGraphData(
       ?.filter((p: TemperatureTimeSeriesPoint) => p.temperatureCelsius)
       .map((p: TemperatureTimeSeriesPoint) => ({
         x: p.time,
-        y: showHumidity ? formatHumidity(p.humidity) : formatTemp(p.temperatureCelsius, useF),
+        y: showHumidity ? formatHumidity(p.humidity) : formatTemp(p.temperatureCelsius, useF, 1),
       })),
     hidden: oldHiddenCategories.includes(s.location?.name),
   }));
@@ -312,21 +312,21 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showH
           {{
             data.showHumidity
               ? formatHumidityWithUnit(series.humidityAggregate?.minimum)
-              : formatTempWithUnit(series.temperatureAggregate?.minimum, useFahrenheit)
+              : formatTempWithUnit(series.temperatureAggregate?.minimum, useFahrenheit, 1)
           }}
         </td>
         <td>
           {{
             data.showHumidity
               ? formatHumidityWithUnit(series.humidityAggregate?.maximum)
-              : formatTempWithUnit(series.temperatureAggregate?.maximum, useFahrenheit)
+              : formatTempWithUnit(series.temperatureAggregate?.maximum, useFahrenheit, 1)
           }}
         </td>
         <td>
           {{
             data.showHumidity
               ? formatHumidityWithUnit(series.humidityAggregate?.average)
-              : formatTempWithUnit(series.temperatureAggregate?.average, useFahrenheit)
+              : formatTempWithUnit(series.temperatureAggregate?.average, useFahrenheit, 1)
           }}
         </td>
       </tr>
