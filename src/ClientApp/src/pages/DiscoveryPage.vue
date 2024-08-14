@@ -8,6 +8,7 @@ import type { HttpResponse } from '@/api/http-client';
 import DateHelpers from '@/models/DateHelpers';
 import { parseISO } from 'date-fns';
 import useAppStore from '@/stores/appStore';
+import { formatJSON, isNil } from '@/models/FormatHelpers';
 
 const data = reactive({
   topics: 'rtl_433/#\nzigbee2mqtt/#',
@@ -57,7 +58,7 @@ async function connectToHub() {
     connection.on('newDiscoveryMessage', (message) => {
       const formattedMessage = `${DateHelpers.dateTimeForApi(parseISO(message.time))}: ${
         message.topic
-      }\n${message.payload}\n`;
+      }\n${formatJSON(message.payload)}\n`;
       data.feed.unshift(formattedMessage);
     });
   }
@@ -74,7 +75,7 @@ async function onRefresh() {
 async function onStart() {
   try {
     const response = await api().mqttDiscoverySetup({
-      topics: data.topics.split(/\r?\n/g),
+      topics: data.topics.split(/\r?\n/g).filter((x) => !isNil(x)),
     });
 
     data.status = response?.data;
@@ -109,7 +110,7 @@ onMounted(async () => {
 <template>
   <div class="container-xxl">
     <h1 class="mt-4 mb-4">Discovery</h1>
-    <p>See MQTT messages from the specified topics. New messages appear on top.</p>
+    <p>See MQTT messages from the specified topics.</p>
     <p>+ is a single-level wildcard. Can be used anywhere in a topic to sub a level.</p>
     <p>
       # is a multi-level wildcard. Can only be used at the end of a topic preceded by a forward
@@ -138,7 +139,7 @@ onMounted(async () => {
       <textarea id="topics" v-model="data.topics" rows="3" class="form-control" />
     </div>
     <div class="mt-3">
-      <label for="feed" class="form-label"> Feed messages (Time: Topic \n Payload) </label>
+      <label for="feed" class="form-label"> Feed messages (new messages appear on top)</label>
       <textarea
         id="feed"
         v-model="feed"

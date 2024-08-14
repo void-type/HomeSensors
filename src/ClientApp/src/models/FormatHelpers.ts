@@ -32,3 +32,11 @@ export function trimAndTitleCase(value: string) {
 export function isNil(value: string | null | undefined | object | number) {
   return value === null || typeof value === 'undefined' || value === '';
 }
+
+export function formatJSON(json: string) {
+  try {
+    return JSON.stringify(JSON.parse(json), null, 2);
+  } catch {
+    return json;
+  }
+}
