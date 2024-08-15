@@ -1,6 +1,7 @@
 ﻿using HomeSensors.Model.Emailing;
 using HomeSensors.Model.Mqtt;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Alerts;
@@ -25,12 +26,19 @@ public class WaterLeakAlertService
 
         ClearExpiredAlerts(now, betweenNotificationsMinutes);
 
-        if (message.Payload.Water_Leak)
+        switch (message.Payload.Water_Leak)
         {
-            await NotifyLeak(message, now);
+            case null:
+                var subject = $"{nameof(MqttWaterLeakMessagePayload.Water_Leak)} property not found in payload";
+                var body = $"Serialized payload object: {JsonSerializer.Serialize(message)}";
+                await _emailNotificationService.NotifyError(body, subject);
+                break;
+            case true:
+                await NotifyLeak(message, now);
+                break;
         }
 
-        if (message.Payload.Battery_Low)
+        if (message.Payload.Battery_Low == true)
         {
             await NotifyBatteryLow(message, now);
         }

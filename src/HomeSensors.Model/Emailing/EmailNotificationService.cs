@@ -1,5 +1,6 @@
 ﻿using VoidCore.Model.Emailing;
 using VoidCore.Model.Text;
+using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Emailing;
 
@@ -11,12 +12,14 @@ public class EmailNotificationService
     private readonly IEmailSender _emailSender;
     private readonly IEmailFactory _emailFactory;
     private readonly NotificationsSettings _notificationsSettings;
+    private readonly IDateTimeService _dateTimeService;
 
-    public EmailNotificationService(IEmailSender emailSender, IEmailFactory emailFactory, NotificationsSettings notificationsSettings)
+    public EmailNotificationService(IEmailSender emailSender, IEmailFactory emailFactory, NotificationsSettings notificationsSettings, IDateTimeService dateTimeService)
     {
         _emailSender = emailSender;
         _emailFactory = emailFactory;
         _notificationsSettings = notificationsSettings;
+        _dateTimeService = dateTimeService;
     }
 
     public Task Send(Action<EmailOptionsBuilder> configure, CancellationToken cancellationToken)
@@ -31,5 +34,25 @@ public class EmailNotificationService
         });
 
         return _emailSender.SendEmail(newEmail, cancellationToken);
+    }
+
+    public Task NotifyError(string bodyMessage, string? subject = null, Exception? exception = null)
+    {
+        return Send(e =>
+        {
+            e.SetSubject($"Error occurred: {subject ?? bodyMessage}");
+
+            e.AddLine($"Error occurred: {bodyMessage}");
+
+            if (exception is not null)
+            {
+                e.AddLine();
+                e.AddLine("Exception:");
+                e.AddLine(exception.ToString());
+            }
+
+            e.AddLine();
+            e.AddLine($"Time: {_dateTimeService.MomentWithOffset}");
+        }, default);
     }
 }

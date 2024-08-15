@@ -2,11 +2,11 @@
 
 public class MqttWaterLeakMessagePayload
 {
-    public int Battery { get; set; }
-    public bool Battery_Low { get; set; }
-    public int LinkQuality { get; set; }
-    public bool Tamper { get; set; }
-    public bool Water_Leak { get; set; }
+    public int? Battery { get; set; }
+    public bool? Battery_Low { get; set; }
+    public int? LinkQuality { get; set; }
+    public bool? Tamper { get; set; }
+    public bool? Water_Leak { get; set; }
 }
 
 #pragma warning disable S125

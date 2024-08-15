@@ -1,4 +1,5 @@
 ﻿using HomeSensors.Model.Alerts;
+using HomeSensors.Model.Emailing;
 using HomeSensors.Model.Mqtt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,16 +17,17 @@ public class MqttWaterLeaksWorker : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
     private readonly MqttWaterLeaksSettings _workerSettings;
+    private readonly EmailNotificationService _emailNotificationService;
 
     public MqttWaterLeaksWorker(ILogger<MqttWaterLeaksWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory,
-        MqttFactory mqttFactory, MqttWaterLeaksSettings workerSettings)
+        MqttFactory mqttFactory, MqttWaterLeaksSettings workerSettings, EmailNotificationService emailNotificationService)
     {
         _logger = logger;
         _configuration = configuration;
         _scopeFactory = scopeFactory;
         _mqttFactory = mqttFactory;
         _workerSettings = workerSettings;
-
+        _emailNotificationService = emailNotificationService;
         logger.LogInformation("Enabling background job: {JobName}.",
             nameof(MqttWaterLeaksWorker));
     }
@@ -72,6 +74,7 @@ public class MqttWaterLeaksWorker : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttWaterLeaksWorker));
+            await _emailNotificationService.NotifyError($"Exception thrown in {nameof(MqttWaterLeaksWorker)}", null, ex);
         }
     }
 
