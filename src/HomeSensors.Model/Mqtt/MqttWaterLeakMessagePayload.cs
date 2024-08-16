@@ -2,7 +2,7 @@
 
 public class MqttWaterLeakMessagePayload
 {
-    public int? Battery { get; set; }
+    public double? Battery { get; set; }
     public bool? Battery_Low { get; set; }
     public int? LinkQuality { get; set; }
     public bool? Tamper { get; set; }
