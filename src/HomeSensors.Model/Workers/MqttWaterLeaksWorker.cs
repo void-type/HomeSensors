@@ -74,7 +74,7 @@ public class MqttWaterLeaksWorker : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttWaterLeaksWorker));
-            await _emailNotificationService.NotifyError($"Exception thrown in {nameof(MqttWaterLeaksWorker)}", null, ex);
+            await _emailNotificationService.NotifyError($"Topic: {e.ApplicationMessage.Topic}\nPayload string: {e.GetPayloadString()}", $"Exception thrown in {nameof(MqttWaterLeaksWorker)}", ex);
         }
     }
 

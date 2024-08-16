@@ -49,7 +49,7 @@ public static partial class MqttHelpers
 
     public static MqttTemperatureMessage DeserializeTemperatureMessage(this MqttApplicationMessageReceivedEventArgs e)
     {
-        var payload = GetPayloadString(e);
+        var payload = e.GetPayloadString();
 
         return JsonSerializer.Deserialize<MqttTemperatureMessage>(payload, _serializerOptions)
             .EnsureNotNull();
@@ -62,7 +62,7 @@ public static partial class MqttHelpers
 
     public static MqttWaterLeakMessagePayload DeserializeWaterLeakMessage(this MqttApplicationMessageReceivedEventArgs e)
     {
-        var payload = GetPayloadString(e);
+        var payload = e.GetPayloadString();
 
         return JsonSerializer.Deserialize<MqttWaterLeakMessagePayload>(payload, _serializerOptions)
             .EnsureNotNull();
