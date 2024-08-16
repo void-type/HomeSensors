@@ -6,7 +6,7 @@ import type {
   TemperatureTimeSeriesResponse,
   TemperatureLocationResponse,
 } from '@/api/data-contracts';
-import { onMounted, reactive, watch, computed, watchEffect } from 'vue';
+import { onMounted, reactive, watch, computed, watchEffect, ref } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-date-fns';
@@ -45,6 +45,8 @@ const timeSeriesInputs: ITimeSeriesInputs = reactive({
   end: initialTime,
   locationIds: [] as Array<number>,
 });
+
+const showCurrent = ref(false);
 
 const areAllLocationsSelected = computed(() =>
   data.locations.every((value) => timeSeriesInputs.locationIds.includes(value.id as number))
@@ -157,6 +159,7 @@ function setGraphData(
       datasets,
     },
     options: {
+      animation: !showCurrent.value,
       // 12 hours
       spanGaps: 1000 * 60 * 60 * 12,
       responsive: true,
@@ -241,6 +244,26 @@ async function getLocations() {
   }
 }
 
+let lastTimeout: number | null = null;
+const timeoutSeconds = 5;
+
+function currentTimer() {
+  lastTimeout = setTimeout(() => {
+    const future = new Date();
+    future.setMinutes(future.getMinutes() + 5);
+    timeSeriesInputs.end = future;
+    currentTimer();
+  }, timeoutSeconds * 1000);
+}
+
+function setCurrentTimer() {
+  if (showCurrent.value) {
+    currentTimer();
+  } else if (lastTimeout) {
+    clearTimeout(lastTimeout);
+  }
+}
+
 onMounted(async () => {
   await getLocations();
 });
@@ -258,7 +281,17 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showH
     </div>
     <div class="g-col-12 g-col-md-6">
       <label for="endDate" class="form-label">End date</label>
-      <app-date-time-picker v-model="timeSeriesInputs.end" />
+      <app-date-time-picker v-model="timeSeriesInputs.end" :disabled="showCurrent" />
+      <div class="form-check form-check-inline mt-2">
+        <input
+          id="showCurrent"
+          v-model="showCurrent"
+          class="form-check-input"
+          type="checkbox"
+          @change="setCurrentTimer()"
+        />
+        <label class="form-check-label" for="showCurrent">Show current</label>
+      </div>
     </div>
     <div class="g-col-12">
       <button id="selectAllButton" class="btn btn-sm btn-outline-light" @click="onSelectAllClick">

@@ -26,7 +26,11 @@ export default class DateHelpers {
     return formatISO9075(value as Date);
   }
 
-  static dateTimeShortForView(value: Date | string): string {
+  static dateTimeShortForView(value: Date | string | undefined): string {
+    if (typeof value === 'undefined') {
+      return '';
+    }
+
     if (typeof value === 'string') {
       if (isNil(value)) {
         return '';
