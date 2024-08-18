@@ -15,9 +15,9 @@
     "generate-api-client": "sta -p https://localhost:5001/swagger/v1/swagger.json -o ./src/api/ --modular --responses --extract-request-params --disableStrictSSL"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.5.2",
-    "@fortawesome/free-regular-svg-icons": "^6.5.2",
-    "@fortawesome/free-solid-svg-icons": "^6.5.2",
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-regular-svg-icons": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@microsoft/signalr": "^7.0.14",
     "@popperjs/core": "^2.11.8",
@@ -25,17 +25,17 @@
     "chart.js": "^4.4.3",
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^2.30.0",
-    "pinia": "^2.1.7",
+    "pinia": "^2.2.2",
     "v-calendar": "^3.1.2",
-    "vue": "^3.4.31",
-    "vue-router": "^4.4.0"
+    "vue": "^3.4.38",
+    "vue-router": "^4.4.3"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "^1.10.3",
+    "@rushstack/eslint-patch": "^1.10.4",
     "@tsconfig/node18": "^18.2.4",
     "@types/bootstrap": "^5.2.10",
-    "@types/node": "^20.14.9",
-    "@vitejs/plugin-vue": "^5.0.5",
+    "@types/node": "^20.15.0",
+    "@vitejs/plugin-vue": "^5.1.2",
     "@vue/eslint-config-prettier": "^9.0.0",
     "@vue/eslint-config-typescript": "^13.0.0",
     "@vue/tsconfig": "^0.5.1",
@@ -44,14 +44,14 @@
     "eslint-import-resolver-alias": "^1.1.2",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-vue": "^9.27.0",
-    "eslint-plugin-vuejs-accessibility": "^2.3.1",
+    "eslint-plugin-vuejs-accessibility": "^2.4.1",
     "npm-check-updates": "^16.14.20",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.3.2",
-    "sass": "^1.77.6",
-    "swagger-typescript-api": "^13.0.12",
-    "typescript": "~5.5.3",
-    "vite": "^5.3.3",
-    "vue-tsc": "^2.0.26"
+    "prettier": "^3.3.3",
+    "sass": "^1.77.8",
+    "swagger-typescript-api": "^13.0.21",
+    "typescript": "~5.5.4",
+    "vite": "^5.4.1",
+    "vue-tsc": "^2.0.29"
   }
 }
