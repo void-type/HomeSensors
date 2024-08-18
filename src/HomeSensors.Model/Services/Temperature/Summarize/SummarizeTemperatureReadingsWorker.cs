@@ -9,7 +9,7 @@ using System.Diagnostics;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Time;
 
-namespace HomeSensors.Model.Workers;
+namespace HomeSensors.Model.Services.Temperature.Summarize;
 
 /// <summary>
 /// This worker compresses older data by summarizing into regular average intervals.
@@ -23,13 +23,11 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
     private readonly TimeSpan _summarizeCutoff;
     private const int SummarizeIntervalMinutes = 5;
     private readonly SummarizeTemperatureReadingsSettings _workerSettings;
-    private readonly AlertsSettings _alertsSettings;
 
     public SummarizeTemperatureReadingsWorker(ILogger<SummarizeTemperatureReadingsWorker> logger, IServiceScopeFactory scopeFactory,
-        IDateTimeService dateTimeService, SummarizeTemperatureReadingsSettings workerSettings, AlertsSettings alertsSettings)
+        IDateTimeService dateTimeService, SummarizeTemperatureReadingsSettings workerSettings)
     {
         _workerSettings = workerSettings;
-        _alertsSettings = alertsSettings;
         _logger = logger;
         _scopeFactory = scopeFactory;
         _dateTimeService = dateTimeService;
@@ -44,10 +42,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Offset the schedule of this job from others
-        if (_alertsSettings.IsEnabled)
-        {
-            await Task.Delay(TimeSpan.FromMinutes(_workerSettings.DelayFirstTickMinutes), stoppingToken);
-        }
+        await Task.Delay(TimeSpan.FromMinutes(_workerSettings.DelayFirstTickMinutes), stoppingToken);
 
         var timer = new PeriodicTimer(_betweenTicks);
 

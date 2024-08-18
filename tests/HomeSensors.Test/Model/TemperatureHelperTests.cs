@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Model.Data.Models;
 using HomeSensors.Model.Helpers;
+using HomeSensors.Model.Repositories;
 using Xunit;
 
 namespace HomeSensors.Test.Model;

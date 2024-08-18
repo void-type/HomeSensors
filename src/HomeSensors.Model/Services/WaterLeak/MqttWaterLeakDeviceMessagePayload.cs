@@ -1,6 +1,6 @@
-﻿namespace HomeSensors.Model.Mqtt;
+﻿namespace HomeSensors.Model.Services.WaterLeak;
 
-public class MqttWaterLeakMessagePayload
+public class MqttWaterLeakDeviceMessagePayload
 {
     public double? Battery { get; set; }
     public bool? Battery_Low { get; set; }

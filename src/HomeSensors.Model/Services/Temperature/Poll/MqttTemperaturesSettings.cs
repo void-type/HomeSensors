@@ -1,4 +1,4 @@
-﻿namespace HomeSensors.Model.Workers;
+﻿namespace HomeSensors.Model.Services.Temperature.Poll;
 
 public class MqttTemperaturesSettings
 {

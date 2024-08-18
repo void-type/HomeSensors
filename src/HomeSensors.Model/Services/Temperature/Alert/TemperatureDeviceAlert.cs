@@ -1,11 +1,11 @@
 ﻿using HomeSensors.Model.Repositories.Models;
 using VoidCore.Model.Functional;
 
-namespace HomeSensors.Model.Alerts;
+namespace HomeSensors.Model.Services.Temperature.Alert;
 
-public class DeviceAlert : ValueObject
+public class TemperatureDeviceAlert : ValueObject
 {
-    public DeviceAlert(DeviceAlertType type, TemperatureDeviceResponse device, TemperatureLocationResponse? location, DateTimeOffset resendAfter)
+    public TemperatureDeviceAlert(TemperatureDeviceAlertType type, TemperatureDeviceResponse device, TemperatureLocationResponse? location, DateTimeOffset resendAfter)
     {
         Type = type;
         Device = device;
@@ -13,7 +13,7 @@ public class DeviceAlert : ValueObject
         ResendAfter = resendAfter;
     }
 
-    public DeviceAlertType Type { get; }
+    public TemperatureDeviceAlertType Type { get; }
     public TemperatureDeviceResponse Device { get; }
     public TemperatureLocationResponse? Location { get; }
     public DateTimeOffset ResendAfter { get; }

@@ -1,5 +1,7 @@
 ﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Data.Models;
+using HomeSensors.Model.Helpers;
+using HomeSensors.Model.Json;
 using HomeSensors.Model.Mqtt;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,8 +10,10 @@ using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
+using System.Text.Json;
+using VoidCore.Model.Guards;
 
-namespace HomeSensors.Model.Workers;
+namespace HomeSensors.Model.Services.Temperature.Poll;
 
 public class MqttTemperaturesWorker : BackgroundService
 {
@@ -96,11 +100,11 @@ public class MqttTemperaturesWorker : BackgroundService
 
     private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
     {
-        var message = e.DeserializeTemperatureMessage();
+        var message = DeserializeTemperatureMessage(e);
 
         if (_configuration.LogMessages)
         {
-            var readableMessage = message.GetReadableTemperatureMessage();
+            var readableMessage = GetReadableTemperatureMessage(message);
             MqttHelpers.LogMqttPayload(_logger, readableMessage);
         }
 
@@ -198,5 +202,18 @@ public class MqttTemperaturesWorker : BackgroundService
         }
 
         await _mqttClient.SubscribeAsync(topicFilters);
+    }
+
+    public static MqttTemperatureDeviceMessage DeserializeTemperatureMessage(MqttApplicationMessageReceivedEventArgs e)
+    {
+        var payload = e.GetPayloadString();
+
+        return JsonSerializer.Deserialize<MqttTemperatureDeviceMessage>(payload, JsonHelpers.JsonOptions)
+            .EnsureNotNull();
+    }
+
+    public static string GetReadableTemperatureMessage(MqttTemperatureDeviceMessage message)
+    {
+        return $"{message.Time.ToLocalTime()} | {message.Model}/{message.Id}/{message.Channel} | {TemperatureHelpers.FormatTemp(message.Temperature_C ?? -1000)} | {message.Humidity}%";
     }
 }

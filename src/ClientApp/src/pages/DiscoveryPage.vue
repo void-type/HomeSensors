@@ -60,6 +60,7 @@ async function connectToHub() {
         message.topic
       }\n${formatJSON(message.payload)}\n`;
       data.feed.unshift(formattedMessage);
+      data.feed = data.feed.slice(0, 2000);
     });
   }
 

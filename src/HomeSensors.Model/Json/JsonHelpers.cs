@@ -5,7 +5,9 @@ namespace HomeSensors.Model.Json;
 
 public static class JsonHelpers
 {
-    public static JsonSerializerOptions GetOptions()
+    public static readonly JsonSerializerOptions JsonOptions = GetOptions();
+
+    private static JsonSerializerOptions GetOptions()
     {
         var serializerOptions = new JsonSerializerOptions()
         {

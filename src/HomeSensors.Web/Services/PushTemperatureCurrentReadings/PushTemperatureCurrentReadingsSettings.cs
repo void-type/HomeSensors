@@ -1,4 +1,4 @@
-﻿namespace HomeSensors.Web.Workers;
+﻿namespace HomeSensors.Web.Services.PushTemperatureCurrentReadings;
 
 public class PushTemperatureCurrentReadingsSettings
 {

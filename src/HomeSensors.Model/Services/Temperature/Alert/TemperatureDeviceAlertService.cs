@@ -4,16 +4,16 @@ using HomeSensors.Model.Repositories;
 using Microsoft.Extensions.Logging;
 using VoidCore.Model.Functional;
 
-namespace HomeSensors.Model.Alerts;
+namespace HomeSensors.Model.Services.Temperature.Alert;
 
-public class DeviceAlertService
+public class TemperatureDeviceAlertService
 {
-    private readonly ILogger<DeviceAlertService> _logger;
+    private readonly ILogger<TemperatureDeviceAlertService> _logger;
     private readonly TemperatureLocationRepository _locationRepository;
     private readonly TemperatureDeviceRepository _deviceRepository;
     private readonly EmailNotificationService _emailNotificationService;
 
-    public DeviceAlertService(ILogger<DeviceAlertService> logger,
+    public TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService> logger,
         TemperatureLocationRepository locationRepository, TemperatureDeviceRepository deviceRepository,
         EmailNotificationService emailNotificationService)
     {
@@ -23,7 +23,7 @@ public class DeviceAlertService
         _emailNotificationService = emailNotificationService;
     }
 
-    public async Task Process(List<DeviceAlert> latchedAlerts, DateTimeOffset now, TimeSpan betweenAlerts, CancellationToken stoppingToken)
+    public async Task Process(List<TemperatureDeviceAlert> latchedAlerts, DateTimeOffset now, TimeSpan betweenAlerts, CancellationToken stoppingToken)
     {
         var devices = await _deviceRepository.GetAll();
 
@@ -33,16 +33,16 @@ public class DeviceAlertService
 
         var inactiveAlerts = devices
             .Where(d => d.IsInactive)
-            .Select(d => new DeviceAlert(
-                DeviceAlertType.DeviceInactive,
+            .Select(d => new TemperatureDeviceAlert(
+                TemperatureDeviceAlertType.DeviceInactive,
                 d,
                 locations.Find(l => l.Id == d.LocationId),
                 resendAfter));
 
         var lowBatteryAlert = devices
             .Where(d => d.IsBatteryLevelLow)
-            .Select(d => new DeviceAlert(
-                DeviceAlertType.DeviceLowBattery,
+            .Select(d => new TemperatureDeviceAlert(
+                TemperatureDeviceAlertType.DeviceLowBattery,
                 d,
                 locations.Find(l => l.Id == d.LocationId),
                 resendAfter));
@@ -60,11 +60,11 @@ public class DeviceAlertService
         {
             switch (alert.Type)
             {
-                case DeviceAlertType.DeviceInactive:
+                case TemperatureDeviceAlertType.DeviceInactive:
                     await NotifyInactiveClear(alert, stoppingToken);
                     break;
 
-                case DeviceAlertType.DeviceLowBattery:
+                case TemperatureDeviceAlertType.DeviceLowBattery:
                     await NotifyLowBatteryClear(alert, stoppingToken);
                     break;
             }
@@ -83,11 +83,11 @@ public class DeviceAlertService
         {
             switch (alert.Type)
             {
-                case DeviceAlertType.DeviceInactive:
+                case TemperatureDeviceAlertType.DeviceInactive:
                     await NotifyInactiveAlert(alert, stoppingToken);
                     break;
 
-                case DeviceAlertType.DeviceLowBattery:
+                case TemperatureDeviceAlertType.DeviceLowBattery:
                     await NotifyLowBatteryAlert(alert, stoppingToken);
                     break;
             }
@@ -96,7 +96,7 @@ public class DeviceAlertService
         }
     }
 
-    private Task NotifyInactiveAlert(DeviceAlert alert, CancellationToken stoppingToken)
+    private Task NotifyInactiveAlert(TemperatureDeviceAlert alert, CancellationToken stoppingToken)
     {
         var locationName = alert.Location?.Name ?? "Unknown";
 
@@ -108,7 +108,7 @@ public class DeviceAlertService
         return SendEmail(subject, body, alert, stoppingToken);
     }
 
-    private Task NotifyInactiveClear(DeviceAlert alert, CancellationToken stoppingToken)
+    private Task NotifyInactiveClear(TemperatureDeviceAlert alert, CancellationToken stoppingToken)
     {
         var locationName = alert.Location?.Name ?? "Unknown";
 
@@ -120,7 +120,7 @@ public class DeviceAlertService
         return SendEmail(subject, body, alert, stoppingToken);
     }
 
-    private Task NotifyLowBatteryAlert(DeviceAlert alert, CancellationToken stoppingToken)
+    private Task NotifyLowBatteryAlert(TemperatureDeviceAlert alert, CancellationToken stoppingToken)
     {
         var locationName = alert.Location?.Name ?? "Unknown";
 
@@ -132,7 +132,7 @@ public class DeviceAlertService
         return SendEmail(subject, body, alert, stoppingToken);
     }
 
-    private Task NotifyLowBatteryClear(DeviceAlert alert, CancellationToken stoppingToken)
+    private Task NotifyLowBatteryClear(TemperatureDeviceAlert alert, CancellationToken stoppingToken)
     {
         var locationName = alert.Location?.Name ?? "Unknown";
 
@@ -144,7 +144,7 @@ public class DeviceAlertService
         return SendEmail(subject, body, alert, stoppingToken);
     }
 
-    private Task SendEmail(string subject, string body, DeviceAlert alert, CancellationToken stoppingToken)
+    private Task SendEmail(string subject, string body, TemperatureDeviceAlert alert, CancellationToken stoppingToken)
     {
         var device = alert.Device;
         var deviceName = $"{device.Name} ({device.MqttTopic})";

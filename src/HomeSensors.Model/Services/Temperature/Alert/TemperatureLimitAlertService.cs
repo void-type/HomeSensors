@@ -4,7 +4,7 @@ using HomeSensors.Model.Repositories;
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.Extensions.Logging;
 
-namespace HomeSensors.Model.Alerts;
+namespace HomeSensors.Model.Services.Temperature.Alert;
 
 public class TemperatureLimitAlertService
 {

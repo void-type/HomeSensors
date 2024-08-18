@@ -2,7 +2,7 @@
 using HomeSensors.Web.Repositories;
 using Microsoft.AspNetCore.SignalR;
 
-namespace HomeSensors.Web.Workers;
+namespace HomeSensors.Web.Services.PushTemperatureCurrentReadings;
 
 /// <summary>
 /// This worker broadcasts current readings to all of the TemperatureHub SignalR clients.
