@@ -17,9 +17,4 @@ public class RepositoryBase
     }
 
     protected virtual string GetTag([CallerMemberName] string callerMemberName = "unknown") => $"Query called from {GetCaller(callerMemberName)}.";
-
-    protected static string BuildCacheKey(params string[] cacheKeyParts)
-    {
-        return string.Join("|", cacheKeyParts);
-    }
 }

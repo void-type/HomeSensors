@@ -1,20 +1,22 @@
-﻿using HomeSensors.Model.Data;
+﻿using HomeSensors.Model.Caching;
+using HomeSensors.Model.Data;
 using HomeSensors.Model.Repositories.Models;
+using LazyCache;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Repositories;
 
-public class TemperatureReadingRepository : RepositoryBase
+public class TemperatureReadingRepository : CachedRepositoryBase
 {
     private readonly HomeSensorsContext _data;
-    private readonly IDateTimeService _dateTimeService;
 
-    public TemperatureReadingRepository(HomeSensorsContext data, IDateTimeService dateTimeService)
+    public TemperatureReadingRepository(CachingSettings cachingSettings, HomeSensorsContext data,
+        IDateTimeService dateTimeService, IAppCache cache)
+        : base(cachingSettings, cache, dateTimeService)
     {
         _data = data;
-        _dateTimeService = dateTimeService;
     }
 
     /// <summary>
@@ -26,7 +28,7 @@ public class TemperatureReadingRepository : RepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
-            .Where(x => x.Time >= _dateTimeService.MomentWithOffset.AddDays(-1))
+            .Where(x => x.Time >= DateTimeService.MomentWithOffset.AddDays(-1))
             .GroupBy(x => x.TemperatureLocation!.Name)
             .OrderBy(g => g.Key != "Outside")
             .ThenBy(x => x.Key)
@@ -42,9 +44,28 @@ public class TemperatureReadingRepository : RepositoryBase
     }
 
     /// <summary>
+    /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
+    /// </summary>
+    /// <param name="refreshCache">Pass true to force refresh of the cache. Use when scheduled and all other clients can use same cached interval.</param>
+    public Task<List<TemperatureReadingResponse>> GetCurrentCached(bool refreshCache = false)
+    {
+        var cacheKey = GetCaller();
+
+        if (refreshCache)
+        {
+            Cache.Remove(cacheKey);
+        }
+
+        return Cache.GetOrAddAsync(
+            cacheKey,
+            GetCurrent,
+            GetAbsoluteCacheExpiration(CacheSettings.CurrentReadingsCacheTime));
+    }
+
+    /// <summary>
     /// Gets the latest reading for the location.
     /// </summary>
-    public Task<Maybe<TemperatureReadingResponse>> GetCurrent(long locationId)
+    public Task<Maybe<TemperatureReadingResponse>> GetCurrentForLocation(long locationId)
     {
         return _data.TemperatureReadings
             .TagWith(GetTag())
@@ -62,9 +83,24 @@ public class TemperatureReadingRepository : RepositoryBase
     }
 
     /// <summary>
+    /// Gets the latest reading for the location.
+    /// </summary>
+    public Task<Maybe<TemperatureReadingResponse>> GetCurrentForLocationCached(long locationId)
+    {
+        var cacheKey = BuildCacheKey(
+            GetCaller(),
+            locationId.ToString());
+
+        return Cache.GetOrAddAsync(
+            cacheKey,
+            async () => await GetCurrentForLocation(locationId),
+            GetAbsoluteCacheExpiration(CacheSettings.CurrentReadingsCacheTime));
+    }
+
+    /// <summary>
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
-    /// <param name="request">GraphTimeSeriesRequest</param>
+    /// <param name="request">TemperatureTimeSeriesRequest</param>
     public async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeries(TemperatureTimeSeriesRequest request)
     {
         if (request.LocationIds.Count == 0)
@@ -130,5 +166,30 @@ public class TemperatureReadingRepository : RepositoryBase
                     points: avgGraphPoints
                 );
             });
+    }
+
+    /// <summary>
+    /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
+    /// </summary>
+    /// <param name="request">TemperatureTimeSeriesRequest</param>
+    public Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesCached(TemperatureTimeSeriesRequest request)
+    {
+        // Prevent caching time spans that are incomplete
+        if (request.EndTime >= DateTimeService.MomentWithOffset)
+        {
+            return GetTimeSeries(request);
+        }
+
+        var cacheKey = BuildCacheKey(
+            GetCaller(),
+            request.StartTime.ToString("o"),
+            request.EndTime.ToString("o"),
+            string.Join(",", request.LocationIds.OrderBy(x => x)));
+
+        return Cache.GetOrAddAsync(
+            cacheKey,
+            async () => await GetTimeSeries(request),
+            // Prevent memory build up as there can be any number of keys.
+            LazyCacheEntryOptions.WithImmediateAbsoluteExpiration(CacheSettings.DefaultCacheTime));
     }
 }

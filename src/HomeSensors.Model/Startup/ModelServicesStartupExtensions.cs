@@ -1,4 +1,5 @@
-﻿using HomeSensors.Model.Data;
+﻿using HomeSensors.Model.Caching;
+using HomeSensors.Model.Data;
 using HomeSensors.Model.Emailing;
 using HomeSensors.Model.Mqtt;
 using HomeSensors.Model.Repositories;
@@ -6,6 +7,7 @@ using HomeSensors.Model.Services.Temperature.Alert;
 using HomeSensors.Model.Services.Temperature.Poll;
 using HomeSensors.Model.Services.Temperature.Summarize;
 using HomeSensors.Model.Services.WaterLeak;
+using LazyCache;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,7 @@ public static class ModelServicesStartupExtensions
     {
         services.AddSettingsSingleton<MqttSettings>(config);
         services.AddSettingsSingleton<NotificationsSettings>(config);
+        services.AddSettingsSingleton<CachingSettings>(config);
 
         services.AddSingleton<IEmailFactory, HtmlEmailFactory>();
         services.AddSingleton<IEmailSender, SmtpEmailer>();
@@ -32,6 +35,14 @@ public static class ModelServicesStartupExtensions
         services.AddScoped<TemperatureReadingRepository>();
         services.AddScoped<TemperatureDeviceRepository>();
         services.AddScoped<TemperatureLocationRepository>();
+
+        services.AddLazyCache(sp =>
+        {
+            var cachingSettings = sp.GetRequiredService<CachingSettings>();
+            var cache = new CachingService(CachingService.DefaultCacheProvider);
+            cache.DefaultCachePolicy.DefaultCacheDurationSeconds = cachingSettings.DefaultMinutes * 60;
+            return cache;
+        });
 
         config.GetRequiredConnectionString<HomeSensorsContext>();
         services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions

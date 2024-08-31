@@ -114,6 +114,6 @@ public class MqttDiscoveryService
 
         var message = new MqttDiscoveryMessage(_dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);
 
-        await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.newMessageMessageName, message);
+        await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.NewDiscoveryMessageMessageName, message);
     }
 }

@@ -10,7 +10,7 @@ public class TemperatureLimitAlertService
 {
     private readonly ILogger<TemperatureLimitAlertService> _logger;
     private readonly TemperatureLocationRepository _locationRepository;
-    private readonly TemperatureReadingRepository _temperatureRepository;
+    private readonly TemperatureReadingRepository _readingRepository;
     private readonly EmailNotificationService _emailNotificationService;
 
     private const string ColdStatus = "cold";
@@ -19,12 +19,12 @@ public class TemperatureLimitAlertService
     private const string MaxStatus = "maximum";
 
     public TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> logger,
-        TemperatureLocationRepository locationRepository, TemperatureReadingRepository temperatureRepository,
+        TemperatureLocationRepository locationRepository, TemperatureReadingRepository readingRepository,
         EmailNotificationService emailNotificationService)
     {
         _logger = logger;
         _locationRepository = locationRepository;
-        _temperatureRepository = temperatureRepository;
+        _readingRepository = readingRepository;
         _emailNotificationService = emailNotificationService;
     }
 
@@ -80,8 +80,8 @@ public class TemperatureLimitAlertService
         {
             var location = alert.Result.Location;
 
-            var maybeReading = await _temperatureRepository
-                .GetCurrent(location.Id);
+            var maybeReading = await _readingRepository
+                .GetCurrentForLocation(location.Id);
 
             if (maybeReading.HasNoValue)
             {

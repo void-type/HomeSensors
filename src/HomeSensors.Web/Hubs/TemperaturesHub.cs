@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.Repositories.Models;
-using HomeSensors.Web.Repositories;
+﻿using HomeSensors.Model.Repositories;
+using HomeSensors.Model.Repositories.Models;
 using Microsoft.AspNetCore.SignalR;
 
 namespace HomeSensors.Web.Hubs;
@@ -9,18 +9,18 @@ namespace HomeSensors.Web.Hubs;
 /// </summary>
 public class TemperaturesHub : Hub
 {
-    public const string newMessageMessageName = "newDiscoveryMessage";
+    public const string NewDiscoveryMessageMessageName = "newDiscoveryMessage";
     public const string UpdateCurrentReadingsMessageName = "updateCurrentReadings";
 
-    private readonly TemperatureCachedRepository _temperatureRepository;
+    private readonly TemperatureReadingRepository _readingRepository;
 
-    public TemperaturesHub(TemperatureCachedRepository temperatureRepository)
+    public TemperaturesHub(TemperatureReadingRepository readingRepository)
     {
-        _temperatureRepository = temperatureRepository;
+        _readingRepository = readingRepository;
     }
 
     public Task<List<TemperatureReadingResponse>> GetCurrentReadings()
     {
-        return _temperatureRepository.GetCurrentReadings();
+        return _readingRepository.GetCurrentCached();
     }
 }

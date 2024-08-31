@@ -1,5 +1,5 @@
-﻿using HomeSensors.Web.Hubs;
-using HomeSensors.Web.Repositories;
+﻿using HomeSensors.Model.Repositories;
+using HomeSensors.Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
 namespace HomeSensors.Web.Services.PushTemperatureCurrentReadings;
@@ -37,9 +37,9 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                var temperatureRepository = scope.ServiceProvider.GetRequiredService<TemperatureCachedRepository>();
+                var readingRepository = scope.ServiceProvider.GetRequiredService<TemperatureReadingRepository>();
 
-                var currentReadings = await temperatureRepository.GetCurrentReadings(true);
+                var currentReadings = await readingRepository.GetCurrentCached(true);
 
                 await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.UpdateCurrentReadingsMessageName, currentReadings, cancellationToken: stoppingToken);
             }

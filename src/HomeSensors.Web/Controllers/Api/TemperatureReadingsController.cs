@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.Repositories.Models;
-using HomeSensors.Web.Repositories;
+﻿using HomeSensors.Model.Repositories;
+using HomeSensors.Model.Repositories.Models;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -11,11 +11,11 @@ namespace HomeSensors.Web.Controllers.Api;
 [Route(ApiRouteAttribute.BasePath + "/temperatures-readings")]
 public class TemperatureReadingsController : ControllerBase
 {
-    private readonly TemperatureCachedRepository _cachedTemperatureRepository;
+    private readonly TemperatureReadingRepository _readingRepository;
 
-    public TemperatureReadingsController(TemperatureCachedRepository cachedRepository)
+    public TemperatureReadingsController(TemperatureReadingRepository readingRepository)
     {
-        _cachedTemperatureRepository = cachedRepository;
+        _readingRepository = readingRepository;
     }
 
     [HttpGet]
@@ -24,8 +24,24 @@ public class TemperatureReadingsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetCurrentReadings()
     {
-        var readings = await _cachedTemperatureRepository.GetCurrentReadings();
+        var readings = await _readingRepository.GetCurrentCached();
         return HttpResponder.Respond(readings);
+    }
+
+    [HttpGet]
+    [Route("location/{locationId}")]
+    [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    public async Task<IActionResult> GetCurrentReadingForLocation(long locationId)
+    {
+        var reading = await _readingRepository.GetCurrentForLocationCached(locationId);
+
+        if (reading.HasNoValue)
+        {
+            return NotFound();
+        }
+
+        return HttpResponder.Respond(reading);
     }
 
     [HttpPost]
@@ -34,7 +50,7 @@ public class TemperatureReadingsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetTimeSeries([FromBody] TemperatureTimeSeriesRequest request)
     {
-        var series = await _cachedTemperatureRepository.GetTimeSeriesReadings(request);
+        var series = await _readingRepository.GetTimeSeriesCached(request);
         return HttpResponder.Respond(series);
     }
 }
