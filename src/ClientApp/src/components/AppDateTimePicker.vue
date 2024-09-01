@@ -12,6 +12,10 @@ const props = defineProps({
     required: false,
     default: false,
   },
+  id: {
+    type: String,
+    required: true,
+  },
 });
 
 const appStore = useAppStore();
@@ -35,7 +39,7 @@ const { useDarkMode } = storeToRefs(appStore);
     :is-dark="useDarkMode"
     color="primary"
     ><template #default="{ inputValue, inputEvents }">
-      <input id="endDate" class="form-control" :value="inputValue" v-on="inputEvents" />
+      <input :id="props.id" class="form-control" :value="inputValue" v-on="inputEvents" />
     </template>
   </v-date-picker>
 </template>

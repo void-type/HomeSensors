@@ -2,6 +2,6 @@
 
 public class PushTemperatureCurrentReadingsSettings
 {
-    public bool IsEnabled { get; set; } = true;
-    public int BetweenTicksSeconds { get; set; } = 30;
+    public bool IsEnabled { get; init; } = true;
+    public int BetweenTicksSeconds { get; init; } = 30;
 }

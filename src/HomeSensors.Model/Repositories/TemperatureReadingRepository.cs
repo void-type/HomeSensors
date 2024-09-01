@@ -1,4 +1,4 @@
-﻿using HomeSensors.Model.Caching;
+﻿using HomeSensors.Model.Cache;
 using HomeSensors.Model.Data;
 using HomeSensors.Model.Repositories.Models;
 using LazyCache;
@@ -8,15 +8,19 @@ using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Repositories;
 
-public class TemperatureReadingRepository : CachedRepositoryBase
+public class TemperatureReadingRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
+    private readonly IDateTimeService _dateTimeService;
+    private readonly LazyCacheOptionService _cacheOptions;
+    private readonly IAppCache _cache;
 
-    public TemperatureReadingRepository(CachingSettings cachingSettings, HomeSensorsContext data,
-        IDateTimeService dateTimeService, IAppCache cache)
-        : base(cachingSettings, cache, dateTimeService)
+    public TemperatureReadingRepository(HomeSensorsContext data, IDateTimeService dateTimeService, LazyCacheOptionService cacheOptions, IAppCache cache)
     {
         _data = data;
+        _dateTimeService = dateTimeService;
+        _cacheOptions = cacheOptions;
+        _cache = cache;
     }
 
     /// <summary>
@@ -28,7 +32,7 @@ public class TemperatureReadingRepository : CachedRepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
-            .Where(x => x.Time >= DateTimeService.MomentWithOffset.AddDays(-1))
+            .Where(x => x.Time >= _dateTimeService.MomentWithOffset.AddDays(-1))
             .GroupBy(x => x.TemperatureLocation!.Name)
             .OrderBy(g => g.Key != "Outside")
             .ThenBy(x => x.Key)
@@ -49,17 +53,20 @@ public class TemperatureReadingRepository : CachedRepositoryBase
     /// <param name="refreshCache">Pass true to force refresh of the cache. Use when scheduled and all other clients can use same cached interval.</param>
     public Task<List<TemperatureReadingResponse>> GetCurrentCached(bool refreshCache = false)
     {
-        var cacheKey = GetCaller();
+        var caller = GetCaller();
+        var cacheKey = caller;
 
         if (refreshCache)
         {
-            Cache.Remove(cacheKey);
+            _cache.Remove(cacheKey);
         }
 
-        return Cache.GetOrAddAsync(
+        var cacheOptions = _cacheOptions.GetOptions(caller);
+
+        return _cache.GetOrAddAsync(
             cacheKey,
             GetCurrent,
-            GetAbsoluteCacheExpiration(CacheSettings.CurrentReadingsCacheTime));
+            cacheOptions);
     }
 
     /// <summary>
@@ -87,14 +94,14 @@ public class TemperatureReadingRepository : CachedRepositoryBase
     /// </summary>
     public Task<Maybe<TemperatureReadingResponse>> GetCurrentForLocationCached(long locationId)
     {
-        var cacheKey = BuildCacheKey(
-            GetCaller(),
-            locationId.ToString());
+        var caller = GetCaller();
+        var cacheKey = $"{caller}|{locationId}";
+        var cacheOptions = _cacheOptions.GetOptions(caller);
 
-        return Cache.GetOrAddAsync(
+        return _cache.GetOrAddAsync(
             cacheKey,
             async () => await GetCurrentForLocation(locationId),
-            GetAbsoluteCacheExpiration(CacheSettings.CurrentReadingsCacheTime));
+            cacheOptions);
     }
 
     /// <summary>
@@ -174,22 +181,19 @@ public class TemperatureReadingRepository : CachedRepositoryBase
     /// <param name="request">TemperatureTimeSeriesRequest</param>
     public Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesCached(TemperatureTimeSeriesRequest request)
     {
-        // Prevent caching time spans that are incomplete
-        if (request.EndTime >= DateTimeService.MomentWithOffset)
+        // Prevent caching incomplete series to stay current.
+        if (request.EndTime >= _dateTimeService.MomentWithOffset)
         {
             return GetTimeSeries(request);
         }
 
-        var cacheKey = BuildCacheKey(
-            GetCaller(),
-            request.StartTime.ToString("o"),
-            request.EndTime.ToString("o"),
-            string.Join(",", request.LocationIds.OrderBy(x => x)));
+        var caller = GetCaller();
+        var cacheKey = $"{caller}|{request.StartTime:o}|{request.EndTime:o}|{string.Join(",", request.LocationIds.OrderBy(x => x))}";
+        var cacheOptions = _cacheOptions.GetOptions(caller);
 
-        return Cache.GetOrAddAsync(
+        return _cache.GetOrAddAsync(
             cacheKey,
             async () => await GetTimeSeries(request),
-            // Prevent memory build up as there can be any number of keys.
-            LazyCacheEntryOptions.WithImmediateAbsoluteExpiration(CacheSettings.DefaultCacheTime));
+            cacheOptions);
     }
 }

@@ -22,16 +22,18 @@ public class MqttDiscoveryController : ControllerBase
     [ProducesResponseType(typeof(MqttDiscoveryClientStatus), 200)]
     public IActionResult Status()
     {
-        return HttpResponder.Respond(_discoveryService.GetClientStatus());
+        return _discoveryService.GetClientStatus()
+            .Map(HttpResponder.Respond);
     }
 
     [HttpPost]
     [Route("setup")]
     [ProducesResponseType(typeof(MqttDiscoveryClientStatus), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Setup([FromBody] MqttDiscoverySetupRequest request)
+    public Task<IActionResult> Setup([FromBody] MqttDiscoverySetupRequest request)
     {
-        return HttpResponder.Respond(await _discoveryService.SetupClient(request));
+        return _discoveryService.SetupClient(request)
+            .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
@@ -39,6 +41,7 @@ public class MqttDiscoveryController : ControllerBase
     [ProducesResponseType(typeof(MqttDiscoveryClientStatus), 200)]
     public IActionResult Teardown()
     {
-        return HttpResponder.Respond(_discoveryService.TeardownClient());
+        return _discoveryService.TeardownClient()
+            .Map(HttpResponder.Respond);
     }
 }

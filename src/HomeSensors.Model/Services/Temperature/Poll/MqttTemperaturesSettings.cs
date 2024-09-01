@@ -2,5 +2,5 @@
 
 public class MqttTemperaturesSettings
 {
-    public bool IsEnabled { get; set; } = true;
+    public bool IsEnabled { get; init; } = true;
 }

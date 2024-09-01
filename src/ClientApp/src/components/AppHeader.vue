@@ -53,14 +53,14 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                 <div class="form-check form-switch" title="Use dark mode">
                   <label
                     class="form-check-label"
-                    for="useDarkMode"
+                    for="useDarkModeSetting"
                     title="Use dark mode"
                     aria-label="Use dark mode"
                     @click.stop
                     >🌙</label
                   >
                   <input
-                    id="useDarkMode"
+                    id="useDarkModeSetting"
                     :checked="useDarkMode"
                     class="form-check-input"
                     type="checkbox"
@@ -74,14 +74,14 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                 <div class="form-check form-switch" title="Use Fahrenheit">
                   <label
                     class="form-check-label"
-                    for="useFahrenheit"
+                    for="useFahrenheitSetting"
                     title="Use Fahrenheit"
                     aria-label="Use Fahrenheit"
                     @click.stop
                     >🇺🇸</label
                   >
                   <input
-                    id="useFahrenheit"
+                    id="useFahrenheitSetting"
                     :checked="useFahrenheit"
                     class="form-check-input"
                     type="checkbox"
@@ -96,14 +96,14 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                 <div class="form-check form-switch" title="Show Humidity">
                   <label
                     class="form-check-label"
-                    for="showHumidity"
+                    for="showHumiditySetting"
                     title="Show Humidity"
                     aria-label="Show Humidity"
                     @click.stop
                     >%</label
                   >
                   <input
-                    id="showHumidity"
+                    id="showHumiditySetting"
                     :checked="showHumidity"
                     class="form-check-input"
                     type="checkbox"

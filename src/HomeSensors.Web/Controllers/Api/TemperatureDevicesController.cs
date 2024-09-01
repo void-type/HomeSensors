@@ -26,35 +26,31 @@ public class TemperatureDevicesController : ControllerBase
     [Route("all")]
     [ProducesResponseType(typeof(List<TemperatureDeviceResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetAll()
+    public Task<IActionResult> GetAll()
     {
-        var readings = await _deviceRepository.GetAll();
-        return HttpResponder.Respond(readings);
+        return _deviceRepository.GetAll()
+            .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Save([FromBody] TemperatureDeviceSaveRequest request)
+    public Task<IActionResult> Save([FromBody] TemperatureDeviceSaveRequest request)
     {
-        var result = await _deviceRepository.Save(request);
-
-        await RefreshTopicSubscriptions();
-
-        return HttpResponder.Respond(result);
+        return _deviceRepository.Save(request)
+            .TeeAsync(RefreshTopicSubscriptions)
+            .MapAsync(HttpResponder.Respond);
     }
 
     [HttpDelete]
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> Delete(int id)
+    public Task<IActionResult> Delete(int id)
     {
-        var result = await _deviceRepository.Delete(id);
-
-        await RefreshTopicSubscriptions();
-
-        return HttpResponder.Respond(result);
+        return _deviceRepository.Delete(id)
+            .TeeAsync(RefreshTopicSubscriptions)
+            .MapAsync(HttpResponder.Respond);
     }
 
     private async Task RefreshTopicSubscriptions()

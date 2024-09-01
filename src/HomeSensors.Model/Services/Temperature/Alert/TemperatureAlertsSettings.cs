@@ -2,7 +2,7 @@
 
 public class TemperatureAlertsSettings
 {
-    public bool IsEnabled { get; set; } = true;
-    public int BetweenTicksMinutes { get; set; } = 20;
-    public int BetweenNotificationsMinutes { get; set; } = 120;
+    public bool IsEnabled { get; init; } = true;
+    public int BetweenTicksMinutes { get; init; } = 20;
+    public int BetweenNotificationsMinutes { get; init; } = 120;
 }

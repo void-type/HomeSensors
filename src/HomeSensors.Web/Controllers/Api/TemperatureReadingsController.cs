@@ -22,35 +22,30 @@ public class TemperatureReadingsController : ControllerBase
     [Route("current")]
     [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetCurrentReadings()
+    public Task<IActionResult> GetCurrentReadings()
     {
-        var readings = await _readingRepository.GetCurrentCached();
-        return HttpResponder.Respond(readings);
+        return _readingRepository.GetCurrentCached()
+            .MapAsync(HttpResponder.Respond);
     }
 
     [HttpGet]
     [Route("location/{locationId}")]
     [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetCurrentReadingForLocation(long locationId)
+    public Task<IActionResult> GetCurrentReadingForLocation(long locationId)
     {
-        var reading = await _readingRepository.GetCurrentForLocationCached(locationId);
-
-        if (reading.HasNoValue)
-        {
-            return NotFound();
-        }
-
-        return HttpResponder.Respond(reading);
+        return _readingRepository.GetCurrentForLocationCached(locationId)
+            .ToResultAsync(new Failure("No current reading for location.", nameof(locationId)))
+            .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [Route("time-series")]
     [ProducesResponseType(typeof(List<TemperatureTimeSeriesResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetTimeSeries([FromBody] TemperatureTimeSeriesRequest request)
+    public Task<IActionResult> GetTimeSeries([FromBody] TemperatureTimeSeriesRequest request)
     {
-        var series = await _readingRepository.GetTimeSeriesCached(request);
-        return HttpResponder.Respond(series);
+        return _readingRepository.GetTimeSeriesCached(request)
+            .MapAsync(HttpResponder.Respond);
     }
 }

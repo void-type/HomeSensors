@@ -2,9 +2,9 @@
 
 public class MqttSettings
 {
-    public string Server { get; set; } = string.Empty;
-    public int? Port { get; set; }
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public bool LogMessages { get; set; }
+    public string Server { get; init; } = string.Empty;
+    public int? Port { get; init; }
+    public string Username { get; init; } = string.Empty;
+    public string Password { get; init; } = string.Empty;
+    public bool LogMessages { get; init; }
 }

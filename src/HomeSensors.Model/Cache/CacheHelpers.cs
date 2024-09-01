@@ -1,9 +1,14 @@
 ﻿using VoidCore.Model.Responses.Collections;
 
-namespace HomeSensors.Model.Caching;
+namespace HomeSensors.Model.Cache;
 
-public static class CachingExtensions
+public static class CacheHelpers
 {
+    public static string BuildCacheKey(params object[] cacheKeyParts)
+    {
+        return string.Join("|", cacheKeyParts.ToString());
+    }
+
     public static string GetCacheKey(this PaginationOptions paginationOptions)
     {
         return paginationOptions.IsPagingEnabled

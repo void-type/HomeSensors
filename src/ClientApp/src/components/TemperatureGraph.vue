@@ -277,11 +277,11 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showH
   <div class="grid mb-3">
     <div class="g-col-12 g-col-md-6">
       <label for="startDate" class="form-label">Start date</label>
-      <app-date-time-picker v-model="timeSeriesInputs.start" />
+      <app-date-time-picker id="startDate" v-model="timeSeriesInputs.start" />
     </div>
     <div class="g-col-12 g-col-md-6">
       <label for="endDate" class="form-label">End date</label>
-      <app-date-time-picker v-model="timeSeriesInputs.end" :disabled="showCurrent" />
+      <app-date-time-picker id="endDate" v-model="timeSeriesInputs.end" :disabled="showCurrent" />
       <div class="form-check form-check-inline mt-2">
         <input
           id="showCurrent"

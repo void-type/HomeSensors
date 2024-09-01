@@ -249,6 +249,25 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * No description
    *
    * @tags TemperatureReadings
+   * @name TemperatureReadingsGetCurrentReadingForLocation
+   * @request GET:/api/temperatures-readings/location/{locationId}
+   * @response `200` `(TemperatureReadingResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  temperatureReadingsGetCurrentReadingForLocation = (
+    locationId: number,
+    params: RequestParams = {}
+  ) =>
+    this.request<TemperatureReadingResponse[], IItemSetOfIFailure>({
+      path: `/api/temperatures-readings/location/${locationId}`,
+      method: 'GET',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags TemperatureReadings
    * @name TemperatureReadingsGetTimeSeries
    * @request POST:/api/temperatures-readings/time-series
    * @response `200` `(TemperatureTimeSeriesResponse)[]`
