@@ -1,8 +1,7 @@
-﻿using HomeSensors.Model.Cache;
-using HomeSensors.Model.Data;
+﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Repositories.Models;
-using LazyCache;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Time;
 
@@ -12,21 +11,19 @@ public class TemperatureReadingRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
     private readonly IDateTimeService _dateTimeService;
-    private readonly LazyCacheOptionService _cacheOptions;
-    private readonly IAppCache _cache;
+    private readonly HybridCache _cache;
 
-    public TemperatureReadingRepository(HomeSensorsContext data, IDateTimeService dateTimeService, LazyCacheOptionService cacheOptions, IAppCache cache)
+    public TemperatureReadingRepository(HomeSensorsContext data, IDateTimeService dateTimeService, HybridCache cache)
     {
         _data = data;
         _dateTimeService = dateTimeService;
-        _cacheOptions = cacheOptions;
         _cache = cache;
     }
 
     /// <summary>
     /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
     /// </summary>
-    public async Task<List<TemperatureReadingResponse>> GetCurrent()
+    public async Task<List<TemperatureReadingResponse>> GetCurrent(CancellationToken cancellationToken = default)
     {
         var data = await _data.TemperatureReadings
             .TagWith(GetTag())
@@ -37,7 +34,7 @@ public class TemperatureReadingRepository : RepositoryBase
             .OrderBy(g => g.Key != "Outside")
             .ThenBy(x => x.Key)
             .Select(g => g.OrderByDescending(x => x.Time).First())
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return data.ConvertAll(x => new TemperatureReadingResponse(
             time: x.Time,
@@ -51,28 +48,30 @@ public class TemperatureReadingRepository : RepositoryBase
     /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
     /// </summary>
     /// <param name="refreshCache">Pass true to force refresh of the cache. Use when scheduled and all other clients can use same cached interval.</param>
-    public Task<List<TemperatureReadingResponse>> GetCurrentCached(bool refreshCache = false)
+    public async Task<List<TemperatureReadingResponse>> GetCurrentCached(bool refreshCache = false, CancellationToken cancellationToken = default)
     {
-        var caller = GetCaller();
-        var cacheKey = caller;
+        var cacheKey = GetCaller();
 
         if (refreshCache)
         {
-            _cache.Remove(cacheKey);
+            await _cache.RemoveAsync(cacheKey, cancellationToken);
         }
 
-        var cacheOptions = _cacheOptions.GetOptions(caller);
-
-        return _cache.GetOrAddAsync(
+        return await _cache.GetOrCreateAsync(
             cacheKey,
-            GetCurrent,
-            cacheOptions);
+            async cancel => await GetCurrent(cancel),
+            options: new()
+            {
+                Expiration = TimeSpan.FromSeconds(60),
+                LocalCacheExpiration = TimeSpan.FromSeconds(60),
+            },
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// Gets the latest reading for the location.
     /// </summary>
-    public Task<Maybe<TemperatureReadingResponse>> GetCurrentForLocation(long locationId)
+    public Task<Maybe<TemperatureReadingResponse>> GetCurrentForLocation(long locationId, CancellationToken cancellationToken = default)
     {
         return _data.TemperatureReadings
             .TagWith(GetTag())
@@ -80,7 +79,7 @@ public class TemperatureReadingRepository : RepositoryBase
             .Include(x => x.TemperatureLocation)
             .Where(x => x.TemperatureLocationId == locationId)
             .OrderByDescending(x => x.Time)
-            .FirstOrDefaultAsync()
+            .FirstOrDefaultAsync(cancellationToken)
             .MapAsync(Maybe.From)
             .SelectAsync(x => new TemperatureReadingResponse(
                 time: x.Time,
@@ -92,23 +91,27 @@ public class TemperatureReadingRepository : RepositoryBase
     /// <summary>
     /// Gets the latest reading for the location.
     /// </summary>
-    public Task<Maybe<TemperatureReadingResponse>> GetCurrentForLocationCached(long locationId)
+    public async Task<Maybe<TemperatureReadingResponse>> GetCurrentForLocationCached(long locationId, CancellationToken cancellationToken = default)
     {
         var caller = GetCaller();
         var cacheKey = $"{caller}|{locationId}";
-        var cacheOptions = _cacheOptions.GetOptions(caller);
 
-        return _cache.GetOrAddAsync(
+        return await _cache.GetOrCreateAsync(
             cacheKey,
-            async () => await GetCurrentForLocation(locationId),
-            cacheOptions);
+            async cancel => await GetCurrentForLocation(locationId, cancel),
+            options: new()
+            {
+                Expiration = TimeSpan.FromSeconds(60),
+                LocalCacheExpiration = TimeSpan.FromSeconds(60),
+            },
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
     /// <param name="request">TemperatureTimeSeriesRequest</param>
-    public async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeries(TemperatureTimeSeriesRequest request)
+    public async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeries(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
     {
         if (request.LocationIds.Count == 0)
         {
@@ -122,7 +125,7 @@ public class TemperatureReadingRepository : RepositoryBase
             .Where(x => request.LocationIds.Contains(x.TemperatureLocationId))
             .Where(x => x.Time >= request.StartTime && x.Time <= request.EndTime)
             .OrderByDescending(x => x.Time)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (dbReadings.Count == 0)
         {
@@ -179,21 +182,20 @@ public class TemperatureReadingRepository : RepositoryBase
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
     /// <param name="request">TemperatureTimeSeriesRequest</param>
-    public Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesCached(TemperatureTimeSeriesRequest request)
+    public async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesCached(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
     {
         // Prevent caching incomplete series to stay current.
         if (request.EndTime >= _dateTimeService.MomentWithOffset)
         {
-            return GetTimeSeries(request);
+            return await GetTimeSeries(request, cancellationToken);
         }
 
         var caller = GetCaller();
         var cacheKey = $"{caller}|{request.StartTime:o}|{request.EndTime:o}|{string.Join(",", request.LocationIds.OrderBy(x => x))}";
-        var cacheOptions = _cacheOptions.GetOptions(caller);
 
-        return _cache.GetOrAddAsync(
+        return await _cache.GetOrCreateAsync(
             cacheKey,
-            async () => await GetTimeSeries(request),
-            cacheOptions);
+            async (cancel) => await GetTimeSeries(request, cancel),
+            cancellationToken: cancellationToken);
     }
 }

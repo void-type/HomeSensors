@@ -1,6 +1,4 @@
-﻿using HomeSensors.Model.Cache;
-using HomeSensors.Model.Cache.Configuration;
-using HomeSensors.Model.Data;
+﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Emailing;
 using HomeSensors.Model.Mqtt;
 using HomeSensors.Model.Repositories;
@@ -9,6 +7,7 @@ using HomeSensors.Model.Services.Temperature.Poll;
 using HomeSensors.Model.Services.Temperature.Summarize;
 using HomeSensors.Model.Services.WaterLeak;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet;
@@ -24,26 +23,26 @@ public static class ModelServicesStartupExtensions
     {
         services.AddSettingsSingleton<MqttSettings>(config);
         services.AddSettingsSingleton<NotificationsSettings>(config);
-        services.AddSettingsSingleton<CacheSettings>(config);
 
         services.AddSingleton<IEmailFactory, HtmlEmailFactory>();
         services.AddSingleton<IEmailSender, SmtpEmailer>();
         services.AddSingleton<EmailNotificationService>();
         services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
         services.AddSingleton<MqttFactory>();
-        services.AddSingleton<LazyCacheOptionService>();
 
         services.AddScoped<TemperatureReadingRepository>();
         services.AddScoped<TemperatureDeviceRepository>();
         services.AddScoped<TemperatureLocationRepository>();
 
-        services.AddLazyCache(sp =>
+        services.AddHybridCache(options =>
         {
-            var cacheOptions = sp.GetRequiredService<LazyCacheOptionService>();
-            var cache = new LazyCache.CachingService(LazyCache.CachingService.DefaultCacheProvider);
-            // If not using our lazy option overrides, the fallback will be sliding expiration (we cannot set a global mode in LazyCache) and our default/fallback duration.
-            cache.DefaultCachePolicy.DefaultCacheDurationSeconds = (int)double.Round(cacheOptions.GetPolicyFromSettings().Duration.TotalSeconds);
-            return cache;
+            // X * 1MB
+            options.MaximumPayloadBytes = 100 * 1048576L;
+            options.DefaultEntryOptions = new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromMinutes(5),
+                LocalCacheExpiration = TimeSpan.FromMinutes(5),
+            };
         });
 
         config.GetRequiredConnectionString<HomeSensorsContext>();
