@@ -74,6 +74,10 @@ public class LazyCacheOptionService
         };
     }
 
+    /// <summary>
+    /// Retrieves a policy from configuration. If policy or policy property not set, will return default, then fallback.
+    /// </summary>
+    /// <param name="name">Name of the policy. Null for default.</param>
     public CacheExpirationPolicy GetPolicyFromSettings(string? name = null)
     {
         var defaultPolicy = new CacheExpirationPolicy()
