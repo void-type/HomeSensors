@@ -41,7 +41,6 @@ public class SmtpEmailer : IEmailSender
 
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(_applicationSettings.Name, _notificationsSettings.FromAddress));
-        message.Sender = new MailboxAddress(_applicationSettings.Name, _notificationsSettings.FromAddress);
         message.Subject = email.Subject;
         message.Body = new TextPart(_notificationsSettings.EmailTextSubtype)
         {

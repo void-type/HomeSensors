@@ -28,8 +28,9 @@ try
     Log.Information("Configuring host for {Name} v{Version}", ThisAssembly.AssemblyTitle, ThisAssembly.AssemblyInformationalVersion);
 
     // Settings
-    services.AddSettingsSingleton<WebApplicationSettings>(config, true).Validate();
-    services.AddSingleton<ApplicationSettings, WebApplicationSettings>();
+    var settings = services.AddSettingsSingleton<WebApplicationSettings>(config, true);
+    settings.Validate();
+    services.AddSingleton<ApplicationSettings>(settings);
 
     // Infrastructure
     services.AddHttpContextAccessor();
