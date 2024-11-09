@@ -35,6 +35,7 @@ public static class ModelServicesStartupExtensions
         services.AddScoped<TemperatureDeviceRepository>();
         services.AddScoped<TemperatureLocationRepository>();
 
+#pragma warning disable EXTEXP0018 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         services.AddHybridCache(options =>
         {
             // X * 1MB
@@ -45,6 +46,7 @@ public static class ModelServicesStartupExtensions
                 LocalCacheExpiration = TimeSpan.FromMinutes(5),
             };
         });
+#pragma warning restore EXTEXP0018 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         config.GetRequiredConnectionString<HomeSensorsContext>();
         services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
