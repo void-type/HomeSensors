@@ -31,10 +31,12 @@ export interface AppVersion {
   assemblyConfiguration?: string;
 }
 
-export interface MqttDiscoveryClientStatus {
-  topics?: string[] | null;
-  isCreated?: boolean;
-  isConnected?: boolean;
+export interface CategoryResponse {
+  /** @format int64 */
+  id?: number;
+  name?: string;
+  /** @format int32 */
+  order?: number;
 }
 
 export interface IItemSetOfIFailure {
@@ -53,6 +55,29 @@ export interface IItemSetOfIFailure {
 export interface IFailure {
   message?: string;
   uiHandle?: string | null;
+}
+
+export type EntityMessageOfLong = UserMessage & {
+  /** @format int64 */
+  id?: number;
+};
+
+export interface UserMessage {
+  message?: string;
+}
+
+export interface CategorySaveRequest {
+  /** @format int64 */
+  id?: number;
+  name?: string;
+  /** @format int32 */
+  order?: number;
+}
+
+export interface MqttDiscoveryClientStatus {
+  topics?: string[] | null;
+  isCreated?: boolean;
+  isConnected?: boolean;
 }
 
 export interface MqttDiscoverySetupRequest {
@@ -93,15 +118,9 @@ export interface TemperatureLocationResponse {
   minTemperatureLimitCelsius?: number | null;
   /** @format double */
   maxTemperatureLimitCelsius?: number | null;
-}
-
-export type EntityMessageOfLong = UserMessage & {
+  isHidden?: boolean;
   /** @format int64 */
-  id?: number;
-};
-
-export interface UserMessage {
-  message?: string;
+  categoryId?: number | null;
 }
 
 export interface TemperatureDeviceSaveRequest {
@@ -129,6 +148,9 @@ export interface TemperatureLocationSaveRequest {
   minTemperatureLimitCelsius?: number | null;
   /** @format double */
   maxTemperatureLimitCelsius?: number | null;
+  isHidden?: boolean;
+  /** @format int64 */
+  categoryId?: number | null;
 }
 
 export interface TemperatureTimeSeriesResponse {

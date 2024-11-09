@@ -155,6 +155,11 @@ onMounted(async () => {
                 'is-invalid': data.errors.includes(`mqttTopic-${device.id}`),
               }"
             />
+            <router-link
+              :to="{ name: 'discoveryMain', query: { topic: device.mqttTopic } }"
+              class="btn btn-sm btn-outline-secondary mt-2"
+              >View MQTT</router-link
+            >
           </div>
           <div class="g-col-12 g-col-md-6 g-col-lg-4">
             <label :for="`location-${device.id}`" class="form-label">Location</label>

@@ -32,7 +32,19 @@ public static class RepositoryHelpers
             .ToList();
     }
 
-    public static TemperatureReadingResponse ToApiResponse(this TemperatureReading a) => new(a.Time, a.Humidity, a.TemperatureCelsius, a.TemperatureLocation?.ToApiResponse());
+    public static TemperatureReadingResponse ToApiResponse(this TemperatureReading a) =>
+        new(
+            time: a.Time,
+            humidity: a.Humidity,
+            temperatureCelsius: a.TemperatureCelsius,
+            location: a.TemperatureLocation?.ToApiResponse());
 
-    public static TemperatureLocationResponse ToApiResponse(this TemperatureLocation a) => new(a.Id, a.Name, a.MinTemperatureLimitCelsius, a.MaxTemperatureLimitCelsius);
+    public static TemperatureLocationResponse ToApiResponse(this TemperatureLocation a) =>
+        new(
+            id: a.Id,
+            name: a.Name,
+            minTemperatureLimitCelsius: a.MinTemperatureLimitCelsius,
+            maxTemperatureLimitCelsius: a.MaxTemperatureLimitCelsius,
+            isHidden: a.IsHidden,
+            categoryId: a.CategoryId);
 }

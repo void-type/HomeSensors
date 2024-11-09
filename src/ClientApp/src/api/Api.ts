@@ -11,6 +11,8 @@
 
 import type {
   AppVersion,
+  CategoryResponse,
+  CategorySaveRequest,
   EntityMessageOfLong,
   IItemSetOfIFailure,
   MqttDiscoveryClientStatus,
@@ -58,6 +60,56 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
     this.request<AppVersion, any>({
       path: `/api/app/version`,
       method: 'GET',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Categories
+   * @name CategoriesGetAll
+   * @request GET:/api/categories/all
+   * @response `200` `(CategoryResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  categoriesGetAll = (params: RequestParams = {}) =>
+    this.request<CategoryResponse[], IItemSetOfIFailure>({
+      path: `/api/categories/all`,
+      method: 'GET',
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Categories
+   * @name CategoriesSave
+   * @request POST:/api/categories
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  categoriesSave = (data: CategorySaveRequest, params: RequestParams = {}) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/categories`,
+      method: 'POST',
+      body: data,
+      type: ContentType.Json,
+      format: 'json',
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Categories
+   * @name CategoriesDelete
+   * @request DELETE:/api/categories/{id}
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  categoriesDelete = (id: number, params: RequestParams = {}) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/categories/${id}`,
+      method: 'DELETE',
       format: 'json',
       ...params,
     });

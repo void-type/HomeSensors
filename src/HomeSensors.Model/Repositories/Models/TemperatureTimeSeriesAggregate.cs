@@ -10,6 +10,8 @@ public class TemperatureTimeSeriesAggregate
     }
 
     public double? Minimum { get; }
+
     public double? Maximum { get; }
+
     public double? Average { get; }
 }

@@ -13,12 +13,21 @@ public class HomeSensorsContext : DbContext
         ChangeTracker.LazyLoadingEnabled = false;
     }
 
+    public virtual DbSet<Category> Categories { get; set; }
     public virtual DbSet<TemperatureDevice> TemperatureDevices { get; set; }
     public virtual DbSet<TemperatureLocation> TemperatureLocations { get; set; }
     public virtual DbSet<TemperatureReading> TemperatureReadings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.ToTable(nameof(Category));
+
+            entity.HasIndex(si => si.Name)
+                .IsUnique();
+        });
+
         modelBuilder.Entity<TemperatureReading>(entity =>
         {
             entity.ToTable(nameof(TemperatureReading));
@@ -39,6 +48,9 @@ public class HomeSensorsContext : DbContext
 
             entity.HasIndex(l => l.Name)
                 .IsUnique();
+
+            entity.HasOne(r => r.Category)
+                .WithMany(i => i.TemperatureLocations).HasForeignKey("CategoryId");
         });
 
         modelBuilder.Entity<TemperatureDevice>(entity =>

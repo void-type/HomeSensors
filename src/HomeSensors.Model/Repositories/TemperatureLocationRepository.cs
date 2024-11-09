@@ -73,6 +73,17 @@ public class TemperatureLocationRepository : RepositoryBase
             failures.Add(new Failure("Name already exists.", "name"));
         }
 
+        if (request.CategoryId is not null)
+        {
+            var category = await _data.Categories
+                .FirstOrDefaultAsync(x => x.Id == request.CategoryId);
+
+            if (category is null)
+            {
+                failures.Add(new Failure("Category not found.", "categoryId"));
+            }
+        }
+
         if (failures.Count > 0)
         {
             return Result.Fail<EntityMessage<long>>(failures);
@@ -90,6 +101,8 @@ public class TemperatureLocationRepository : RepositoryBase
         location.Name = request.Name;
         location.MinTemperatureLimitCelsius = request.MinTemperatureLimitCelsius;
         location.MaxTemperatureLimitCelsius = request.MaxTemperatureLimitCelsius;
+        location.IsHidden = request.IsHidden;
+        location.CategoryId = request.CategoryId;
 
         await _data.SaveChangesAsync();
 

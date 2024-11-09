@@ -24,9 +24,14 @@ public class TemperatureReadingResponse
     }
 
     public DateTimeOffset Time { get; }
+
     public double? Humidity { get; }
+
     public double? TemperatureCelsius { get; }
+
     public TemperatureLocationResponse? Location { get; }
+
     public bool IsHot { get; }
+
     public bool IsCold { get; }
 }

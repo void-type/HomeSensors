@@ -1,6 +1,10 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
-import type { IItemSetOfIFailure, TemperatureLocationResponse } from '@/api/data-contracts';
+import type {
+  CategoryResponse,
+  IItemSetOfIFailure,
+  TemperatureLocationResponse,
+} from '@/api/data-contracts';
 import { toNumberOrNull } from '@/models/FormatHelpers';
 import { formatTempWithUnitOrEmpty } from '@/models/TempFormatHelpers';
 import { onMounted, reactive } from 'vue';
@@ -15,6 +19,7 @@ const api = ApiHelpers.client;
 
 const data = reactive({
   locations: [] as Array<TemperatureLocationResponse>,
+  categories: [] as Array<CategoryResponse>,
   newLocation: {
     name: '',
     min: null as number | null,
@@ -32,6 +37,15 @@ async function getLocations() {
   }
 }
 
+async function getCategories() {
+  try {
+    const response = await api().categoriesGetAll();
+    data.categories = response.data;
+  } catch (error) {
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+  }
+}
+
 async function newLocation() {
   if (data.locations.findIndex((x) => (x.id || 0) < 1) > -1) {
     return;
@@ -42,6 +56,8 @@ async function newLocation() {
     name: '',
     minTemperatureLimitCelsius: null,
     maxTemperatureLimitCelsius: null,
+    isHidden: false,
+    categoryId: null,
   });
 }
 
@@ -57,6 +73,7 @@ async function reallyDeleteLocation(location: TemperatureLocationResponse) {
     }
 
     await getLocations();
+    await getCategories();
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
@@ -81,6 +98,8 @@ async function saveLocation(location: TemperatureLocationResponse) {
     name: location.name,
     minTemperatureLimitCelsius: toNumberOrNull(location.minTemperatureLimitCelsius),
     maxTemperatureLimitCelsius: toNumberOrNull(location.maxTemperatureLimitCelsius),
+    isHidden: location.isHidden,
+    categoryId: toNumberOrNull(location.categoryId),
   };
 
   try {
@@ -90,6 +109,7 @@ async function saveLocation(location: TemperatureLocationResponse) {
     }
 
     await getLocations();
+    await getCategories();
   } catch (error) {
     const response = error as HttpResponse<unknown, unknown>;
     messageStore.setApiFailureMessages(response);
@@ -101,6 +121,7 @@ async function saveLocation(location: TemperatureLocationResponse) {
 
 onMounted(async () => {
   await getLocations();
+  await getCategories();
 });
 </script>
 
@@ -151,6 +172,38 @@ onMounted(async () => {
               type="number"
             />
             {{ formatTempWithUnitOrEmpty(location.maxTemperatureLimitCelsius, true) }}
+          </div>
+          <div class="g-col-12 g-col-md-6 g-col-lg-4">
+            <label :for="`category-${location.id}`" class="form-label">Category</label>
+            <select
+              :id="`category-${location.id}`"
+              v-model="location.categoryId"
+              :class="{
+                'form-select': true,
+                'form-select-sm': true,
+                'is-invalid': data.errors.includes(`category-${location.id}`),
+              }"
+            >
+              <option :value="0"></option>
+              <option v-for="category in data.categories" :key="category.id" :value="category.id">
+                {{ category.name }}
+              </option>
+            </select>
+          </div>
+          <div class="g-col-12">
+            <div class="form-check">
+              <input
+                :id="`hidden-${location.id}`"
+                v-model="location.isHidden"
+                class="form-check-input"
+                :class="{
+                  'form-check-input': true,
+                  'is-invalid': data.errors.includes(`hidden-${location.id}`),
+                }"
+                type="checkbox"
+              />
+              <label :for="`hidden-${location.id}`" class="form-check-label">Hidden</label>
+            </div>
           </div>
           <div v-if="location.id" class="g-col-12">
             <div>

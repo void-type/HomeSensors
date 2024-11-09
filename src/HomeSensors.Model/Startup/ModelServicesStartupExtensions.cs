@@ -30,6 +30,7 @@ public static class ModelServicesStartupExtensions
         services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
         services.AddSingleton<MqttFactory>();
 
+        services.AddScoped<CategoryRepository>();
         services.AddScoped<TemperatureReadingRepository>();
         services.AddScoped<TemperatureDeviceRepository>();
         services.AddScoped<TemperatureLocationRepository>();

@@ -18,7 +18,10 @@ public class TemperatureCheckLimitResponse
     }
 
     public TemperatureLocationResponse Location { get; }
+
     public bool IsFailed { get; }
+
     public TemperatureReadingResponse? MinReading { get; }
+
     public TemperatureReadingResponse? MaxReading { get; }
 }

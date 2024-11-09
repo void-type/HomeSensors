@@ -51,9 +51,26 @@ const router = createRouter({
       meta: { title: 'Locations' },
     },
     {
+      path: '/categories',
+      name: 'categoriesMain',
+      component: () => import('@/pages/CategoriesPage.vue'),
+      meta: { title: 'Categories' },
+    },
+    {
       path: '/discovery',
       name: 'discoveryMain',
       component: () => import('@/pages/DiscoveryPage.vue'),
+      props: (route) => {
+        const topics = route.query.topic;
+
+        if (!topics) {
+          return {};
+        }
+
+        return {
+          topics: Array.isArray(topics) ? topics : [topics],
+        };
+      },
       meta: { title: 'Discovery' },
     },
     {

@@ -5,6 +5,7 @@ import type {
   TemperatureTimeSeriesPoint,
   TemperatureTimeSeriesResponse,
   TemperatureLocationResponse,
+  CategoryResponse,
 } from '@/api/data-contracts';
 import { onMounted, reactive, watch, computed, watchEffect, ref } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
@@ -36,6 +37,7 @@ const initialTime = startOfMinute(new Date());
 
 const data = reactive({
   locations: [] as Array<TemperatureLocationResponse>,
+  categories: [] as Array<CategoryResponse>,
   graphSeries: [] as Array<TemperatureTimeSeriesResponse>,
   showHumidity: false,
 });
@@ -237,12 +239,52 @@ async function getTimeSeries(inputs: ITimeSeriesInputs) {
 async function getLocations() {
   try {
     const response = await api().temperatureLocationsGetAll();
-    data.locations = response.data;
+    data.locations = response.data.filter((x) => !x.isHidden);
     timeSeriesInputs.locationIds = data.locations.map((x) => x.id as number);
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
+
+async function getCategories() {
+  try {
+    const response = await api().categoriesGetAll();
+    data.categories = response.data;
+  } catch (error) {
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+  }
+}
+
+const categorizedLocations = computed(() => {
+  const sortedCategories = data.categories.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const groupedReadings = sortedCategories.reduce(
+    (acc, category) => {
+      if (!category.name) {
+        return acc;
+      }
+
+      const readings = data.locations.filter((location) => location.categoryId === category.id);
+
+      if (!readings.length) {
+        return acc;
+      }
+
+      acc[category.name] = readings;
+
+      return acc;
+    },
+    {} as Record<string, TemperatureLocationResponse[]>
+  );
+
+  const uncategorized = data.locations.filter((location) => !location.categoryId);
+
+  if (uncategorized.length) {
+    groupedReadings.Uncategorized = uncategorized;
+  }
+
+  return groupedReadings;
+});
 
 let lastTimeout: number | null = null;
 const timeoutSeconds = 5;
@@ -266,6 +308,7 @@ function setCurrentTimer() {
 
 onMounted(async () => {
   await getLocations();
+  await getCategories();
 });
 
 watch(timeSeriesInputs, (inputs) => getTimeSeries(inputs), { immediate: true });
@@ -300,20 +343,23 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showH
     </div>
     <div class="g-col-12">
       <div
-        v-for="location in data.locations"
-        :key="location.id"
-        class="form-check form-check-inline"
+        v-for="(values, categoryName) in categorizedLocations"
+        :key="categoryName"
+        class="g-col-12"
       >
-        <input
-          :id="`locationSelect-${location.id}`"
-          v-model="timeSeriesInputs.locationIds"
-          :value="location.id"
-          class="form-check-input"
-          type="checkbox"
-        />
-        <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
-          location.name
-        }}</label>
+        <div>{{ categoryName }}</div>
+        <div v-for="location in values" :key="location.id" class="form-check form-check-inline">
+          <input
+            :id="`locationSelect-${location.id}`"
+            v-model="timeSeriesInputs.locationIds"
+            :value="location.id"
+            class="form-check-input"
+            type="checkbox"
+          />
+          <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
+            location.name
+          }}</label>
+        </div>
       </div>
     </div>
     <div class="g-col-12">

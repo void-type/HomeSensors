@@ -1,21 +1,35 @@
 <script lang="ts" setup>
 import useAppStore from '@/stores/appStore';
-import type { TemperatureReadingResponse } from '@/api/data-contracts';
-import { onMounted, reactive } from 'vue';
+import type { CategoryResponse, TemperatureReadingResponse } from '@/api/data-contracts';
+import { computed, onMounted, reactive } from 'vue';
 import { addMinutes, format, isPast } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
 import { storeToRefs } from 'pinia';
 import { formatTempWithUnit, formatHumidityWithUnit } from '@/models/TempFormatHelpers';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import ApiHelpers from '@/models/ApiHelpers';
+import type { HttpResponse } from '@/api/http-client';
+import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
+const messageStore = useMessageStore();
+const api = ApiHelpers.client;
 
 const { useFahrenheit, showHumidity, staleLimitMinutes } = storeToRefs(appStore);
 
 const data = reactive({
   currentReadings: [] as Array<TemperatureReadingResponse>,
+  categories: [] as Array<CategoryResponse>,
 });
+
+async function getCategories() {
+  try {
+    const response = await api().categoriesGetAll();
+    data.categories = response.data;
+  } catch (error) {
+    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+  }
+}
 
 let connection: signalR.HubConnection | null = null;
 
@@ -62,6 +76,41 @@ async function connectToHub() {
   startConnection();
 }
 
+const categorizedReadings = computed(() => {
+  const visibleReadings = data.currentReadings.filter((x) => !x.location?.isHidden);
+
+  const sortedCategories = data.categories.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const groupedReadings = sortedCategories.reduce(
+    (acc, category) => {
+      if (!category.name) {
+        return acc;
+      }
+
+      const readings = visibleReadings.filter(
+        (reading) => reading.location?.categoryId === category.id
+      );
+
+      if (!readings.length) {
+        return acc;
+      }
+
+      acc[category.name] = readings;
+
+      return acc;
+    },
+    {} as Record<string, TemperatureReadingResponse[]>
+  );
+
+  const uncategorized = visibleReadings.filter((reading) => !reading.location?.categoryId);
+
+  if (uncategorized.length) {
+    groupedReadings.Uncategorized = uncategorized;
+  }
+
+  return groupedReadings;
+});
+
 function isStale(reading: TemperatureReadingResponse) {
   const readingDate = new Date(reading.time as string);
 
@@ -72,51 +121,53 @@ function isStale(reading: TemperatureReadingResponse) {
 
 onMounted(async () => {
   await connectToHub();
+  await getCategories();
 });
 </script>
 
 <template>
   <div class="grid">
-    <div
-      v-for="(currentTemp, i) in data.currentReadings"
-      :key="i"
-      class="g-col-6 g-col-md-4 g-col-lg-3"
-    >
-      <div class="card text-center">
-        <div class="card-body">
-          <div class="h4 mb-2">
-            {{ currentTemp.location?.name }}
-          </div>
-          <div class="h3">
-            <font-awesome-icon
-              v-if="currentTemp.isHot"
-              icon="fa-temperature-full"
-              class="hot blink me-2"
-              title="Hotter than limit."
-            />
-            <font-awesome-icon
-              v-if="currentTemp.isCold"
-              icon="fa-snowflake"
-              class="cold blink me-2"
-              title="Colder than limit."
-            />
-            <span class="fw-bold">{{
-              formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit, 0)
-            }}</span>
-            <span v-if="currentTemp.humidity !== null && showHumidity" class="ps-3">{{
-              formatHumidityWithUnit(currentTemp.humidity)
-            }}</span>
-          </div>
-          <div>
-            <font-awesome-icon
-              v-if="isStale(currentTemp)"
-              icon="fa-clock"
-              class="stale blink me-2"
-              :title="`Reading is more than ${staleLimitMinutes} minutes old.`"
-            />
-            <small class="fw-light">{{
-              format(new Date(currentTemp.time as string), 'HH:mm')
-            }}</small>
+    <div v-for="(values, categoryName) in categorizedReadings" :key="categoryName" class="g-col-12">
+      <h4>{{ categoryName }}</h4>
+      <div class="grid">
+        <div v-for="(currentTemp, i) in values" :key="i" class="g-col-6 g-col-md-4 g-col-lg-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <div class="h5 mb-2">
+                {{ currentTemp.location?.name }}
+              </div>
+              <div class="h3">
+                <font-awesome-icon
+                  v-if="currentTemp.isHot"
+                  icon="fa-temperature-full"
+                  class="hot blink me-2"
+                  title="Hotter than limit."
+                />
+                <font-awesome-icon
+                  v-if="currentTemp.isCold"
+                  icon="fa-snowflake"
+                  class="cold blink me-2"
+                  title="Colder than limit."
+                />
+                <span class="fw-bold">{{
+                  formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit, 0)
+                }}</span>
+                <span v-if="currentTemp.humidity !== null && showHumidity" class="ps-3">{{
+                  formatHumidityWithUnit(currentTemp.humidity)
+                }}</span>
+              </div>
+              <div>
+                <font-awesome-icon
+                  v-if="isStale(currentTemp)"
+                  icon="fa-clock"
+                  class="stale blink me-2"
+                  :title="`Reading is more than ${staleLimitMinutes} minutes old.`"
+                />
+                <small class="fw-light">{{
+                  format(new Date(currentTemp.time as string), 'HH:mm')
+                }}</small>
+              </div>
+            </div>
           </div>
         </div>
       </div>

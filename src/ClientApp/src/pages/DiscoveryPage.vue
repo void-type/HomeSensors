@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, reactive } from 'vue';
+import { computed, onMounted, reactive, type PropType } from 'vue';
 import * as signalR from '@microsoft/signalr';
 import ApiHelpers from '@/models/ApiHelpers';
 import type { MqttDiscoveryClientStatus } from '@/api/data-contracts';
@@ -10,8 +10,16 @@ import { parseISO } from 'date-fns';
 import useAppStore from '@/stores/appStore';
 import { formatJSON, isNil } from '@/models/FormatHelpers';
 
+const props = defineProps({
+  topics: {
+    type: Array as PropType<Array<string>>,
+    required: false,
+    default: () => ['rtl_433/#', 'zigbee2mqtt/#'],
+  },
+});
+
 const data = reactive({
-  topics: 'rtl_433/#\nzigbee2mqtt/#',
+  topics: '',
   feed: [] as Array<string>,
   status: {
     topics: [] as Array<string>,
@@ -104,6 +112,8 @@ onMounted(async () => {
 
   if (topics) {
     data.topics = topics.join('\n');
+  } else {
+    data.topics = props.topics.join('\n');
   }
 });
 </script>

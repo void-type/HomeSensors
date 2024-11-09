@@ -11,7 +11,10 @@ public class TemperatureTimeSeriesResponse
     }
 
     public TemperatureLocationResponse Location { get; }
+
     public TemperatureTimeSeriesAggregate TemperatureAggregate { get; }
+
     public TemperatureTimeSeriesAggregate HumidityAggregate { get; }
+
     public IEnumerable<TemperatureTimeSeriesPoint> Points { get; }
 }

@@ -12,11 +12,11 @@ try {
   . ./build/buildSettings.ps1
 
   if ($MigrationName) {
-    dotnet ef database update "$MigrationName" @dbMigrationArgs
+    dotnet ef migrations remove "$MigrationName" @dbMigrationArgs
     return
   }
 
-  dotnet ef database update @dbMigrationArgs
+  dotnet ef migrations remove @dbMigrationArgs
 
 } finally {
   Set-Location $originalLocation

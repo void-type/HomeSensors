@@ -69,11 +69,14 @@ public class TemperatureDeviceRepository : RepositoryBase
     {
         var failures = new List<IFailure>();
 
-        var locationExists = await _data.TemperatureLocations.AnyAsync(x => x.Id == request.LocationId);
-
-        if (!locationExists)
+        if (!request.IsRetired)
         {
-            failures.Add(new Failure("Location doesn't exist.", "location"));
+            var locationExists = await _data.TemperatureLocations.AnyAsync(x => x.Id == request.LocationId);
+
+            if (!locationExists)
+            {
+                failures.Add(new Failure("Location doesn't exist.", "location"));
+            }
         }
 
         if (request.Name.IsNullOrWhiteSpace())

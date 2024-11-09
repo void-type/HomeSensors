@@ -10,6 +10,8 @@ public class TemperatureTimeSeriesPoint
     }
 
     public DateTimeOffset Time { get; }
+
     public double? TemperatureCelsius { get; }
+
     public double? Humidity { get; }
 }

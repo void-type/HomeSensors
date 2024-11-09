@@ -19,12 +19,20 @@ public class TemperatureDeviceResponse
     }
 
     public long Id { get; }
+
     public string Name { get; }
+
     public string MqttTopic { get; }
+
     public long LocationId { get; }
+
     public TemperatureReadingResponse? LastReading { get; }
+
     public bool IsRetired { get; }
+
     public bool IsLost { get; }
+
     public bool IsInactive { get; }
+
     public bool IsBatteryLevelLow { get; }
 }
