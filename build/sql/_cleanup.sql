@@ -1,46 +1,65 @@
 -- Cleanup readings that weren't associated with a location. Cleanup devices that have no readings.
 
-DELETE FROM TemperatureReadings WHERE TemperatureLocationId IS NULL
+DELETE FROM TemperatureReading WHERE TemperatureLocationId IS NULL
 
-DELETE d FROM [HomeSensors].[dbo].[TemperatureDevices] AS d
+DELETE d FROM [HomeSensors].[dbo].[TemperatureDevice] AS d
 WHERE NOT EXISTS ( SELECT *
-FROM TemperatureReadings r
+FROM TemperatureReading r
 WHERE r.TemperatureDeviceId = d.Id  )
 
 
 -- Clone data down from prod to test
-TRUNCATE TABLE HomeSensorsTest.dbo.TemperatureReadings
-DELETE FROM HomeSensorsTest.dbo.TemperatureDevices
-DELETE FROM HomeSensorsTest.dbo.TemperatureLocations
+TRUNCATE TABLE HomeSensorsTest.dbo.TemperatureReading
+DELETE FROM HomeSensorsTest.dbo.TemperatureDevice
+DELETE FROM HomeSensorsTest.dbo.TemperatureLocation
+DELETE FROM HomeSensorsTest.dbo.Category
 
-
-SET IDENTITY_INSERT HomeSensorsTest.dbo.TemperatureLocations ON
+SET IDENTITY_INSERT HomeSensorsTest.dbo.Category ON
 GO
 
-INSERT INTO HomeSensorsTest.dbo.TemperatureLocations
+INSERT INTO HomeSensorsTest.dbo.Category
+  ([Id]
+  ,[Name]
+  ,[Order])
+SELECT
+  *
+FROM
+  HomeSensors.dbo.Category
+
+SET IDENTITY_INSERT HomeSensorsTest.dbo.Category OFF
+GO
+
+SET IDENTITY_INSERT HomeSensorsTest.dbo.TemperatureLocation ON
+GO
+
+INSERT INTO HomeSensorsTest.dbo.TemperatureLocation
   ([Id]
   ,[Name]
   ,[MaxTemperatureLimitCelsius]
-  ,[MinTemperatureLimitCelsius])
-SELECT *
-FROM HomeSensors.dbo.TemperatureLocations
+  ,[MinTemperatureLimitCelsius]
+  ,[CategoryId]
+  ,[IsHidden])
+SELECT
+  *
+FROM
+  HomeSensors.dbo.TemperatureLocation
 
-SET IDENTITY_INSERT HomeSensorsTest.dbo.TemperatureLocations OFF
+SET IDENTITY_INSERT HomeSensorsTest.dbo.TemperatureLocation OFF
 GO
 
-
-SET IDENTITY_INSERT HomeSensorsTest.dbo.TemperatureDevices ON
+SET IDENTITY_INSERT HomeSensorsTest.dbo.TemperatureDevice ON
 GO
 
-INSERT INTO HomeSensorsTest.dbo.TemperatureDevices
+INSERT INTO HomeSensorsTest.dbo.TemperatureDevice
   ([Id]
-  ,[DeviceModel]
-  ,[DeviceId]
-  ,[DeviceChannel]
-  ,[CurrentTemperatureLocationId]
-  ,[IsRetired])
-SELECT *
-FROM HomeSensors.dbo.TemperatureDevices
+  ,[TemperatureLocationId]
+  ,[IsRetired]
+  ,[MqttTopic]
+  ,[Name])
+SELECT
+  *
+FROM
+  HomeSensors.dbo.TemperatureDevice
 
-SET IDENTITY_INSERT HomeSensorsTest.dbo.TemperatureDevices OFF
+SET IDENTITY_INSERT HomeSensorsTest.dbo.TemperatureDevice OFF
 GO

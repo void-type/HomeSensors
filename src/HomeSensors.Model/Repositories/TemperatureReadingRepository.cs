@@ -29,10 +29,11 @@ public class TemperatureReadingRepository : RepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
+            .ThenInclude(x => x!.Category)
             .Where(x => x.Time >= _dateTimeService.MomentWithOffset.AddDays(-1))
+            .OrderBy(x => x.TemperatureLocation!.Category!.Order)
+            .ThenBy(x => x.TemperatureLocation!.Name)
             .GroupBy(x => x.TemperatureLocation!.Name)
-            .OrderBy(g => g.Key != "Outside")
-            .ThenBy(x => x.Key)
             .Select(g => g.OrderByDescending(x => x.Time).First())
             .ToListAsync(cancellationToken);
 
@@ -122,6 +123,7 @@ public class TemperatureReadingRepository : RepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
+            .ThenInclude(x => x!.Category)
             .Where(x => request.LocationIds.Contains(x.TemperatureLocationId))
             .Where(x => x.Time >= request.StartTime && x.Time <= request.EndTime)
             .OrderByDescending(x => x.Time)
@@ -147,9 +149,9 @@ public class TemperatureReadingRepository : RepositoryBase
         };
 
         return dbReadings
+            .OrderBy(x => x.TemperatureLocation!.Category!.Order)
+            .ThenBy(x => x.TemperatureLocation!.Name)
             .GroupBy(x => x.TemperatureLocation!.Name)
-            .OrderBy(x => x.Key != "Outside")
-            .ThenBy(x => x.Key)
             .ToList()
             .ConvertAll(readingsForLocation =>
             {
