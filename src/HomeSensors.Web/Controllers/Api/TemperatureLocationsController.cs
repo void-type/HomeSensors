@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Model.Repositories;
 using HomeSensors.Model.Repositories.Models;
+using HomeSensors.Model.Services.Temperature.Alert;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -13,10 +14,13 @@ namespace HomeSensors.Web.Controllers.Api;
 public class TemperatureLocationsController : ControllerBase
 {
     private readonly TemperatureLocationRepository _locationRepository;
+    private readonly TemperatureAlertsSettings _alertSettings;
 
-    public TemperatureLocationsController(TemperatureLocationRepository locationRepository)
+    public TemperatureLocationsController(TemperatureLocationRepository locationRepository,
+        TemperatureAlertsSettings alertSettings)
     {
         _locationRepository = locationRepository;
+        _alertSettings = alertSettings;
     }
 
     [HttpGet]
@@ -35,7 +39,7 @@ public class TemperatureLocationsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public Task<IActionResult> CheckLimits(DateTimeOffset lastCheck)
     {
-        return _locationRepository.CheckLimits(lastCheck)
+        return _locationRepository.CheckLimits(lastCheck, _alertSettings.AverageIntervalMinutes)
             .MapAsync(HttpResponder.Respond);
     }
 

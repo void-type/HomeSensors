@@ -12,24 +12,27 @@ public class TemperatureDeviceAlertService
     private readonly TemperatureLocationRepository _locationRepository;
     private readonly TemperatureDeviceRepository _deviceRepository;
     private readonly EmailNotificationService _emailNotificationService;
+    private readonly TemperatureAlertsSettings _alertSettings;
 
     public TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService> logger,
         TemperatureLocationRepository locationRepository, TemperatureDeviceRepository deviceRepository,
-        EmailNotificationService emailNotificationService)
+        EmailNotificationService emailNotificationService, TemperatureAlertsSettings alertSettings)
     {
         _logger = logger;
         _locationRepository = locationRepository;
         _deviceRepository = deviceRepository;
         _emailNotificationService = emailNotificationService;
+        _alertSettings = alertSettings;
     }
 
-    public async Task Process(List<TemperatureDeviceAlert> latchedAlerts, DateTimeOffset now, TimeSpan betweenAlerts, CancellationToken stoppingToken)
+    public async Task Process(List<TemperatureDeviceAlert> latchedAlerts, DateTimeOffset now, CancellationToken stoppingToken)
     {
         var devices = await _deviceRepository.GetAll();
 
         var locations = await _locationRepository.GetAll();
 
-        var resendAfter = now.Add(betweenAlerts);
+        var betweenNotifications = TimeSpan.FromMinutes(_alertSettings.BetweenNotificationsMinutes);
+        var resendAfter = now.Add(betweenNotifications);
 
         var inactiveAlerts = devices
             .Where(d => d.IsInactive)

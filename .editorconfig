@@ -267,14 +267,25 @@ dotnet_naming_rule.everything_else_naming.severity = suggestion
 # Remove unused usings
 dotnet_diagnostic.IDE0005.severity = warning
 dotnet_diagnostic.IDE0060.severity = warning
+
 # False-positive, base authentication should be set site-wide
 dotnet_diagnostic.SCS0012.severity = none
+
 # False-positive, AntiForgery is set site-wide
 dotnet_diagnostic.SCS0016.severity = none
+
 # We don't need ConfigureAwait(false)
 dotnet_diagnostic.RCS1090.severity = none
+dotnet_diagnostic.MA0004.severity = none
+
+# We prefer the opposite, to enforce the use of the async keyword
+dotnet_diagnostic.AsyncFixer01.severity = none
+
 # We check our API models ourselves
 dotnet_diagnostic.S6967.severity = none
+
+# CA2016: Forward the 'CancellationToken' parameter to methods
+dotnet_diagnostic.CA2016.severity = warning
 
 
 # Javascript and Vue

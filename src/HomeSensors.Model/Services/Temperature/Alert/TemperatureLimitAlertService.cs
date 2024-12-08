@@ -8,29 +8,31 @@ namespace HomeSensors.Model.Services.Temperature.Alert;
 
 public class TemperatureLimitAlertService
 {
-    private readonly ILogger<TemperatureLimitAlertService> _logger;
-    private readonly TemperatureLocationRepository _locationRepository;
-    private readonly TemperatureReadingRepository _readingRepository;
-    private readonly EmailNotificationService _emailNotificationService;
-
     private const string ColdStatus = "cold";
     private const string HotStatus = "hot";
     private const string MinStatus = "minimum";
     private const string MaxStatus = "maximum";
 
+    private readonly ILogger<TemperatureLimitAlertService> _logger;
+    private readonly TemperatureLocationRepository _locationRepository;
+    private readonly TemperatureReadingRepository _readingRepository;
+    private readonly EmailNotificationService _emailNotificationService;
+    private readonly TemperatureAlertsSettings _alertSettings;
+
     public TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> logger,
         TemperatureLocationRepository locationRepository, TemperatureReadingRepository readingRepository,
-        EmailNotificationService emailNotificationService)
+        EmailNotificationService emailNotificationService, TemperatureAlertsSettings alertSettings)
     {
         _logger = logger;
         _locationRepository = locationRepository;
         _readingRepository = readingRepository;
         _emailNotificationService = emailNotificationService;
+        _alertSettings = alertSettings;
     }
 
-    public async Task Process(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, DateTimeOffset lastTick, TimeSpan betweenAlerts, CancellationToken stoppingToken)
+    public async Task Process(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, DateTimeOffset lastTick, CancellationToken stoppingToken)
     {
-        var failedResults = (await _locationRepository.CheckLimits(lastTick))
+        var failedResults = (await _locationRepository.CheckLimits(lastTick, _alertSettings.AverageIntervalMinutes))
             .Where(x => x.IsFailed)
             .ToArray();
 
@@ -39,23 +41,25 @@ public class TemperatureLimitAlertService
         // Clean expired alerts
         latchedAlerts.RemoveAll(x => x.Expiry <= now);
 
-        await ProcessAlerts(latchedAlerts, now, betweenAlerts, failedResults, stoppingToken);
+        await ProcessAlerts(latchedAlerts, now, failedResults, stoppingToken);
     }
 
-    private async Task ProcessAlerts(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, TimeSpan betweenAlerts, TemperatureCheckLimitResponse[] failedResults, CancellationToken stoppingToken)
+    private async Task ProcessAlerts(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, TemperatureCheckLimitResponse[] failedResults, CancellationToken stoppingToken)
     {
+        var betweenNotifications = TimeSpan.FromMinutes(_alertSettings.BetweenNotificationsMinutes);
+
         foreach (var failedResult in failedResults)
         {
             if (failedResult.MinReading is not null && !AlertExists(latchedAlerts, failedResult, ColdStatus))
             {
                 await NotifyAlert(failedResult, MinStatus, ColdStatus, failedResult.MinReading, failedResult.Location.MinTemperatureLimitCelsius, stoppingToken);
-                AddAlert(latchedAlerts, failedResult, ColdStatus, now, betweenAlerts);
+                AddAlert(latchedAlerts, failedResult, ColdStatus, now, betweenNotifications);
             }
 
             if (failedResult.MaxReading is not null && !AlertExists(latchedAlerts, failedResult, HotStatus))
             {
                 await NotifyAlert(failedResult, MaxStatus, HotStatus, failedResult.MaxReading, failedResult.Location.MaxTemperatureLimitCelsius, stoppingToken);
-                AddAlert(latchedAlerts, failedResult, HotStatus, now, betweenAlerts);
+                AddAlert(latchedAlerts, failedResult, HotStatus, now, betweenNotifications);
             }
         }
     }
@@ -81,7 +85,7 @@ public class TemperatureLimitAlertService
             var location = alert.Result.Location;
 
             var maybeReading = await _readingRepository
-                .GetCurrentForLocation(location.Id);
+                .GetCurrentForLocation(location.Id, stoppingToken);
 
             if (maybeReading.HasNoValue)
             {

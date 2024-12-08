@@ -35,7 +35,7 @@ public class TemperatureLocationRepository : RepositoryBase
     /// </summary>
     /// <param name="lastCheck">The time of the last check.</param>
     /// <returns>List of results</returns>
-    public async Task<List<TemperatureCheckLimitResponse>> CheckLimits(DateTimeOffset lastCheck)
+    public async Task<List<TemperatureCheckLimitResponse>> CheckLimits(DateTimeOffset lastCheck, int averageIntervalMinutes)
     {
         var locations = (await _data.TemperatureLocations
             .TagWith(GetTag())
@@ -47,8 +47,8 @@ public class TemperatureLocationRepository : RepositoryBase
 
         foreach (var location in locations)
         {
-            var min = await GetMinExceeded(location, lastCheck);
-            var max = await GetMaxExceeded(location, lastCheck);
+            var min = await GetMinExceeded(location, lastCheck, averageIntervalMinutes);
+            var max = await GetMaxExceeded(location, lastCheck, averageIntervalMinutes);
 
             results.Add(new TemperatureCheckLimitResponse(location, min, max));
         }
@@ -142,37 +142,85 @@ public class TemperatureLocationRepository : RepositoryBase
         return Result.Ok(EntityMessage.Create("Location deleted.", location.Id));
     }
 
-    private async Task<TemperatureReadingResponse?> GetMinExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck)
+    private async Task<TemperatureReadingResponse?> GetMinExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck, int averageIntervalMinutes)
     {
         if (!location.MinTemperatureLimitCelsius.HasValue)
         {
             return null;
         }
 
-        var min = await _data.TemperatureReadings
+        // Check for any exceeded reading.
+        if (averageIntervalMinutes <= 0)
+        {
+            var min = await _data.TemperatureReadings
+                .TagWith(GetTag())
+                .AsNoTracking()
+                .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id && x.TemperatureCelsius < location.MinTemperatureLimitCelsius)
+                .OrderBy(x => x.TemperatureCelsius)
+                .FirstOrDefaultAsync();
+
+            return min?.ToApiResponse();
+        }
+
+        // If configured, test interval averages.
+        var all = await _data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
-            .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id && x.TemperatureCelsius < location.MinTemperatureLimitCelsius)
-            .OrderBy(x => x.TemperatureCelsius)
-            .FirstOrDefaultAsync();
+            .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id)
+            .ToListAsync();
 
-        return min?.ToApiResponse();
+        var minInterval = all
+            .GetIntervalAverages(averageIntervalMinutes)
+            .Where(x => x.TemperatureCelsius < location.MinTemperatureLimitCelsius)
+            .OrderBy(x => x.TemperatureCelsius)
+            .FirstOrDefault();
+
+        if (minInterval is null)
+        {
+            return null;
+        }
+
+        return new TemperatureReadingResponse(minInterval.Time, minInterval.Humidity, minInterval.TemperatureCelsius, location);
     }
 
-    private async Task<TemperatureReadingResponse?> GetMaxExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck)
+    private async Task<TemperatureReadingResponse?> GetMaxExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck, int averageIntervalMinutes)
     {
         if (!location.MaxTemperatureLimitCelsius.HasValue)
         {
             return null;
         }
 
-        var max = await _data.TemperatureReadings
+        // Check for any exceeded reading.
+        if (averageIntervalMinutes <= 0)
+        {
+            var max = await _data.TemperatureReadings
+                .TagWith(GetTag())
+                .AsNoTracking()
+                .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id && x.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
+                .OrderByDescending(x => x.TemperatureCelsius)
+                .FirstOrDefaultAsync();
+
+            return max?.ToApiResponse();
+        }
+
+        // If configured, test interval averages.
+        var all = await _data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
-            .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id && x.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
-            .OrderByDescending(x => x.TemperatureCelsius)
-            .FirstOrDefaultAsync();
+            .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id)
+            .ToListAsync();
 
-        return max?.ToApiResponse();
+        var maxInterval = all
+            .GetIntervalAverages(averageIntervalMinutes)
+            .Where(x => x.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
+            .OrderByDescending(x => x.TemperatureCelsius)
+            .FirstOrDefault();
+
+        if (maxInterval is null)
+        {
+            return null;
+        }
+
+        return new TemperatureReadingResponse(maxInterval.Time, maxInterval.Humidity, maxInterval.TemperatureCelsius, location);
     }
 }

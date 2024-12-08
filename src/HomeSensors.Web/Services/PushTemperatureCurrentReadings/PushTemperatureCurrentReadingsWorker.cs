@@ -39,7 +39,7 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
                 using var scope = _scopeFactory.CreateScope();
                 var readingRepository = scope.ServiceProvider.GetRequiredService<TemperatureReadingRepository>();
 
-                var currentReadings = await readingRepository.GetCurrentCached(true);
+                var currentReadings = await readingRepository.GetCurrentCached(true, stoppingToken);
 
                 await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.UpdateCurrentReadingsMessageName, currentReadings, cancellationToken: stoppingToken);
             }

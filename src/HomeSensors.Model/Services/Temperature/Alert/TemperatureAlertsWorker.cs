@@ -14,21 +14,19 @@ public class TemperatureAlertsWorker : BackgroundService
     private readonly ILogger<TemperatureAlertsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDateTimeService _dateTimeService;
-    private readonly TimeSpan _betweenTicks;
-    private readonly TimeSpan _betweenNotifications;
+    private readonly TemperatureAlertsSettings _alertSettings;
 
     public TemperatureAlertsWorker(ILogger<TemperatureAlertsWorker> logger, IServiceScopeFactory scopeFactory, IDateTimeService dateTimeService,
-        TemperatureAlertsSettings workerSettings)
+        TemperatureAlertsSettings alertSettings)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
         _dateTimeService = dateTimeService;
-        _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
-        _betweenNotifications = TimeSpan.FromMinutes(workerSettings.BetweenNotificationsMinutes);
+        _alertSettings = alertSettings;
 
         logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
             nameof(TemperatureAlertsWorker),
-            workerSettings.BetweenTicksMinutes);
+            alertSettings.BetweenTicksMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,7 +35,8 @@ public class TemperatureAlertsWorker : BackgroundService
         var latchedLimitAlerts = new List<TemperatureLimitAlert>();
         var latchedDeviceAlerts = new List<TemperatureDeviceAlert>();
 
-        var timer = new PeriodicTimer(_betweenTicks);
+        var betweenTicks = TimeSpan.FromMinutes(_alertSettings.BetweenTicksMinutes);
+        var timer = new PeriodicTimer(betweenTicks);
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
@@ -48,15 +47,15 @@ public class TemperatureAlertsWorker : BackgroundService
                 _logger.LogInformation("{JobName} job is starting.", nameof(TemperatureAlertsWorker));
 
                 var now = _dateTimeService.MomentWithOffset;
-                var lastTick = now.Subtract(_betweenTicks);
+                var lastTick = now.Subtract(betweenTicks);
 
                 using var scope = _scopeFactory.CreateScope();
 
                 var limitsService = scope.ServiceProvider.GetRequiredService<TemperatureLimitAlertService>();
                 var devicesService = scope.ServiceProvider.GetRequiredService<TemperatureDeviceAlertService>();
 
-                await limitsService.Process(latchedLimitAlerts, now, lastTick, _betweenNotifications, stoppingToken);
-                await devicesService.Process(latchedDeviceAlerts, now, _betweenNotifications, stoppingToken);
+                await limitsService.Process(latchedLimitAlerts, now, lastTick, stoppingToken);
+                await devicesService.Process(latchedDeviceAlerts, now, stoppingToken);
             }
             catch (Exception ex)
             {
