@@ -4,8 +4,8 @@ import CategoriesTable from '@/components/CategoriesTable.vue';
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-4 mb-4">Categories</h1>
-    <CategoriesTable />
+    <h1 class="mt-3">Categories</h1>
+    <CategoriesTable class="mt-4" />
   </div>
 </template>
 

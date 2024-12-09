@@ -317,102 +317,104 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showH
 </script>
 
 <template>
-  <div class="grid mb-3">
-    <div class="g-col-12 g-col-md-6">
-      <label for="startDate" class="form-label">Start date</label>
-      <app-date-time-picker id="startDate" v-model="timeSeriesInputs.start" />
-    </div>
-    <div class="g-col-12 g-col-md-6">
-      <label for="endDate" class="form-label">End date</label>
-      <app-date-time-picker id="endDate" v-model="timeSeriesInputs.end" :disabled="showCurrent" />
-      <div class="form-check form-check-inline mt-2">
-        <input
-          id="showCurrent"
-          v-model="showCurrent"
-          class="form-check-input"
-          type="checkbox"
-          @change="setCurrentTimer()"
-        />
-        <label class="form-check-label" for="showCurrent">Show current</label>
+  <div>
+    <div class="grid">
+      <div class="g-col-12 g-col-md-6">
+        <label for="startDate" class="form-label">Start date</label>
+        <app-date-time-picker id="startDate" v-model="timeSeriesInputs.start" />
       </div>
-    </div>
-    <div class="g-col-12">
-      <button id="selectAllButton" class="btn btn-sm btn-outline-light" @click="onSelectAllClick">
-        {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
-      </button>
-    </div>
-    <div class="g-col-12">
-      <div
-        v-for="(values, categoryName) in categorizedLocations"
-        :key="categoryName"
-        class="g-col-12"
-      >
-        <div>{{ categoryName }}</div>
-        <div v-for="location in values" :key="location.id" class="form-check form-check-inline">
+      <div class="g-col-12 g-col-md-6">
+        <label for="endDate" class="form-label">End date</label>
+        <app-date-time-picker id="endDate" v-model="timeSeriesInputs.end" :disabled="showCurrent" />
+        <div class="form-check form-check-inline mt-2">
           <input
-            :id="`locationSelect-${location.id}`"
-            v-model="timeSeriesInputs.locationIds"
-            :value="location.id"
+            id="showCurrent"
+            v-model="showCurrent"
+            class="form-check-input"
+            type="checkbox"
+            @change="setCurrentTimer()"
+          />
+          <label class="form-check-label" for="showCurrent">Show current</label>
+        </div>
+      </div>
+      <div class="g-col-12">
+        <button id="selectAllButton" class="btn btn-sm btn-secondary" @click="onSelectAllClick">
+          {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
+        </button>
+      </div>
+      <div class="g-col-12">
+        <div
+          v-for="(values, categoryName) in categorizedLocations"
+          :key="categoryName"
+          class="g-col-12"
+        >
+          <div>{{ categoryName }}</div>
+          <div v-for="location in values" :key="location.id" class="form-check form-check-inline">
+            <input
+              :id="`locationSelect-${location.id}`"
+              v-model="timeSeriesInputs.locationIds"
+              :value="location.id"
+              class="form-check-input"
+              type="checkbox"
+            />
+            <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
+              location.name
+            }}</label>
+          </div>
+        </div>
+      </div>
+      <div class="g-col-12">
+        <div class="form-check form-switch">
+          <label class="form-check-label" for="showHumidity" @click.stop>Humidity</label>
+          <input
+            id="showHumidity"
+            v-model="data.showHumidity"
             class="form-check-input"
             type="checkbox"
           />
-          <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
-            location.name
-          }}</label>
         </div>
       </div>
     </div>
-    <div class="g-col-12">
-      <div class="form-check form-switch">
-        <label class="form-check-label" for="showHumidity" @click.stop>Humidity</label>
-        <input
-          id="showHumidity"
-          v-model="data.showHumidity"
-          class="form-check-input"
-          type="checkbox"
-        />
-      </div>
+    <div class="chart-container mt-3">
+      <canvas id="tempGraph"></canvas>
     </div>
+    <table :class="{ 'mt-3': true, table: true, 'table-dark': useDarkMode }">
+      <thead>
+        <tr>
+          <th>Location</th>
+          <th>Low</th>
+          <th>High</th>
+          <th>Avg</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(series, i) in data.graphSeries" :key="i">
+          <td>{{ series.location?.name }}</td>
+          <td>
+            {{
+              data.showHumidity
+                ? formatHumidityWithUnit(series.humidityAggregate?.minimum)
+                : formatTempWithUnit(series.temperatureAggregate?.minimum, useFahrenheit, 1)
+            }}
+          </td>
+          <td>
+            {{
+              data.showHumidity
+                ? formatHumidityWithUnit(series.humidityAggregate?.maximum)
+                : formatTempWithUnit(series.temperatureAggregate?.maximum, useFahrenheit, 1)
+            }}
+          </td>
+          <td>
+            {{
+              data.showHumidity
+                ? formatHumidityWithUnit(series.humidityAggregate?.average)
+                : formatTempWithUnit(series.temperatureAggregate?.average, useFahrenheit, 1)
+            }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
-  <div class="chart-container mt-3">
-    <canvas id="tempGraph"></canvas>
-  </div>
-  <table :class="{ 'mt-3': true, table: true, 'table-dark': useDarkMode }">
-    <thead>
-      <tr>
-        <th>Location</th>
-        <th>Low</th>
-        <th>High</th>
-        <th>Avg</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="(series, i) in data.graphSeries" :key="i">
-        <td>{{ series.location?.name }}</td>
-        <td>
-          {{
-            data.showHumidity
-              ? formatHumidityWithUnit(series.humidityAggregate?.minimum)
-              : formatTempWithUnit(series.temperatureAggregate?.minimum, useFahrenheit, 1)
-          }}
-        </td>
-        <td>
-          {{
-            data.showHumidity
-              ? formatHumidityWithUnit(series.humidityAggregate?.maximum)
-              : formatTempWithUnit(series.temperatureAggregate?.maximum, useFahrenheit, 1)
-          }}
-        </td>
-        <td>
-          {{
-            data.showHumidity
-              ? formatHumidityWithUnit(series.humidityAggregate?.average)
-              : formatTempWithUnit(series.temperatureAggregate?.average, useFahrenheit, 1)
-          }}
-        </td>
-      </tr>
-    </tbody>
-  </table>
 </template>
 
 <style lang="scss" scoped>

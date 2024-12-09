@@ -120,20 +120,18 @@ onMounted(async () => {
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-4 mb-4">Discovery</h1>
-    <p>See MQTT messages from the specified topics.</p>
+    <h1 class="mt-3">Discovery</h1>
+    <p class="mt-4">See MQTT messages from the specified topics.</p>
     <p>+ is a single-level wildcard. Can be used anywhere in a topic to sub a level.</p>
     <p>
       # is a multi-level wildcard. Can only be used at the end of a topic preceded by a forward
       slash.
     </p>
-    <div class="btn-toolbar mt-3">
+    <div class="btn-toolbar mt-4">
       <button class="btn btn-primary me-2" @click.prevent.stop="onStart">Start</button>
-      <button class="btn btn-outline-light me-2" @click.prevent.stop="onEnd">End</button>
-      <button class="btn btn-outline-light me-2" @click.prevent.stop="onClear">Clear</button>
-      <button class="btn btn-outline-light me-2" @click.prevent.stop="onRefresh">
-        Refresh status
-      </button>
+      <button class="btn btn-secondary me-2" @click.prevent.stop="onEnd">End</button>
+      <button class="btn btn-secondary me-2" @click.prevent.stop="onClear">Clear</button>
+      <button class="btn btn-secondary me-2" @click.prevent.stop="onRefresh">Refresh status</button>
     </div>
     <div class="mt-3">
       <label for="status" class="form-label">Status</label>

@@ -20,7 +20,9 @@ const api = ApiHelpers.client;
 
 onMounted(() => {
   appStore.setDarkMode(DarkModeHelpers.getInitialDarkModeSetting());
+
   appStore.setUseFahrenheit(UserSettingHelpers.getInitialFahrenheitSetting());
+
   appStore.setShowHumidity(UserSettingHelpers.getInitialHumiditySetting());
 
   api()
@@ -56,11 +58,11 @@ onMounted(() => {
     </template>
   </AppHeader>
   <AppMessageCenter class="d-print-none" />
-  <main id="main" class="mb-4" tabindex="-1">
+  <main id="main" tabindex="-1">
     <RouterView />
   </main>
   <AppModal />
-  <AppFooter class="mt-2" />
+  <AppFooter class="mt-4" />
 </template>
 
 <style lang="scss" scoped></style>

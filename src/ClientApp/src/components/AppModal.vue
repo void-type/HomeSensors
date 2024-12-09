@@ -56,7 +56,7 @@ watch(modalIsActive, (isActive) => {
       tabindex="-1"
       aria-labelledby="app-modal-title"
       aria-hidden="true"
-      @keydown.esc.prevent.stop="cancelAction()"
+      @keydown.esc.stop.prevent="cancelAction()"
     >
       <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content">
@@ -66,7 +66,7 @@ watch(modalIsActive, (isActive) => {
               type="button"
               class="btn-close"
               aria-label="Cancel"
-              @click="cancelAction()"
+              @click="cancelAction"
             ></button>
           </div>
           <div class="modal-body">{{ modalParameters.description }}</div>
@@ -74,8 +74,8 @@ watch(modalIsActive, (isActive) => {
             <button
               id="app-modal-cancel-button"
               type="button"
-              class="btn btn-outline-light"
-              @click="cancelAction()"
+              class="btn btn-secondary"
+              @click="cancelAction"
             >
               Cancel
             </button>
@@ -83,7 +83,7 @@ watch(modalIsActive, (isActive) => {
               id="app-modal-ok-button"
               type="button"
               class="btn btn-primary"
-              @click="okAction()"
+              @click="okAction"
             >
               OK
             </button>

@@ -1,22 +1,16 @@
 <script lang="ts" setup>
-import { useMessageStore } from '@/stores/messageStore';
 import { storeToRefs } from 'pinia';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { useMessageStore } from '@/stores/messageStore';
 
 const messageStore = useMessageStore();
 const { messages } = storeToRefs(messageStore);
-const { clearMessage } = messageStore;
+const { clearMessage, clearMessageTimeout } = messageStore;
 </script>
 
 <template>
-  <div
-    id="message-center"
-    :class="{
-      shadow: messages.length > 0,
-      'sticky-top': true,
-      'mb-0': true,
-    }"
-  >
-    <transition-group name="list" class="alert-wrapper" tag="div" appear>
+  <div id="message-center" class="sticky-top mb-0">
+    <transition-group v-if="messages.length > 0" name="list" class="alert-wrapper" tag="div" appear>
       <div
         v-for="message in messages"
         :key="message.id"
@@ -27,12 +21,19 @@ const { clearMessage } = messageStore;
           'alert-success': !message.isError,
         }"
       >
+        <font-awesome-icon
+          v-if="typeof message.timeout === 'undefined'"
+          class="opacity-50 me-2"
+          icon="fa-thumbtack"
+        />
         {{ message.text }}
         <button
           type="button"
           class="btn-close"
-          aria-label="Close"
+          aria-label="Close message"
           @click="clearMessage(message)"
+          @mouseenter="clearMessageTimeout(message)"
+          @focusin="clearMessageTimeout(message)"
         ></button>
       </div>
     </transition-group>
@@ -45,8 +46,8 @@ const { clearMessage } = messageStore;
 
   div.alert-wrapper {
     position: absolute;
-    width: 600px;
-    max-width: 90%;
+    width: 90%;
+    max-width: 600px;
     margin-left: auto;
     margin-right: auto;
     left: 0;
@@ -54,9 +55,8 @@ const { clearMessage } = messageStore;
 
     div.alert {
       margin: 0;
-      margin-top: 0.5rem;
-      text-align: center;
-      --bs-alert-padding-x: 0.5rem;
+      margin-top: 0.2em;
+      --bs-alert-padding-x: 1rem;
       --bs-alert-padding-y: 0.5rem;
     }
 

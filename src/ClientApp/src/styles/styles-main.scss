@@ -28,23 +28,25 @@ body {
   flex-grow: 1;
 }
 
-// Minimum button width
-Button animation input[type='button'].btn,
-input[type='submit'].btn,
-button.btn,
-a.btn,
-.btn {
-  min-width: 5rem;
-
-  &.btn-cling,
-  &.btn-sm {
-    min-width: unset;
-  }
-}
-
 // Bootstrap hides nav-link focus ring
 .nav-link:focus-visible {
   outline: auto;
+}
+
+.slim-scroll {
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 1px;
+    height: 36px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--bs-body-color);
+    outline: 1px solid var(--bs-body-color);
+    border-radius: 30px;
+    height: 10px;
+  }
 }
 
 .card {
@@ -87,15 +89,21 @@ a.btn,
   }
 }
 
-.btn-outline-light {
-  color: var(--bs-text);
-  border: var(--bs-border-width) solid var(--bs-border-color);
+.nav-search-button,
+.navbar-toggler {
+  border: var(--bs-border-width) solid var(--bs-gray-600);
+
+  &:hover {
+    border-color: var(--bs-border-color);
+  }
+
+  &:focus {
+    box-shadow: none;
+  }
 }
 
-.navbar .btn-outline-light,
-.navbar-toggler {
-  color: var(--bs-text);
-  border: var(--bs-border-width) solid var(--bs-gray-600);
+.spinner-border {
+  color: rgba(var(--bs-body-color-rgb), 0.3);
 }
 
 .gap-sm {

@@ -2,6 +2,7 @@
 import logoSvg from '@/img/logo.svg';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import useAppStore from '@/stores/appStore';
 import type { HTMLInputEvent } from '@/models/HTMLInputEvent';
 
@@ -24,8 +25,8 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
         {{ applicationName }}
       </router-link>
       <button
-        class="navbar-toggler"
         type="button"
+        class="navbar-toggler"
         data-bs-toggle="collapse"
         data-bs-target="#navbar-menu"
         aria-controls="navbar-menu"
@@ -50,17 +51,12 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
               <li class="dropdown-item">Roles: {{ userRoles }}</li>
               <li class="dropdown-item">
-                <div class="form-check form-switch" title="Use dark mode">
-                  <label
-                    class="form-check-label"
-                    for="useDarkModeSetting"
-                    title="Use dark mode"
-                    aria-label="Use dark mode"
-                    @click.stop
-                    >🌙</label
+                <div class="form-check form-switch">
+                  <label class="form-check-label" for="useDarkMode" aria-label="Use dark mode"
+                    ><font-awesome-icon class="me-2" icon="fa-moon" />Dark mode</label
                   >
                   <input
-                    id="useDarkModeSetting"
+                    id="useDarkMode"
                     :checked="useDarkMode"
                     class="form-check-input"
                     type="checkbox"
@@ -78,7 +74,7 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                     title="Use Fahrenheit"
                     aria-label="Use Fahrenheit"
                     @click.stop
-                    >🇺🇸</label
+                    ><span class="me-2">🇺🇸</span> Imperial</label
                   >
                   <input
                     id="useFahrenheitSetting"
@@ -100,7 +96,7 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                     title="Show Humidity"
                     aria-label="Show Humidity"
                     @click.stop
-                    >%</label
+                    ><span class="me-2">%</span>Show humidity</label
                   >
                   <input
                     id="showHumiditySetting"

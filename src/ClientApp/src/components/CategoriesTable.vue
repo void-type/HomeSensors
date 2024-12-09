@@ -103,58 +103,60 @@ onMounted(async () => {
 </script>
 
 <template>
-  <button class="btn btn-primary" @click="newCategory()">New</button>
-  <div class="grid mt-4">
-    <div v-for="category in data.categories" :key="category.id" class="card g-col-12">
-      <div class="card-body">
-        <div class="grid gap-sm">
-          <div v-if="!category.id" class="g-col-12">New category</div>
-          <div class="g-col-12 g-col-md-6 g-col-lg-4">
-            <label :for="`name-${category.id}`" class="form-label">Name</label>
-            <input
-              :id="`name-${category.id}`"
-              v-model="category.name"
-              required
-              type="text"
-              :class="{
-                'form-control': true,
-                'form-control-sm': true,
-                'is-invalid': data.errors.includes(`name-${category.id}`),
-              }"
-            />
-          </div>
-          <div class="g-col-12 g-col-md-6 g-col-lg-4">
-            <label :for="`order-${category.id}`" class="form-label">Order</label>
-            <input
-              :id="`order-${category.id}`"
-              v-model="category.order"
-              required
-              type="number"
-              :class="{
-                'form-control': true,
-                'form-control-sm': true,
-                'is-invalid': data.errors.includes(`order-${category.id}`),
-              }"
-            />
-          </div>
-          <div class="g-col-12">
-            <div class="btn-toolbar">
-              <button class="btn btn-sm btn-primary me-2" @click="saveCategory(category)">
-                Save
-              </button>
-              <button
-                v-if="category.id"
-                class="btn btn-sm btn-danger ms-auto"
-                @click="deleteCategory(category)"
-              >
-                Delete
-              </button>
+  <div>
+    <button class="btn btn-primary" @click="newCategory()">New</button>
+    <div class="grid mt-4">
+      <div v-for="category in data.categories" :key="category.id" class="card g-col-12">
+        <div class="card-body">
+          <div class="grid gap-sm">
+            <div v-if="!category.id" class="g-col-12">New category</div>
+            <div class="g-col-12 g-col-md-6 g-col-lg-4">
+              <label :for="`name-${category.id}`" class="form-label">Name</label>
+              <input
+                :id="`name-${category.id}`"
+                v-model="category.name"
+                required
+                type="text"
+                :class="{
+                  'form-control': true,
+                  'form-control-sm': true,
+                  'is-invalid': data.errors.includes(`name-${category.id}`),
+                }"
+              />
+            </div>
+            <div class="g-col-12 g-col-md-6 g-col-lg-4">
+              <label :for="`order-${category.id}`" class="form-label">Order</label>
+              <input
+                :id="`order-${category.id}`"
+                v-model="category.order"
+                required
+                type="number"
+                :class="{
+                  'form-control': true,
+                  'form-control-sm': true,
+                  'is-invalid': data.errors.includes(`order-${category.id}`),
+                }"
+              />
+            </div>
+            <div class="g-col-12">
+              <div class="btn-toolbar">
+                <button class="btn btn-sm btn-primary me-2" @click="saveCategory(category)">
+                  Save
+                </button>
+                <button
+                  v-if="category.id"
+                  class="btn btn-sm btn-danger ms-auto"
+                  @click="deleteCategory(category)"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <div v-if="data.categories.length < 1" class="g-col-12 text-center">No categories.</div>
     </div>
-    <div v-if="data.categories.length < 1" class="g-col-12 text-center">No categories.</div>
   </div>
 </template>
 

@@ -126,104 +126,106 @@ onMounted(async () => {
 </script>
 
 <template>
-  <button class="btn btn-primary" @click="newLocation()">New</button>
-  <div class="grid mt-4">
-    <div v-for="location in data.locations" :key="location.id" class="card g-col-12">
-      <div class="card-body">
-        <div class="grid gap-sm">
-          <div v-if="!location.id" class="g-col-12">New location</div>
-          <div class="g-col-12 g-col-md-6 g-col-lg-4">
-            <label :for="`name-${location.id}`">Name</label>
-            <input
-              :id="`name-${location.id}`"
-              v-model="location.name"
-              :class="{
-                'form-control': true,
-                'form-control-sm': true,
-                'is-invalid': data.errors.includes(`name-${location.id}`),
-              }"
-              type="text"
-            />
-          </div>
-          <div class="g-col-12 g-col-md-6 g-col-lg-4">
-            <label :for="`min-${location.id}`">Min temp limit (°C)</label>
-            <input
-              :id="`min-${location.id}`"
-              v-model="location.minTemperatureLimitCelsius"
-              :class="{
-                'form-control': true,
-                'form-control-sm': true,
-                'is-invalid': data.errors.includes(`min-${location.id}`),
-              }"
-              type="number"
-            />
-            {{ formatTempWithUnitOrEmpty(location.minTemperatureLimitCelsius, true) }}
-          </div>
-          <div class="g-col-12 g-col-md-6 g-col-lg-4">
-            <label :for="`max-${location.id}`">Max temp limit (°C)</label>
-            <input
-              :id="`max-${location.id}`"
-              v-model="location.maxTemperatureLimitCelsius"
-              :class="{
-                'form-control': true,
-                'form-control-sm': true,
-                'is-invalid': data.errors.includes(`max-${location.id}`),
-              }"
-              type="number"
-            />
-            {{ formatTempWithUnitOrEmpty(location.maxTemperatureLimitCelsius, true) }}
-          </div>
-          <div class="g-col-12 g-col-md-6 g-col-lg-4">
-            <label :for="`category-${location.id}`" class="form-label">Category</label>
-            <select
-              :id="`category-${location.id}`"
-              v-model="location.categoryId"
-              :class="{
-                'form-select': true,
-                'form-select-sm': true,
-                'is-invalid': data.errors.includes(`category-${location.id}`),
-              }"
-            >
-              <option :value="0"></option>
-              <option v-for="category in data.categories" :key="category.id" :value="category.id">
-                {{ category.name }}
-              </option>
-            </select>
-          </div>
-          <div class="g-col-12">
-            <div class="form-check">
+  <div>
+    <button class="btn btn-primary" @click="newLocation()">New</button>
+    <div class="grid mt-4">
+      <div v-for="location in data.locations" :key="location.id" class="card g-col-12">
+        <div class="card-body">
+          <div class="grid gap-sm">
+            <div v-if="!location.id" class="g-col-12">New location</div>
+            <div class="g-col-12 g-col-md-6 g-col-lg-4">
+              <label :for="`name-${location.id}`">Name</label>
               <input
-                :id="`hidden-${location.id}`"
-                v-model="location.isHidden"
-                class="form-check-input"
+                :id="`name-${location.id}`"
+                v-model="location.name"
                 :class="{
-                  'form-check-input': true,
-                  'is-invalid': data.errors.includes(`hidden-${location.id}`),
+                  'form-control': true,
+                  'form-control-sm': true,
+                  'is-invalid': data.errors.includes(`name-${location.id}`),
                 }"
-                type="checkbox"
+                type="text"
               />
-              <label :for="`hidden-${location.id}`" class="form-check-label">Hidden</label>
             </div>
-          </div>
-          <div v-if="location.id" class="g-col-12">
-            <div>
-              <small class="text-body-secondary me-2">ID: {{ location.id }}</small>
+            <div class="g-col-12 g-col-md-6 g-col-lg-4">
+              <label :for="`min-${location.id}`">Min temp limit (°C)</label>
+              <input
+                :id="`min-${location.id}`"
+                v-model="location.minTemperatureLimitCelsius"
+                :class="{
+                  'form-control': true,
+                  'form-control-sm': true,
+                  'is-invalid': data.errors.includes(`min-${location.id}`),
+                }"
+                type="number"
+              />
+              {{ formatTempWithUnitOrEmpty(location.minTemperatureLimitCelsius, true) }}
             </div>
-          </div>
-          <div class="g-col-12">
-            <div class="btn-toolbar">
-              <button class="btn btn-sm btn-primary me-2" @click="saveLocation(location)">
-                Save
-              </button>
-              <button class="btn btn-sm btn-danger ms-auto" @click="deleteLocation(location)">
-                Delete
-              </button>
+            <div class="g-col-12 g-col-md-6 g-col-lg-4">
+              <label :for="`max-${location.id}`">Max temp limit (°C)</label>
+              <input
+                :id="`max-${location.id}`"
+                v-model="location.maxTemperatureLimitCelsius"
+                :class="{
+                  'form-control': true,
+                  'form-control-sm': true,
+                  'is-invalid': data.errors.includes(`max-${location.id}`),
+                }"
+                type="number"
+              />
+              {{ formatTempWithUnitOrEmpty(location.maxTemperatureLimitCelsius, true) }}
+            </div>
+            <div class="g-col-12 g-col-md-6 g-col-lg-4">
+              <label :for="`category-${location.id}`" class="form-label">Category</label>
+              <select
+                :id="`category-${location.id}`"
+                v-model="location.categoryId"
+                :class="{
+                  'form-select': true,
+                  'form-select-sm': true,
+                  'is-invalid': data.errors.includes(`category-${location.id}`),
+                }"
+              >
+                <option :value="0"></option>
+                <option v-for="category in data.categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+            </div>
+            <div class="g-col-12">
+              <div class="form-check">
+                <input
+                  :id="`hidden-${location.id}`"
+                  v-model="location.isHidden"
+                  class="form-check-input"
+                  :class="{
+                    'form-check-input': true,
+                    'is-invalid': data.errors.includes(`hidden-${location.id}`),
+                  }"
+                  type="checkbox"
+                />
+                <label :for="`hidden-${location.id}`" class="form-check-label">Hidden</label>
+              </div>
+            </div>
+            <div v-if="location.id" class="g-col-12">
+              <div>
+                <small class="text-body-secondary me-2">ID: {{ location.id }}</small>
+              </div>
+            </div>
+            <div class="g-col-12">
+              <div class="btn-toolbar">
+                <button class="btn btn-sm btn-primary me-2" @click="saveLocation(location)">
+                  Save
+                </button>
+                <button class="btn btn-sm btn-danger ms-auto" @click="deleteLocation(location)">
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <div v-if="data.locations.length < 1" class="g-col-12 text-center">No locations.</div>
     </div>
-    <div v-if="data.locations.length < 1" class="g-col-12 text-center">No locations.</div>
   </div>
 </template>
 
