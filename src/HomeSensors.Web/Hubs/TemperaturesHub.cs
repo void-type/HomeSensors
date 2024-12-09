@@ -19,7 +19,10 @@ public class TemperaturesHub : Hub
         _readingRepository = readingRepository;
     }
 
-    public async Task<List<TemperatureReadingResponse>> GetCurrentReadingsAsync()
+    // Omit async suffix for hub methods
+#pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
+
+    public async Task<List<TemperatureReadingResponse>> GetCurrentReadings()
     {
         return await _readingRepository.GetCurrentCachedAsync();
     }
