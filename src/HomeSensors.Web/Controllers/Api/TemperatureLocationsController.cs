@@ -1,6 +1,5 @@
 ﻿using HomeSensors.Model.Repositories;
 using HomeSensors.Model.Repositories.Models;
-using HomeSensors.Model.Services.Temperature.Alert;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -14,22 +13,19 @@ namespace HomeSensors.Web.Controllers.Api;
 public class TemperatureLocationsController : ControllerBase
 {
     private readonly TemperatureLocationRepository _locationRepository;
-    private readonly TemperatureAlertsSettings _alertSettings;
 
-    public TemperatureLocationsController(TemperatureLocationRepository locationRepository,
-        TemperatureAlertsSettings alertSettings)
+    public TemperatureLocationsController(TemperatureLocationRepository locationRepository)
     {
         _locationRepository = locationRepository;
-        _alertSettings = alertSettings;
     }
 
     [HttpGet]
     [Route("all")]
     [ProducesResponseType(typeof(List<TemperatureLocationResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAllAsync()
     {
-        return _locationRepository.GetAll()
+        return await _locationRepository.GetAllAsync()
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -37,18 +33,18 @@ public class TemperatureLocationsController : ControllerBase
     [Route("check-limits")]
     [ProducesResponseType(typeof(List<TemperatureCheckLimitResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> CheckLimits(DateTimeOffset lastCheck)
+    public async Task<IActionResult> CheckLimitsAsync(DateTimeOffset since, bool isAveragingEnabled)
     {
-        return _locationRepository.CheckLimits(lastCheck, _alertSettings.AverageIntervalMinutes)
+        return await _locationRepository.CheckLimitsAsync(since, isAveragingEnabled)
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> Save([FromBody] TemperatureLocationSaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] TemperatureLocationSaveRequest request)
     {
-        return _locationRepository.Save(request)
+        return await _locationRepository.SaveAsync(request)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -56,9 +52,9 @@ public class TemperatureLocationsController : ControllerBase
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> DeleteAsync(int id)
     {
-        return _locationRepository.Delete(id)
+        return await _locationRepository.DeleteAsync(id)
             .MapAsync(HttpResponder.Respond);
     }
 }

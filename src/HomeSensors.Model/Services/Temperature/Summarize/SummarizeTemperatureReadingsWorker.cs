@@ -114,7 +114,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                                 .SelectMany(x => x.OldReadings)
                                 .ToArray();
 
-                            dbContext.TemperatureReadings.AddRange(readingsToCreate);
+                            await dbContext.TemperatureReadings.AddRangeAsync(readingsToCreate);
                             dbContext.TemperatureReadings.RemoveRange(readingsToDelete);
 
                             await dbContext.SaveChangesAsync(stoppingToken);

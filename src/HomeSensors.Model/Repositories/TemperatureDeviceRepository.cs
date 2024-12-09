@@ -23,7 +23,7 @@ public class TemperatureDeviceRepository : RepositoryBase
     /// <summary>
     /// Get all devices with statuses and last readings.
     /// </summary>
-    public async Task<List<TemperatureDeviceResponse>> GetAll()
+    public async Task<List<TemperatureDeviceResponse>> GetAllAsync()
     {
         var lastReadings = await _data.TemperatureReadings
             .TagWith(GetTag())
@@ -65,7 +65,7 @@ public class TemperatureDeviceRepository : RepositoryBase
         });
     }
 
-    public async Task<IResult<EntityMessage<long>>> Save(TemperatureDeviceSaveRequest request)
+    public async Task<IResult<EntityMessage<long>>> SaveAsync(TemperatureDeviceSaveRequest request)
     {
         var failures = new List<IFailure>();
 
@@ -113,7 +113,7 @@ public class TemperatureDeviceRepository : RepositoryBase
         return Result.Ok(EntityMessage.Create("Device saved.", device.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> Delete(int id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(int id)
     {
         var device = await _data.TemperatureDevices
             .FirstOrDefaultAsync(x => x.Id == id);

@@ -20,7 +20,7 @@ public class TemperatureLocationRepository : RepositoryBase
     /// <summary>
     /// Get all locations.
     /// </summary>
-    public async Task<List<TemperatureLocationResponse>> GetAll()
+    public async Task<List<TemperatureLocationResponse>> GetAllAsync()
     {
         return (await _data.TemperatureLocations
             .TagWith(GetTag())
@@ -33,9 +33,10 @@ public class TemperatureLocationRepository : RepositoryBase
     /// <summary>
     /// Check all locations for readings that exceed min/max since the last check.
     /// </summary>
-    /// <param name="lastCheck">The time of the last check.</param>
+    /// <param name="since">The time of the last check</param>
+    /// <param name="isAveragingEnabled">If true, the check will average readings over the look back period</param>
     /// <returns>List of results</returns>
-    public async Task<List<TemperatureCheckLimitResponse>> CheckLimits(DateTimeOffset lastCheck, int averageIntervalMinutes)
+    public async Task<List<TemperatureCheckLimitResponse>> CheckLimitsAsync(DateTimeOffset since, bool isAveragingEnabled)
     {
         var locations = (await _data.TemperatureLocations
             .TagWith(GetTag())
@@ -47,8 +48,8 @@ public class TemperatureLocationRepository : RepositoryBase
 
         foreach (var location in locations)
         {
-            var min = await GetMinExceeded(location, lastCheck, averageIntervalMinutes);
-            var max = await GetMaxExceeded(location, lastCheck, averageIntervalMinutes);
+            var min = await GetMinExceededAsync(location, since, isAveragingEnabled);
+            var max = await GetMaxExceededAsync(location, since, isAveragingEnabled);
 
             results.Add(new TemperatureCheckLimitResponse(location, min, max));
         }
@@ -56,7 +57,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return results;
     }
 
-    public async Task<IResult<EntityMessage<long>>> Save(TemperatureLocationSaveRequest request)
+    public async Task<IResult<EntityMessage<long>>> SaveAsync(TemperatureLocationSaveRequest request)
     {
         var failures = new List<IFailure>();
 
@@ -109,7 +110,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return Result.Ok(EntityMessage.Create("Location saved.", location.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> Delete(int id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(int id)
     {
         var location = await _data.TemperatureLocations
             .FirstOrDefaultAsync(x => x.Id == id);
@@ -142,85 +143,93 @@ public class TemperatureLocationRepository : RepositoryBase
         return Result.Ok(EntityMessage.Create("Location deleted.", location.Id));
     }
 
-    private async Task<TemperatureReadingResponse?> GetMinExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck, int averageIntervalMinutes)
+    private async Task<TemperatureReadingResponse?> GetMinExceededAsync(TemperatureLocationResponse location, DateTimeOffset since, bool isAveragingEnabled)
     {
         if (!location.MinTemperatureLimitCelsius.HasValue)
         {
             return null;
         }
 
-        // Check for any exceeded reading.
-        if (averageIntervalMinutes <= 0)
+        if (!isAveragingEnabled)
         {
             var min = await _data.TemperatureReadings
                 .TagWith(GetTag())
                 .AsNoTracking()
-                .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id && x.TemperatureCelsius < location.MinTemperatureLimitCelsius)
+                .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id && x.TemperatureCelsius < location.MinTemperatureLimitCelsius)
                 .OrderBy(x => x.TemperatureCelsius)
                 .FirstOrDefaultAsync();
 
             return min?.ToApiResponse();
         }
 
-        // If configured, test interval averages.
-        var all = await _data.TemperatureReadings
+        // If averaging enabled, test average over the look back period.
+        var lookBack = await _data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
-            .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id)
+            .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id)
             .ToListAsync();
 
-        var minInterval = all
-            .GetIntervalAverages(averageIntervalMinutes)
-            .Where(x => x.TemperatureCelsius < location.MinTemperatureLimitCelsius)
-            .OrderBy(x => x.TemperatureCelsius)
-            .FirstOrDefault();
-
-        if (minInterval is null)
+        if (lookBack.Count == 0)
         {
             return null;
         }
 
-        return new TemperatureReadingResponse(minInterval.Time, minInterval.Humidity, minInterval.TemperatureCelsius, location);
+        var lookBackAverage = lookBack.GetSetAverage();
+
+        if (lookBackAverage.TemperatureCelsius < location.MinTemperatureLimitCelsius)
+        {
+            return new(
+                time: lookBackAverage.Time,
+                humidity: lookBackAverage.Humidity,
+                temperatureCelsius: lookBackAverage.TemperatureCelsius,
+                location: location);
+        }
+
+        return null;
     }
 
-    private async Task<TemperatureReadingResponse?> GetMaxExceeded(TemperatureLocationResponse location, DateTimeOffset lastCheck, int averageIntervalMinutes)
+    private async Task<TemperatureReadingResponse?> GetMaxExceededAsync(TemperatureLocationResponse location, DateTimeOffset since, bool isAveragingEnabled)
     {
         if (!location.MaxTemperatureLimitCelsius.HasValue)
         {
             return null;
         }
 
-        // Check for any exceeded reading.
-        if (averageIntervalMinutes <= 0)
+        if (!isAveragingEnabled)
         {
             var max = await _data.TemperatureReadings
                 .TagWith(GetTag())
                 .AsNoTracking()
-                .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id && x.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
+                .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id && x.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
                 .OrderByDescending(x => x.TemperatureCelsius)
                 .FirstOrDefaultAsync();
 
             return max?.ToApiResponse();
         }
 
-        // If configured, test interval averages.
-        var all = await _data.TemperatureReadings
+        // If averaging enabled, test average over the look back period.
+        var lookBack = await _data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
-            .Where(x => x.Time >= lastCheck && x.TemperatureLocationId == location.Id)
+            .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id)
             .ToListAsync();
 
-        var maxInterval = all
-            .GetIntervalAverages(averageIntervalMinutes)
-            .Where(x => x.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
-            .OrderByDescending(x => x.TemperatureCelsius)
-            .FirstOrDefault();
-
-        if (maxInterval is null)
+        if (lookBack.Count == 0)
         {
             return null;
         }
 
-        return new TemperatureReadingResponse(maxInterval.Time, maxInterval.Humidity, maxInterval.TemperatureCelsius, location);
+        var lookBackAverage = lookBack.GetSetAverage();
+
+        if (lookBackAverage.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
+        {
+            return new(
+                time: lookBackAverage.Time,
+                humidity: lookBackAverage.Humidity,
+                temperatureCelsius: lookBackAverage.TemperatureCelsius,
+                location: location);
+        }
+
+        return null;
     }
 }

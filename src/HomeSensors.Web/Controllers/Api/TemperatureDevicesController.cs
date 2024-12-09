@@ -26,19 +26,19 @@ public class TemperatureDevicesController : ControllerBase
     [Route("all")]
     [ProducesResponseType(typeof(List<TemperatureDeviceResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAllAsync()
     {
-        return _deviceRepository.GetAll()
+        return await _deviceRepository.GetAllAsync()
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> Save([FromBody] TemperatureDeviceSaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] TemperatureDeviceSaveRequest request)
     {
-        return _deviceRepository.Save(request)
-            .TeeAsync(RefreshTopicSubscriptions)
+        return await _deviceRepository.SaveAsync(request)
+            .TeeAsync(RefreshTopicSubscriptionsAsync)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -46,14 +46,14 @@ public class TemperatureDevicesController : ControllerBase
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> DeleteAsync(int id)
     {
-        return _deviceRepository.Delete(id)
-            .TeeAsync(RefreshTopicSubscriptions)
+        return await _deviceRepository.DeleteAsync(id)
+            .TeeAsync(RefreshTopicSubscriptionsAsync)
             .MapAsync(HttpResponder.Respond);
     }
 
-    private async Task RefreshTopicSubscriptions()
+    private async Task RefreshTopicSubscriptionsAsync()
     {
         var worker = _contextAccessor?
             .HttpContext?
@@ -64,7 +64,7 @@ public class TemperatureDevicesController : ControllerBase
 
         if (worker is not null)
         {
-            await worker.RefreshTopicSubscriptions();
+            await worker.RefreshTopicSubscriptionsAsync();
         }
     }
 }

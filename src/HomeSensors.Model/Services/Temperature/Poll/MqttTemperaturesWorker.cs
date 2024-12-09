@@ -36,15 +36,15 @@ public class MqttTemperaturesWorker : BackgroundService
             nameof(MqttTemperaturesWorker));
     }
 
-    public async Task RefreshTopicSubscriptions()
+    public async Task RefreshTopicSubscriptionsAsync()
     {
-        var newTopics = await GetTopics();
+        var newTopics = await GetTopicsAsync();
 
         var topicsToUnsubscribe = _currentTopics.Except(newTopics).ToList();
-        await UnsubscribeFromTopics(topicsToUnsubscribe);
+        await UnsubscribeFromTopicsAsync(topicsToUnsubscribe);
 
         var topicsToSubscribe = newTopics.Except(_currentTopics).ToList();
-        await SubscribeToTopics(topicsToSubscribe);
+        await SubscribeToTopicsAsync(topicsToSubscribe);
 
         _currentTopics = newTopics;
     }
@@ -57,12 +57,12 @@ public class MqttTemperaturesWorker : BackgroundService
 
             _logger.LogInformation("Connecting Managed MQTT client.");
 
-            _mqttClient.ConnectingFailedAsync += LogConnectionFailure;
-            _mqttClient.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
+            _mqttClient.ConnectingFailedAsync += LogConnectionFailureAsync;
+            _mqttClient.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLoggingAsync;
 
             await _mqttClient.StartAsync(_configuration.GetClientOptions());
 
-            await RefreshTopicSubscriptions();
+            await RefreshTopicSubscriptionsAsync();
 
             // The client is still running, we just loop here and the Delay will listen for the stop token.
             while (!stoppingToken.IsCancellationRequested)
@@ -70,7 +70,7 @@ public class MqttTemperaturesWorker : BackgroundService
                 await Task.Delay(300000, stoppingToken);
 
                 // Every 5 minutes, refresh topics (in case the job is running as a service and won't be notified of device changes).
-                await RefreshTopicSubscriptions();
+                await RefreshTopicSubscriptionsAsync();
             }
         }
         finally
@@ -80,17 +80,17 @@ public class MqttTemperaturesWorker : BackgroundService
         }
     }
 
-    private Task LogConnectionFailure(ConnectingFailedEventArgs e)
+    private async Task LogConnectionFailureAsync(ConnectingFailedEventArgs e)
     {
         _logger.LogError(e.Exception, "MQTT client failed to connect.");
-        return Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
-    private async Task ProcessMessageWithExceptionLogging(MqttApplicationMessageReceivedEventArgs e)
+    private async Task ProcessMessageWithExceptionLoggingAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         try
         {
-            await ProcessMessage(e);
+            await ProcessMessageAsync(e);
         }
         catch (Exception ex)
         {
@@ -98,7 +98,7 @@ public class MqttTemperaturesWorker : BackgroundService
         }
     }
 
-    private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
+    private async Task ProcessMessageAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         var message = DeserializeTemperatureMessage(e);
 
@@ -150,7 +150,7 @@ public class MqttTemperaturesWorker : BackgroundService
         await dbContext.SaveChangesAsync();
     }
 
-    private async Task<List<string>> GetTopics()
+    private async Task<List<string>> GetTopicsAsync()
     {
         using var scope = _scopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
@@ -162,7 +162,7 @@ public class MqttTemperaturesWorker : BackgroundService
             .ToListAsync();
     }
 
-    private async Task UnsubscribeFromTopics(List<string> topics)
+    private async Task UnsubscribeFromTopicsAsync(List<string> topics)
     {
         if (_mqttClient is null)
         {
@@ -182,7 +182,7 @@ public class MqttTemperaturesWorker : BackgroundService
         await _mqttClient.UnsubscribeAsync(topics);
     }
 
-    private async Task SubscribeToTopics(List<string> topics)
+    private async Task SubscribeToTopicsAsync(List<string> topics)
     {
         if (_mqttClient is null)
         {

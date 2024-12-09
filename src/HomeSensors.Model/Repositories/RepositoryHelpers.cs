@@ -19,9 +19,9 @@ public static class RepositoryHelpers
             return readingsForLocation
                 .Select(reading => new TemperatureTimeSeriesPoint
                 (
-                    reading.Time,
-                    reading.TemperatureCelsius,
-                    reading.Humidity
+                    time: reading.Time,
+                    temperatureCelsius: reading.TemperatureCelsius,
+                    humidity: reading.Humidity
                 ))
                 .ToList();
         }
@@ -30,6 +30,22 @@ public static class RepositoryHelpers
             .GroupBy(r => r.Time.RoundDownMinutes(intervalMinutes))
             .Select(timeGroup => new TemperatureTimeSeriesPoint(timeGroup.Key, timeGroup.Average(s => s.TemperatureCelsius), timeGroup.Average(s => s.Humidity)))
             .ToList();
+    }
+
+    /// <summary>
+    /// Average a collection of readings into a single point.
+    /// </summary>
+    /// <param name="readingsForLocation">Readings to pull time series from</param>
+    public static TemperatureTimeSeriesPoint GetSetAverage(this IEnumerable<TemperatureReading> readingsForLocation)
+    {
+        var readings = readingsForLocation.ToList();
+
+        return new TemperatureTimeSeriesPoint
+        (
+            time: readings.Min(r => r.Time),
+            temperatureCelsius: readings.Average(r => r.TemperatureCelsius),
+            humidity: readings.Average(r => r.Humidity)
+        );
     }
 
     public static TemperatureReadingResponse ToApiResponse(this TemperatureReading a) =>

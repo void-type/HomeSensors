@@ -19,8 +19,8 @@ public class TemperaturesHub : Hub
         _readingRepository = readingRepository;
     }
 
-    public Task<List<TemperatureReadingResponse>> GetCurrentReadings()
+    public async Task<List<TemperatureReadingResponse>> GetCurrentReadingsAsync()
     {
-        return _readingRepository.GetCurrentCached();
+        return await _readingRepository.GetCurrentCachedAsync();
     }
 }

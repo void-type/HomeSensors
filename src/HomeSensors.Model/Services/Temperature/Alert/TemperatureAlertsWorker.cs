@@ -37,6 +37,7 @@ public class TemperatureAlertsWorker : BackgroundService
 
         var betweenTicks = TimeSpan.FromMinutes(_alertSettings.BetweenTicksMinutes);
         var timer = new PeriodicTimer(betweenTicks);
+        var lastTick = _dateTimeService.MomentWithOffset;
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
@@ -47,15 +48,22 @@ public class TemperatureAlertsWorker : BackgroundService
                 _logger.LogInformation("{JobName} job is starting.", nameof(TemperatureAlertsWorker));
 
                 var now = _dateTimeService.MomentWithOffset;
-                var lastTick = now.Subtract(betweenTicks);
 
                 using var scope = _scopeFactory.CreateScope();
 
                 var limitsService = scope.ServiceProvider.GetRequiredService<TemperatureLimitAlertService>();
                 var devicesService = scope.ServiceProvider.GetRequiredService<TemperatureDeviceAlertService>();
 
-                await limitsService.Process(latchedLimitAlerts, now, lastTick, stoppingToken);
-                await devicesService.Process(latchedDeviceAlerts, now, stoppingToken);
+                var isAveragingEnabled = _alertSettings.LookBackMinutes > 0;
+
+                var since = isAveragingEnabled
+                    ? now.Subtract(TimeSpan.FromMinutes(_alertSettings.LookBackMinutes))
+                    : lastTick;
+
+                await limitsService.ProcessAsync(latchedLimitAlerts, now, since, isAveragingEnabled, stoppingToken);
+                await devicesService.ProcessAsync(latchedDeviceAlerts, now, stoppingToken);
+
+                lastTick = now;
             }
             catch (Exception ex)
             {

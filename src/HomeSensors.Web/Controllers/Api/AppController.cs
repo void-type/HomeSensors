@@ -17,9 +17,9 @@ public class AppController : ControllerBase
     [HttpGet]
     [Route("info")]
     [ProducesResponseType(typeof(GetWebClientInfo.WebClientInfo), 200)]
-    public Task<IActionResult> GetInfo([FromServices] GetWebClientInfo.Pipeline getPipeline)
+    public async Task<IActionResult> GetInfoAsync([FromServices] GetWebClientInfo.Pipeline getPipeline)
     {
-        return getPipeline
+        return await getPipeline
             .Handle(new GetWebClientInfo.Request())
             .MapAsync(HttpResponder.Respond);
     }

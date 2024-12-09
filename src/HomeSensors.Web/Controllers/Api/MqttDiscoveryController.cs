@@ -30,9 +30,9 @@ public class MqttDiscoveryController : ControllerBase
     [Route("setup")]
     [ProducesResponseType(typeof(MqttDiscoveryClientStatus), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> Setup([FromBody] MqttDiscoverySetupRequest request)
+    public async Task<IActionResult> SetupAsync([FromBody] MqttDiscoverySetupRequest request)
     {
-        return _discoveryService.SetupClient(request)
+        return await _discoveryService.SetupClientAsync(request)
             .MapAsync(HttpResponder.Respond);
     }
 

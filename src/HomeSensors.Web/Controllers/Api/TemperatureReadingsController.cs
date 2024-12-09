@@ -22,9 +22,9 @@ public class TemperatureReadingsController : ControllerBase
     [Route("current")]
     [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> GetCurrentReadings()
+    public async Task<IActionResult> GetCurrentReadingsAsync()
     {
-        return _readingRepository.GetCurrentCached()
+        return await _readingRepository.GetCurrentCachedAsync()
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -32,9 +32,9 @@ public class TemperatureReadingsController : ControllerBase
     [Route("location/{locationId}")]
     [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> GetCurrentReadingForLocation(long locationId)
+    public async Task<IActionResult> GetCurrentReadingForLocationAsync(long locationId)
     {
-        return _readingRepository.GetCurrentForLocationCached(locationId)
+        return await _readingRepository.GetCurrentForLocationCachedAsync(locationId)
             .ToResultAsync(new Failure("No current reading for location.", nameof(locationId)))
             .MapAsync(HttpResponder.Respond);
     }
@@ -43,9 +43,9 @@ public class TemperatureReadingsController : ControllerBase
     [Route("time-series")]
     [ProducesResponseType(typeof(List<TemperatureTimeSeriesResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> GetTimeSeries([FromBody] TemperatureTimeSeriesRequest request)
+    public async Task<IActionResult> GetTimeSeriesAsync([FromBody] TemperatureTimeSeriesRequest request)
     {
-        return _readingRepository.GetTimeSeriesCached(request)
+        return await _readingRepository.GetTimeSeriesCachedAsync(request)
             .MapAsync(HttpResponder.Respond);
     }
 }

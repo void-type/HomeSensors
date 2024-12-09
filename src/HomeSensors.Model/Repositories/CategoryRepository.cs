@@ -17,7 +17,7 @@ public class CategoryRepository : RepositoryBase
         _data = data;
     }
 
-    public async Task<List<CategoryResponse>> GetAll()
+    public async Task<List<CategoryResponse>> GetAllAsync()
     {
         var data = await _data.Categories
             .TagWith(GetTag())
@@ -36,7 +36,7 @@ public class CategoryRepository : RepositoryBase
         });
     }
 
-    public async Task<IResult<EntityMessage<long>>> Save(CategorySaveRequest request)
+    public async Task<IResult<EntityMessage<long>>> SaveAsync(CategorySaveRequest request)
     {
         var failures = new List<IFailure>();
 
@@ -67,7 +67,7 @@ public class CategoryRepository : RepositoryBase
         return Result.Ok(EntityMessage.Create("Category saved.", category.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> Delete(int id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(int id)
     {
         var category = await _data.Categories
             .FirstOrDefaultAsync(x => x.Id == id);

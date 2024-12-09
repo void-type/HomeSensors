@@ -22,7 +22,7 @@ public class EmailNotificationService
         _dateTimeService = dateTimeService;
     }
 
-    public Task Send(Action<EmailOptionsBuilder> configure, CancellationToken cancellationToken)
+    public async Task SendAsync(Action<EmailOptionsBuilder> configure, CancellationToken cancellationToken)
     {
         var newEmail = _emailFactory.Create(e =>
         {
@@ -33,12 +33,12 @@ public class EmailNotificationService
             e.AddLine($"Sent from {TextHelpers.Link(_notificationsSettings.SignatureName, _notificationsSettings.SignatureLink)}");
         });
 
-        return _emailSender.SendEmail(newEmail, cancellationToken);
+        await _emailSender.SendEmail(newEmail, cancellationToken);
     }
 
-    public Task NotifyError(string bodyMessage, string? subject = null, Exception? exception = null)
+    public async Task NotifyErrorAsync(string bodyMessage, string? subject = null, Exception? exception = null)
     {
-        return Send(e =>
+        await SendAsync(e =>
         {
             e.SetSubject($"Error occurred: {subject ?? bodyMessage}");
 

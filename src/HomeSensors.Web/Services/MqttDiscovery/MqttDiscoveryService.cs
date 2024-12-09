@@ -38,7 +38,7 @@ public class MqttDiscoveryService
             IsConnected: _clientState?.Client?.IsConnected ?? false);
     }
 
-    public async Task<IResult<MqttDiscoveryClientStatus>> SetupClient(MqttDiscoverySetupRequest request)
+    public async Task<IResult<MqttDiscoveryClientStatus>> SetupClientAsync(MqttDiscoverySetupRequest request)
     {
         if (_clientState is not null)
         {
@@ -51,8 +51,8 @@ public class MqttDiscoveryService
 
         _logger.LogInformation("Connecting Managed MQTT client.");
 
-        client.ConnectingFailedAsync += LogConnectionFailure;
-        client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
+        client.ConnectingFailedAsync += LogConnectionFailureAsync;
+        client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLoggingAsync;
 
         await client.StartAsync(_configuration.GetClientOptions());
 
@@ -85,17 +85,17 @@ public class MqttDiscoveryService
         return GetClientStatus();
     }
 
-    private Task LogConnectionFailure(ConnectingFailedEventArgs e)
+    private async Task LogConnectionFailureAsync(ConnectingFailedEventArgs e)
     {
         _logger.LogError(e.Exception, "MQTT client failed to connect.");
-        return Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
-    private async Task ProcessMessageWithExceptionLogging(MqttApplicationMessageReceivedEventArgs e)
+    private async Task ProcessMessageWithExceptionLoggingAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         try
         {
-            await ProcessMessage(e);
+            await ProcessMessageAsync(e);
         }
         catch (Exception ex)
         {
@@ -103,7 +103,7 @@ public class MqttDiscoveryService
         }
     }
 
-    private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
+    private async Task ProcessMessageAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         var payload = e.GetPayloadString();
 

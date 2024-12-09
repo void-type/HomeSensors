@@ -30,21 +30,21 @@ public class TemperatureLimitAlertService
         _alertSettings = alertSettings;
     }
 
-    public async Task Process(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, DateTimeOffset lastTick, CancellationToken stoppingToken)
+    public async Task ProcessAsync(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, DateTimeOffset since, bool isAveragingEnabled, CancellationToken stoppingToken)
     {
-        var failedResults = (await _locationRepository.CheckLimits(lastTick, _alertSettings.AverageIntervalMinutes))
+        var failedResults = (await _locationRepository.CheckLimitsAsync(since, isAveragingEnabled))
             .Where(x => x.IsFailed)
             .ToArray();
 
-        await CleanClearedAlerts(latchedAlerts, failedResults, stoppingToken);
+        await CleanClearedAlertsAsync(latchedAlerts, failedResults, isAveragingEnabled, stoppingToken);
 
         // Clean expired alerts
         latchedAlerts.RemoveAll(x => x.Expiry <= now);
 
-        await ProcessAlerts(latchedAlerts, now, failedResults, stoppingToken);
+        await ProcessAlertsAsync(latchedAlerts, now, failedResults, stoppingToken);
     }
 
-    private async Task ProcessAlerts(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, TemperatureCheckLimitResponse[] failedResults, CancellationToken stoppingToken)
+    private async Task ProcessAlertsAsync(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, TemperatureCheckLimitResponse[] failedResults, CancellationToken stoppingToken)
     {
         var betweenNotifications = TimeSpan.FromMinutes(_alertSettings.BetweenNotificationsMinutes);
 
@@ -52,13 +52,13 @@ public class TemperatureLimitAlertService
         {
             if (failedResult.MinReading is not null && !AlertExists(latchedAlerts, failedResult, ColdStatus))
             {
-                await NotifyAlert(failedResult, MinStatus, ColdStatus, failedResult.MinReading, failedResult.Location.MinTemperatureLimitCelsius, stoppingToken);
+                await NotifyAlertAsync(failedResult, MinStatus, ColdStatus, failedResult.MinReading, failedResult.Location.MinTemperatureLimitCelsius, stoppingToken);
                 AddAlert(latchedAlerts, failedResult, ColdStatus, now, betweenNotifications);
             }
 
             if (failedResult.MaxReading is not null && !AlertExists(latchedAlerts, failedResult, HotStatus))
             {
-                await NotifyAlert(failedResult, MaxStatus, HotStatus, failedResult.MaxReading, failedResult.Location.MaxTemperatureLimitCelsius, stoppingToken);
+                await NotifyAlertAsync(failedResult, MaxStatus, HotStatus, failedResult.MaxReading, failedResult.Location.MaxTemperatureLimitCelsius, stoppingToken);
                 AddAlert(latchedAlerts, failedResult, HotStatus, now, betweenNotifications);
             }
         }
@@ -74,7 +74,7 @@ public class TemperatureLimitAlertService
         latchedAlerts.Add(new TemperatureLimitAlert(failedResult, status, now.Add(betweenAlerts)));
     }
 
-    private async Task CleanClearedAlerts(List<TemperatureLimitAlert> latchedAlerts, TemperatureCheckLimitResponse[] failedResults, CancellationToken stoppingToken)
+    private async Task CleanClearedAlertsAsync(List<TemperatureLimitAlert> latchedAlerts, TemperatureCheckLimitResponse[] failedResults, bool isAveragingEnabled, CancellationToken stoppingToken)
     {
         var clearedAlerts = latchedAlerts
             .Where(alert => !Array.Exists(failedResults, x => AlertIsForThisResult(alert, x)))
@@ -85,7 +85,7 @@ public class TemperatureLimitAlertService
             var location = alert.Result.Location;
 
             var maybeReading = await _readingRepository
-                .GetCurrentForLocation(location.Id, stoppingToken);
+                .GetCurrentForLocationAsync(location.Id, stoppingToken);
 
             if (maybeReading.HasNoValue)
             {
@@ -96,7 +96,8 @@ public class TemperatureLimitAlertService
 
             var alertIsCold = alert.Status == ColdStatus;
 
-            if ((alertIsCold && reading.IsCold) || (!alertIsCold && reading.IsHot))
+            // If not using averages, only clear if the reading is within the limit.
+            if (!isAveragingEnabled && ((alertIsCold && reading.IsCold) || (!alertIsCold && reading.IsHot)))
             {
                 continue;
             }
@@ -104,7 +105,7 @@ public class TemperatureLimitAlertService
             var limit = alertIsCold ? alert.Result.Location.MinTemperatureLimitCelsius : alert.Result.Location.MaxTemperatureLimitCelsius;
             var minOrMax = alertIsCold ? MinStatus : MaxStatus;
 
-            await NotifyClear(reading, alert, limit, minOrMax, stoppingToken);
+            await NotifyClearAsync(reading, alert, limit, minOrMax, stoppingToken);
             latchedAlerts.Remove(alert);
         }
     }
@@ -118,27 +119,39 @@ public class TemperatureLimitAlertService
         );
     }
 
-    private Task NotifyAlert(TemperatureCheckLimitResponse failedResult, string minOrMax, string hotOrCold, TemperatureReadingResponse reading, double? limit, CancellationToken stoppingToken)
+    private async Task NotifyAlertAsync(TemperatureCheckLimitResponse failedResult, string minOrMax, string hotOrCold, TemperatureReadingResponse reading, double? limit, CancellationToken stoppingToken)
     {
         var locationName = failedResult.Location.Name;
         var time = reading.Time;
         var readingTempString = TemperatureHelpers.GetDualTempString(reading.TemperatureCelsius);
         var limitTempString = TemperatureHelpers.GetDualTempString(limit);
 
-        _logger.LogWarning("Temperature limit exceeded: {LocationName} was as {HotOrCold} as {Reading} at {Time}. Limit of {Limit}.", locationName, hotOrCold, readingTempString, time, limitTempString);
+        var lookBackMinutes = _alertSettings.LookBackMinutes;
 
-        return _emailNotificationService.Send(e =>
+        _logger.LogWarning("Temperature limit exceeded: {LocationName} was as {HotOrCold} as {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.",
+            locationName,
+            hotOrCold,
+            readingTempString,
+            time,
+            limitTempString,
+            lookBackMinutes);
+
+        await _emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"{locationName} is {hotOrCold} ({readingTempString})");
 
             e.AddLine($"{locationName} exceeded the {minOrMax} temperature limit of {limitTempString}.");
+            if (lookBackMinutes > 0)
+            {
+                e.AddLine($"This alert is based on an average temperature over the last {lookBackMinutes} minutes.");
+            }
             e.AddLine();
             e.AddLine($"Temperature: {readingTempString}");
             e.AddLine($"Time: {time}");
         }, stoppingToken);
     }
 
-    private Task NotifyClear(TemperatureReadingResponse reading, TemperatureLimitAlert alert, double? limit, string minOrMax, CancellationToken stoppingToken)
+    private async Task NotifyClearAsync(TemperatureReadingResponse reading, TemperatureLimitAlert alert, double? limit, string minOrMax, CancellationToken stoppingToken)
     {
         var location = alert.Result.Location;
 
@@ -146,13 +159,25 @@ public class TemperatureLimitAlertService
         var readingTempString = TemperatureHelpers.GetDualTempString(reading.TemperatureCelsius);
         var limitTempString = TemperatureHelpers.GetDualTempString(limit);
 
-        _logger.LogWarning("Temperature within limit: {LocationName} is no longer {HotOrCold}. Currently {Reading} at {Time}. Limit of {Limit}.", location.Name, alert.Status, readingTempString, time, limitTempString);
+        var lookBackMinutes = _alertSettings.LookBackMinutes;
 
-        return _emailNotificationService.Send(e =>
+        _logger.LogWarning("Temperature within limit: {LocationName} is no longer {HotOrCold}. Currently {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.",
+            location.Name,
+            alert.Status,
+            readingTempString,
+            time,
+            limitTempString,
+            lookBackMinutes);
+
+        await _emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"{location.Name} is no longer {alert.Status} ({readingTempString})");
 
             e.AddLine($"{location.Name} no longer exceeds the {minOrMax} temperature limit of {limitTempString}.");
+            if (lookBackMinutes > 0)
+            {
+                e.AddLine($"This alert is based on an average temperature over the last {lookBackMinutes} minutes.");
+            }
             e.AddLine();
             e.AddLine($"Temperature: {readingTempString}");
             e.AddLine($"Time: {time}");

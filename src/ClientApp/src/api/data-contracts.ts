@@ -55,6 +55,7 @@ export interface IItemSetOfIFailure {
 export interface IFailure {
   message?: string;
   uiHandle?: string | null;
+  code?: string | null;
 }
 
 export type EntityMessageOfLong = UserMessage & {
@@ -188,5 +189,6 @@ export interface TemperatureTimeSeriesRequest {
 
 export interface TemperatureLocationsCheckLimitsParams {
   /** @format date-time */
-  lastCheck?: string;
+  since?: string;
+  isAveragingEnabled?: boolean;
 }

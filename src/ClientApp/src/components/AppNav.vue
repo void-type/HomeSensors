@@ -20,7 +20,7 @@
         data-bs-toggle="dropdown"
         aria-expanded="false"
       >
-        Administration
+        Admin
       </a>
       <ul class="dropdown-menu" aria-labelledby="administrationDropdown">
         <li class="nav-item">

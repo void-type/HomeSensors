@@ -45,8 +45,8 @@ public class MqttWaterLeaksWorker : BackgroundService
 
         _logger.LogInformation("Connecting Managed MQTT client.");
 
-        client.ConnectingFailedAsync += LogConnectionFailure;
-        client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLogging;
+        client.ConnectingFailedAsync += LogConnectionFailureAsync;
+        client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLoggingAsync;
 
         await client.StartAsync(_configuration.GetClientOptions());
 
@@ -72,7 +72,7 @@ public class MqttWaterLeaksWorker : BackgroundService
 
                 using var scope = _scopeFactory.CreateScope();
                 var waterLeakAlertService = scope.ServiceProvider.GetRequiredService<WaterLeakAlertService>();
-                await waterLeakAlertService.CheckInactive();
+                await waterLeakAlertService.CheckInactiveAsync();
             }
             catch (Exception ex)
             {
@@ -85,26 +85,26 @@ public class MqttWaterLeaksWorker : BackgroundService
         }
     }
 
-    private Task LogConnectionFailure(ConnectingFailedEventArgs e)
+    private async Task LogConnectionFailureAsync(ConnectingFailedEventArgs e)
     {
         _logger.LogError(e.Exception, "MQTT client failed to connect.");
-        return Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
-    private async Task ProcessMessageWithExceptionLogging(MqttApplicationMessageReceivedEventArgs e)
+    private async Task ProcessMessageWithExceptionLoggingAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         try
         {
-            await ProcessMessage(e);
+            await ProcessMessageAsync(e);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttWaterLeaksWorker));
-            await _emailNotificationService.NotifyError($"Topic: {e.ApplicationMessage.Topic}\nPayload string: {e.GetPayloadString()}", $"Exception thrown in {nameof(MqttWaterLeaksWorker)}", ex);
+            await _emailNotificationService.NotifyErrorAsync($"Topic: {e.ApplicationMessage.Topic}\nPayload string: {e.GetPayloadString()}", $"Exception thrown in {nameof(MqttWaterLeaksWorker)}", ex);
         }
     }
 
-    private async Task ProcessMessage(MqttApplicationMessageReceivedEventArgs e)
+    private async Task ProcessMessageAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         var payload = DeserializeWaterLeakMessage(e);
 
@@ -123,7 +123,7 @@ public class MqttWaterLeaksWorker : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var waterLeakAlertService = scope.ServiceProvider.GetRequiredService<WaterLeakAlertService>();
 
-        await waterLeakAlertService.Process(message);
+        await waterLeakAlertService.ProcessAsync(message);
     }
 
     public static MqttWaterLeakDeviceMessagePayload DeserializeWaterLeakMessage(MqttApplicationMessageReceivedEventArgs e)

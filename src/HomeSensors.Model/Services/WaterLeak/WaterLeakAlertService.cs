@@ -32,7 +32,7 @@ public class WaterLeakAlertService
         }
     }
 
-    public async Task Process(MqttWaterLeakDeviceMessage message)
+    public async Task ProcessAsync(MqttWaterLeakDeviceMessage message)
     {
         var now = _dateTimeService.MomentWithOffset;
 
@@ -54,7 +54,7 @@ public class WaterLeakAlertService
             // If the last check-in was expired send clear notification.
             if (lastCheckInExists && lastCheckInTime.AddMinutes(_mqttWaterLeaksSettings.InactiveDeviceLimitMinutes) < now)
             {
-                await NotifyActive(message, now);
+                await NotifyActiveAsync(message, now);
             }
 
             _lastCheckIns.AddOrUpdate(message.LocationName, now, (_, _) => now);
@@ -65,17 +65,17 @@ public class WaterLeakAlertService
             case null:
                 throw new InvalidOperationException($"Payload property \"{nameof(MqttWaterLeakDeviceMessagePayload)}.{nameof(MqttWaterLeakDeviceMessagePayload.Water_Leak)}\" not found or was null.");
             case true:
-                await NotifyLeak(message, now);
+                await NotifyLeakAsync(message, now);
                 break;
         }
 
         if (message.Payload.Battery_Low == true)
         {
-            await NotifyBatteryLow(message, now);
+            await NotifyBatteryLowAsync(message, now);
         }
     }
 
-    public async Task CheckInactive()
+    public async Task CheckInactiveAsync()
     {
         var now = _dateTimeService.MomentWithOffset;
 
@@ -97,11 +97,11 @@ public class WaterLeakAlertService
         foreach (var inactiveDevice in inactiveDevices)
         {
             _latchedInactiveAlerts.TryAdd(inactiveDevice.Key, now);
-            await NotifyInactive(inactiveDevice, now);
+            await NotifyInactiveAsync(inactiveDevice, now);
         }
     }
 
-    private async Task NotifyLeak(MqttWaterLeakDeviceMessage message, DateTimeOffset now)
+    private async Task NotifyLeakAsync(MqttWaterLeakDeviceMessage message, DateTimeOffset now)
     {
         var alert = new WaterLeakDeviceAlert(message.LocationName, WaterLeakDeviceAlertType.WaterLeak);
 
@@ -115,7 +115,7 @@ public class WaterLeakAlertService
 
         _logger.LogWarning("Water leak detected: {LocationName}", message.LocationName);
 
-        await _emailNotificationService.Send(e =>
+        await _emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"Water leak detected: {message.LocationName}");
 
@@ -126,7 +126,7 @@ public class WaterLeakAlertService
         }, default);
     }
 
-    private async Task NotifyBatteryLow(MqttWaterLeakDeviceMessage message, DateTimeOffset now)
+    private async Task NotifyBatteryLowAsync(MqttWaterLeakDeviceMessage message, DateTimeOffset now)
     {
         var alert = new WaterLeakDeviceAlert(message.LocationName, WaterLeakDeviceAlertType.LowBattery);
 
@@ -140,7 +140,7 @@ public class WaterLeakAlertService
 
         _logger.LogWarning("Water leak sensor battery low: {LocationName}", message.LocationName);
 
-        await _emailNotificationService.Send(e =>
+        await _emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"Water leak sensor battery low: {message.LocationName}");
 
@@ -151,13 +151,13 @@ public class WaterLeakAlertService
         }, default);
     }
 
-    private Task NotifyInactive(KeyValuePair<string, DateTimeOffset> inactiveDevice, DateTimeOffset now)
+    private Task NotifyInactiveAsync(KeyValuePair<string, DateTimeOffset> inactiveDevice, DateTimeOffset now)
     {
         var locationName = inactiveDevice.Key;
 
         _logger.LogWarning("Water leak sensor inactive: {LocationName}", locationName);
 
-        return _emailNotificationService.Send(e =>
+        return _emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"Water leak sensor inactive: {locationName}");
 
@@ -168,13 +168,13 @@ public class WaterLeakAlertService
         }, default);
     }
 
-    private Task NotifyActive(MqttWaterLeakDeviceMessage message, DateTimeOffset now)
+    private Task NotifyActiveAsync(MqttWaterLeakDeviceMessage message, DateTimeOffset now)
     {
         var locationName = message.LocationName;
 
         _logger.LogWarning("Water leak sensor active again: {LocationName}", locationName);
 
-        return _emailNotificationService.Send(e =>
+        return _emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"Water leak sensor active again: {locationName}");
 

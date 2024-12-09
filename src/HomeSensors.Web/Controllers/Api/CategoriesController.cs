@@ -23,18 +23,18 @@ public class CategoriesController : ControllerBase
     [Route("all")]
     [ProducesResponseType(typeof(List<CategoryResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAllAsync()
     {
-        return _categoryRepository.GetAll()
+        return await _categoryRepository.GetAllAsync()
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> Save([FromBody] CategorySaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] CategorySaveRequest request)
     {
-        return _categoryRepository.Save(request)
+        return await _categoryRepository.SaveAsync(request)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -42,9 +42,9 @@ public class CategoriesController : ControllerBase
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> DeleteAsync(int id)
     {
-        return _categoryRepository.Delete(id)
+        return await _categoryRepository.DeleteAsync(id)
             .MapAsync(HttpResponder.Respond);
     }
 }
