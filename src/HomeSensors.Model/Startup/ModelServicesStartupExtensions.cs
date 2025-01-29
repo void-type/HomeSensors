@@ -7,13 +7,13 @@ using HomeSensors.Model.Services.Temperature.Poll;
 using HomeSensors.Model.Services.Temperature.Summarize;
 using HomeSensors.Model.Services.WaterLeak;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet;
 using VoidCore.Model.Configuration;
 using VoidCore.Model.Emailing;
 using VoidCore.Model.Time;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace HomeSensors.Model.Startup;
 
@@ -35,18 +35,12 @@ public static class ModelServicesStartupExtensions
         services.AddScoped<TemperatureDeviceRepository>();
         services.AddScoped<TemperatureLocationRepository>();
 
-#pragma warning disable EXTEXP0018 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        services.AddHybridCache(options =>
-        {
-            // X * 1MB
-            options.MaximumPayloadBytes = 100 * 1048576L;
-            options.DefaultEntryOptions = new HybridCacheEntryOptions
+        services.AddFusionCache()
+            .WithDefaultEntryOptions(new FusionCacheEntryOptions
             {
-                Expiration = TimeSpan.FromMinutes(5),
-                LocalCacheExpiration = TimeSpan.FromMinutes(5),
-            };
-        });
-#pragma warning restore EXTEXP0018 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                Duration = TimeSpan.FromMinutes(5),
+            })
+            .AsHybridCache();
 
         config.GetRequiredConnectionString<HomeSensorsContext>();
         services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions

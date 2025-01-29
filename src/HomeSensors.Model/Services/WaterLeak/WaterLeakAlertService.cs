@@ -151,13 +151,13 @@ public class WaterLeakAlertService
         }, default);
     }
 
-    private Task NotifyInactiveAsync(KeyValuePair<string, DateTimeOffset> inactiveDevice, DateTimeOffset now)
+    private async Task NotifyInactiveAsync(KeyValuePair<string, DateTimeOffset> inactiveDevice, DateTimeOffset now)
     {
         var locationName = inactiveDevice.Key;
 
         _logger.LogWarning("Water leak sensor inactive: {LocationName}", locationName);
 
-        return _emailNotificationService.SendAsync(e =>
+        await _emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"Water leak sensor inactive: {locationName}");
 
@@ -168,13 +168,13 @@ public class WaterLeakAlertService
         }, default);
     }
 
-    private Task NotifyActiveAsync(MqttWaterLeakDeviceMessage message, DateTimeOffset now)
+    private async Task NotifyActiveAsync(MqttWaterLeakDeviceMessage message, DateTimeOffset now)
     {
         var locationName = message.LocationName;
 
         _logger.LogWarning("Water leak sensor active again: {LocationName}", locationName);
 
-        return _emailNotificationService.SendAsync(e =>
+        await _emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"Water leak sensor active again: {locationName}");
 
