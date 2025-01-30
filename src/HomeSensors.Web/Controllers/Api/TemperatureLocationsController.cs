@@ -9,7 +9,7 @@ using VoidCore.Model.Responses.Messages;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-[Route(ApiRouteAttribute.BasePath + "/temperatures-locations")]
+[Route(ApiRouteAttribute.BasePath + "/temperature-locations")]
 public class TemperatureLocationsController : ControllerBase
 {
     private readonly TemperatureLocationRepository _locationRepository;

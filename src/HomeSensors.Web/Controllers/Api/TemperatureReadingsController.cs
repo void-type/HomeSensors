@@ -8,7 +8,7 @@ using VoidCore.Model.Responses.Collections;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-[Route(ApiRouteAttribute.BasePath + "/temperatures-readings")]
+[Route(ApiRouteAttribute.BasePath + "/temperature-readings")]
 public class TemperatureReadingsController : ControllerBase
 {
     private readonly TemperatureReadingRepository _readingRepository;
