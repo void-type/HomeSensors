@@ -71,10 +71,10 @@ public static class SecurityStartupExtensions
                 options.StyleSources
                     // Add the Swagger UI scripts
                     .AllowNonce();
+
+                app.UseRecommendedSecurityHeaders();
             }
         });
-
-        app.UseRecommendedSecurityHeaders();
 
         return app;
     }
