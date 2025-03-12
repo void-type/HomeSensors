@@ -4,8 +4,9 @@
 @inject IHostEnvironment env
 @{
     ViewData["Title"] = $"Home | {appConfig.Name}";
-    var vueDevServerEnabled = env.IsDevelopment() && config.GetSection("VueDevServer").GetValue<bool>("Enabled", true);
-    var vueDevServerHost = config.GetSection("VueDevServer").GetValue<string>("Host", string.Empty);
+
+    var vueDevServerEnabled = env.IsDevelopment() && config.GetSection("VueDevServer").GetValue("Enabled", true);
+    var vueDevServerHost = config.GetSection("VueDevServer").GetValue("Host", string.Empty);
 }
 
 @section Style

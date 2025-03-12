@@ -4,7 +4,7 @@
         <PackageReference Include="MailKit" Version="4.10.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.1" />
         <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
-        <PackageReference Include="VoidCore.Model" Version="14.1.3" />
+        <PackageReference Include="VoidCore.Model" Version="15.0.1-gb9eb465023" />
         <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.0.0" />
 
         <!-- <ProjectReference Include="..\..\..\VoidCore\src\VoidCore.Model\VoidCore.Model.csproj" /> -->

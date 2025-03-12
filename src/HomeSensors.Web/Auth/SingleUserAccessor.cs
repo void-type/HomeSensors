@@ -4,7 +4,10 @@ namespace HomeSensors.Web.Auth;
 
 public class SingleUserAccessor : ICurrentUserAccessor
 {
-    private static readonly DomainUser _singleUser = new("SingleUser", Array.Empty<string>());
+    private static readonly DomainUser _singleUser = new("SingleUser", []);
 
-    public DomainUser User => _singleUser;
+    public async Task<DomainUser> GetUser()
+    {
+        return await Task.FromResult(_singleUser);
+    }
 }
