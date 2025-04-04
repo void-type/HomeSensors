@@ -1,0 +1,13 @@
+/.vscode/
+/artifacts/
+/coverage/
+/docs/
+/testResults/
+**/bin/
+**/obj/
+**/out/
+**/*.Web/wwwroot/
+**/node_modules/
+
+**/app[Ss]ettings.*.json
+**/README.md
