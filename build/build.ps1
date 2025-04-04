@@ -48,7 +48,7 @@ try {
       npm run lint
       Stop-OnError
       npm run format
-      Stop-OnError "Formatting the client failed."
+      Stop-OnError 'Formatting the client failed.'
     }
 
     if (-not $SkipOutdated) {
@@ -65,8 +65,20 @@ try {
   Set-Location -Path $projectRoot
 
   if (-not $SkipFormat) {
-    dotnet format --verify-no-changes
-    Stop-OnError 'Please run formatter: dotnet format.'
+    $formatOutput = dotnet format --verify-no-changes
+    Write-Host $formatOutput
+
+    if ($LASTEXITCODE -ne 0) {
+      # Don't stop for obsolete warnings
+      $formatOutput = $formatOutput -replace '.*S1133.*', ''
+      # Don't stop for  TODO warnings
+      $formatOutput = $formatOutput -replace '.*S1135.*', ''
+
+      if (-not [string]::IsNullOrWhiteSpace($formatOutput)) {
+        Write-Host "Formatting errors found. Please run 'dotnet format' to fix them."
+        exit 1
+      }
+    }
   }
 
   dotnet restore
