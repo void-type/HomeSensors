@@ -75,7 +75,16 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                         var oldReadings = await dbContext.TemperatureReadings
                             .TagWith($"Query called from {nameof(SummarizeTemperatureReadingsWorker)}.")
                             .AsNoTracking()
-                            .Where(x => !x.IsSummary && x.Time < cutoffLimit && x.TemperatureDeviceId == device.Id)
+                            .Where(x => !x.IsSummary && x.TemperatureDeviceId == device.Id && x.Time < cutoffLimit)
+                            .Select(x => new
+                            {
+                                x.Id,
+                                x.Time,
+                                x.TemperatureDeviceId,
+                                x.TemperatureLocationId,
+                                x.TemperatureCelsius,
+                                x.Humidity
+                            })
                             .ToListAsync(stoppingToken);
 
                         if (oldReadings.Count == 0)
@@ -112,12 +121,29 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
 
                             var readingsToDelete = newReadingChunk
                                 .SelectMany(x => x.OldReadings)
+                                .Select(x => new TemperatureReading()
+                                {
+                                    Id = x.Id,
+                                })
                                 .ToArray();
 
-                            await dbContext.TemperatureReadings.AddRangeAsync(readingsToCreate);
-                            dbContext.TemperatureReadings.RemoveRange(readingsToDelete);
+                            await using var transaction = await dbContext.Database.BeginTransactionAsync(
+                                System.Data.IsolationLevel.ReadCommitted, stoppingToken);
 
-                            await dbContext.SaveChangesAsync(stoppingToken);
+                            try
+                            {
+                                await dbContext.TemperatureReadings.AddRangeAsync(readingsToCreate);
+                                dbContext.TemperatureReadings.RemoveRange(readingsToDelete);
+
+                                await dbContext.SaveChangesAsync(stoppingToken);
+
+                                await transaction.CommitAsync(stoppingToken);
+                            }
+                            catch
+                            {
+                                await transaction.RollbackAsync(stoppingToken);
+                                throw;
+                            }
 
                             createdCount += readingsToCreate.Length;
                             deletedCount += readingsToDelete.Length;

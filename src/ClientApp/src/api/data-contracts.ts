@@ -1,5 +1,6 @@
 /* eslint-disable */
 /* tslint:disable */
+// @ts-nocheck
 /*
  * ---------------------------------------------------------------
  * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
@@ -9,15 +10,23 @@
  * ---------------------------------------------------------------
  */
 
+/** Information for bootstrapping a web client. */
 export interface WebClientInfo {
+  /** The value of the header antiforgery token */
   antiforgeryToken?: string;
+  /** The header name of the antiforgery token */
   antiforgeryTokenHeaderName?: string;
+  /** The UI-friendly application name. */
   applicationName?: string;
+  /** The current user */
   user?: DomainUser;
 }
 
+/** A user for use in the domain layer and model services. */
 export interface DomainUser {
+  /** UI-friendly name for the current user */
   login?: string;
+  /** Names of the authorization policies that the user fulfills. */
   authorizedAs?: string[];
 }
 
@@ -39,31 +48,56 @@ export interface CategoryResponse {
   order?: number;
 }
 
+/** A set of items. Can optionally by a page of a full set. */
 export interface IItemSetOfIFailure {
-  /** @format int32 */
+  /**
+   * The count of items in this set.
+   * @format int32
+   */
   count?: number;
+  /** The items in this set. */
   items?: IFailure[];
+  /** When true, this is a page of a full set. */
   isPagingEnabled?: boolean;
-  /** @format int32 */
+  /**
+   * If paging is enabled, this represents the page number in the total set.
+   * @format int32
+   */
   page?: number;
-  /** @format int32 */
+  /**
+   * If paging is enabled, the requested number of results per page.
+   * @format int32
+   */
   take?: number;
-  /** @format int32 */
+  /**
+   * The count of all the items in the total set. If paging is enabled, the total number of results in all pages.
+   * @format int32
+   */
   totalCount?: number;
 }
 
+/** A domain logic failure with UI-friendly error message and optional field name or UI handle. */
 export interface IFailure {
+  /** The UI-friendly error message to be displayed to the user. */
   message?: string;
+  /** The name of the UI field corresponding to the invalid user input. */
   uiHandle?: string | null;
+  /** A A code name or identifier for the error for programmatic error discrimination. */
   code?: string | null;
 }
 
+/** A UI-friendly message and the Id of the entity that was affected during an event. */
 export type EntityMessageOfLong = UserMessage & {
-  /** @format int64 */
+  /**
+   * The Id of the entity affected during an event.
+   * @format int64
+   */
   id?: number;
 };
 
+/** A UI-friendly message. */
 export interface UserMessage {
+  /** The UI-friendly message. */
   message?: string;
 }
 

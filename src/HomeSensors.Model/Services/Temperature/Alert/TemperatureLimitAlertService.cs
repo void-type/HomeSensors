@@ -85,7 +85,7 @@ public class TemperatureLimitAlertService
             var location = alert.Result.Location;
 
             var maybeReading = await _readingRepository
-                .GetCurrentForLocationAsync(location.Id, stoppingToken);
+                .GetCurrentForLocationCachedAsync(location.Id, stoppingToken);
 
             if (maybeReading.HasNoValue)
             {

@@ -23,31 +23,6 @@ public class TemperatureReadingRepository : RepositoryBase
     /// <summary>
     /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
     /// </summary>
-    public async Task<List<TemperatureReadingResponse>> GetCurrentAsync(CancellationToken cancellationToken = default)
-    {
-        var data = await _data.TemperatureReadings
-            .TagWith(GetTag())
-            .AsNoTracking()
-            .Include(x => x.TemperatureLocation)
-            .ThenInclude(x => x!.Category)
-            .Where(x => x.Time >= _dateTimeService.MomentWithOffset.AddDays(-1))
-            .OrderBy(x => x.TemperatureLocation!.Category!.Order)
-            .ThenBy(x => x.TemperatureLocation!.Name)
-            .GroupBy(x => x.TemperatureLocation!.Name)
-            .Select(g => g.OrderByDescending(x => x.Time).First())
-            .ToListAsync(cancellationToken);
-
-        return data.ConvertAll(x => new TemperatureReadingResponse(
-            time: x.Time,
-            humidity: x.Humidity,
-            temperatureCelsius: x.TemperatureCelsius,
-            location: x.TemperatureLocation!.ToApiResponse()
-        ));
-    }
-
-    /// <summary>
-    /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
-    /// </summary>
     /// <param name="refreshCache">Pass true to force refresh of the cache. Use when scheduled and all other clients can use same cached interval.</param>
     public async Task<List<TemperatureReadingResponse>> GetCurrentCachedAsync(bool refreshCache = false, CancellationToken cancellationToken = default)
     {
@@ -72,47 +47,66 @@ public class TemperatureReadingRepository : RepositoryBase
     /// <summary>
     /// Gets the latest reading for the location.
     /// </summary>
-    public async Task<Maybe<TemperatureReadingResponse>> GetCurrentForLocationAsync(long locationId, CancellationToken cancellationToken = default)
-    {
-        return await _data.TemperatureReadings
-            .TagWith(GetTag())
-            .AsNoTracking()
-            .Include(x => x.TemperatureLocation)
-            .Where(x => x.TemperatureLocationId == locationId)
-            .OrderByDescending(x => x.Time)
-            .FirstOrDefaultAsync(cancellationToken)
-            .MapAsync(Maybe.From)
-            .SelectAsync(x => new TemperatureReadingResponse(
-                time: x.Time,
-                humidity: x.Humidity,
-                temperatureCelsius: x.TemperatureCelsius,
-                location: x.TemperatureLocation!.ToApiResponse()));
-    }
-
-    /// <summary>
-    /// Gets the latest reading for the location.
-    /// </summary>
     public async Task<Maybe<TemperatureReadingResponse>> GetCurrentForLocationCachedAsync(long locationId, CancellationToken cancellationToken = default)
     {
-        var caller = GetCaller();
-        var cacheKey = $"{caller}|{locationId}";
-
-        return await _cache.GetOrCreateAsync(
-            cacheKey,
-            async cancel => await GetCurrentForLocationAsync(locationId, cancel),
-            options: new()
-            {
-                Expiration = TimeSpan.FromSeconds(60),
-                LocalCacheExpiration = TimeSpan.FromSeconds(60),
-            },
-            cancellationToken: cancellationToken);
+        return (await GetCurrentCachedAsync(cancellationToken: cancellationToken))
+            .FirstOrDefault(x => x.Location?.Id == locationId);
     }
 
     /// <summary>
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
     /// <param name="request">TemperatureTimeSeriesRequest</param>
-    public async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
+    public async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
+    {
+        // Prevent caching incomplete series to stay current.
+        if (request.EndTime >= _dateTimeService.MomentWithOffset)
+        {
+            return await GetTimeSeriesAsync(request, cancellationToken);
+        }
+
+        var caller = GetCaller();
+        var cacheKey = $"{caller}|{request.StartTime:o}|{request.EndTime:o}|{string.Join(",", request.LocationIds.Order())}";
+
+        return await _cache.GetOrCreateAsync(
+            cacheKey,
+            async (cancel) => await GetTimeSeriesAsync(request, cancel),
+            cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
+    /// </summary>
+    private async Task<List<TemperatureReadingResponse>> GetCurrentAsync(CancellationToken cancellationToken = default)
+    {
+        var data = await _data.TemperatureReadings
+            .TagWith(GetTag())
+            .AsNoTracking()
+            .Include(x => x.TemperatureLocation)
+            .ThenInclude(x => x!.Category)
+            .Where(x => !x.IsSummary && x.Time >= _dateTimeService.MomentWithOffset.AddDays(-1))
+            .GroupBy(x => x.TemperatureLocationId)
+            .Select(g => g.OrderByDescending(x => x.Time).First())
+            .ToListAsync(cancellationToken);
+
+        var orderedData = data
+            .OrderBy(x => x.TemperatureLocation!.Category!.Order)
+            .ThenBy(x => x.TemperatureLocation!.Name)
+            .ToList();
+
+        return orderedData.ConvertAll(x => new TemperatureReadingResponse(
+            time: x.Time,
+            humidity: x.Humidity,
+            temperatureCelsius: x.TemperatureCelsius,
+            location: x.TemperatureLocation!.ToApiResponse()
+        ));
+    }
+
+    /// <summary>
+    /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
+    /// </summary>
+    /// <param name="request">TemperatureTimeSeriesRequest</param>
+    private async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
     {
         if (request.LocationIds.Count == 0)
         {
@@ -178,26 +172,5 @@ public class TemperatureReadingRepository : RepositoryBase
                     points: avgGraphPoints
                 );
             });
-    }
-
-    /// <summary>
-    /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
-    /// </summary>
-    /// <param name="request">TemperatureTimeSeriesRequest</param>
-    public async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
-    {
-        // Prevent caching incomplete series to stay current.
-        if (request.EndTime >= _dateTimeService.MomentWithOffset)
-        {
-            return await GetTimeSeriesAsync(request, cancellationToken);
-        }
-
-        var caller = GetCaller();
-        var cacheKey = $"{caller}|{request.StartTime:o}|{request.EndTime:o}|{string.Join(",", request.LocationIds.OrderBy(x => x))}";
-
-        return await _cache.GetOrCreateAsync(
-            cacheKey,
-            async (cancel) => await GetTimeSeriesAsync(request, cancel),
-            cancellationToken: cancellationToken);
     }
 }

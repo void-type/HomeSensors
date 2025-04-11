@@ -24,6 +24,8 @@ public class HomeSensorsContext : DbContext
         {
             entity.ToTable(nameof(Category));
 
+            entity.HasIndex(c => c.Order);
+
             entity.HasIndex(si => si.Name)
                 .IsUnique();
         });
@@ -32,10 +34,18 @@ public class HomeSensorsContext : DbContext
         {
             entity.ToTable(nameof(TemperatureReading));
 
-            entity.HasIndex(r => r.Time);
-            entity.HasIndex(r => r.IsSummary);
-            entity.HasIndex(r => new { r.Time, r.TemperatureLocationId });
-            entity.HasIndex(r => new { r.Time, r.TemperatureDeviceId, r.IsSummary });
+            // Index for GetCurrentAsync query
+            entity.HasIndex(r => new { r.Time })
+                .HasFilter("[IsSummary] = 0")
+                .IncludeProperties(r => new { r.TemperatureLocationId, r.TemperatureCelsius, r.Humidity });
+
+            // Index for GetTimeSeriesAsync query
+            entity.HasIndex(r => new { r.TemperatureLocationId, r.Time })
+                .IncludeProperties(r => new { r.TemperatureCelsius, r.Humidity });
+
+            // Index for SummarizeTemperatureReadingsWorker.ExecuteAsync oldReadings query
+            entity.HasIndex(r => new { r.IsSummary, r.TemperatureDeviceId, r.Time })
+                .IncludeProperties(r => new { r.TemperatureCelsius, r.Humidity, r.TemperatureLocationId });
 
             entity.HasOne(x => x.TemperatureLocation)
                 .WithMany(x => x.TemperatureReadings)
