@@ -1,6 +1,6 @@
 # Get-Service HomeSensors | Stop-Service; pause; Get-Service HomeSensors | Start-Service
 # Run this script as a server administrator from the scripts directory
-[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = "High")]
+[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
 param()
 
 Push-Location -Path "$PSScriptRoot/../"
@@ -12,8 +12,12 @@ try {
   }
 
   if ($PSCmdlet.ShouldProcess("$serviceDirectoryProduction", "Deploy $shortAppName.Service to Production.")) {
+    if (-not (Test-Path -Path $webSettingsProduction)) {
+      throw "No settings file found at $webSettingsProduction"
+    }
+
     ROBOCOPY "$serviceReleaseFolder" "$serviceDirectoryProduction" /MIR
-    Copy-Item -Path "$serviceSettingsDirectoryProduction\*" -Include "*.Production.json" -Recurse -Destination $serviceDirectoryProduction
+    Copy-Item -Path "$serviceSettingsProduction" -Destination $serviceDirectoryProduction
   }
 
 } finally {

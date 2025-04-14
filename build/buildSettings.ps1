@@ -11,10 +11,10 @@ $webReleaseFolder = './artifacts/dist/release/web'
 $serviceReleaseFolder = './artifacts/dist/release/service'
 
 $webDirectoryProduction = "\\server2\DeployedApps\apps\$projectName.Web"
-$webSettingsDirectoryProduction = "\\server2\Servers\AppConfigs\$projectName\Web"
+$webSettingsProduction = "\\server2\Servers\AppConfigs\$projectName\Web\appsettings.Production.json"
 
 $serviceDirectoryProduction = "\\server2\DeployedApps\apps\$projectName.Service"
-$serviceSettingsDirectoryProduction = "\\server2\Servers\AppConfigs\$projectName\Service"
+$serviceSettingsProduction = "\\server2\Servers\AppConfigs\$projectName\Service\appsettings.Production.json"
 
 $dbMigrationArgs = @(
   '--project', (Resolve-Path "$PSScriptRoot/../$modelProjectFolder" | Select-Object -ExpandProperty Path),
