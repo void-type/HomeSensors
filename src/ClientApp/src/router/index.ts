@@ -36,6 +36,14 @@ const router = createRouter({
       path: '/time-series',
       name: 'timeSeries',
       component: () => import('@/pages/TimeSeriesPage.vue'),
+      props: (route) => {
+        return {
+          startDate: route.query.start ? new Date(route.query.start as string) : undefined,
+          endDate: route.query.end ? new Date(route.query.end as string) : undefined,
+          showHumidity: route.query.humidity === 'true',
+          locationIds: route.query.locationIds,
+        };
+      },
       meta: { title: 'Time Series' },
     },
     {

@@ -27,6 +27,17 @@ import AppDateTimePicker from './AppDateTimePicker.vue';
 
 Chart.register(...registerables);
 
+// Define props
+const props = defineProps<{
+  initialStart?: Date;
+  initialEnd?: Date;
+  initialShowHumidity?: boolean;
+  initialLocationIds?: number[];
+}>();
+
+// Define emits
+const emit = defineEmits(['inputs-change']);
+
 const appStore = useAppStore();
 const messageStore = useMessageStore();
 const api = ApiHelpers.client;
@@ -39,13 +50,13 @@ const data = reactive({
   locations: [] as Array<TemperatureLocationResponse>,
   categories: [] as Array<CategoryResponse>,
   graphSeries: [] as Array<TemperatureTimeSeriesResponse>,
-  showHumidity: false,
+  showHumidity: props.initialShowHumidity !== undefined ? props.initialShowHumidity : false,
 });
 
 const timeSeriesInputs: ITimeSeriesInputs = reactive({
-  start: addHours(initialTime, -48),
-  end: initialTime,
-  locationIds: [] as Array<number>,
+  start: props.initialStart || addHours(initialTime, -48),
+  end: props.initialEnd || initialTime,
+  locationIds: props.initialLocationIds || ([] as Array<number>),
 });
 
 const showCurrent = ref(false);
@@ -231,6 +242,12 @@ async function getTimeSeries(inputs: ITimeSeriesInputs) {
   try {
     const response = await api().temperatureReadingsGetTimeSeries(parameters);
     data.graphSeries = response.data;
+
+    // Emit event with current inputs
+    emit('inputs-change', {
+      ...inputs,
+      showHumidity: data.showHumidity,
+    });
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
@@ -312,6 +329,17 @@ onMounted(async () => {
 });
 
 watch(timeSeriesInputs, (inputs) => getTimeSeries(inputs), { immediate: true });
+
+// Watch humidity toggle changes to emit events
+watch(
+  () => data.showHumidity,
+  () => {
+    emit('inputs-change', {
+      ...timeSeriesInputs,
+      showHumidity: data.showHumidity,
+    });
+  }
+);
 
 watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showHumidity));
 </script>
