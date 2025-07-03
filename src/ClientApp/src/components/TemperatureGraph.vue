@@ -401,8 +401,10 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showH
         </div>
       </div>
     </div>
-    <div class="chart-container mt-3">
-      <canvas id="tempGraph"></canvas>
+    <div class="chart-container-wrapper mt-3">
+      <div class="chart-container">
+        <canvas id="tempGraph"></canvas>
+      </div>
     </div>
     <table :class="{ 'mt-3': true, table: true, 'table-dark': useDarkMode }">
       <thead>
@@ -446,10 +448,6 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showH
 <style lang="scss" scoped>
 .chart-container {
   position: relative;
-  min-height: 600px;
-}
-
-#tempGraph {
   height: 400px;
 }
 </style>
