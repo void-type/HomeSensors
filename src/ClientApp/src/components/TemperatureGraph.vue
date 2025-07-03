@@ -27,7 +27,6 @@ import AppDateTimePicker from './AppDateTimePicker.vue';
 
 Chart.register(...registerables);
 
-// Define props
 const props = defineProps<{
   initialStart?: Date;
   initialEnd?: Date;
@@ -35,7 +34,6 @@ const props = defineProps<{
   initialLocationIds?: number[];
 }>();
 
-// Define emits
 const emit = defineEmits(['inputs-change']);
 
 const appStore = useAppStore();
@@ -242,12 +240,6 @@ async function getTimeSeries(inputs: ITimeSeriesInputs) {
   try {
     const response = await api().temperatureReadingsGetTimeSeries(parameters);
     data.graphSeries = response.data;
-
-    // Emit event with current inputs
-    emit('inputs-change', {
-      ...inputs,
-      showHumidity: data.showHumidity,
-    });
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
@@ -328,9 +320,15 @@ onMounted(async () => {
   await getCategories();
 });
 
-watch(timeSeriesInputs, (inputs) => getTimeSeries(inputs), { immediate: true });
+watch(timeSeriesInputs, (inputs) => {
+  emit('inputs-change', {
+    ...inputs,
+    showHumidity: data.showHumidity,
+  });
 
-// Watch humidity toggle changes to emit events
+  getTimeSeries(inputs);
+});
+
 watch(
   () => data.showHumidity,
   () => {
