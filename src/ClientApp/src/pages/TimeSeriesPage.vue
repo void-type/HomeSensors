@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 import DateHelpers from '@/models/DateHelpers';
 import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
 
-// Define props for query parameters
 defineProps<{
   startDate?: Date;
   endDate?: Date;
@@ -14,7 +13,6 @@ defineProps<{
 
 const router = useRouter();
 
-// Handle the TemperatureGraph's input changes and update the URL
 const onInputsChange = (inputs: ITimeSeriesInputs & { showHumidity: boolean }) => {
   const query = {
     start: inputs.start ? DateHelpers.dateTimeForApi(inputs.start) : undefined,
@@ -26,8 +24,9 @@ const onInputsChange = (inputs: ITimeSeriesInputs & { showHumidity: boolean }) =
         : undefined,
   };
 
-  // Update the URL without reloading the page
-  router.replace({ query });
+  router.replace({
+    query,
+  });
 };
 </script>
 

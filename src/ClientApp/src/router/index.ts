@@ -16,6 +16,10 @@ const router = createRouter({
       return savedPosition;
     }
 
+    if (from.path === to.path) {
+      return undefined;
+    }
+
     document.getElementById('app')?.focus();
 
     return {

@@ -446,6 +446,7 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showH
 <style lang="scss" scoped>
 .chart-container {
   position: relative;
+  min-height: 600px;
 }
 
 #tempGraph {
