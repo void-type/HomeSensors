@@ -17,6 +17,7 @@ public class HomeSensorsContext : DbContext
     public virtual DbSet<TemperatureDevice> TemperatureDevices { get; set; }
     public virtual DbSet<TemperatureLocation> TemperatureLocations { get; set; }
     public virtual DbSet<TemperatureReading> TemperatureReadings { get; set; }
+    public virtual DbSet<ThermostatAction> ThermostatActions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +69,15 @@ public class HomeSensorsContext : DbContext
             entity.ToTable(nameof(TemperatureDevice));
 
             entity.HasIndex(d => d.MqttTopic)
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<ThermostatAction>(entity =>
+        {
+            entity.ToTable(nameof(ThermostatAction));
+
+            entity.HasIndex(a => new { a.EntityId, a.LastChanged })
+                .IncludeProperties(a => new { a.LastUpdated, a.State })
                 .IsUnique();
         });
     }

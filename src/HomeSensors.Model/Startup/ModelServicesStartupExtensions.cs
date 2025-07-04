@@ -1,15 +1,18 @@
 ﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Emailing;
+using HomeSensors.Model.HomeAssistant;
 using HomeSensors.Model.Mqtt;
 using HomeSensors.Model.Repositories;
 using HomeSensors.Model.Services.Temperature.Alert;
 using HomeSensors.Model.Services.Temperature.Poll;
 using HomeSensors.Model.Services.Temperature.Summarize;
+using HomeSensors.Model.Services.Thermostat;
 using HomeSensors.Model.Services.WaterLeak;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MQTTnet;
+using System.Net.Http.Headers;
 using VoidCore.Model.Configuration;
 using VoidCore.Model.Emailing;
 using VoidCore.Model.Time;
@@ -23,6 +26,7 @@ public static class ModelServicesStartupExtensions
     {
         services.AddSettingsSingleton<MqttSettings>(config);
         services.AddSettingsSingleton<NotificationsSettings>(config);
+        services.AddSettingsSingleton<HomeAssistantSettings>(config);
 
         services.AddSingleton<IEmailFactory, HtmlEmailFactory>();
         services.AddSingleton<IEmailSender, SmtpEmailer>();
@@ -41,6 +45,13 @@ public static class ModelServicesStartupExtensions
                 Duration = TimeSpan.FromMinutes(5),
             })
             .AsHybridCache();
+
+        services.AddHttpClient("HomeAssistant", (serviceProvider, client) =>
+        {
+            var settings = serviceProvider.GetRequiredService<HomeAssistantSettings>();
+            client.BaseAddress = new Uri(settings.ApiEndpoint);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", settings.AccessToken);
+        });
 
         config.GetRequiredConnectionString<HomeSensorsContext>();
         services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
@@ -77,6 +88,12 @@ public static class ModelServicesStartupExtensions
         {
             services.AddSingleton<WaterLeakAlertService>();
             services.AddHostedService<MqttWaterLeaksWorker>();
+        }
+
+        var thermostatSettings = services.AddSettingsSingleton<ThermostatActionsSettings>(workersConfig);
+        if (thermostatSettings.IsEnabled)
+        {
+            services.AddHostedService<ThermostatActionsWorker>();
         }
 
         return services;
