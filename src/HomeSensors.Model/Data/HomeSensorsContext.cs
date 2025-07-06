@@ -76,8 +76,8 @@ public class HomeSensorsContext : DbContext
         {
             entity.ToTable(nameof(ThermostatAction));
 
-            entity.HasIndex(a => new { a.EntityId, a.LastChanged })
-                .IncludeProperties(a => new { a.LastUpdated, a.State })
+            entity.HasIndex(a => new { a.EntityId, a.LastChanged, a.LastUpdated })
+                .IncludeProperties(a => new { a.State })
                 .IsUnique();
         });
     }

@@ -4,14 +4,14 @@ public class ThermostatAction
 {
     public long Id { get; set; }
 
-    public string? EntityId { get; set; }
+    public string EntityId { get; set; } = string.Empty;
 
     // Idle, cooling, heating
-    public string? State { get; set; }
+    public string State { get; set; } = string.Empty;
 
     // Last Changed indicates the last time the state of an entity was modified.
-    public DateTimeOffset? LastChanged { get; set; }
+    public DateTimeOffset LastChanged { get; set; }
 
     // Last Updated indicates the last time any change (state or attribute) was recorded for that entity.
-    public DateTimeOffset? LastUpdated { get; set; }
+    public DateTimeOffset LastUpdated { get; set; }
 }
