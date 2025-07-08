@@ -189,6 +189,17 @@ export interface TemperatureLocationSaveRequest {
 }
 
 export interface TemperatureTimeSeriesResponse {
+  thermostatActions?: TemperatureTimeSeriesThermostatAction[];
+  locations?: TemperatureTimeSeriesLocationData[];
+}
+
+export interface TemperatureTimeSeriesThermostatAction {
+  action?: string;
+  startTime?: string;
+  endTime?: string;
+}
+
+export interface TemperatureTimeSeriesLocationData {
   location?: TemperatureLocationResponse;
   temperatureAggregate?: TemperatureTimeSeriesAggregate;
   humidityAggregate?: TemperatureTimeSeriesAggregate;
@@ -219,6 +230,7 @@ export interface TemperatureTimeSeriesRequest {
   /** @format date-time */
   endTime?: string;
   locationIds?: number[];
+  includeThermostatActions?: boolean;
 }
 
 export interface TemperatureLocationsCheckLimitsParams {

@@ -2,19 +2,13 @@
 
 public class TemperatureTimeSeriesResponse
 {
-    public TemperatureTimeSeriesResponse(TemperatureLocationResponse location, TemperatureTimeSeriesAggregate temperatureAggregate, TemperatureTimeSeriesAggregate humidityAggregate, IEnumerable<TemperatureTimeSeriesPoint> points)
+    public TemperatureTimeSeriesResponse(List<TemperatureTimeSeriesThermostatAction> thermostatActions, List<TemperatureTimeSeriesLocationData> locationSeries)
     {
-        Location = location;
-        TemperatureAggregate = temperatureAggregate;
-        HumidityAggregate = humidityAggregate;
-        Points = points;
+        ThermostatActions = thermostatActions;
+        Locations = locationSeries;
     }
 
-    public TemperatureLocationResponse Location { get; }
+    public List<TemperatureTimeSeriesThermostatAction> ThermostatActions { get; }
 
-    public TemperatureTimeSeriesAggregate TemperatureAggregate { get; }
-
-    public TemperatureTimeSeriesAggregate HumidityAggregate { get; }
-
-    public IEnumerable<TemperatureTimeSeriesPoint> Points { get; }
+    public List<TemperatureTimeSeriesLocationData> Locations { get; }
 }

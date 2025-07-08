@@ -323,14 +323,14 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @tags TemperatureReadings
    * @name TemperatureReadingsGetTimeSeries
    * @request POST:/api/temperature-readings/time-series
-   * @response `200` `(TemperatureTimeSeriesResponse)[]`
+   * @response `200` `TemperatureTimeSeriesResponse`
    * @response `400` `IItemSetOfIFailure`
    */
   temperatureReadingsGetTimeSeries = (
     data: TemperatureTimeSeriesRequest,
     params: RequestParams = {}
   ) =>
-    this.request<TemperatureTimeSeriesResponse[], IItemSetOfIFailure>({
+    this.request<TemperatureTimeSeriesResponse, IItemSetOfIFailure>({
       path: `/api/temperature-readings/time-series`,
       method: 'POST',
       body: data,

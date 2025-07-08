@@ -3,7 +3,7 @@ import ApiHelpers from '@/models/ApiHelpers';
 import useAppStore from '@/stores/appStore';
 import type {
   TemperatureTimeSeriesPoint,
-  TemperatureTimeSeriesResponse,
+  TemperatureTimeSeriesLocationData,
   TemperatureLocationResponse,
   CategoryResponse,
 } from '@/api/data-contracts';
@@ -47,7 +47,7 @@ const initialTime = startOfMinute(new Date());
 const data = reactive({
   locations: [] as Array<TemperatureLocationResponse>,
   categories: [] as Array<CategoryResponse>,
-  graphSeries: [] as Array<TemperatureTimeSeriesResponse>,
+  graphSeries: [] as Array<TemperatureTimeSeriesLocationData>,
   showHumidity: props.initialShowHumidity !== undefined ? props.initialShowHumidity : false,
 });
 
@@ -123,7 +123,7 @@ function getColor(categoryName: string) {
 }
 
 function setGraphData(
-  series: Array<TemperatureTimeSeriesResponse>,
+  series: Array<TemperatureTimeSeriesLocationData>,
   useF: boolean,
   showHumidity: boolean
 ) {

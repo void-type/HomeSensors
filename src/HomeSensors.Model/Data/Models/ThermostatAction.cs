@@ -2,6 +2,9 @@
 
 public class ThermostatAction
 {
+    public const string Heating = "heating";
+    public const string Cooling = "cooling";
+
     public long Id { get; set; }
 
     public string EntityId { get; set; } = string.Empty;

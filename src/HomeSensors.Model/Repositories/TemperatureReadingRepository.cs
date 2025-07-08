@@ -1,4 +1,5 @@
 ﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Data.Models;
 using HomeSensors.Model.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -57,7 +58,7 @@ public class TemperatureReadingRepository : RepositoryBase
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
     /// <param name="request">TemperatureTimeSeriesRequest</param>
-    public async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
+    public async Task<List<TemperatureTimeSeriesLocationData>> GetTimeSeriesCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
     {
         // Prevent caching incomplete series to stay current.
         if (request.EndTime >= _dateTimeService.MomentWithOffset)
@@ -71,6 +72,32 @@ public class TemperatureReadingRepository : RepositoryBase
         return await _cache.GetOrCreateAsync(
             cacheKey,
             async (cancel) => await GetTimeSeriesAsync(request, cancel),
+            cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Pull a time series of HVAC actions.
+    /// </summary>
+    /// <param name="request">TemperatureTimeSeriesRequest</param>
+    public async Task<List<TemperatureTimeSeriesThermostatAction>> GetThermostatActionsCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!request.IncludeThermostatActions)
+        {
+            return [];
+        }
+
+        // Prevent caching incomplete series to stay current.
+        if (request.EndTime >= _dateTimeService.MomentWithOffset)
+        {
+            return await GetThermostatActionsAsync(request, cancellationToken);
+        }
+
+        var caller = GetCaller();
+        var cacheKey = $"{caller}|{request.StartTime:o}|{request.EndTime:o}";
+
+        return await _cache.GetOrCreateAsync(
+            cacheKey,
+            async (cancel) => await GetThermostatActionsAsync(request, cancel),
             cancellationToken: cancellationToken);
     }
 
@@ -106,7 +133,7 @@ public class TemperatureReadingRepository : RepositoryBase
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
     /// <param name="request">TemperatureTimeSeriesRequest</param>
-    private async Task<List<TemperatureTimeSeriesResponse>> GetTimeSeriesAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
+    private async Task<List<TemperatureTimeSeriesLocationData>> GetTimeSeriesAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
     {
         if (request.LocationIds.Count == 0)
         {
@@ -165,12 +192,75 @@ public class TemperatureReadingRepository : RepositoryBase
                     maximum: allHumidity.Max(),
                     average: allHumidity.Average());
 
-                return new TemperatureTimeSeriesResponse(
+                return new TemperatureTimeSeriesLocationData(
                     location: readingsForLocation.First().TemperatureLocation!.ToApiResponse(),
                     tempAgg,
                     humidityAgg,
                     points: avgGraphPoints
                 );
             });
+    }
+
+    private async Task<List<TemperatureTimeSeriesThermostatAction>> GetThermostatActionsAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
+    {
+        var dbReadings = await _data.ThermostatActions
+           .TagWith(GetTag())
+           .AsNoTracking()
+           .Where(x => x.LastUpdated >= request.StartTime && x.LastUpdated <= request.EndTime)
+           .OrderBy(x => x.LastUpdated)
+           .ToListAsync(cancellationToken);
+
+        // Get the most recent action before the start time
+        var firstAction = await _data.ThermostatActions
+           .TagWith(GetTag())
+           .AsNoTracking()
+           .Where(x => x.LastUpdated < request.StartTime)
+           .OrderByDescending(x => x.LastUpdated)
+           .FirstOrDefaultAsync(cancellationToken);
+
+        // Get the earliest action after the end time
+        var lastAction = await _data.ThermostatActions
+           .TagWith(GetTag())
+           .AsNoTracking()
+           .Where(x => x.LastUpdated > request.EndTime)
+           .OrderBy(x => x.LastUpdated)
+           .FirstOrDefaultAsync(cancellationToken);
+
+        dbReadings = firstAction != null
+            ? [firstAction, .. dbReadings]
+            : dbReadings;
+
+        dbReadings = lastAction != null
+            ? [.. dbReadings, lastAction]
+            : dbReadings;
+
+        dbReadings = [.. dbReadings.OrderBy(x => x.LastUpdated)];
+
+        if (dbReadings.Count == 0)
+        {
+            return [];
+        }
+
+        var result = new List<TemperatureTimeSeriesThermostatAction>();
+
+        // Iterate through the actions and build the time series.
+        // Thermostat actions have a time stamp that denotes the action period start. We need to get the end timestamp from the next item.
+        // We are only interested in returning heating and cooling periods.
+        for (var i = 0; i < dbReadings.Count - 1; i++)
+        {
+            var action = dbReadings[i];
+            var nextAction = dbReadings[i + 1];
+
+            if (action.State == ThermostatAction.Heating || action.State == ThermostatAction.Cooling)
+            {
+                result.Add(new TemperatureTimeSeriesThermostatAction
+                {
+                    Action = action.State,
+                    StartTime = action.LastUpdated.ToString("o"),
+                    EndTime = nextAction.LastUpdated.ToString("o")
+                });
+            }
+        }
+        return result;
     }
 }

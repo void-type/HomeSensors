@@ -2,9 +2,9 @@
 
 public class CategorySaveRequest
 {
-    public long Id { get; init; }
+    public required long Id { get; init; }
 
-    public string Name { get; init; } = string.Empty;
+    public required string Name { get; init; } = string.Empty;
 
-    public int Order { get; init; }
+    public required int Order { get; init; }
 }

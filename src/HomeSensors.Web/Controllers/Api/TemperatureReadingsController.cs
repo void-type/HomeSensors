@@ -22,9 +22,9 @@ public class TemperatureReadingsController : ControllerBase
     [Route("current")]
     [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetCurrentReadingsAsync()
+    public async Task<IActionResult> GetCurrentReadingsAsync(CancellationToken cancellationToken = default)
     {
-        return await _readingRepository.GetCurrentCachedAsync()
+        return await _readingRepository.GetCurrentCachedAsync(cancellationToken: cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -32,20 +32,23 @@ public class TemperatureReadingsController : ControllerBase
     [Route("location/{locationId}")]
     [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetCurrentReadingForLocationAsync(long locationId)
+    public async Task<IActionResult> GetCurrentReadingForLocationAsync(long locationId, CancellationToken cancellationToken = default)
     {
-        return await _readingRepository.GetCurrentForLocationCachedAsync(locationId)
+        return await _readingRepository.GetCurrentForLocationCachedAsync(locationId, cancellationToken)
             .ToResultAsync(new Failure("No current reading for location.", nameof(locationId)))
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [Route("time-series")]
-    [ProducesResponseType(typeof(List<TemperatureTimeSeriesResponse>), 200)]
+    [ProducesResponseType(typeof(TemperatureTimeSeriesResponse), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetTimeSeriesAsync([FromBody] TemperatureTimeSeriesRequest request)
+    public async Task<IActionResult> GetTimeSeriesAsync([FromBody] TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
     {
-        return await _readingRepository.GetTimeSeriesCachedAsync(request)
-            .MapAsync(HttpResponder.Respond);
+        var timeSeries = await _readingRepository.GetTimeSeriesCachedAsync(request, cancellationToken);
+
+        var actions = await _readingRepository.GetThermostatActionsCachedAsync(request, cancellationToken);
+
+        return HttpResponder.Respond(new TemperatureTimeSeriesResponse(actions, timeSeries));
     }
 }

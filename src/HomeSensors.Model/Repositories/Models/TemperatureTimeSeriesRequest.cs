@@ -2,9 +2,11 @@
 
 public class TemperatureTimeSeriesRequest
 {
-    public DateTimeOffset StartTime { get; init; } = DateTimeOffset.Now.AddHours(-48);
+    public required DateTimeOffset StartTime { get; init; } = DateTimeOffset.Now.AddHours(-48);
 
-    public DateTimeOffset EndTime { get; init; } = DateTimeOffset.Now;
+    public required DateTimeOffset EndTime { get; init; } = DateTimeOffset.Now;
 
-    public List<long> LocationIds { get; init; } = [];
+    public required List<long> LocationIds { get; init; } = [];
+
+    public required bool IncludeThermostatActions { get; init; }
 }
