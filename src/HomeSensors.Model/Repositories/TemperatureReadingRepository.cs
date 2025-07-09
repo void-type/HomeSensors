@@ -10,13 +10,13 @@ namespace HomeSensors.Model.Repositories;
 
 public class TemperatureReadingRepository : RepositoryBase
 {
-    private readonly HomeSensorsContext _data;
+    private readonly IDbContextFactory<HomeSensorsContext> _contextFactory;
     private readonly IDateTimeService _dateTimeService;
     private readonly HybridCache _cache;
 
-    public TemperatureReadingRepository(HomeSensorsContext data, IDateTimeService dateTimeService, HybridCache cache)
+    public TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> contextFactory, IDateTimeService dateTimeService, HybridCache cache)
     {
-        _data = data;
+        _contextFactory = contextFactory;
         _dateTimeService = dateTimeService;
         _cache = cache;
     }
@@ -79,9 +79,9 @@ public class TemperatureReadingRepository : RepositoryBase
     /// Pull a time series of HVAC actions.
     /// </summary>
     /// <param name="request">TemperatureTimeSeriesRequest</param>
-    public async Task<List<TemperatureTimeSeriesThermostatAction>> GetThermostatActionsCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
+    public async Task<List<TemperatureTimeSeriesHvacAction>> GetHvacActionsCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
     {
-        if (!request.IncludeThermostatActions)
+        if (!request.IncludeHvacActions)
         {
             return [];
         }
@@ -89,7 +89,7 @@ public class TemperatureReadingRepository : RepositoryBase
         // Prevent caching incomplete series to stay current.
         if (request.EndTime >= _dateTimeService.MomentWithOffset)
         {
-            return await GetThermostatActionsAsync(request, cancellationToken);
+            return await GetHvacActionsAsync(request, cancellationToken);
         }
 
         var caller = GetCaller();
@@ -97,7 +97,7 @@ public class TemperatureReadingRepository : RepositoryBase
 
         return await _cache.GetOrCreateAsync(
             cacheKey,
-            async (cancel) => await GetThermostatActionsAsync(request, cancel),
+            async (cancel) => await GetHvacActionsAsync(request, cancel),
             cancellationToken: cancellationToken);
     }
 
@@ -106,7 +106,9 @@ public class TemperatureReadingRepository : RepositoryBase
     /// </summary>
     private async Task<List<TemperatureReadingResponse>> GetCurrentAsync(CancellationToken cancellationToken = default)
     {
-        var data = await _data.TemperatureReadings
+        await using var context = _contextFactory.CreateDbContext();
+
+        var data = await context.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
@@ -140,7 +142,9 @@ public class TemperatureReadingRepository : RepositoryBase
             return [];
         }
 
-        var dbReadings = await _data.TemperatureReadings
+        await using var context = _contextFactory.CreateDbContext();
+
+        var dbReadings = await context.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
@@ -201,9 +205,11 @@ public class TemperatureReadingRepository : RepositoryBase
             });
     }
 
-    private async Task<List<TemperatureTimeSeriesThermostatAction>> GetThermostatActionsAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
+    private async Task<List<TemperatureTimeSeriesHvacAction>> GetHvacActionsAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
-        var dbReadings = await _data.ThermostatActions
+        await using var context = _contextFactory.CreateDbContext();
+
+        var dbReadings = await context.HvacActions
            .TagWith(GetTag())
            .AsNoTracking()
            .Where(x => x.LastUpdated >= request.StartTime && x.LastUpdated <= request.EndTime)
@@ -211,7 +217,7 @@ public class TemperatureReadingRepository : RepositoryBase
            .ToListAsync(cancellationToken);
 
         // Get the most recent action before the start time
-        var firstAction = await _data.ThermostatActions
+        var firstAction = await context.HvacActions
            .TagWith(GetTag())
            .AsNoTracking()
            .Where(x => x.LastUpdated < request.StartTime)
@@ -219,7 +225,7 @@ public class TemperatureReadingRepository : RepositoryBase
            .FirstOrDefaultAsync(cancellationToken);
 
         // Get the earliest action after the end time
-        var lastAction = await _data.ThermostatActions
+        var lastAction = await context.HvacActions
            .TagWith(GetTag())
            .AsNoTracking()
            .Where(x => x.LastUpdated > request.EndTime)
@@ -241,7 +247,7 @@ public class TemperatureReadingRepository : RepositoryBase
             return [];
         }
 
-        var result = new List<TemperatureTimeSeriesThermostatAction>();
+        var result = new List<TemperatureTimeSeriesHvacAction>();
 
         // Iterate through the actions and build the time series.
         // Thermostat actions have a time stamp that denotes the action period start. We need to get the end timestamp from the next item.
@@ -251,9 +257,9 @@ public class TemperatureReadingRepository : RepositoryBase
             var action = dbReadings[i];
             var nextAction = dbReadings[i + 1];
 
-            if (action.State == ThermostatAction.Heating || action.State == ThermostatAction.Cooling)
+            if (action.State == HvacAction.Heating || action.State == HvacAction.Cooling)
             {
-                result.Add(new TemperatureTimeSeriesThermostatAction
+                result.Add(new TemperatureTimeSeriesHvacAction
                 {
                     Action = action.State,
                     StartTime = action.LastUpdated.ToString("o"),

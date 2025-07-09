@@ -4,6 +4,7 @@ using HomeSensors.Model.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HomeSensors.Model.Migrations
 {
     [DbContext(typeof(HomeSensorsContext))]
-    partial class HomeSensorsContextModelSnapshot : ModelSnapshot
+    [Migration("20250709022635_ThermostatActionRename")]
+    partial class ThermostatActionRename
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,38 +48,6 @@ namespace HomeSensors.Model.Migrations
                     b.HasIndex("Order");
 
                     b.ToTable("Category", (string)null);
-                });
-
-            modelBuilder.Entity("HomeSensors.Model.Data.Models.HvacAction", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("EntityId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTimeOffset>("LastChanged")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset>("LastUpdated")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EntityId", "LastChanged", "LastUpdated")
-                        .IsUnique();
-
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("EntityId", "LastChanged", "LastUpdated"), new[] { "State" });
-
-                    b.ToTable("HvacAction", (string)null);
                 });
 
             modelBuilder.Entity("HomeSensors.Model.Data.Models.TemperatureDevice", b =>
@@ -195,6 +166,38 @@ namespace HomeSensors.Model.Migrations
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("IsSummary", "TemperatureDeviceId", "Time"), new[] { "TemperatureCelsius", "Humidity", "TemperatureLocationId" });
 
                     b.ToTable("TemperatureReading", (string)null);
+                });
+
+            modelBuilder.Entity("HomeSensors.Model.Data.Models.ThermostatAction", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset>("LastChanged")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("LastUpdated")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId", "LastChanged", "LastUpdated")
+                        .IsUnique();
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("EntityId", "LastChanged", "LastUpdated"), new[] { "State" });
+
+                    b.ToTable("HvacAction", (string)null);
                 });
 
             modelBuilder.Entity("HomeSensors.Model.Data.Models.TemperatureDevice", b =>

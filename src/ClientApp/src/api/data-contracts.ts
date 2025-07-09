@@ -189,11 +189,11 @@ export interface TemperatureLocationSaveRequest {
 }
 
 export interface TemperatureTimeSeriesResponse {
-  thermostatActions?: TemperatureTimeSeriesThermostatAction[];
+  hvacActions?: TemperatureTimeSeriesHvacAction[];
   locations?: TemperatureTimeSeriesLocationData[];
 }
 
-export interface TemperatureTimeSeriesThermostatAction {
+export interface TemperatureTimeSeriesHvacAction {
   action?: string;
   startTime?: string;
   endTime?: string;
@@ -230,7 +230,7 @@ export interface TemperatureTimeSeriesRequest {
   /** @format date-time */
   endTime?: string;
   locationIds?: number[];
-  includeThermostatActions?: boolean;
+  includeHvacActions?: boolean;
 }
 
 export interface TemperatureLocationsCheckLimitsParams {

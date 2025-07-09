@@ -6,6 +6,7 @@ import type {
   TemperatureTimeSeriesLocationData,
   TemperatureLocationResponse,
   CategoryResponse,
+  TemperatureTimeSeriesHvacAction,
 } from '@/api/data-contracts';
 import { onMounted, reactive, watch, computed, watchEffect, ref } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
@@ -32,6 +33,7 @@ const props = defineProps<{
   initialEnd?: Date;
   initialShowHumidity?: boolean;
   initialLocationIds?: number[];
+  initialHideHvacActions?: boolean;
 }>();
 
 const emit = defineEmits(['inputs-change']);
@@ -48,6 +50,7 @@ const data = reactive({
   locations: [] as Array<TemperatureLocationResponse>,
   categories: [] as Array<CategoryResponse>,
   graphSeries: [] as Array<TemperatureTimeSeriesLocationData>,
+  hvacActions: [] as Array<TemperatureTimeSeriesHvacAction>,
   showHumidity: props.initialShowHumidity !== undefined ? props.initialShowHumidity : false,
 });
 
@@ -55,6 +58,8 @@ const timeSeriesInputs: ITimeSeriesInputs = reactive({
   start: props.initialStart || addHours(initialTime, -48),
   end: props.initialEnd || initialTime,
   locationIds: props.initialLocationIds || ([] as Array<number>),
+  includeHvacActions:
+    props.initialHideHvacActions !== undefined ? !props.initialHideHvacActions : true,
 });
 
 const showCurrent = ref(false);
@@ -235,11 +240,13 @@ async function getTimeSeries(inputs: ITimeSeriesInputs) {
     startTime: DateHelpers.dateTimeForApi(inputs.start),
     endTime: DateHelpers.dateTimeForApi(inputs.end),
     locationIds: inputs.locationIds,
+    includeHvacActions: inputs.includeHvacActions,
   };
 
   try {
     const response = await api().temperatureReadingsGetTimeSeries(parameters);
-    data.graphSeries = response.data;
+    data.graphSeries = response.data.locations || [];
+    data.hvacActions = response.data.hvacActions || [];
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }

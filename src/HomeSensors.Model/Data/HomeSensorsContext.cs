@@ -17,7 +17,7 @@ public class HomeSensorsContext : DbContext
     public virtual DbSet<TemperatureDevice> TemperatureDevices { get; set; }
     public virtual DbSet<TemperatureLocation> TemperatureLocations { get; set; }
     public virtual DbSet<TemperatureReading> TemperatureReadings { get; set; }
-    public virtual DbSet<ThermostatAction> ThermostatActions { get; set; }
+    public virtual DbSet<HvacAction> HvacActions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -72,9 +72,9 @@ public class HomeSensorsContext : DbContext
                 .IsUnique();
         });
 
-        modelBuilder.Entity<ThermostatAction>(entity =>
+        modelBuilder.Entity<HvacAction>(entity =>
         {
-            entity.ToTable(nameof(ThermostatAction));
+            entity.ToTable("HvacAction");
 
             entity.HasIndex(a => new { a.EntityId, a.LastChanged, a.LastUpdated })
                 .IncludeProperties(a => new { a.State })

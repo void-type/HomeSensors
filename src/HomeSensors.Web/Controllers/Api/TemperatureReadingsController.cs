@@ -45,9 +45,14 @@ public class TemperatureReadingsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetTimeSeriesAsync([FromBody] TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
     {
-        var timeSeries = await _readingRepository.GetTimeSeriesCachedAsync(request, cancellationToken);
+        var timeSeriesTask = _readingRepository.GetTimeSeriesCachedAsync(request, cancellationToken);
+        var actionsTask = _readingRepository.GetHvacActionsCachedAsync(request, cancellationToken);
 
-        var actions = await _readingRepository.GetThermostatActionsCachedAsync(request, cancellationToken);
+        // Comment this out to run tasks in series.
+        await Task.WhenAll(timeSeriesTask, actionsTask);
+
+        var timeSeries = await timeSeriesTask;
+        var actions = await actionsTask;
 
         return HttpResponder.Respond(new TemperatureTimeSeriesResponse(actions, timeSeries));
     }

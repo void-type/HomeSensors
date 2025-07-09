@@ -1,6 +1,6 @@
 ﻿namespace HomeSensors.Model.Data.Models;
 
-public class ThermostatAction
+public class HvacAction
 {
     public const string Heating = "heating";
     public const string Cooling = "cooling";
@@ -9,7 +9,7 @@ public class ThermostatAction
 
     public string EntityId { get; set; } = string.Empty;
 
-    // Idle, cooling, heating
+    // Idle, fan, cooling, heating
     public string State { get; set; } = string.Empty;
 
     // Last Changed indicates the last time the state of an entity was modified.

@@ -3,10 +3,10 @@ using HomeSensors.Model.Emailing;
 using HomeSensors.Model.HomeAssistant;
 using HomeSensors.Model.Mqtt;
 using HomeSensors.Model.Repositories;
+using HomeSensors.Model.Services.Hvac;
 using HomeSensors.Model.Services.Temperature.Alert;
 using HomeSensors.Model.Services.Temperature.Poll;
 using HomeSensors.Model.Services.Temperature.Summarize;
-using HomeSensors.Model.Services.Thermostat;
 using HomeSensors.Model.Services.WaterLeak;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -54,7 +54,7 @@ public static class ModelServicesStartupExtensions
         });
 
         config.GetRequiredConnectionString<HomeSensorsContext>();
-        services.AddDbContext<HomeSensorsContext>(ctxOptions => ctxOptions
+        services.AddDbContextFactory<HomeSensorsContext>(ctxOptions => ctxOptions
             .UseSqlServer("Name=HomeSensors", sqlOptions =>
             {
                 sqlOptions.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName);
@@ -90,10 +90,10 @@ public static class ModelServicesStartupExtensions
             services.AddHostedService<MqttWaterLeaksWorker>();
         }
 
-        var thermostatSettings = services.AddSettingsSingleton<ThermostatActionsSettings>(workersConfig);
-        if (thermostatSettings.IsEnabled)
+        var hvacSettings = services.AddSettingsSingleton<HvacActionsSettings>(workersConfig);
+        if (hvacSettings.IsEnabled)
         {
-            services.AddHostedService<ThermostatActionsWorker>();
+            services.AddHostedService<HvacActionsWorker>();
         }
 
         return services;

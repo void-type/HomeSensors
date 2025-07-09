@@ -10,32 +10,32 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using VoidCore.Model.Time;
 
-namespace HomeSensors.Model.Services.Thermostat;
+namespace HomeSensors.Model.Services.Hvac;
 
-public class ThermostatActionsWorker : BackgroundService
+public class HvacActionsWorker : BackgroundService
 {
-    private readonly ILogger<ThermostatActionsWorker> _logger;
-    private readonly ThermostatActionsSettings _thermostatWorkerSettings;
+    private readonly ILogger<HvacActionsWorker> _logger;
+    private readonly HvacActionsSettings _hvacWorkerSettings;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDateTimeService _dateTimeService;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public ThermostatActionsWorker(
-        ILogger<ThermostatActionsWorker> logger,
-        ThermostatActionsSettings thermostatWorkerSettings,
+    public HvacActionsWorker(
+        ILogger<HvacActionsWorker> logger,
+        HvacActionsSettings hvacWorkerSettings,
         IServiceScopeFactory scopeFactory,
         IDateTimeService dateTimeService,
         IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
-        _thermostatWorkerSettings = thermostatWorkerSettings;
+        _hvacWorkerSettings = hvacWorkerSettings;
         _scopeFactory = scopeFactory;
         _dateTimeService = dateTimeService;
         _httpClientFactory = httpClientFactory;
 
         logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
-            nameof(ThermostatActionsWorker),
-            _thermostatWorkerSettings.BetweenTicksMinutes);
+            nameof(HvacActionsWorker),
+            _hvacWorkerSettings.BetweenTicksMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,13 +45,13 @@ public class ThermostatActionsWorker : BackgroundService
         var lastStateUpdated = _dateTimeService.MomentWithOffset.AddDays(-15);
         var lastState = "unknown";
 
-        var entityId = _thermostatWorkerSettings.EntityId;
+        var entityId = _hvacWorkerSettings.EntityId;
 
         using (var scope = _scopeFactory.CreateScope())
         {
             await using var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
-            var lastEntry = await dbContext.ThermostatActions
+            var lastEntry = await dbContext.HvacActions
                 .Where(a => a.EntityId == entityId)
                 .OrderByDescending(a => a.LastChanged)
                 .ThenByDescending(a => a.LastUpdated)
@@ -65,7 +65,7 @@ public class ThermostatActionsWorker : BackgroundService
             }
         }
 
-        var betweenTicks = TimeSpan.FromMinutes(_thermostatWorkerSettings.BetweenTicksMinutes);
+        var betweenTicks = TimeSpan.FromMinutes(_hvacWorkerSettings.BetweenTicksMinutes);
         var timer = new PeriodicTimer(betweenTicks);
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
@@ -74,7 +74,7 @@ public class ThermostatActionsWorker : BackgroundService
 
             try
             {
-                _logger.LogInformation("{JobName} job is starting.", nameof(ThermostatActionsWorker));
+                _logger.LogInformation("{JobName} job is starting.", nameof(HvacActionsWorker));
 
                 using var scope = _scopeFactory.CreateScope();
                 await using var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
@@ -147,7 +147,7 @@ public class ThermostatActionsWorker : BackgroundService
 
                         lastState = state;
 
-                        var newAction = new ThermostatAction
+                        var newAction = new HvacAction
                         {
                             EntityId = stateEntry.EntityId,
                             State = state,
@@ -155,7 +155,7 @@ public class ThermostatActionsWorker : BackgroundService
                             LastUpdated = stateEntry.LastUpdated.Value
                         };
 
-                        dbContext.ThermostatActions.Add(newAction);
+                        dbContext.HvacActions.Add(newAction);
 
                         await dbContext.SaveChangesAsync(stoppingToken);
                     }
@@ -170,11 +170,11 @@ public class ThermostatActionsWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(ThermostatActionsWorker));
+                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(HvacActionsWorker));
             }
             finally
             {
-                _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(ThermostatActionsWorker), Stopwatch.GetElapsedTime(startTime));
+                _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(HvacActionsWorker), Stopwatch.GetElapsedTime(startTime));
             }
         }
     }

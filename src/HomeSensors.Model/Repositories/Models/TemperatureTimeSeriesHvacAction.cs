@@ -1,6 +1,6 @@
-namespace HomeSensors.Model.Repositories.Models;
+﻿namespace HomeSensors.Model.Repositories.Models;
 
-public class TemperatureTimeSeriesThermostatAction
+public class TemperatureTimeSeriesHvacAction
 {
     public required string Action { get; init; }
     public required string StartTime { get; init; }

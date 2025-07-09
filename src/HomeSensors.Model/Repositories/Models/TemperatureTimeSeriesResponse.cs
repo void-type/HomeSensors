@@ -2,13 +2,13 @@
 
 public class TemperatureTimeSeriesResponse
 {
-    public TemperatureTimeSeriesResponse(List<TemperatureTimeSeriesThermostatAction> thermostatActions, List<TemperatureTimeSeriesLocationData> locationSeries)
+    public TemperatureTimeSeriesResponse(List<TemperatureTimeSeriesHvacAction> hvacActions, List<TemperatureTimeSeriesLocationData> locationSeries)
     {
-        ThermostatActions = thermostatActions;
+        HvacActions = hvacActions;
         Locations = locationSeries;
     }
 
-    public List<TemperatureTimeSeriesThermostatAction> ThermostatActions { get; }
+    public List<TemperatureTimeSeriesHvacAction> HvacActions { get; }
 
     public List<TemperatureTimeSeriesLocationData> Locations { get; }
 }
