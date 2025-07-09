@@ -216,28 +216,28 @@ public class TemperatureReadingRepository : RepositoryBase
            .OrderBy(x => x.LastUpdated)
            .ToListAsync(cancellationToken);
 
-        // Get the most recent action before the start time
-        var firstAction = await context.HvacActions
+        // Get the most recent action before the start time, so the chart can show this period ending.
+        var firstExtraAction = await context.HvacActions
            .TagWith(GetTag())
            .AsNoTracking()
            .Where(x => x.LastUpdated < request.StartTime)
            .OrderByDescending(x => x.LastUpdated)
            .FirstOrDefaultAsync(cancellationToken);
 
-        // Get the earliest action after the end time
-        var lastAction = await context.HvacActions
+        // Get the earliest action after the end time, so the chart can show this period starting.
+        var lastExtraAction = await context.HvacActions
            .TagWith(GetTag())
            .AsNoTracking()
            .Where(x => x.LastUpdated > request.EndTime)
            .OrderBy(x => x.LastUpdated)
            .FirstOrDefaultAsync(cancellationToken);
 
-        dbReadings = firstAction != null
-            ? [firstAction, .. dbReadings]
+        dbReadings = firstExtraAction != null
+            ? [firstExtraAction, .. dbReadings]
             : dbReadings;
 
-        dbReadings = lastAction != null
-            ? [.. dbReadings, lastAction]
+        dbReadings = lastExtraAction != null
+            ? [.. dbReadings, lastExtraAction]
             : dbReadings;
 
         dbReadings = [.. dbReadings.OrderBy(x => x.LastUpdated)];
@@ -249,24 +249,42 @@ public class TemperatureReadingRepository : RepositoryBase
 
         var result = new List<TemperatureTimeSeriesHvacAction>();
 
+        // If last extra action exists, then we are likely in the past, so we'll treat it as a possible end to our last action.
+        // Else we might be at the end of our data, so we'll stop a last action at the end of of the queried period.
+        var hasLastExtraAction = lastExtraAction is not null;
+        var count = hasLastExtraAction ? dbReadings.Count - 1 : dbReadings.Count;
+
         // Iterate through the actions and build the time series.
         // Thermostat actions have a time stamp that denotes the action period start. We need to get the end timestamp from the next item.
         // We are only interested in returning heating and cooling periods.
-        for (var i = 0; i < dbReadings.Count - 1; i++)
+        for (var i = 0; i < count; i++)
         {
             var action = dbReadings[i];
-            var nextAction = dbReadings[i + 1];
+            var nextAction = dbReadings.Count > i + 1 ? dbReadings[i + 1] : null;
 
             if (action.State == HvacAction.Heating || action.State == HvacAction.Cooling)
             {
+                var startTime = action.LastUpdated;
+
+                var endTime = nextAction is not null
+                    ? nextAction.LastUpdated
+                    : _dateTimeService.MomentWithOffset;
+
+                if (endTime <= startTime)
+                {
+                    // If the end time is before the start time (action is in the future and hasn't ended), skip this action because we don't want to make up data.
+                    continue;
+                }
+
                 result.Add(new TemperatureTimeSeriesHvacAction
                 {
                     Action = action.State,
-                    StartTime = action.LastUpdated.ToString("o"),
-                    EndTime = nextAction.LastUpdated.ToString("o")
+                    StartTime = startTime,
+                    EndTime = endTime,
                 });
             }
         }
+
         return result;
     }
 }

@@ -46,6 +46,7 @@ const router = createRouter({
           endDate: route.query.end ? new Date(route.query.end as string) : undefined,
           showHumidity: route.query.humidity === 'true',
           locationIds: route.query.locationIds,
+          hideHvacActions: route.query.hideHvacActions === 'true',
         };
       },
       meta: { title: 'Time Series' },

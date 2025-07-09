@@ -9,11 +9,14 @@ defineProps<{
   endDate?: Date;
   showHumidity?: boolean;
   locationIds?: string;
+  hideHvacActions?: boolean;
 }>();
 
 const router = useRouter();
 
-const onInputsChange = (inputs: ITimeSeriesInputs & { showHumidity: boolean }) => {
+const onInputsChange = (
+  inputs: ITimeSeriesInputs & { hideHvacActions: boolean; showHumidity: boolean }
+) => {
   const query = {
     start: inputs.start ? DateHelpers.dateTimeForApi(inputs.start) : undefined,
     end: inputs.end ? DateHelpers.dateTimeForApi(inputs.end) : undefined,
@@ -22,6 +25,7 @@ const onInputsChange = (inputs: ITimeSeriesInputs & { showHumidity: boolean }) =
       inputs.locationIds?.length > 0
         ? [...inputs.locationIds].sort((a, b) => a - b).join(',')
         : undefined,
+    hideHvacActions: inputs.hideHvacActions ? 'true' : undefined,
   };
 
   router.replace({
@@ -44,6 +48,7 @@ const onInputsChange = (inputs: ITimeSeriesInputs & { showHumidity: boolean }) =
           ?.map(Number)
           ?.filter((id) => !isNaN(id)) || []
       "
+      :initial-hide-hvac-actions="hideHvacActions"
       @inputs-change="onInputsChange"
     />
   </div>

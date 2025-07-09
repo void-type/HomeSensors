@@ -12,6 +12,7 @@ import { onMounted, reactive, watch, computed, watchEffect, ref } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-date-fns';
+import annotationPlugin from 'chartjs-plugin-annotation';
 import type { HttpResponse } from '@/api/http-client';
 import { storeToRefs } from 'pinia';
 import {
@@ -26,7 +27,7 @@ import useMessageStore from '@/stores/messageStore';
 import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
 import AppDateTimePicker from './AppDateTimePicker.vue';
 
-Chart.register(...registerables);
+Chart.register(...registerables, annotationPlugin);
 
 const props = defineProps<{
   initialStart?: Date;
@@ -52,14 +53,14 @@ const data = reactive({
   graphSeries: [] as Array<TemperatureTimeSeriesLocationData>,
   hvacActions: [] as Array<TemperatureTimeSeriesHvacAction>,
   showHumidity: props.initialShowHumidity !== undefined ? props.initialShowHumidity : false,
+  showHvacActions:
+    props.initialHideHvacActions !== undefined ? !props.initialHideHvacActions : true,
 });
 
 const timeSeriesInputs: ITimeSeriesInputs = reactive({
   start: props.initialStart || addHours(initialTime, -48),
   end: props.initialEnd || initialTime,
   locationIds: props.initialLocationIds || ([] as Array<number>),
-  includeHvacActions:
-    props.initialHideHvacActions !== undefined ? !props.initialHideHvacActions : true,
 });
 
 const showCurrent = ref(false);
@@ -130,7 +131,8 @@ function getColor(categoryName: string) {
 function setGraphData(
   series: Array<TemperatureTimeSeriesLocationData>,
   useF: boolean,
-  showHumidity: boolean
+  showHumidity: boolean,
+  showHvacActions: boolean
 ) {
   const element = document.getElementById('tempGraph') as HTMLCanvasElement;
 
@@ -169,6 +171,28 @@ function setGraphData(
     hidden: oldHiddenCategories.includes(s.location?.name),
   }));
 
+  // Create annotations from HVAC actions
+  // TODO: cut off first and last actions to match data range
+  // TODO: add tooltip with action and duration.
+  const hvacAnnotations = data.hvacActions.map((action, index) => {
+    const color =
+      action.action === 'heating' ? 'rgba(255, 100, 100, 0.2)' : 'rgba(100, 150, 255, 0.2)';
+    return {
+      type: 'box',
+      xMin: action.startTime,
+      xMax: action.endTime,
+      backgroundColor: color,
+      borderColor: 'transparent',
+      drawTime: 'beforeDatasetsDraw',
+      display: true,
+      label: {
+        display: false,
+        content: action.action,
+      },
+      id: `hvac-${index}`,
+    };
+  });
+
   const config = {
     type: 'line',
     data: {
@@ -192,6 +216,9 @@ function setGraphData(
             label: (item: TooltipItem<'line'>) =>
               `${item.dataset.label}: ${item.formattedValue}${showHumidity ? '%' : tempUnit(useF)}`,
           },
+        },
+        annotation: {
+          annotations: showHvacActions ? hvacAnnotations : [],
         },
       },
 
@@ -240,7 +267,7 @@ async function getTimeSeries(inputs: ITimeSeriesInputs) {
     startTime: DateHelpers.dateTimeForApi(inputs.start),
     endTime: DateHelpers.dateTimeForApi(inputs.end),
     locationIds: inputs.locationIds,
-    includeHvacActions: inputs.includeHvacActions,
+    includeHvacActions: true,
   };
 
   try {
@@ -331,22 +358,26 @@ watch(timeSeriesInputs, (inputs) => {
   emit('inputs-change', {
     ...inputs,
     showHumidity: data.showHumidity,
+    hideHvacActions: !data.showHvacActions,
   });
 
   getTimeSeries(inputs);
 });
 
 watch(
-  () => data.showHumidity,
+  () => [data.showHumidity, data.showHvacActions],
   () => {
     emit('inputs-change', {
       ...timeSeriesInputs,
       showHumidity: data.showHumidity,
+      hideHvacActions: !data.showHvacActions,
     });
   }
 );
 
-watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showHumidity));
+watchEffect(() => {
+  setGraphData(data.graphSeries, useFahrenheit.value, data.showHumidity, data.showHvacActions);
+});
 </script>
 
 <template>
@@ -402,6 +433,17 @@ watchEffect(() => setGraphData(data.graphSeries, useFahrenheit.value, data.showH
           <input
             id="showHumidity"
             v-model="data.showHumidity"
+            class="form-check-input"
+            type="checkbox"
+          />
+        </div>
+        <div class="form-check form-switch">
+          <label class="form-check-label" for="showHvacActions" @click.stop>
+            Show HVAC Actions
+          </label>
+          <input
+            id="showHvacActions"
+            v-model="data.showHvacActions"
             class="form-check-input"
             type="checkbox"
           />

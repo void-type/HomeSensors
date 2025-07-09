@@ -195,7 +195,9 @@ export interface TemperatureTimeSeriesResponse {
 
 export interface TemperatureTimeSeriesHvacAction {
   action?: string;
+  /** @format date-time */
   startTime?: string;
+  /** @format date-time */
   endTime?: string;
 }
 

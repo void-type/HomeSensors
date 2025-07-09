@@ -3,6 +3,6 @@
 public class TemperatureTimeSeriesHvacAction
 {
     public required string Action { get; init; }
-    public required string StartTime { get; init; }
-    public required string EndTime { get; init; }
+    public required DateTimeOffset StartTime { get; init; }
+    public required DateTimeOffset EndTime { get; init; }
 }
