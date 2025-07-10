@@ -8,7 +8,7 @@ import type {
   CategoryResponse,
   TemperatureTimeSeriesHvacAction,
 } from '@/api/data-contracts';
-import { onMounted, reactive, watch, computed, watchEffect, ref } from 'vue';
+import { onMounted, reactive, watch, computed, watchEffect, ref, onUnmounted } from 'vue';
 import { addHours, startOfMinute } from 'date-fns';
 import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
 import 'chartjs-adapter-date-fns';
@@ -22,6 +22,7 @@ import {
   formatHumidityWithUnit,
   tempUnit,
 } from '@/models/TempFormatHelpers';
+import { trimAndTitleCase } from '@/models/FormatHelpers';
 import DateHelpers from '@/models/DateHelpers';
 import useMessageStore from '@/stores/messageStore';
 import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
@@ -171,23 +172,112 @@ function setGraphData(
     hidden: oldHiddenCategories.includes(s.location?.name),
   }));
 
-  // Create annotations from HVAC actions
   // TODO: cut off first and last actions to match data range
-  // TODO: add tooltip with action and duration.
+  const earliestTemperatureReading =
+    series.length > 0
+      ? series
+          .flatMap((s) => s.points || [])
+          .reduce(
+            (earliest, current) => {
+              if (!current.time) return earliest;
+              const currentTime = new Date(current.time).getTime();
+              return currentTime < earliest.getTime() ? new Date(current.time) : earliest;
+            },
+            new Date(series[0].points?.[0]?.time || Date.now())
+          )
+      : new Date();
+
+  const latestTemperatureReading =
+    series.length > 0
+      ? series
+          .flatMap((s) => s.points || [])
+          .reduce(
+            (latest, current) => {
+              if (!current.time) return latest;
+              const currentTime = new Date(current.time).getTime();
+              return currentTime > latest.getTime() ? new Date(current.time) : latest;
+            },
+            new Date(series[0].points?.[0]?.time || 0)
+          )
+      : new Date();
+
+  // Create annotations from HVAC actions
   const hvacAnnotations = data.hvacActions.map((action, index) => {
-    const color =
-      action.action === 'heating' ? 'rgba(255, 100, 100, 0.2)' : 'rgba(100, 150, 255, 0.2)';
+    const durationMin = Math.round(
+      (new Date(action.endTime || '').getTime() - new Date(action.startTime || '').getTime()) /
+        (1000 * 60)
+    );
+
+    const startTime = new Date(action.startTime || '');
+    const endTime = new Date(action.endTime || '');
+
+    const startTimeOrEarliest =
+      new Date(action.startTime || '').getTime() < earliestTemperatureReading.getTime()
+        ? earliestTemperatureReading
+        : startTime;
+
+    const endTimeOrLatest =
+      new Date(action.endTime || '').getTime() > latestTemperatureReading.getTime()
+        ? latestTemperatureReading
+        : endTime;
+
     return {
       type: 'box',
-      xMin: action.startTime,
-      xMax: action.endTime,
-      backgroundColor: color,
+      xMin: startTimeOrEarliest,
+      xMax: endTimeOrLatest,
+      backgroundColor:
+        action.action === 'heating' ? 'rgba(255, 100, 100, 0.2)' : 'rgba(100, 150, 255, 0.2)',
       borderColor: 'transparent',
       drawTime: 'beforeDatasetsDraw',
       display: true,
       label: {
-        display: false,
-        content: action.action,
+        display: false, // Don't show a permanent label
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      enter(context: any) {
+        if (context.chart.tooltip) {
+          // Create custom tooltip content
+          const tooltipContent = {
+            title: trimAndTitleCase(action.action || 'unknown'),
+            body: [
+              `Duration: ${durationMin} min`,
+              `Start: ${DateHelpers.dateTimeForView(startTime)}`,
+              `End: ${DateHelpers.dateTimeForView(endTime)}`,
+            ],
+          };
+          // Get mouse position from chart
+          const { canvas } = context.chart;
+          const rect = canvas.getBoundingClientRect();
+          const position = {
+            x: rect.left + rect.width / 2, // Default to middle of chart
+            y: rect.top + 20, // Position near the top
+          };
+
+          // Store the tooltip data on the chart instance for later use
+          context.chart.$hoveredAnnotation = {
+            content: tooltipContent,
+            position,
+          };
+
+          // Force tooltip to show
+          context.chart.tooltip.setActiveElements([], { x: position.x, y: position.y });
+          context.chart.update('none');
+        }
+        return true;
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      leave(context: any) {
+        if (context.chart.tooltip) {
+          // Clear the stored annotation tooltip data
+          context.chart.$hoveredAnnotation = null;
+
+          // Hide the tooltip
+          context.chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+          context.chart.update('none');
+
+          document.getElementById('chartjs-tooltip')?.remove();
+        }
+        return true;
       },
       id: `hvac-${index}`,
     };
@@ -212,6 +302,64 @@ function setGraphData(
           display: false,
         },
         tooltip: {
+          enabled: true,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          external(context: any) {
+            // Only use custom tooltip for annotation hovers
+            if (!context.chart.$hoveredAnnotation) {
+              return;
+            }
+
+            // Get or create tooltip element
+            let tooltipEl = document.getElementById('chartjs-tooltip');
+            if (!tooltipEl) {
+              tooltipEl = document.createElement('div');
+              tooltipEl.id = 'chartjs-tooltip';
+              tooltipEl.innerHTML = '<table class="tooltip-table"></table>';
+              document.body.appendChild(tooltipEl);
+
+              // Style the tooltip
+              tooltipEl.style.background = useDarkMode.value
+                ? 'rgba(28, 30, 31, 0.9)'
+                : 'rgba(255, 255, 255, 0.9)';
+              tooltipEl.style.color = useDarkMode.value ? '#e6e6e6' : '#1c1e1f';
+              tooltipEl.style.borderRadius = '5px';
+              tooltipEl.style.padding = '10px';
+              tooltipEl.style.position = 'absolute';
+              tooltipEl.style.pointerEvents = 'none';
+              tooltipEl.style.zIndex = '100';
+              tooltipEl.style.boxShadow = '0 2px 5px rgba(0,0,0,0.25)';
+              tooltipEl.style.fontSize = '14px';
+            }
+
+            // Get the data from the chart
+            const { content } = context.chart.$hoveredAnnotation;
+            const tableRoot = tooltipEl.querySelector('table');
+
+            // Display tooltip content
+            if (tableRoot && content) {
+              let innerHtml = '<thead>';
+              innerHtml += `<tr><th style="text-align:center;font-weight:bold;">${content.title}</th></tr>`;
+              innerHtml += '</thead><tbody>';
+
+              content.body.forEach((line: string) => {
+                innerHtml += `<tr><td>${line}</td></tr>`;
+              });
+
+              innerHtml += '</tbody>';
+              tableRoot.innerHTML = innerHtml;
+            }
+
+            // Position tooltip near the mouse
+            // TODO: Tooltip seems to be positioned mirrored across the X axis
+            const { canvas } = context.chart;
+            const rect = canvas.getBoundingClientRect();
+
+            // Show tooltip
+            tooltipEl.style.opacity = '1';
+            tooltipEl.style.left = `${rect.left + rect.width / 2}px`;
+            tooltipEl.style.top = `${rect.top + 20}px`;
+          },
           callbacks: {
             label: (item: TooltipItem<'line'>) =>
               `${item.dataset.label}: ${item.formattedValue}${showHumidity ? '%' : tempUnit(useF)}`,
@@ -377,6 +525,17 @@ watch(
 
 watchEffect(() => {
   setGraphData(data.graphSeries, useFahrenheit.value, data.showHumidity, data.showHvacActions);
+});
+
+onUnmounted(() => {
+  const tooltipEl = document.getElementById('chartjs-tooltip');
+  if (tooltipEl) {
+    tooltipEl.remove();
+  }
+
+  if (lastTimeout) {
+    clearTimeout(lastTimeout);
+  }
 });
 </script>
 
