@@ -379,7 +379,6 @@ async function getLocations() {
   try {
     const response = await api().temperatureLocationsGetAll();
     data.locations = response.data.filter((x) => !x.isHidden);
-    timeSeriesInputs.locationIds = data.locations.map((x) => x.id as number);
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
@@ -448,6 +447,12 @@ function setCurrentTimer() {
 onMounted(async () => {
   await getLocations();
   await getCategories();
+
+  if (data.locations.length === 0) {
+    timeSeriesInputs.locationIds = data.locations.map((x) => x.id as number);
+  } else {
+    getTimeSeries(timeSeriesInputs);
+  }
 });
 
 watch(timeSeriesInputs, (inputs) => {
