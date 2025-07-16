@@ -452,7 +452,7 @@ onMounted(async () => {
   await getLocations();
   await getCategories();
 
-  if (data.locations.length === 0) {
+  if (timeSeriesInputs.locationIds.length === 0) {
     timeSeriesInputs.locationIds = data.locations.map((x) => x.id as number);
   } else {
     getTimeSeries(timeSeriesInputs);
