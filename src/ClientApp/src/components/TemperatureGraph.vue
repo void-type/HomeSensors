@@ -158,21 +158,25 @@ function setGraphData(
     lineChart?.destroy();
   }
 
-  const datasets = series?.map((s) => ({
-    label: s.location?.name,
-    borderColor: getColor(s.location?.name || 'unknown'),
-    data: s.points
-      ?.filter((p: TemperatureTimeSeriesPoint) => p.temperatureCelsius)
-      .map((p: TemperatureTimeSeriesPoint) => ({
-        x: p.time,
-        y: showHumidity
-          ? formatHumidity(p.humidity)
-          : formatTemp(p.temperatureCelsius, useF, useF ? 1 : 2),
-      })),
-    hidden: oldHiddenCategories.includes(s.location?.name),
-  }));
+  const datasets = series?.map((s) => {
+    const lineColor = getColor(s.location?.name || 'unknown');
 
-  // TODO: cut off first and last actions to match data range
+    return {
+      label: s.location?.name,
+      borderColor: lineColor,
+      backgroundColor: lineColor,
+      data: s.points
+        ?.filter((p: TemperatureTimeSeriesPoint) => p.temperatureCelsius)
+        .map((p: TemperatureTimeSeriesPoint) => ({
+          x: p.time,
+          y: showHumidity
+            ? formatHumidity(p.humidity)
+            : formatTemp(p.temperatureCelsius, useF, useF ? 1 : 2),
+        })),
+      hidden: oldHiddenCategories.includes(s.location?.name),
+    };
+  });
+
   const earliestTemperatureReading =
     series.length > 0
       ? series
@@ -201,7 +205,6 @@ function setGraphData(
           )
       : new Date();
 
-  // Create annotations from HVAC actions
   const hvacAnnotations = data.hvacActions.map((action, index) => {
     const startTime = new Date(action.startTime || '');
     const endTime = new Date(action.endTime || '');
@@ -226,16 +229,14 @@ function setGraphData(
       drawTime: 'beforeDatasetsDraw',
       display: true,
       label: {
-        // Don't show a permanent label
         display: false,
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       enter(context: any) {
         if (context.chart.tooltip) {
           const tooltipContent = {
-            title: trimAndTitleCase(action.action || 'unknown'),
+            title: `${trimAndTitleCase(action.action || 'unknown')}: ${action.durationMinutes} min`,
             body: [
-              `Duration: ${action.durationMinutes} min`,
               `Start: ${DateHelpers.dateTimeForView(startTime)}`,
               `End: ${DateHelpers.dateTimeForView(endTime)}`,
             ],
@@ -293,11 +294,14 @@ function setGraphData(
             const tooltipEl = document.getElementById('chartjs-tooltip')!;
 
             const { content } = context.chart.$hoveredAnnotation;
-            const cardBody = tooltipEl.querySelector('.card-body');
+            const cardBody = tooltipEl.querySelector('.tooltip-body');
 
             if (cardBody && content) {
               let innerHtml = '';
-              innerHtml += `<div class="card-title">${content.title}</div>`;
+
+              if (content.title) {
+                innerHtml += `<div class="fw-bold">${content.title}</div>`;
+              }
 
               content.body.forEach((line: string) => {
                 innerHtml += `<div class="card-text">${line}</div>`;
@@ -561,8 +565,8 @@ onUnmounted(() => {
       <div class="chart-container">
         <canvas id="tempGraph"></canvas>
       </div>
-      <div id="chartjs-tooltip" class="card position-absolute d-none">
-        <div class="card-body p-1"></div>
+      <div id="chartjs-tooltip" class="position-absolute d-none">
+        <div class="tooltip-body"></div>
       </div>
     </div>
     <div class="mt-3 grid">
@@ -639,14 +643,18 @@ onUnmounted(() => {
 }
 
 #chartjs-tooltip {
-  background: var(--bs-body-bg);
-  color: var(--bs-body-color);
-  border-radius: 5px;
-  padding: 10px;
   pointer-events: none;
   z-index: 100;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
   bottom: 0;
   left: 0;
+  outline: none;
+  background-color: black;
+  color: white;
+  border-radius: 5px;
+  padding: 5px;
+
+  .tooltip-body {
+    font-size: 0.8rem;
+  }
 }
 </style>
