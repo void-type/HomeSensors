@@ -281,6 +281,7 @@ public class TemperatureReadingRepository : RepositoryBase
                     Action = action.State,
                     StartTime = startTime,
                     EndTime = endTime,
+                    DurationMinutes = (int)(endTime - startTime).TotalMinutes,
                 });
             }
         }

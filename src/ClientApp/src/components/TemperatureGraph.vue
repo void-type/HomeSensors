@@ -203,11 +203,6 @@ function setGraphData(
 
   // Create annotations from HVAC actions
   const hvacAnnotations = data.hvacActions.map((action, index) => {
-    const durationMin = Math.round(
-      (new Date(action.endTime || '').getTime() - new Date(action.startTime || '').getTime()) /
-        (1000 * 60)
-    );
-
     const startTime = new Date(action.startTime || '');
     const endTime = new Date(action.endTime || '');
 
@@ -231,36 +226,25 @@ function setGraphData(
       drawTime: 'beforeDatasetsDraw',
       display: true,
       label: {
-        display: false, // Don't show a permanent label
+        // Don't show a permanent label
+        display: false,
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       enter(context: any) {
         if (context.chart.tooltip) {
-          // Create custom tooltip content
           const tooltipContent = {
             title: trimAndTitleCase(action.action || 'unknown'),
             body: [
-              `Duration: ${durationMin} min`,
+              `Duration: ${action.durationMinutes} min`,
               `Start: ${DateHelpers.dateTimeForView(startTime)}`,
               `End: ${DateHelpers.dateTimeForView(endTime)}`,
             ],
           };
-          // Get mouse position from chart
-          const { canvas } = context.chart;
-          const rect = canvas.getBoundingClientRect();
-          const position = {
-            x: rect.left + rect.width / 2, // Default to middle of chart
-            y: rect.top + 20, // Position near the top
-          };
 
-          // Store the tooltip data on the chart instance for later use
           context.chart.$hoveredAnnotation = {
             content: tooltipContent,
-            position,
           };
 
-          // Force tooltip to show
-          context.chart.tooltip.setActiveElements([], { x: position.x, y: position.y });
           context.chart.update('none');
         }
         return true;
@@ -268,14 +252,11 @@ function setGraphData(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       leave(context: any) {
         if (context.chart.tooltip) {
-          // Clear the stored annotation tooltip data
           context.chart.$hoveredAnnotation = null;
 
-          // Hide the tooltip
-          context.chart.tooltip.setActiveElements([], { x: 0, y: 0 });
           context.chart.update('none');
 
-          document.getElementById('chartjs-tooltip')?.remove();
+          document.getElementById('chartjs-tooltip')?.classList.add('d-none');
         }
         return true;
       },
@@ -305,60 +286,27 @@ function setGraphData(
           enabled: true,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           external(context: any) {
-            // Only use custom tooltip for annotation hovers
             if (!context.chart.$hoveredAnnotation) {
               return;
             }
 
-            // Get or create tooltip element
-            let tooltipEl = document.getElementById('chartjs-tooltip');
-            if (!tooltipEl) {
-              tooltipEl = document.createElement('div');
-              tooltipEl.id = 'chartjs-tooltip';
-              tooltipEl.innerHTML = '<table class="tooltip-table"></table>';
-              document.body.appendChild(tooltipEl);
+            const tooltipEl = document.getElementById('chartjs-tooltip')!;
 
-              // Style the tooltip
-              tooltipEl.style.background = useDarkMode.value
-                ? 'rgba(28, 30, 31, 0.9)'
-                : 'rgba(255, 255, 255, 0.9)';
-              tooltipEl.style.color = useDarkMode.value ? '#e6e6e6' : '#1c1e1f';
-              tooltipEl.style.borderRadius = '5px';
-              tooltipEl.style.padding = '10px';
-              tooltipEl.style.position = 'absolute';
-              tooltipEl.style.pointerEvents = 'none';
-              tooltipEl.style.zIndex = '100';
-              tooltipEl.style.boxShadow = '0 2px 5px rgba(0,0,0,0.25)';
-              tooltipEl.style.fontSize = '14px';
-            }
-
-            // Get the data from the chart
             const { content } = context.chart.$hoveredAnnotation;
-            const tableRoot = tooltipEl.querySelector('table');
+            const cardBody = tooltipEl.querySelector('.card-body');
 
-            // Display tooltip content
-            if (tableRoot && content) {
-              let innerHtml = '<thead>';
-              innerHtml += `<tr><th style="text-align:center;font-weight:bold;">${content.title}</th></tr>`;
-              innerHtml += '</thead><tbody>';
+            if (cardBody && content) {
+              let innerHtml = '';
+              innerHtml += `<div class="card-title">${content.title}</div>`;
 
               content.body.forEach((line: string) => {
-                innerHtml += `<tr><td>${line}</td></tr>`;
+                innerHtml += `<div class="card-text">${line}</div>`;
               });
 
-              innerHtml += '</tbody>';
-              tableRoot.innerHTML = innerHtml;
+              cardBody.innerHTML = innerHtml;
+
+              document.getElementById('chartjs-tooltip')?.classList.remove('d-none');
             }
-
-            // Position tooltip near the mouse
-            // TODO: Tooltip seems to be positioned mirrored across the X axis
-            const { canvas } = context.chart;
-            const rect = canvas.getBoundingClientRect();
-
-            // Show tooltip
-            tooltipEl.style.opacity = '1';
-            tooltipEl.style.left = `${rect.left + rect.width / 2}px`;
-            tooltipEl.style.top = `${rect.top + 20}px`;
           },
           callbacks: {
             label: (item: TooltipItem<'line'>) =>
@@ -528,11 +476,6 @@ watchEffect(() => {
 });
 
 onUnmounted(() => {
-  const tooltipEl = document.getElementById('chartjs-tooltip');
-  if (tooltipEl) {
-    tooltipEl.remove();
-  }
-
   if (lastTimeout) {
     clearTimeout(lastTimeout);
   }
@@ -609,9 +552,32 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-    <div class="chart-container-wrapper mt-3">
+    <div class="chart-container-wrapper mt-3 position-relative">
       <div class="chart-container">
         <canvas id="tempGraph"></canvas>
+      </div>
+      <div id="chartjs-tooltip" class="card position-absolute d-none">
+        <div class="card-body p-1"></div>
+      </div>
+    </div>
+    <div class="mt-3 grid">
+      <div class="g-col-6 cold">
+        Cooling:
+        {{
+          data.hvacActions
+            .filter((x) => x.action === 'cooling')
+            .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
+        }}
+        min
+      </div>
+      <div class="g-col-6 hot">
+        Heating:
+        {{
+          data.hvacActions
+            .filter((x) => x.action === 'heating')
+            .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
+        }}
+        min
       </div>
     </div>
     <table :class="{ 'mt-3': true, table: true, 'table-dark': useDarkMode }">
@@ -657,5 +623,25 @@ onUnmounted(() => {
 .chart-container {
   position: relative;
   height: 400px;
+}
+
+.hot {
+  color: #d74040;
+}
+
+.cold {
+  color: #5e83f3;
+}
+
+#chartjs-tooltip {
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  border-radius: 5px;
+  padding: 10px;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+  bottom: 0;
+  left: 0;
 }
 </style>

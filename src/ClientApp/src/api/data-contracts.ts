@@ -199,6 +199,8 @@ export interface TemperatureTimeSeriesHvacAction {
   startTime?: string;
   /** @format date-time */
   endTime?: string;
+  /** @format int32 */
+  durationMinutes?: number;
 }
 
 export interface TemperatureTimeSeriesLocationData {
