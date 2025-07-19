@@ -515,9 +515,8 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <div class="card mb-3">
-      <div class="card-body">
-        <!-- <h5 class="card-title">Date Range</h5> -->
+    <div>
+      <div class="mb-3">
         <div class="grid mb-3">
           <div class="g-col-12 g-col-md-6">
             <label for="startDate" class="form-label">Start date</label>
@@ -542,56 +541,62 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
-        <div class="d-flex justify-content-center mb-2">
-          <div class="btn-group btn-group-sm">
+        <div class="d-flex justify-content-center">
+          <div class="btn-group btn-group-sm mb-2">
             <button
               class="btn btn-outline-secondary"
               title="Back 1 Month"
               @click="adjustDateRange({ months: -1 })"
             >
-              <span>&laquo; Month</span>
+              <span>&laquo;&nbsp;</span>
+              <span>Month</span>
             </button>
             <button
               class="btn btn-outline-secondary"
               title="Back 1 Week"
               @click="adjustDateRange({ weeks: -1 })"
             >
-              <span>&laquo; Week</span>
+              <span>&laquo;&nbsp;</span>
+              <span>Week</span>
             </button>
             <button
               class="btn btn-outline-secondary"
               title="Back 1 Day"
               @click="adjustDateRange({ days: -1 })"
             >
-              <span>&laquo; Day</span>
+              <span>&laquo;&nbsp;</span>
+              <span>Day</span>
             </button>
             <button
               class="btn btn-outline-secondary"
               title="Forward 1 Day"
               @click="adjustDateRange({ days: 1 })"
             >
-              <span>Day &raquo;</span>
+              <span>Day</span>
+              <span>&nbsp;&raquo;</span>
             </button>
             <button
               class="btn btn-outline-secondary"
               title="Forward 1 Week"
               @click="adjustDateRange({ weeks: 1 })"
             >
-              <span>Week &raquo;</span>
+              <span>Week</span>
+              <span>&nbsp;&raquo;</span>
             </button>
             <button
               class="btn btn-outline-secondary"
               title="Forward 1 Month"
               @click="adjustDateRange({ months: 1 })"
             >
-              <span>Month &raquo;</span>
+              <span>Month</span>
+              <span>&nbsp;&raquo;</span>
             </button>
           </div>
         </div>
       </div>
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <h5 class="card-title">Locations</h5>
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="mb-0">Locations</h5>
           <button
             id="selectAllButton"
             class="btn btn-sm btn-outline-secondary ms-auto"
@@ -600,7 +605,6 @@ onUnmounted(() => {
             {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
           </button>
         </div>
-
         <div class="grid">
           <div
             v-for="(values, categoryName) in categorizedLocations"
@@ -625,31 +629,24 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-      <div class="card-body">
-        <!-- <h5 class="card-title mb-3">Display Options</h5> -->
-        <div class="grid gap-sm">
-          <div class="g-col-12 g-col-md-6">
-            <div class="form-check form-switch">
-              <input
-                id="showHumidity"
-                v-model="data.showHumidity"
-                class="form-check-input"
-                type="checkbox"
-              />
-              <label class="form-check-label" for="showHumidity">Show humidity</label>
-            </div>
-          </div>
-          <div class="g-col-12 g-col-md-6">
-            <div class="form-check form-switch">
-              <input
-                id="showHvacActions"
-                v-model="data.showHvacActions"
-                class="form-check-input"
-                type="checkbox"
-              />
-              <label class="form-check-label" for="showHvacActions">Show HVAC actions</label>
-            </div>
-          </div>
+      <div class="mb-3">
+        <div class="form-check form-switch">
+          <input
+            id="showHumidity"
+            v-model="data.showHumidity"
+            class="form-check-input"
+            type="checkbox"
+          />
+          <label class="form-check-label" for="showHumidity">Show humidity</label>
+        </div>
+        <div class="form-check form-switch">
+          <input
+            id="showHvacActions"
+            v-model="data.showHvacActions"
+            class="form-check-input"
+            type="checkbox"
+          />
+          <label class="form-check-label" for="showHvacActions">Show HVAC actions</label>
         </div>
       </div>
     </div>
