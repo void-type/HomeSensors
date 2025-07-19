@@ -46,8 +46,6 @@ const api = ApiHelpers.client;
 
 const { useFahrenheit, useDarkMode } = storeToRefs(appStore);
 
-const initialTime = startOfMinute(new Date());
-
 const data = reactive({
   locations: [] as Array<TemperatureLocationResponse>,
   categories: [] as Array<CategoryResponse>,
@@ -58,13 +56,30 @@ const data = reactive({
     props.initialHideHvacActions !== undefined ? !props.initialHideHvacActions : true,
 });
 
-const timeSeriesInputs: ITimeSeriesInputs = reactive({
-  start: props.initialStart || addHours(initialTime, -48),
-  end: props.initialEnd || initialTime,
-  locationIds: props.initialLocationIds || ([] as Array<number>),
-});
+function getInitialTimeSeriesInputs(): ITimeSeriesInputs {
+  const initialTime = startOfMinute(new Date());
+
+  return {
+    start: props.initialStart || addHours(initialTime, -48),
+    end: props.initialEnd || initialTime,
+    locationIds: props.initialLocationIds || ([] as Array<number>),
+  };
+}
+
+const timeSeriesInputs: ITimeSeriesInputs = reactive(getInitialTimeSeriesInputs());
 
 const showCurrent = ref(false);
+
+function resetTimeSeriesInputs() {
+  const initialTime = startOfMinute(new Date());
+
+  timeSeriesInputs.start = addHours(initialTime, -48);
+  timeSeriesInputs.end = initialTime;
+
+  if (showCurrent.value) {
+    showCurrent.value = false;
+  }
+}
 
 const areAllLocationsSelected = computed(() =>
   data.locations.every((value) => timeSeriesInputs.locationIds.includes(value.id as number))
@@ -517,84 +532,6 @@ onUnmounted(() => {
   <div>
     <div>
       <div class="mb-3">
-        <div class="grid mb-3">
-          <div class="g-col-12 g-col-md-6">
-            <label for="startDate" class="form-label">Start date</label>
-            <app-date-time-picker id="startDate" v-model="timeSeriesInputs.start" />
-          </div>
-          <div class="g-col-12 g-col-md-6">
-            <label for="endDate" class="form-label">End date</label>
-            <app-date-time-picker
-              id="endDate"
-              v-model="timeSeriesInputs.end"
-              :disabled="showCurrent"
-            />
-            <div class="form-check form-check-inline mt-2">
-              <input
-                id="showCurrent"
-                v-model="showCurrent"
-                class="form-check-input"
-                type="checkbox"
-                @change="setCurrentTimer()"
-              />
-              <label class="form-check-label" for="showCurrent">Show current</label>
-            </div>
-          </div>
-        </div>
-        <div class="d-flex justify-content-center">
-          <div class="btn-group btn-group-sm mb-2">
-            <button
-              class="btn btn-outline-secondary"
-              title="Back 1 Month"
-              @click="adjustDateRange({ months: -1 })"
-            >
-              <span>&laquo;&nbsp;</span>
-              <span>Month</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Back 1 Week"
-              @click="adjustDateRange({ weeks: -1 })"
-            >
-              <span>&laquo;&nbsp;</span>
-              <span>Week</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Back 1 Day"
-              @click="adjustDateRange({ days: -1 })"
-            >
-              <span>&laquo;&nbsp;</span>
-              <span>Day</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Forward 1 Day"
-              @click="adjustDateRange({ days: 1 })"
-            >
-              <span>Day</span>
-              <span>&nbsp;&raquo;</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Forward 1 Week"
-              @click="adjustDateRange({ weeks: 1 })"
-            >
-              <span>Week</span>
-              <span>&nbsp;&raquo;</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Forward 1 Month"
-              @click="adjustDateRange({ months: 1 })"
-            >
-              <span>Month</span>
-              <span>&nbsp;&raquo;</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h5 class="mb-0">Locations</h5>
           <button
@@ -647,6 +584,93 @@ onUnmounted(() => {
             type="checkbox"
           />
           <label class="form-check-label" for="showHvacActions">Show HVAC actions</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <div class="grid mb-3">
+          <div class="g-col-12 g-col-md-6">
+            <label for="startDate" class="form-label">Start date</label>
+            <app-date-time-picker id="startDate" v-model="timeSeriesInputs.start" />
+          </div>
+          <div class="g-col-12 g-col-md-6">
+            <label for="endDate" class="form-label">End date</label>
+            <app-date-time-picker
+              id="endDate"
+              v-model="timeSeriesInputs.end"
+              :disabled="showCurrent"
+            />
+            <div class="form-check form-check-inline mt-2">
+              <input
+                id="showCurrent"
+                v-model="showCurrent"
+                class="form-check-input"
+                type="checkbox"
+                @change="setCurrentTimer()"
+              />
+              <label class="form-check-label" for="showCurrent">Show current</label>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-center flex-wrap gap-2">
+          <div class="btn-group btn-group-sm mb-2">
+            <button
+              class="btn btn-outline-secondary"
+              title="Back 1 Month"
+              @click="adjustDateRange({ months: -1 })"
+            >
+              <span>&laquo;&nbsp;</span>
+              <span>Month</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Back 1 Week"
+              @click="adjustDateRange({ weeks: -1 })"
+            >
+              <span>&laquo;&nbsp;</span>
+              <span>Week</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Back 1 Day"
+              @click="adjustDateRange({ days: -1 })"
+            >
+              <span>&laquo;&nbsp;</span>
+              <span>Day</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Forward 1 Day"
+              @click="adjustDateRange({ days: 1 })"
+            >
+              <span>Day</span>
+              <span>&nbsp;&raquo;</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Forward 1 Week"
+              @click="adjustDateRange({ weeks: 1 })"
+            >
+              <span>Week</span>
+              <span>&nbsp;&raquo;</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Forward 1 Month"
+              @click="adjustDateRange({ months: 1 })"
+            >
+              <span>Month</span>
+              <span>&nbsp;&raquo;</span>
+            </button>
+          </div>
+          <div class="btn-group btn-group-sm mb-2">
+            <button
+              class="btn btn-outline-secondary"
+              title="Reset to last 48 hours"
+              @click="resetTimeSeriesInputs()"
+            >
+              <span>Reset</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
