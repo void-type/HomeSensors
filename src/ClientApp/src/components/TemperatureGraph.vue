@@ -459,6 +459,28 @@ onMounted(async () => {
   }
 });
 
+function adjustDateRange(parameters: { days?: number; weeks?: number; months?: number }) {
+  // Calculate total days from weeks and months (approximated)
+  const totalDays =
+    (parameters.days || 0) + (parameters.weeks || 0) * 7 + (parameters.months || 0) * 28;
+
+  // Calculate the current range span in milliseconds
+  const currentRangeMs = timeSeriesInputs.end.getTime() - timeSeriesInputs.start.getTime();
+
+  // Calculate the new start and end dates
+  const newStart = new Date(timeSeriesInputs.start.getTime() + totalDays * 24 * 60 * 60 * 1000);
+  const newEnd = new Date(newStart.getTime() + currentRangeMs);
+
+  // Update the inputs
+  timeSeriesInputs.start = newStart;
+  timeSeriesInputs.end = newEnd;
+
+  // If showing current, turn it off when manually adjusting dates
+  if (showCurrent.value) {
+    showCurrent.value = false;
+  }
+}
+
 watch(timeSeriesInputs, (inputs) => {
   emit('inputs-change', {
     ...inputs,
@@ -493,71 +515,141 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <div class="grid">
-      <div class="g-col-12 g-col-md-6">
-        <label for="startDate" class="form-label">Start date</label>
-        <app-date-time-picker id="startDate" v-model="timeSeriesInputs.start" />
-      </div>
-      <div class="g-col-12 g-col-md-6">
-        <label for="endDate" class="form-label">End date</label>
-        <app-date-time-picker id="endDate" v-model="timeSeriesInputs.end" :disabled="showCurrent" />
-        <div class="form-check form-check-inline mt-2">
-          <input
-            id="showCurrent"
-            v-model="showCurrent"
-            class="form-check-input"
-            type="checkbox"
-            @change="setCurrentTimer()"
-          />
-          <label class="form-check-label" for="showCurrent">Show current</label>
-        </div>
-      </div>
-      <div class="g-col-12">
-        <button id="selectAllButton" class="btn btn-sm btn-secondary" @click="onSelectAllClick">
-          {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
-        </button>
-      </div>
-      <div class="g-col-12">
-        <div
-          v-for="(values, categoryName) in categorizedLocations"
-          :key="categoryName"
-          class="g-col-12"
-        >
-          <div>{{ categoryName }}</div>
-          <div v-for="location in values" :key="location.id" class="form-check form-check-inline">
-            <input
-              :id="`locationSelect-${location.id}`"
-              v-model="timeSeriesInputs.locationIds"
-              :value="location.id"
-              class="form-check-input"
-              type="checkbox"
+    <div class="card mb-3">
+      <div class="card-body">
+        <!-- <h5 class="card-title">Date Range</h5> -->
+        <div class="grid mb-3">
+          <div class="g-col-12 g-col-md-6">
+            <label for="startDate" class="form-label">Start date</label>
+            <app-date-time-picker id="startDate" v-model="timeSeriesInputs.start" />
+          </div>
+          <div class="g-col-12 g-col-md-6">
+            <label for="endDate" class="form-label">End date</label>
+            <app-date-time-picker
+              id="endDate"
+              v-model="timeSeriesInputs.end"
+              :disabled="showCurrent"
             />
-            <label class="form-check-label" :for="`locationSelect-${location.id}`">{{
-              location.name
-            }}</label>
+            <div class="form-check form-check-inline mt-2">
+              <input
+                id="showCurrent"
+                v-model="showCurrent"
+                class="form-check-input"
+                type="checkbox"
+                @change="setCurrentTimer()"
+              />
+              <label class="form-check-label" for="showCurrent">Show current</label>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-center mb-2">
+          <div class="btn-group btn-group-sm">
+            <button
+              class="btn btn-outline-secondary"
+              title="Back 1 Month"
+              @click="adjustDateRange({ months: -1 })"
+            >
+              <span>&laquo; Month</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Back 1 Week"
+              @click="adjustDateRange({ weeks: -1 })"
+            >
+              <span>&laquo; Week</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Back 1 Day"
+              @click="adjustDateRange({ days: -1 })"
+            >
+              <span>&laquo; Day</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Forward 1 Day"
+              @click="adjustDateRange({ days: 1 })"
+            >
+              <span>Day &raquo;</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Forward 1 Week"
+              @click="adjustDateRange({ weeks: 1 })"
+            >
+              <span>Week &raquo;</span>
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              title="Forward 1 Month"
+              @click="adjustDateRange({ months: 1 })"
+            >
+              <span>Month &raquo;</span>
+            </button>
           </div>
         </div>
       </div>
-      <div class="g-col-12">
-        <div class="form-check form-switch">
-          <label class="form-check-label" for="showHumidity" @click.stop>Humidity</label>
-          <input
-            id="showHumidity"
-            v-model="data.showHumidity"
-            class="form-check-input"
-            type="checkbox"
-          />
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="card-title">Locations</h5>
+          <button
+            id="selectAllButton"
+            class="btn btn-sm btn-outline-secondary ms-auto"
+            @click="onSelectAllClick"
+          >
+            {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
+          </button>
         </div>
-        <div class="form-check form-switch">
-          <label class="form-check-label" for="showHvacActions" @click.stop>
-            Show HVAC Actions
-          </label>
-          <input
-            id="showHvacActions"
-            v-model="data.showHvacActions"
-            class="form-check-input"
-            type="checkbox"
-          />
+
+        <div class="grid">
+          <div
+            v-for="(values, categoryName) in categorizedLocations"
+            :key="categoryName"
+            class="g-col-12 g-col-sm-4"
+          >
+            <div class="fw-bold mb-1">{{ categoryName }}</div>
+            <div class="ps-2">
+              <div v-for="location in values" :key="location.id" class="form-check">
+                <input
+                  :id="`locationSelect-${location.id}`"
+                  v-model="timeSeriesInputs.locationIds"
+                  :value="location.id"
+                  class="form-check-input"
+                  type="checkbox"
+                />
+                <label class="form-check-label" :for="`locationSelect-${location.id}`">
+                  {{ location.name }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- <h5 class="card-title mb-3">Display Options</h5> -->
+        <div class="grid gap-sm">
+          <div class="g-col-12 g-col-md-6">
+            <div class="form-check form-switch">
+              <input
+                id="showHumidity"
+                v-model="data.showHumidity"
+                class="form-check-input"
+                type="checkbox"
+              />
+              <label class="form-check-label" for="showHumidity">Show humidity</label>
+            </div>
+          </div>
+          <div class="g-col-12 g-col-md-6">
+            <div class="form-check form-switch">
+              <input
+                id="showHvacActions"
+                v-model="data.showHvacActions"
+                class="form-check-input"
+                type="checkbox"
+              />
+              <label class="form-check-label" for="showHvacActions">Show HVAC actions</label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
