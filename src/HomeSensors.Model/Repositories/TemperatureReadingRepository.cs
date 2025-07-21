@@ -67,7 +67,7 @@ public class TemperatureReadingRepository : RepositoryBase
         }
 
         var caller = GetCaller();
-        var cacheKey = $"{caller}|{request.StartTime:o}|{request.EndTime:o}|{string.Join(",", request.LocationIds.Order())}";
+        var cacheKey = $"{caller}|{request.StartTime:o}|{request.EndTime:o}|{string.Join(",", request.LocationIds.Order())}|{request.IncludeHvacActions}|{request.TrimHvacActionsToRequestedTimeRange}";
 
         return await _cache.GetOrCreateAsync(
             cacheKey,
@@ -274,6 +274,25 @@ public class TemperatureReadingRepository : RepositoryBase
                 {
                     // If the end time is before the start time (action is in the future and hasn't ended), skip this action because we don't want to make up data.
                     continue;
+                }
+
+                // Respect the requested time range.
+                if (request.TrimHvacActionsToRequestedTimeRange)
+                {
+                    if (startTime < request.StartTime)
+                    {
+                        startTime = request.StartTime;
+                    }
+
+                    if (endTime > request.EndTime)
+                    {
+                        endTime = request.EndTime;
+                    }
+
+                    if (endTime <= startTime)
+                    {
+                        continue;
+                    }
                 }
 
                 result.Add(new TemperatureTimeSeriesHvacAction

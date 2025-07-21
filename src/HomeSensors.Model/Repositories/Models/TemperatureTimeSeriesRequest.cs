@@ -9,4 +9,6 @@ public class TemperatureTimeSeriesRequest
     public required List<long> LocationIds { get; init; } = [];
 
     public required bool IncludeHvacActions { get; init; }
+
+    public required bool TrimHvacActionsToRequestedTimeRange { get; init; }
 }

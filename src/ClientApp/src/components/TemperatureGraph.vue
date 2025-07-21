@@ -66,7 +66,7 @@ function getInitialTimeSeriesInputs(): ITimeSeriesInputs {
   };
 }
 
-const timeSeriesInputs: ITimeSeriesInputs = reactive(getInitialTimeSeriesInputs());
+const timeSeriesInputs = reactive(getInitialTimeSeriesInputs());
 
 const showCurrent = ref(false);
 
@@ -383,6 +383,7 @@ async function getTimeSeries(inputs: ITimeSeriesInputs) {
     endTime: DateHelpers.dateTimeForApi(inputs.end),
     locationIds: inputs.locationIds,
     includeHvacActions: true,
+    trimHvacActionsToRequestedTimeRange: true,
   };
 
   try {
@@ -496,14 +497,14 @@ function adjustDateRange(parameters: { days?: number; weeks?: number; months?: n
   }
 }
 
-watch(timeSeriesInputs, (inputs) => {
+watch(timeSeriesInputs, async (inputs) => {
   emit('inputs-change', {
     ...inputs,
     showHumidity: data.showHumidity,
     hideHvacActions: !data.showHvacActions,
   });
 
-  getTimeSeries(inputs);
+  await getTimeSeries(inputs);
 });
 
 watch(

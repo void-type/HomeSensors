@@ -235,6 +235,7 @@ export interface TemperatureTimeSeriesRequest {
   endTime?: string;
   locationIds?: number[];
   includeHvacActions?: boolean;
+  trimHvacActionsToRequestedTimeRange?: boolean;
 }
 
 export interface TemperatureLocationsCheckLimitsParams {
