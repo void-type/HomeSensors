@@ -23,6 +23,7 @@ import {
   tempUnit,
 } from '@/models/TempFormatHelpers';
 import { trimAndTitleCase } from '@/models/FormatHelpers';
+import { debounce } from '@/models/InputHelper';
 import DateHelpers from '@/models/DateHelpers';
 import useMessageStore from '@/stores/messageStore';
 import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
@@ -497,6 +498,8 @@ function adjustDateRange(parameters: { days?: number; weeks?: number; months?: n
   }
 }
 
+const getTimeSeriesDebounced = debounce(getTimeSeries, 200);
+
 watch(timeSeriesInputs, async (inputs) => {
   emit('inputs-change', {
     ...inputs,
@@ -504,7 +507,7 @@ watch(timeSeriesInputs, async (inputs) => {
     hideHvacActions: !data.showHvacActions,
   });
 
-  await getTimeSeries(inputs);
+  await getTimeSeriesDebounced(inputs);
 });
 
 watch(
