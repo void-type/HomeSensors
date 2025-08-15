@@ -77,7 +77,6 @@ public class HvacActionsWorker : BackgroundService
                 _logger.LogInformation("{JobName} job is starting.", nameof(HvacActionsWorker));
 
                 using var scope = _scopeFactory.CreateScope();
-                await using var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
                 using var httpClient = _httpClientFactory.CreateClient("HomeAssistant");
 
@@ -100,6 +99,8 @@ public class HvacActionsWorker : BackgroundService
                         .ThenBy(state => state.LastUpdated)?
                         .ToArray()
                         ?? [];
+
+                    await using var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
                     foreach (var stateEntry in orderedStateEntries)
                     {
