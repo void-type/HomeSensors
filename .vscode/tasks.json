@@ -162,7 +162,7 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$node-sass", "$eslint-compact"],
+      "problemMatcher": ["$node-sass", "$eslint-compact", "$tsc"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -206,7 +206,7 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$node-sass", "$eslint-compact"],
+      "problemMatcher": ["$node-sass", "$eslint-compact", "$tsc"],
       "presentation": {
         "echo": true,
         "reveal": "always",
