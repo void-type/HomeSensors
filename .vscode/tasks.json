@@ -2,6 +2,24 @@
   // See https://go.microsoft.com/fwlink/?LinkId=733558
   // for the documentation about the tasks.json format
   "version": "2.0.0",
+  "linux": {
+    "options": {
+      "shell": {
+        "executable": "pwsh"
+      }
+    }
+  },
+  "problemMatcher": [
+    "$msCompile",
+    {
+      "base": "$eslint-compact",
+      "fileLocation": ["relative", "${workspaceFolder}/src/ClientApp"]
+    },
+    {
+      "base": "$tsc",
+      "fileLocation": ["relative", "${workspaceFolder}/src/ClientApp"]
+    }
+  ],
   "tasks": [
     {
       "label": "build",
@@ -14,7 +32,6 @@
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": ["$node-sass", "$eslint-compact", "$msCompile"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -33,7 +50,6 @@
         "cwd": "./src/HomeSensors.Web/"
       },
       "type": "shell",
-      "problemMatcher": ["$msCompile"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -53,7 +69,6 @@
         "cwd": "./src/HomeSensors.Service/"
       },
       "type": "shell",
-      "problemMatcher": ["$msCompile"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -72,7 +87,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$node-sass", "$eslint-compact", "$msCompile"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -90,7 +104,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": [],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -108,7 +121,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": [],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -126,7 +138,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$msCompile"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -144,7 +155,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$msCompile"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -162,7 +172,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$node-sass", "$eslint-compact", "$tsc"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -181,7 +190,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$msCompile"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -195,8 +203,7 @@
     },
     {
       "label": "watch-web",
-      "dependsOn": ["watch-web-client", "watch-web-server"],
-      "problemMatcher": []
+      "dependsOn": ["watch-web-client", "watch-web-server"]
     },
     {
       "label": "watch-web-client-with-build",
@@ -206,7 +213,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$node-sass", "$eslint-compact", "$tsc"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -226,7 +232,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$msCompile"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -243,8 +248,7 @@
       "dependsOn": [
         "watch-web-client-with-build",
         "watch-web-server-with-client-build"
-      ],
-      "problemMatcher": []
+      ]
     },
     {
       "label": "watch-service",
@@ -253,7 +257,6 @@
         "cwd": "./build"
       },
       "type": "shell",
-      "problemMatcher": ["$msCompile"],
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -263,6 +266,102 @@
         "clear": false,
         "group": "watch"
       }
+    },
+    {
+      "label": "create-migration",
+      "command": "./dbCreateMigration.ps1",
+      "args": ["-MigrationName", "${input:migrationName}"],
+      "options": {
+        "cwd": "./build"
+      },
+      "type": "shell",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "build"
+      }
+    },
+    {
+      "label": "apply-migration",
+      "command": "./dbApplyMigration.ps1",
+      "args": ["-MigrationName", "'${input:migrationName}'"],
+      "options": {
+        "cwd": "./build"
+      },
+      "type": "shell",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "build"
+      }
+    },
+    {
+      "label": "remove-migration",
+      "command": "./dbRemoveMigration.ps1",
+      "args": ["-MigrationName", "'${input:migrationName}'"],
+      "options": {
+        "cwd": "./build"
+      },
+      "type": "shell",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "build"
+      }
+    },
+    {
+      "label": "deploy-web-to-test",
+      "command": "./deployWebToTest.ps1",
+      "options": {
+        "cwd": "./build"
+      },
+      "type": "shell",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "build"
+      }
+    },
+    {
+      "label": "deploy-web-to-production",
+      "command": "./deployWebToProduction.ps1",
+      "options": {
+        "cwd": "./build"
+      },
+      "type": "shell",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false,
+        "group": "build"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "migrationName",
+      "description": "Migration name",
+      "default": "",
+      "type": "promptString"
     }
   ]
 }
