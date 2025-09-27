@@ -5,6 +5,11 @@ using VoidCore.Model.Configuration;
 try
 {
     var host = Host.CreateDefaultBuilder(args)
+        .UseDefaultServiceProvider((_, options) =>
+        {
+            options.ValidateScopes = true;
+            options.ValidateOnBuild = true;
+        })
         .UseWindowsService()
         .UseSerilog()
         .ConfigureServices((context, services) =>
