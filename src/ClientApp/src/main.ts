@@ -10,6 +10,7 @@ import {
   faBatteryQuarter,
   faTemperatureFull,
   faSnowflake,
+  faSearch,
 } from '@fortawesome/free-solid-svg-icons';
 import { setupCalendar, DatePicker } from 'v-calendar';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -19,7 +20,15 @@ import App from './App.vue';
 // Prevents inline styling to appease CSP.
 fontAwesomeConfig.autoAddCss = false;
 
-library.add(faMoon, faThumbtack, faClock, faBatteryQuarter, faTemperatureFull, faSnowflake);
+library.add(
+  faMoon,
+  faThumbtack,
+  faClock,
+  faBatteryQuarter,
+  faTemperatureFull,
+  faSnowflake,
+  faSearch
+);
 
 const app = createApp(App);
 

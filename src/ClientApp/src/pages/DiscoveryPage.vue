@@ -14,7 +14,7 @@ const props = defineProps({
   topics: {
     type: Array as PropType<Array<string>>,
     required: false,
-    default: () => ['rtl_433/#', 'zigbee2mqtt/#'],
+    default: () => [],
   },
 });
 
@@ -79,6 +79,7 @@ const feed = computed(() => data.feed.join('\n'));
 
 async function onRefresh() {
   data.status = (await api().mqttDiscoveryStatus())?.data;
+  data.topics = data.status.topics?.join('\n') ?? data.topics;
 }
 
 async function onStart() {
@@ -88,6 +89,15 @@ async function onStart() {
     });
 
     data.status = response?.data;
+
+    // Set querystring topic= for each topic
+    const url = new URL(window.location.href);
+    // clear existing topics
+    url.searchParams.delete('topic');
+    data.topics.split(/\r?\n/g).forEach((topic) => {
+      url.searchParams.append('topic', topic);
+    });
+    window.history.replaceState({}, '', url.toString());
 
     // Recheck status to see if it connected.
     setTimeout(() => onRefresh(), 500);
@@ -100,6 +110,11 @@ async function onEnd() {
   data.status = (await api().mqttDiscoveryTeardown())?.data;
 }
 
+async function onRestart() {
+  await onEnd();
+  await onStart();
+}
+
 async function onClear() {
   data.feed.length = 0;
 }
@@ -108,12 +123,23 @@ onMounted(async () => {
   await connectToHub();
   await onRefresh();
 
-  const { topics } = data.status;
+  const statusTopics = data.status.topics?.join('\n');
+  const propsTopics = props.topics.join('\n');
 
-  if (topics) {
-    data.topics = topics.join('\n');
+  if (propsTopics && propsTopics !== statusTopics) {
+    // User requested new topics.
+    data.topics = propsTopics;
+
+    if (data.status.isConnected) {
+      await onEnd();
+    }
+
+    await onStart();
+  } else if (statusTopics) {
+    // Server topics exist, update to match.
+    data.topics = statusTopics;
   } else {
-    data.topics = props.topics.join('\n');
+    data.topics = ['rtl_433/#', 'zigbee2mqtt/#'].join('\n');
   }
 });
 </script>
@@ -129,6 +155,7 @@ onMounted(async () => {
     </p>
     <div class="btn-toolbar mt-4">
       <button class="btn btn-primary me-2" @click.prevent.stop="onStart">Start</button>
+      <button class="btn btn-secondary me-2" @click.prevent.stop="onRestart">Restart</button>
       <button class="btn btn-secondary me-2" @click.prevent.stop="onEnd">End</button>
       <button class="btn btn-secondary me-2" @click.prevent.stop="onClear">Clear</button>
       <button class="btn btn-secondary me-2" @click.prevent.stop="onRefresh">Refresh status</button>
