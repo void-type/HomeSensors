@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import TemperatureGraph from '@/components/TemperatureGraph.vue';
+import type { ITemperatureGraphInputs } from '@/models/ITemperatureGraphInputs';
 import { useRouter } from 'vue-router';
+import TemperatureGraph from '@/components/TemperatureGraph.vue';
 import DateHelpers from '@/models/DateHelpers';
-import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
 
 defineProps<{
   startDate?: Date;
@@ -14,9 +14,7 @@ defineProps<{
 
 const router = useRouter();
 
-const onInputsChange = (
-  inputs: ITimeSeriesInputs & { hideHvacActions: boolean; showHumidity: boolean }
-) => {
+function onInputsChange(inputs: ITemperatureGraphInputs) {
   const query = {
     start: inputs.start ? DateHelpers.dateTimeForApi(inputs.start) : undefined,
     end: inputs.end ? DateHelpers.dateTimeForApi(inputs.end) : undefined,
@@ -31,12 +29,14 @@ const onInputsChange = (
   router.replace({
     query,
   });
-};
+}
 </script>
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">Time series</h1>
+    <h1 class="mt-3">
+      Time series
+    </h1>
     <TemperatureGraph
       class="mt-4"
       :initial-start="startDate"

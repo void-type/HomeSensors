@@ -1,23 +1,19 @@
 <script lang="ts" setup>
-import useAppStore from '@/stores/appStore';
+import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import type {
   CategoryResponse,
   IItemSetOfIFailure,
   TemperatureLocationResponse,
 } from '@/api/data-contracts';
+import type { HttpResponse } from '@/api/http-client';
+import type { ModalParameters } from '@/models/ModalParameters';
+import { onBeforeUnmount, onMounted, reactive } from 'vue';
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import ApiHelpers from '@/models/ApiHelpers';
 import { toNumberOrNull } from '@/models/FormatHelpers';
 import { formatTempWithUnitOrEmpty } from '@/models/TempFormatHelpers';
-import { onMounted, reactive, onBeforeUnmount } from 'vue';
-import ApiHelpers from '@/models/ApiHelpers';
-import type { HttpResponse } from '@/api/http-client';
+import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
-import type { ModalParameters } from '@/models/ModalParameters';
-import {
-  onBeforeRouteLeave,
-  onBeforeRouteUpdate,
-  type NavigationGuardNext,
-  type RouteLocationNormalized,
-} from 'vue-router';
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
@@ -46,17 +42,23 @@ function trackOriginalState(location: TemperatureLocationResponse) {
         maxTemperatureLimitCelsius: location.maxTemperatureLimitCelsius,
         isHidden: location.isHidden,
         categoryId: location.categoryId,
-      })
+      }),
     );
   }
 }
 
 function isLocationDirty(location: TemperatureLocationResponse): boolean {
-  if (location.id === 0) return true; // New locations are always dirty
-  if (location.id === undefined) return false;
+  if (location.id === 0) {
+    return true;
+  } // New locations are always dirty
+  if (location.id === undefined) {
+    return false;
+  }
 
   const original = data.originalLocations.get(location.id);
-  if (!original) return false;
+  if (!original) {
+    return false;
+  }
 
   const current = JSON.stringify({
     name: location.name,
@@ -70,13 +72,13 @@ function isLocationDirty(location: TemperatureLocationResponse): boolean {
 }
 
 function updateDirtyState() {
-  data.hasDirtyLocations = data.locations.some((location) => isLocationDirty(location));
+  data.hasDirtyLocations = data.locations.some(location => isLocationDirty(location));
 }
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {
   if (data.hasDirtyLocations) {
     event.preventDefault();
-    // eslint-disable-next-line no-param-reassign
+
     event.returnValue = '';
     return '';
   }
@@ -92,7 +94,7 @@ async function getLocations() {
     const response = await api().temperatureLocationsGetAll();
     data.locations = response.data;
     // Track original state for dirty checking
-    data.locations.forEach((location) => trackOriginalState(location));
+    data.locations.forEach(location => trackOriginalState(location));
     updateDirtyState();
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -109,7 +111,7 @@ async function getCategories() {
 }
 
 async function newLocation() {
-  if (data.locations.findIndex((x) => (x.id || 0) < 1) > -1) {
+  if (data.locations.findIndex(x => (x.id || 0) < 1) > -1) {
     return;
   }
 
@@ -132,7 +134,7 @@ async function reallyDeleteLocation(location: TemperatureLocationResponse) {
   }
 
   try {
-    const response = await api().temperatureLocationsDelete(location.id);
+    const response = await api().temperatureLocationsDelete({ id: location.id });
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
@@ -177,7 +179,7 @@ async function saveLocation(location: TemperatureLocationResponse) {
     const isNewLocation = location.id === 0;
     if (isNewLocation) {
       // For new locations, we need to refetch to get the complete data with the new ID
-      const tempIndex = data.locations.findIndex((l) => l.id === 0);
+      const tempIndex = data.locations.findIndex(l => l.id === 0);
       if (tempIndex >= 0) {
         // Remove the temporary entry
         data.locations.splice(tempIndex, 1);
@@ -186,7 +188,7 @@ async function saveLocation(location: TemperatureLocationResponse) {
       }
     } else {
       // Update existing location in place with the form data
-      const existingIndex = data.locations.findIndex((l) => l.id === location.id);
+      const existingIndex = data.locations.findIndex(l => l.id === location.id);
       if (existingIndex >= 0) {
         // Merge the updated data while preserving other properties
         data.locations[existingIndex] = {
@@ -207,14 +209,14 @@ async function saveLocation(location: TemperatureLocationResponse) {
     messageStore.setApiFailureMessages(response);
 
     const failures = (response.error as IItemSetOfIFailure).items || [];
-    failures.forEach((x) => data.errors.push(`${x.uiHandle}-${location.id}`));
+    failures.forEach(x => data.errors.push(`${x.uiHandle}-${location.id}`));
   }
 }
 
 function beforeRouteChange(
   to: RouteLocationNormalized,
   from: RouteLocationNormalized,
-  next: NavigationGuardNext
+  next: NavigationGuardNext,
 ) {
   if (data.hasDirtyLocations) {
     const parameters: ModalParameters = {
@@ -245,9 +247,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">Locations</h1>
+    <h1 class="mt-3">
+      Locations
+    </h1>
     <div class="mt-4">
-      <button class="btn btn-primary" @click="newLocation()">New</button>
+      <button class="btn btn-primary" @click="newLocation()">
+        New
+      </button>
       <div id="locationsAccordion" class="accordion mt-4">
         <div v-for="location in data.locations" :key="location.id" class="accordion-item">
           <h2 :id="`heading-${location.id}`" class="accordion-header">
@@ -261,10 +267,8 @@ onBeforeUnmount(() => {
             >
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
-                  {{ location.name || 'New location' }}
-                  <span v-if="isLocationDirty(location)" class="badge bg-warning text-dark ms-2"
-                    >Unsaved</span
-                  >
+                  {{ location.name || "New location" }}
+                  <span v-if="isLocationDirty(location)" class="badge bg-warning text-dark ms-2">Unsaved</span>
                   <span v-if="location.isHidden" class="badge bg-secondary ms-2">Hidden</span>
                 </span>
               </div>
@@ -283,28 +287,26 @@ onBeforeUnmount(() => {
                   <input
                     :id="`name-${location.id}`"
                     v-model="location.name"
+                    class="form-control form-control-sm"
                     :class="{
-                      'form-control': true,
-                      'form-control-sm': true,
                       'is-invalid': data.errors.includes(`name-${location.id}`),
                     }"
                     type="text"
                     @input="onLocationInput"
-                  />
+                  >
                 </div>
                 <div class="g-col-12 g-col-md-6 g-col-lg-4">
                   <label :for="`category-${location.id}`" class="form-label">Category</label>
                   <select
                     :id="`category-${location.id}`"
                     v-model="location.categoryId"
+                    class="form-select form-select-sm"
                     :class="{
-                      'form-select': true,
-                      'form-select-sm': true,
                       'is-invalid': data.errors.includes(`category-${location.id}`),
                     }"
                     @change="onLocationInput"
                   >
-                    <option :value="0"></option>
+                    <option :value="0" />
                     <option
                       v-for="category in data.categories"
                       :key="category.id"
@@ -319,14 +321,13 @@ onBeforeUnmount(() => {
                   <input
                     :id="`min-${location.id}`"
                     v-model="location.minTemperatureLimitCelsius"
+                    class="form-control form-control-sm"
                     :class="{
-                      'form-control': true,
-                      'form-control-sm': true,
                       'is-invalid': data.errors.includes(`min-${location.id}`),
                     }"
                     type="number"
                     @input="onLocationInput"
-                  />
+                  >
                   {{ formatTempWithUnitOrEmpty(location.minTemperatureLimitCelsius, true) }}
                 </div>
                 <div class="g-col-12 g-col-md-6 g-col-lg-4">
@@ -334,14 +335,13 @@ onBeforeUnmount(() => {
                   <input
                     :id="`max-${location.id}`"
                     v-model="location.maxTemperatureLimitCelsius"
+                    class="form-control form-control-sm"
                     :class="{
-                      'form-control': true,
-                      'form-control-sm': true,
                       'is-invalid': data.errors.includes(`max-${location.id}`),
                     }"
                     type="number"
                     @input="onLocationInput"
-                  />
+                  >
                   {{ formatTempWithUnitOrEmpty(location.maxTemperatureLimitCelsius, true) }}
                 </div>
                 <div class="g-col-12">
@@ -349,14 +349,13 @@ onBeforeUnmount(() => {
                     <input
                       :id="`hidden-${location.id}`"
                       v-model="location.isHidden"
-                      class="form-check-input"
+                      class="form-check-input form-check-input"
                       :class="{
-                        'form-check-input': true,
                         'is-invalid': data.errors.includes(`hidden-${location.id}`),
                       }"
                       type="checkbox"
                       @change="onLocationInput"
-                    />
+                    >
                     <label :for="`hidden-${location.id}`" class="form-check-label">Hidden</label>
                   </div>
                 </div>
@@ -379,7 +378,9 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-        <div v-if="data.locations.length < 1" class="text-center mt-4">No locations.</div>
+        <div v-if="data.locations.length < 1" class="text-center mt-4">
+          No locations.
+        </div>
       </div>
     </div>
   </div>

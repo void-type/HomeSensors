@@ -7,7 +7,7 @@ export function tempUnit(useFahrenheit: boolean) {
 export function formatTemp(
   tempCelsius: number | null | undefined,
   useFahrenheit: boolean,
-  decimalsOverride = -1
+  decimalsOverride = -1,
 ) {
   if (tempCelsius === null || typeof tempCelsius === 'undefined' || tempCelsius.toString() === '') {
     return null;
@@ -23,7 +23,7 @@ export function formatTemp(
 export function formatTempWithUnit(
   tempCelsius: number | null | undefined,
   useFahrenheit: boolean,
-  decimalsOverride = -1
+  decimalsOverride = -1,
 ) {
   return `${formatTemp(tempCelsius, useFahrenheit, decimalsOverride)}${tempUnit(useFahrenheit)}`;
 }
@@ -31,7 +31,7 @@ export function formatTempWithUnit(
 export function formatTempWithUnitOrEmpty(
   tempCelsius: number | null | undefined,
   useFahrenheit: boolean,
-  decimalsOverride = -1
+  decimalsOverride = -1,
 ) {
   if (isNil(tempCelsius)) {
     return '';

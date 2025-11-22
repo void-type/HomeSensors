@@ -1,6 +1,3 @@
-/* eslint-disable */
-/* tslint:disable */
-// @ts-nocheck
 /*
  * ---------------------------------------------------------------
  * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
@@ -10,8 +7,8 @@
  * ---------------------------------------------------------------
  */
 
-import type {
-  AppVersion,
+import type {AppVersion,
+  CategoriesDeleteParams,
   CategoryResponse,
   CategorySaveRequest,
   EntityMessageOfLong,
@@ -21,17 +18,22 @@ import type {
   TemperatureCheckLimitResponse,
   TemperatureDeviceResponse,
   TemperatureDeviceSaveRequest,
+  TemperatureDevicesDeleteParams,
   TemperatureLocationResponse,
   TemperatureLocationSaveRequest,
   TemperatureLocationsCheckLimitsParams,
+  TemperatureLocationsDeleteParams,
   TemperatureReadingResponse,
+  TemperatureReadingsGetCurrentReadingForLocationParams,
   TemperatureTimeSeriesRequest,
   TemperatureTimeSeriesResponse,
-  WebClientInfo,
-} from './data-contracts';
-import { ContentType, HttpClient, type RequestParams } from './http-client';
+  WebClientInfo,} from "./data-contracts";
+import { ContentType, HttpClient } from "./http-client";
+import type { RequestParams } from "./http-client";
 
-export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType> {
+export class Api<
+  SecurityDataType = unknown,
+> extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
@@ -44,8 +46,8 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   appGetInfo = (params: RequestParams = {}) =>
     this.request<WebClientInfo, any>({
       path: `/api/app/info`,
-      method: 'GET',
-      format: 'json',
+      method: "GET",
+      format: "json",
       ...params,
     });
   /**
@@ -60,8 +62,8 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   appGetVersion = (params: RequestParams = {}) =>
     this.request<AppVersion, any>({
       path: `/api/app/version`,
-      method: 'GET',
-      format: 'json',
+      method: "GET",
+      format: "json",
       ...params,
     });
   /**
@@ -76,8 +78,8 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   categoriesGetAll = (params: RequestParams = {}) =>
     this.request<CategoryResponse[], IItemSetOfIFailure>({
       path: `/api/categories/all`,
-      method: 'GET',
-      format: 'json',
+      method: "GET",
+      format: "json",
       ...params,
     });
   /**
@@ -92,10 +94,10 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   categoriesSave = (data: CategorySaveRequest, params: RequestParams = {}) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
       path: `/api/categories`,
-      method: 'POST',
+      method: "POST",
       body: data,
       type: ContentType.Json,
-      format: 'json',
+      format: "json",
       ...params,
     });
   /**
@@ -107,11 +109,14 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `EntityMessageOfLong`
    * @response `400` `IItemSetOfIFailure`
    */
-  categoriesDelete = (id: number, params: RequestParams = {}) =>
+  categoriesDelete = (
+    { id, ...query }: CategoriesDeleteParams,
+    params: RequestParams = {},
+  ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
       path: `/api/categories/${id}`,
-      method: 'DELETE',
-      format: 'json',
+      method: "DELETE",
+      format: "json",
       ...params,
     });
   /**
@@ -125,8 +130,8 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   mqttDiscoveryStatus = (params: RequestParams = {}) =>
     this.request<MqttDiscoveryClientStatus, any>({
       path: `/api/mqtt-discovery/status`,
-      method: 'GET',
-      format: 'json',
+      method: "GET",
+      format: "json",
       ...params,
     });
   /**
@@ -138,13 +143,16 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `MqttDiscoveryClientStatus`
    * @response `400` `IItemSetOfIFailure`
    */
-  mqttDiscoverySetup = (data: MqttDiscoverySetupRequest, params: RequestParams = {}) =>
+  mqttDiscoverySetup = (
+    data: MqttDiscoverySetupRequest,
+    params: RequestParams = {},
+  ) =>
     this.request<MqttDiscoveryClientStatus, IItemSetOfIFailure>({
       path: `/api/mqtt-discovery/setup`,
-      method: 'POST',
+      method: "POST",
       body: data,
       type: ContentType.Json,
-      format: 'json',
+      format: "json",
       ...params,
     });
   /**
@@ -158,8 +166,8 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   mqttDiscoveryTeardown = (params: RequestParams = {}) =>
     this.request<MqttDiscoveryClientStatus, any>({
       path: `/api/mqtt-discovery/teardown`,
-      method: 'POST',
-      format: 'json',
+      method: "POST",
+      format: "json",
       ...params,
     });
   /**
@@ -174,8 +182,8 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   temperatureDevicesGetAll = (params: RequestParams = {}) =>
     this.request<TemperatureDeviceResponse[], IItemSetOfIFailure>({
       path: `/api/temperature-devices/all`,
-      method: 'GET',
-      format: 'json',
+      method: "GET",
+      format: "json",
       ...params,
     });
   /**
@@ -187,13 +195,16 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `EntityMessageOfLong`
    * @response `400` `IItemSetOfIFailure`
    */
-  temperatureDevicesSave = (data: TemperatureDeviceSaveRequest, params: RequestParams = {}) =>
+  temperatureDevicesSave = (
+    data: TemperatureDeviceSaveRequest,
+    params: RequestParams = {},
+  ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
       path: `/api/temperature-devices`,
-      method: 'POST',
+      method: "POST",
       body: data,
       type: ContentType.Json,
-      format: 'json',
+      format: "json",
       ...params,
     });
   /**
@@ -205,11 +216,14 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `EntityMessageOfLong`
    * @response `400` `IItemSetOfIFailure`
    */
-  temperatureDevicesDelete = (id: number, params: RequestParams = {}) =>
+  temperatureDevicesDelete = (
+    { id, ...query }: TemperatureDevicesDeleteParams,
+    params: RequestParams = {},
+  ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
       path: `/api/temperature-devices/${id}`,
-      method: 'DELETE',
-      format: 'json',
+      method: "DELETE",
+      format: "json",
       ...params,
     });
   /**
@@ -224,8 +238,8 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   temperatureLocationsGetAll = (params: RequestParams = {}) =>
     this.request<TemperatureLocationResponse[], IItemSetOfIFailure>({
       path: `/api/temperature-locations/all`,
-      method: 'GET',
-      format: 'json',
+      method: "GET",
+      format: "json",
       ...params,
     });
   /**
@@ -239,13 +253,13 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    */
   temperatureLocationsCheckLimits = (
     query: TemperatureLocationsCheckLimitsParams,
-    params: RequestParams = {}
+    params: RequestParams = {},
   ) =>
     this.request<TemperatureCheckLimitResponse[], IItemSetOfIFailure>({
       path: `/api/temperature-locations/check-limits`,
-      method: 'GET',
+      method: "GET",
       query: query,
-      format: 'json',
+      format: "json",
       ...params,
     });
   /**
@@ -257,13 +271,16 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `EntityMessageOfLong`
    * @response `400` `IItemSetOfIFailure`
    */
-  temperatureLocationsSave = (data: TemperatureLocationSaveRequest, params: RequestParams = {}) =>
+  temperatureLocationsSave = (
+    data: TemperatureLocationSaveRequest,
+    params: RequestParams = {},
+  ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
       path: `/api/temperature-locations`,
-      method: 'POST',
+      method: "POST",
       body: data,
       type: ContentType.Json,
-      format: 'json',
+      format: "json",
       ...params,
     });
   /**
@@ -275,11 +292,14 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `200` `EntityMessageOfLong`
    * @response `400` `IItemSetOfIFailure`
    */
-  temperatureLocationsDelete = (id: number, params: RequestParams = {}) =>
+  temperatureLocationsDelete = (
+    { id, ...query }: TemperatureLocationsDeleteParams,
+    params: RequestParams = {},
+  ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
       path: `/api/temperature-locations/${id}`,
-      method: 'DELETE',
-      format: 'json',
+      method: "DELETE",
+      format: "json",
       ...params,
     });
   /**
@@ -294,8 +314,8 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
   temperatureReadingsGetCurrentReadings = (params: RequestParams = {}) =>
     this.request<TemperatureReadingResponse[], IItemSetOfIFailure>({
       path: `/api/temperature-readings/current`,
-      method: 'GET',
-      format: 'json',
+      method: "GET",
+      format: "json",
       ...params,
     });
   /**
@@ -308,13 +328,16 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    * @response `400` `IItemSetOfIFailure`
    */
   temperatureReadingsGetCurrentReadingForLocation = (
-    locationId: number,
-    params: RequestParams = {}
+    {
+      locationId,
+      ...query
+    }: TemperatureReadingsGetCurrentReadingForLocationParams,
+    params: RequestParams = {},
   ) =>
     this.request<TemperatureReadingResponse[], IItemSetOfIFailure>({
       path: `/api/temperature-readings/location/${locationId}`,
-      method: 'GET',
-      format: 'json',
+      method: "GET",
+      format: "json",
       ...params,
     });
   /**
@@ -328,14 +351,14 @@ export class Api<SecurityDataType = unknown> extends HttpClient<SecurityDataType
    */
   temperatureReadingsGetTimeSeries = (
     data: TemperatureTimeSeriesRequest,
-    params: RequestParams = {}
+    params: RequestParams = {},
   ) =>
     this.request<TemperatureTimeSeriesResponse, IItemSetOfIFailure>({
       path: `/api/temperature-readings/time-series`,
-      method: 'POST',
+      method: "POST",
       body: data,
       type: ContentType.Json,
-      format: 'json',
+      format: "json",
       ...params,
     });
 }

@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import useAppStore from '@/stores/appStore';
 import type { CategoryResponse, TemperatureReadingResponse } from '@/api/data-contracts';
-import { computed, onMounted, reactive } from 'vue';
-import { addMinutes, format, isPast } from 'date-fns';
-import * as signalR from '@microsoft/signalr';
-import { storeToRefs } from 'pinia';
-import { formatTempWithUnit, formatHumidityWithUnit } from '@/models/TempFormatHelpers';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import * as signalR from '@microsoft/signalr';
+import { addMinutes, format, isPast } from 'date-fns';
+import { storeToRefs } from 'pinia';
+import { computed, onMounted, reactive } from 'vue';
+import ApiHelpers from '@/models/ApiHelpers';
+import { formatHumidityWithUnit, formatTempWithUnit } from '@/models/TempFormatHelpers';
+import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
@@ -61,7 +61,7 @@ async function connectToHub() {
     connection = new signalR.HubConnectionBuilder()
       .withUrl('/hub/temperatures')
       .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: (retryContext) =>
+        nextRetryDelayInMilliseconds: retryContext =>
           ApiHelpers.getRetryMilliseconds(retryContext.elapsedMilliseconds),
       })
       .build();
@@ -77,7 +77,7 @@ async function connectToHub() {
 }
 
 const categorizedReadings = computed(() => {
-  const visibleReadings = data.currentReadings.filter((x) => !x.location?.isHidden);
+  const visibleReadings = data.currentReadings.filter(x => !x.location?.isHidden);
 
   const sortedCategories = data.categories.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -88,7 +88,7 @@ const categorizedReadings = computed(() => {
       }
 
       const readings = visibleReadings.filter(
-        (reading) => reading.location?.categoryId === category.id
+        reading => reading.location?.categoryId === category.id,
       );
 
       if (!readings.length) {
@@ -99,10 +99,10 @@ const categorizedReadings = computed(() => {
 
       return acc;
     },
-    {} as Record<string, TemperatureReadingResponse[]>
+    {} as Record<string, TemperatureReadingResponse[]>,
   );
 
-  const uncategorized = visibleReadings.filter((reading) => !reading.location?.categoryId);
+  const uncategorized = visibleReadings.filter(reading => !reading.location?.categoryId);
 
   if (uncategorized.length) {
     groupedReadings.Uncategorized = uncategorized;
@@ -137,13 +137,13 @@ onMounted(async () => {
                 {{ currentTemp.location?.name }}
               </div>
               <div class="h3">
-                <font-awesome-icon
+                <FontAwesomeIcon
                   v-if="currentTemp.isHot"
                   icon="fa-temperature-full"
                   class="hot blink me-2"
                   title="Hotter than limit."
                 />
-                <font-awesome-icon
+                <FontAwesomeIcon
                   v-if="currentTemp.isCold"
                   icon="fa-snowflake"
                   class="cold blink me-2"
@@ -157,7 +157,7 @@ onMounted(async () => {
                 }}</span>
               </div>
               <div>
-                <font-awesome-icon
+                <FontAwesomeIcon
                   v-if="isStale(currentTemp)"
                   icon="fa-clock"
                   class="stale blink me-2"
