@@ -1,10 +1,8 @@
 <script lang="ts" setup>
-import useAppStore from '@/stores/appStore';
-import DateHelpers from '@/models/DateHelpers';
-import 'chartjs-adapter-date-fns';
 import { storeToRefs } from 'pinia';
-
-const modelValue = defineModel<Date>();
+import DateHelpers from '@/models/DateHelpers';
+import useAppStore from '@/stores/appStore';
+import 'chartjs-adapter-date-fns';
 
 const props = defineProps({
   disabled: {
@@ -17,6 +15,8 @@ const props = defineProps({
     required: true,
   },
 });
+
+const modelValue = defineModel<Date>();
 
 const appStore = useAppStore();
 
@@ -38,8 +38,9 @@ const { useDarkMode } = storeToRefs(appStore);
     hide-time-header
     :is-dark="useDarkMode"
     color="primary"
-    ><template #default="{ inputValue, inputEvents }">
-      <input :id="props.id" class="form-control" :value="inputValue" v-on="inputEvents" />
+  >
+    <template #default="{ inputValue, inputEvents }">
+      <input :id="props.id" class="form-control" :value="inputValue" v-on="inputEvents">
     </template>
   </v-date-picker>
 </template>

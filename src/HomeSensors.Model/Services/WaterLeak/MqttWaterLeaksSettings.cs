@@ -6,5 +6,5 @@ public class MqttWaterLeaksSettings
     public int BetweenTicksMinutes { get; init; } = 20;
     public int BetweenNotificationsMinutes { get; init; } = 120;
     public int InactiveDeviceLimitMinutes { get; init; } = 90;
-    public MqttWaterLeakSettingsDevice[] Devices { get; init; } = [];
+    public IEnumerable<MqttWaterLeakSettingsDevice>? Devices { get; init; } = [];
 }

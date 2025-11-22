@@ -1,6 +1,3 @@
-/* eslint-disable */
-/* tslint:disable */
-// @ts-nocheck
 /*
  * ---------------------------------------------------------------
  * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
@@ -238,8 +235,28 @@ export interface TemperatureTimeSeriesRequest {
   trimHvacActionsToRequestedTimeRange?: boolean;
 }
 
+export interface CategoriesDeleteParams {
+  /** @format int32 */
+  id: number;
+}
+
+export interface TemperatureDevicesDeleteParams {
+  /** @format int32 */
+  id: number;
+}
+
 export interface TemperatureLocationsCheckLimitsParams {
   /** @format date-time */
   since?: string;
   isAveragingEnabled?: boolean;
+}
+
+export interface TemperatureLocationsDeleteParams {
+  /** @format int32 */
+  id: number;
+}
+
+export interface TemperatureReadingsGetCurrentReadingForLocationParams {
+  /** @format int64 */
+  locationId: number;
 }

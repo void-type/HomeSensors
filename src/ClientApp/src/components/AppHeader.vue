@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import logoSvg from '@/img/logo.svg';
+import type { HTMLInputEvent } from '@/models/HTMLInputEvent';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import logoSvg from '@/img/logo.svg';
 import useAppStore from '@/stores/appStore';
-import type { HTMLInputEvent } from '@/models/HTMLInputEvent';
 
 const appStore = useAppStore();
 const { applicationName, user, useDarkMode, useFahrenheit, showHumidity } = storeToRefs(appStore);
@@ -21,7 +21,7 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
           class="d-inline-block align-text-top"
           width="24"
           height="24"
-        />
+        >
         {{ applicationName }}
       </router-link>
       <button
@@ -33,10 +33,10 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
         aria-expanded="false"
         aria-label="Toggle navigation"
       >
-        <span class="navbar-toggler-icon"></span>
+        <span class="navbar-toggler-icon" />
       </button>
       <div id="navbar-menu" class="navbar-collapse collapse">
-        <slot name="navItems"></slot>
+        <slot name="navItems" />
         <ul class="navbar-nav ms-auto">
           <li class="nav-item dropdown">
             <a
@@ -46,15 +46,14 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
               href="#"
               class="nav-link dropdown-toggle"
               data-bs-toggle="dropdown"
-              ><span>{{ user.login }}</span></a
-            >
+            ><span>{{ user.login }}</span></a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-              <li class="dropdown-item">Roles: {{ userRoles }}</li>
+              <li class="dropdown-item">
+                Roles: {{ userRoles }}
+              </li>
               <li class="dropdown-item">
                 <div class="form-check form-switch">
-                  <label class="form-check-label" for="useDarkMode" aria-label="Use dark mode"
-                    ><font-awesome-icon class="me-2" icon="fa-moon" />Dark mode</label
-                  >
+                  <label class="form-check-label" for="useDarkMode" aria-label="Use dark mode"><FontAwesomeIcon class="me-2" icon="fa-moon" />Dark mode</label>
                   <input
                     id="useDarkMode"
                     :checked="useDarkMode"
@@ -63,7 +62,7 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                     @change="
                       (e) => appStore.setDarkMode((e as HTMLInputEvent).target?.checked === true)
                     "
-                  />
+                  >
                 </div>
               </li>
               <li class="dropdown-item">
@@ -74,8 +73,7 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                     title="Use Fahrenheit"
                     aria-label="Use Fahrenheit"
                     @click.stop
-                    ><span class="me-2">🇺🇸</span> Imperial</label
-                  >
+                  ><span class="me-2">🇺🇸</span> Imperial</label>
                   <input
                     id="useFahrenheitSetting"
                     :checked="useFahrenheit"
@@ -85,7 +83,7 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                       (e) =>
                         appStore.setUseFahrenheit((e as HTMLInputEvent).target?.checked === true)
                     "
-                  />
+                  >
                 </div>
               </li>
               <li class="dropdown-item">
@@ -96,8 +94,7 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                     title="Show Humidity"
                     aria-label="Show Humidity"
                     @click.stop
-                    ><span class="me-2">%</span>Show humidity</label
-                  >
+                  ><span class="me-2">%</span>Show humidity</label>
                   <input
                     id="showHumiditySetting"
                     :checked="showHumidity"
@@ -107,7 +104,7 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
                       (e) =>
                         appStore.setShowHumidity((e as HTMLInputEvent).target?.checked === true)
                     "
-                  />
+                  >
                 </div>
               </li>
             </ul>

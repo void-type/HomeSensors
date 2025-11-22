@@ -1,25 +1,21 @@
 <script lang="ts" setup>
-import useAppStore from '@/stores/appStore';
+import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import type {
-  TemperatureDeviceResponse,
   IItemSetOfIFailure,
+  TemperatureDeviceResponse,
   TemperatureLocationResponse,
 } from '@/api/data-contracts';
-import { storeToRefs } from 'pinia';
-import { formatTempWithUnit } from '@/models/TempFormatHelpers';
-import DateHelpers from '@/models/DateHelpers';
-import { onMounted, reactive, onBeforeUnmount } from 'vue';
-import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
-import useMessageStore from '@/stores/messageStore';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import type { ModalParameters } from '@/models/ModalParameters';
-import {
-  onBeforeRouteLeave,
-  onBeforeRouteUpdate,
-  type NavigationGuardNext,
-  type RouteLocationNormalized,
-} from 'vue-router';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { storeToRefs } from 'pinia';
+import { onBeforeUnmount, onMounted, reactive } from 'vue';
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import ApiHelpers from '@/models/ApiHelpers';
+import DateHelpers from '@/models/DateHelpers';
+import { formatTempWithUnit } from '@/models/TempFormatHelpers';
+import useAppStore from '@/stores/appStore';
+import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
@@ -44,17 +40,23 @@ function trackOriginalState(device: TemperatureDeviceResponse) {
         mqttTopic: device.mqttTopic,
         locationId: device.locationId,
         isRetired: device.isRetired,
-      })
+      }),
     );
   }
 }
 
 function isDeviceDirty(device: TemperatureDeviceResponse): boolean {
-  if (device.id === 0) return true; // New devices are always dirty
-  if (device.id === undefined) return false;
+  if (device.id === 0) {
+    return true;
+  } // New devices are always dirty
+  if (device.id === undefined) {
+    return false;
+  }
 
   const original = data.originalDevices.get(device.id);
-  if (!original) return false;
+  if (!original) {
+    return false;
+  }
 
   const current = JSON.stringify({
     name: device.name,
@@ -67,13 +69,13 @@ function isDeviceDirty(device: TemperatureDeviceResponse): boolean {
 }
 
 function updateDirtyState() {
-  data.hasDirtyDevices = data.devices.some((device) => isDeviceDirty(device));
+  data.hasDirtyDevices = data.devices.some(device => isDeviceDirty(device));
 }
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {
   if (data.hasDirtyDevices) {
     event.preventDefault();
-    // eslint-disable-next-line no-param-reassign
+
     event.returnValue = '';
     return '';
   }
@@ -85,7 +87,7 @@ async function getDevices() {
     const response = await api().temperatureDevicesGetAll();
     data.devices = response.data;
     // Track original state for dirty checking
-    data.devices.forEach((device) => trackOriginalState(device));
+    data.devices.forEach(device => trackOriginalState(device));
     updateDirtyState();
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -102,7 +104,7 @@ async function getLocations() {
 }
 
 async function newDevice() {
-  if (data.devices.findIndex((x) => (x.id || 0) < 1) > -1) {
+  if (data.devices.findIndex(x => (x.id || 0) < 1) > -1) {
     return;
   }
 
@@ -128,7 +130,7 @@ async function reallyDeleteDevice(device: TemperatureDeviceResponse) {
   }
 
   try {
-    const response = await api().temperatureDevicesDelete(device.id);
+    const response = await api().temperatureDevicesDelete({ id: device.id });
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
@@ -172,7 +174,7 @@ async function saveDevice(device: TemperatureDeviceResponse) {
     if (isNewDevice) {
       // For new devices, we need to refetch to get the complete data with the new ID
       // But we'll replace just this entry in the list
-      const tempIndex = data.devices.findIndex((d) => d.id === 0);
+      const tempIndex = data.devices.findIndex(d => d.id === 0);
       if (tempIndex >= 0) {
         // Remove the temporary entry
         data.devices.splice(tempIndex, 1);
@@ -181,7 +183,7 @@ async function saveDevice(device: TemperatureDeviceResponse) {
       }
     } else {
       // Update existing device in place with the form data
-      const existingIndex = data.devices.findIndex((d) => d.id === device.id);
+      const existingIndex = data.devices.findIndex(d => d.id === device.id);
       if (existingIndex >= 0) {
         // Merge the updated data while preserving other properties
         data.devices[existingIndex] = {
@@ -202,14 +204,14 @@ async function saveDevice(device: TemperatureDeviceResponse) {
     messageStore.setApiFailureMessages(response);
 
     const failures = (response.error as IItemSetOfIFailure).items || [];
-    failures.forEach((x) => data.errors.push(`${x.uiHandle}-${device.id}`));
+    failures.forEach(x => data.errors.push(`${x.uiHandle}-${device.id}`));
   }
 }
 
 function beforeRouteChange(
   to: RouteLocationNormalized,
   from: RouteLocationNormalized,
-  next: NavigationGuardNext
+  next: NavigationGuardNext,
 ) {
   if (data.hasDirtyDevices) {
     const parameters: ModalParameters = {
@@ -240,9 +242,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">Devices</h1>
+    <h1 class="mt-3">
+      Devices
+    </h1>
     <div class="mt-4">
-      <button class="btn btn-primary" @click="newDevice()">New</button>
+      <button class="btn btn-primary" @click="newDevice()">
+        New
+      </button>
       <div id="devicesAccordion" class="accordion mt-4">
         <div v-for="device in data.devices" :key="device.id" class="accordion-item">
           <h2 :id="`heading-${device.id}`" class="accordion-header">
@@ -256,24 +262,22 @@ onBeforeUnmount(() => {
             >
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
-                  {{ device.name || 'New device' }}
-                  <span v-if="isDeviceDirty(device)" class="badge bg-warning text-dark ms-2"
-                    >Unsaved</span
-                  >
+                  {{ device.name || "New device" }}
+                  <span v-if="isDeviceDirty(device)" class="badge bg-warning text-dark ms-2">Unsaved</span>
                   <span v-if="device.isRetired" class="badge bg-secondary ms-2">Retired</span>
-                  <font-awesome-icon
+                  <FontAwesomeIcon
                     v-if="device.isInactive"
                     icon="fa-clock"
                     class="text-danger ms-2"
                     :title="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
                   />
-                  <font-awesome-icon
+                  <FontAwesomeIcon
                     v-if="device.isLost"
                     icon="fa-battery-quarter"
                     class="text-danger ms-2"
                     title="Lost. Doesn't have location."
                   />
-                  <font-awesome-icon
+                  <FontAwesomeIcon
                     v-if="device.isBatteryLevelLow"
                     icon="fa-battery-quarter"
                     class="text-danger ms-2"
@@ -298,13 +302,12 @@ onBeforeUnmount(() => {
                     v-model="device.name"
                     required
                     type="text"
+                    class="form-control form-control-sm"
                     :class="{
-                      'form-control': true,
-                      'form-control-sm': true,
                       'is-invalid': data.errors.includes(`name-${device.id}`),
                     }"
                     @input="onDeviceInput"
-                  />
+                  >
                 </div>
                 <div class="g-col-12 g-col-md-6 g-col-lg-4">
                   <label :for="`mqttTopic-${device.id}`" class="form-label">Topic</label>
@@ -314,18 +317,18 @@ onBeforeUnmount(() => {
                       v-model="device.mqttTopic"
                       required
                       type="text"
+                      class="form-control"
                       :class="{
-                        'form-control': true,
                         'is-invalid': data.errors.includes(`mqttTopic-${device.id}`),
                       }"
                       @input="onDeviceInput"
-                    />
+                    >
                     <router-link
                       :to="{ name: 'discoveryMain', query: { topic: device.mqttTopic } }"
                       class="btn btn-secondary"
                       title="View MQTT"
                     >
-                      <font-awesome-icon icon="fa-search" />
+                      <FontAwesomeIcon icon="fa-search" />
                     </router-link>
                   </div>
                 </div>
@@ -334,14 +337,13 @@ onBeforeUnmount(() => {
                   <select
                     :id="`location-${device.id}`"
                     v-model="device.locationId"
+                    class="form-select form-select-sm"
                     :class="{
-                      'form-select': true,
-                      'form-select-sm': true,
                       'is-invalid': data.errors.includes(`location-${device.id}`),
                     }"
                     @change="onDeviceInput"
                   >
-                    <option :value="0"></option>
+                    <option :value="0" />
                     <option
                       v-for="location in data.locations"
                       :key="location.id"
@@ -356,14 +358,13 @@ onBeforeUnmount(() => {
                     <input
                       :id="`retired-${device.id}`"
                       v-model="device.isRetired"
-                      class="form-check-input"
+                      class="form-check-input form-check-input"
                       :class="{
-                        'form-check-input': true,
                         'is-invalid': data.errors.includes(`retired-${device.id}`),
                       }"
                       type="checkbox"
                       @change="onDeviceInput"
-                    />
+                    >
                     <label :for="`retired-${device.id}`" class="form-check-label">Retired</label>
                   </div>
                 </div>
@@ -372,13 +373,12 @@ onBeforeUnmount(() => {
                     <small class="text-body-secondary me-2">ID: {{ device.id }}</small>
                   </div>
                   <div>
-                    <small v-if="device.lastReading"
-                      >Last reading:
+                    <small v-if="device.lastReading">Last reading:
                       {{
                         formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit)
                       }}
                       on
-                      {{ DateHelpers.dateTimeShortForView(device.lastReading?.time || '') }}
+                      {{ DateHelpers.dateTimeShortForView(device.lastReading?.time || "") }}
                     </small>
                   </div>
                 </div>
@@ -400,7 +400,9 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-        <div v-if="data.devices.length < 1" class="text-center mt-4">No devices.</div>
+        <div v-if="data.devices.length < 1" class="text-center mt-4">
+          No devices.
+        </div>
       </div>
     </div>
   </div>

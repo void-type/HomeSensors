@@ -26,7 +26,7 @@ public class WaterLeakAlertService
 
         var now = _dateTimeService.MomentWithOffset;
 
-        foreach (var sensor in mqttWaterLeaksSettings.Devices)
+        foreach (var sensor in mqttWaterLeaksSettings.Devices ?? [])
         {
             _lastCheckIns.TryAdd(sensor.Name, now);
         }

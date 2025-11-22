@@ -1,21 +1,17 @@
 <script lang="ts" setup>
-import useAppStore from '@/stores/appStore';
+import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import type {
-  TemperatureDeviceResponse,
-  IItemSetOfIFailure,
   CategoryResponse,
+  IItemSetOfIFailure,
+  TemperatureDeviceResponse,
 } from '@/api/data-contracts';
-import { onMounted, reactive, onBeforeUnmount } from 'vue';
-import ApiHelpers from '@/models/ApiHelpers';
 import type { HttpResponse } from '@/api/http-client';
-import useMessageStore from '@/stores/messageStore';
 import type { ModalParameters } from '@/models/ModalParameters';
-import {
-  onBeforeRouteLeave,
-  onBeforeRouteUpdate,
-  type NavigationGuardNext,
-  type RouteLocationNormalized,
-} from 'vue-router';
+import { onBeforeUnmount, onMounted, reactive } from 'vue';
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import ApiHelpers from '@/models/ApiHelpers';
+import useAppStore from '@/stores/appStore';
+import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
@@ -35,17 +31,23 @@ function trackOriginalState(category: CategoryResponse) {
       JSON.stringify({
         name: category.name,
         order: category.order,
-      })
+      }),
     );
   }
 }
 
 function isCategoryDirty(category: CategoryResponse): boolean {
-  if (category.id === 0) return true; // New categories are always dirty
-  if (category.id === undefined) return false;
+  if (category.id === 0) {
+    return true;
+  } // New categories are always dirty
+  if (category.id === undefined) {
+    return false;
+  }
 
   const original = data.originalCategories.get(category.id);
-  if (!original) return false;
+  if (!original) {
+    return false;
+  }
 
   const current = JSON.stringify({
     name: category.name,
@@ -56,13 +58,13 @@ function isCategoryDirty(category: CategoryResponse): boolean {
 }
 
 function updateDirtyState() {
-  data.hasDirtyCategories = data.categories.some((category) => isCategoryDirty(category));
+  data.hasDirtyCategories = data.categories.some(category => isCategoryDirty(category));
 }
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {
   if (data.hasDirtyCategories) {
     event.preventDefault();
-    // eslint-disable-next-line no-param-reassign
+
     event.returnValue = '';
     return '';
   }
@@ -78,7 +80,7 @@ async function getCategories() {
     const response = await api().categoriesGetAll();
     data.categories = response.data.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
     // Track original state for dirty checking
-    data.categories.forEach((category) => trackOriginalState(category));
+    data.categories.forEach(category => trackOriginalState(category));
     updateDirtyState();
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -86,11 +88,11 @@ async function getCategories() {
 }
 
 async function newCategory() {
-  if (data.categories.findIndex((x) => (x.id || 0) < 1) > -1) {
+  if (data.categories.findIndex(x => (x.id || 0) < 1) > -1) {
     return;
   }
 
-  const currentMaxOrder = Math.max(1, ...data.categories.map((x) => x.order ?? 1));
+  const currentMaxOrder = Math.max(1, ...data.categories.map(x => x.order ?? 1));
   const newOrder = Math.floor((currentMaxOrder + 10) / 10) * 10;
 
   const newCat = {
@@ -109,7 +111,7 @@ async function reallyDeleteCategory(category: TemperatureDeviceResponse) {
   }
 
   try {
-    const response = await api().categoriesDelete(category.id);
+    const response = await api().categoriesDelete({ id: category.id });
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
@@ -149,7 +151,7 @@ async function saveCategory(category: CategoryResponse) {
     const isNewCategory = category.id === 0;
     if (isNewCategory) {
       // For new categories, we need to refetch to get the complete data with the new ID
-      const tempIndex = data.categories.findIndex((c) => c.id === 0);
+      const tempIndex = data.categories.findIndex(c => c.id === 0);
       if (tempIndex >= 0) {
         // Remove the temporary entry
         data.categories.splice(tempIndex, 1);
@@ -158,7 +160,7 @@ async function saveCategory(category: CategoryResponse) {
       }
     } else {
       // Update existing category in place with the form data
-      const existingIndex = data.categories.findIndex((c) => c.id === category.id);
+      const existingIndex = data.categories.findIndex(c => c.id === category.id);
       if (existingIndex >= 0) {
         // Merge the updated data while preserving other properties
         data.categories[existingIndex] = {
@@ -178,14 +180,14 @@ async function saveCategory(category: CategoryResponse) {
     messageStore.setApiFailureMessages(response);
 
     const failures = (response.error as IItemSetOfIFailure).items || [];
-    failures.forEach((x) => data.errors.push(`${x.uiHandle}-${category.id}`));
+    failures.forEach(x => data.errors.push(`${x.uiHandle}-${category.id}`));
   }
 }
 
 function beforeRouteChange(
   to: RouteLocationNormalized,
   from: RouteLocationNormalized,
-  next: NavigationGuardNext
+  next: NavigationGuardNext,
 ) {
   if (data.hasDirtyCategories) {
     const parameters: ModalParameters = {
@@ -215,9 +217,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">Categories</h1>
+    <h1 class="mt-3">
+      Categories
+    </h1>
     <div class="mt-4">
-      <button class="btn btn-primary" @click="newCategory()">New</button>
+      <button class="btn btn-primary" @click="newCategory()">
+        New
+      </button>
       <div id="categoriesAccordion" class="accordion mt-4">
         <div v-for="category in data.categories" :key="category.id" class="accordion-item">
           <h2 :id="`heading-${category.id}`" class="accordion-header">
@@ -231,10 +237,8 @@ onBeforeUnmount(() => {
             >
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
-                  {{ category.name || 'New category' }}
-                  <span v-if="isCategoryDirty(category)" class="badge bg-warning text-dark ms-2"
-                    >Unsaved</span
-                  >
+                  {{ category.name || "New category" }}
+                  <span v-if="isCategoryDirty(category)" class="badge bg-warning text-dark ms-2">Unsaved</span>
                 </span>
               </div>
             </button>
@@ -254,13 +258,12 @@ onBeforeUnmount(() => {
                     v-model="category.name"
                     required
                     type="text"
+                    class="form-control form-control-sm"
                     :class="{
-                      'form-control': true,
-                      'form-control-sm': true,
                       'is-invalid': data.errors.includes(`name-${category.id}`),
                     }"
                     @input="onCategoryInput"
-                  />
+                  >
                 </div>
                 <div class="g-col-12 g-col-md-6 g-col-lg-4">
                   <label :for="`order-${category.id}`" class="form-label">Order</label>
@@ -269,13 +272,12 @@ onBeforeUnmount(() => {
                     v-model="category.order"
                     required
                     type="number"
+                    class="form-control form-control-sm"
                     :class="{
-                      'form-control': true,
-                      'form-control-sm': true,
                       'is-invalid': data.errors.includes(`order-${category.id}`),
                     }"
                     @input="onCategoryInput"
-                  />
+                  >
                 </div>
                 <div class="g-col-12">
                   <div class="btn-toolbar">
@@ -295,7 +297,9 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-        <div v-if="data.categories.length < 1" class="text-center mt-4">No categories.</div>
+        <div v-if="data.categories.length < 1" class="text-center mt-4">
+          No categories.
+        </div>
       </div>
     </div>
   </div>

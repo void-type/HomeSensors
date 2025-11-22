@@ -1,21 +1,19 @@
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import 'bootstrap';
-import router from '@/router';
-import { library, config as fontAwesomeConfig } from '@fortawesome/fontawesome-svg-core';
+import { config as fontAwesomeConfig, library } from '@fortawesome/fontawesome-svg-core';
 import {
-  faMoon,
-  faThumbtack,
-  faClock,
   faBatteryQuarter,
-  faTemperatureFull,
-  faSnowflake,
+  faClock,
+  faMoon,
   faSearch,
+  faSnowflake,
+  faTemperatureFull,
+  faThumbtack,
 } from '@fortawesome/free-solid-svg-icons';
-import { setupCalendar, DatePicker } from 'v-calendar';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+import { createPinia } from 'pinia';
+import { DatePicker, setupCalendar } from 'v-calendar';
+import { createApp } from 'vue';
+import router from '@/router';
 import App from './App.vue';
+import 'bootstrap';
 
 // Prevents inline styling to appease CSP.
 fontAwesomeConfig.autoAddCss = false;
@@ -27,7 +25,7 @@ library.add(
   faBatteryQuarter,
   faTemperatureFull,
   faSnowflake,
-  faSearch
+  faSearch,
 );
 
 const app = createApp(App);

@@ -50,7 +50,7 @@ public class MqttWaterLeaksWorker : BackgroundService
 
         await client.StartAsync(_configuration.GetClientOptions());
 
-        var topics = _workerSettings.Devices.Select(x => x.Topic).ToArray();
+        var topics = (_workerSettings.Devices ?? []).Select(x => x.Topic).ToArray();
 
         foreach (var topic in topics)
         {
@@ -108,7 +108,7 @@ public class MqttWaterLeaksWorker : BackgroundService
     {
         var payload = DeserializeWaterLeakMessage(e);
 
-        var name = Array.Find(_workerSettings.Devices, x => x.Topic == e.ApplicationMessage.Topic)?.Name ??
+        var name = (_workerSettings.Devices ?? []).FirstOrDefault(x => x.Topic == e.ApplicationMessage.Topic)?.Name ??
             e.ApplicationMessage.Topic.Split("/").LastOrDefault() ??
             "Unknown";
 

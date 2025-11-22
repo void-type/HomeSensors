@@ -3,13 +3,19 @@
 <template>
   <ul class="navbar-nav">
     <li class="nav-item">
-      <router-link :to="{ name: 'home' }" class="nav-link">Home</router-link>
+      <router-link :to="{ name: 'home' }" class="nav-link">
+        Home
+      </router-link>
     </li>
     <li class="nav-item">
-      <router-link :to="{ name: 'timeSeries' }" class="nav-link">Time Series</router-link>
+      <router-link :to="{ name: 'timeSeries' }" class="nav-link">
+        Time Series
+      </router-link>
     </li>
     <li class="nav-item">
-      <router-link :to="{ name: 'discoveryMain' }" class="nav-link">Discovery</router-link>
+      <router-link :to="{ name: 'discoveryMain' }" class="nav-link">
+        Discovery
+      </router-link>
     </li>
     <li class="nav-item dropdown">
       <a
@@ -24,13 +30,19 @@
       </a>
       <ul class="dropdown-menu" aria-labelledby="administrationDropdown">
         <li class="nav-item">
-          <router-link :to="{ name: 'devicesMain' }" class="nav-link">Devices</router-link>
+          <router-link :to="{ name: 'devicesMain' }" class="nav-link">
+            Devices
+          </router-link>
         </li>
         <li class="nav-item">
-          <router-link :to="{ name: 'locationsMain' }" class="nav-link">Locations</router-link>
+          <router-link :to="{ name: 'locationsMain' }" class="nav-link">
+            Locations
+          </router-link>
         </li>
         <li class="nav-item">
-          <router-link :to="{ name: 'categoriesMain' }" class="nav-link">Categories</router-link>
+          <router-link :to="{ name: 'categoriesMain' }" class="nav-link">
+            Categories
+          </router-link>
         </li>
       </ul>
     </li>

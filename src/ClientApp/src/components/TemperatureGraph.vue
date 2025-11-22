@@ -1,35 +1,35 @@
 <script lang="ts" setup>
-import ApiHelpers from '@/models/ApiHelpers';
-import useAppStore from '@/stores/appStore';
+import type { ScriptableScaleContext, TooltipItem } from 'chart.js';
 import type {
-  TemperatureTimeSeriesPoint,
-  TemperatureTimeSeriesLocationData,
-  TemperatureLocationResponse,
   CategoryResponse,
+  TemperatureLocationResponse,
   TemperatureTimeSeriesHvacAction,
+  TemperatureTimeSeriesLocationData,
+  TemperatureTimeSeriesPoint,
 } from '@/api/data-contracts';
-import { onMounted, reactive, watch, computed, watchEffect, ref, onUnmounted } from 'vue';
-import { addHours, startOfMinute } from 'date-fns';
-import { Chart, registerables, type ScriptableScaleContext, type TooltipItem } from 'chart.js';
-import 'chartjs-adapter-date-fns';
-import annotationPlugin from 'chartjs-plugin-annotation';
 import type { HttpResponse } from '@/api/http-client';
+import type { ITemperatureGraphInputs } from '@/models/ITemperatureGraphInputs';
+import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
+import { Chart, registerables } from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
+import { addHours, startOfMinute } from 'date-fns';
 import { storeToRefs } from 'pinia';
-import {
-  formatTemp,
-  formatTempWithUnit,
-  formatHumidity,
-  formatHumidityWithUnit,
-  tempUnit,
-} from '@/models/TempFormatHelpers';
+import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
+import ApiHelpers from '@/models/ApiHelpers';
+import DateHelpers from '@/models/DateHelpers';
 import { trimAndTitleCase } from '@/models/FormatHelpers';
 import { debounce } from '@/models/InputHelper';
-import DateHelpers from '@/models/DateHelpers';
+import {
+  formatHumidity,
+  formatHumidityWithUnit,
+  formatTemp,
+  formatTempWithUnit,
+  tempUnit,
+} from '@/models/TempFormatHelpers';
+import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
-import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
 import AppDateTimePicker from './AppDateTimePicker.vue';
-
-Chart.register(...registerables, annotationPlugin);
+import 'chartjs-adapter-date-fns';
 
 const props = defineProps<{
   initialStart?: Date;
@@ -39,7 +39,11 @@ const props = defineProps<{
   initialHideHvacActions?: boolean;
 }>();
 
-const emit = defineEmits(['inputs-change']);
+const emit = defineEmits<{
+  inputsChange: [value: ITemperatureGraphInputs];
+}>();
+
+Chart.register(...registerables, annotationPlugin);
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
@@ -83,27 +87,27 @@ function resetTimeSeriesInputs() {
 }
 
 const areAllLocationsSelected = computed(() =>
-  data.locations.every((value) => timeSeriesInputs.locationIds.includes(value.id as number))
+  data.locations.every(value => timeSeriesInputs.locationIds.includes(value.id as number)),
 );
 
 function onSelectAllClick() {
   if (areAllLocationsSelected.value) {
     timeSeriesInputs.locationIds = [];
   } else {
-    timeSeriesInputs.locationIds = data.locations.map((x) => x.id as number);
+    timeSeriesInputs.locationIds = data.locations.map(x => x.id as number);
   }
 }
 
 let lineChart: Chart | null = null;
 
 const categoryColors: Record<string, string> = {
-  Basement: '#2ac4b3',
-  Bedroom: '#b2df8a',
-  Garage: '#ff526f',
+  'Basement': '#2ac4b3',
+  'Bedroom': '#b2df8a',
+  'Garage': '#ff526f',
   'Garage Freezer': '#73a2ef',
   'Garage Fridge': '#3064cf',
-  "Jeff's Office": '#b180d0',
-  Outside: '#feaf29',
+  'Jeff\'s Office': '#b180d0',
+  'Outside': '#feaf29',
 };
 
 const predefinedColors = [
@@ -132,7 +136,7 @@ function getColor(categoryName: string) {
     return existing;
   }
 
-  const predefinedColor = predefinedColors.find((x) => !Object.values(categoryColors).includes(x));
+  const predefinedColor = predefinedColors.find(x => !Object.values(categoryColors).includes(x));
 
   if (predefinedColor) {
     categoryColors[categoryName] = predefinedColor;
@@ -149,7 +153,7 @@ function setGraphData(
   series: Array<TemperatureTimeSeriesLocationData>,
   useF: boolean,
   showHumidity: boolean,
-  showHvacActions: boolean
+  showHvacActions: boolean,
 ) {
   const element = document.getElementById('tempGraph') as HTMLCanvasElement;
 
@@ -193,31 +197,35 @@ function setGraphData(
     };
   });
 
-  const earliestTemperatureReading =
-    series.length > 0
+  const earliestTemperatureReading
+    = series.length > 0
       ? series
-          .flatMap((s) => s.points || [])
+          .flatMap(s => s.points || [])
           .reduce(
             (earliest, current) => {
-              if (!current.time) return earliest;
+              if (!current.time) {
+                return earliest;
+              }
               const currentTime = new Date(current.time).getTime();
               return currentTime < earliest.getTime() ? new Date(current.time) : earliest;
             },
-            new Date(series[0].points?.[0]?.time || Date.now())
+            new Date(series[0]?.points?.[0]?.time || Date.now()),
           )
       : new Date();
 
-  const latestTemperatureReading =
-    series.length > 0
+  const latestTemperatureReading
+    = series.length > 0
       ? series
-          .flatMap((s) => s.points || [])
+          .flatMap(s => s.points || [])
           .reduce(
             (latest, current) => {
-              if (!current.time) return latest;
+              if (!current.time) {
+                return latest;
+              }
               const currentTime = new Date(current.time).getTime();
               return currentTime > latest.getTime() ? new Date(current.time) : latest;
             },
-            new Date(series[0].points?.[0]?.time || 0)
+            new Date(series[0]?.points?.[0]?.time || 0),
           )
       : new Date();
 
@@ -225,13 +233,13 @@ function setGraphData(
     const startTime = new Date(action.startTime || '');
     const endTime = new Date(action.endTime || '');
 
-    const startTimeOrEarliest =
-      new Date(action.startTime || '').getTime() < earliestTemperatureReading.getTime()
+    const startTimeOrEarliest
+      = new Date(action.startTime || '').getTime() < earliestTemperatureReading.getTime()
         ? earliestTemperatureReading
         : startTime;
 
-    const endTimeOrLatest =
-      new Date(action.endTime || '').getTime() > latestTemperatureReading.getTime()
+    const endTimeOrLatest
+      = new Date(action.endTime || '').getTime() > latestTemperatureReading.getTime()
         ? latestTemperatureReading
         : endTime;
 
@@ -247,7 +255,6 @@ function setGraphData(
       label: {
         display: false,
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       enter(context: any) {
         if (context.chart.tooltip) {
           const tooltipContent = {
@@ -266,7 +273,6 @@ function setGraphData(
         }
         return true;
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       leave(context: any) {
         if (context.chart.tooltip) {
           context.chart.$hoveredAnnotation = null;
@@ -301,7 +307,6 @@ function setGraphData(
         },
         tooltip: {
           enabled: true,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           external(context: any) {
             if (!context.chart.$hoveredAnnotation) {
               return;
@@ -374,7 +379,6 @@ function setGraphData(
     },
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lineChart = new Chart(element, config as any);
 }
 
@@ -399,7 +403,7 @@ async function getTimeSeries(inputs: ITimeSeriesInputs) {
 async function getLocations() {
   try {
     const response = await api().temperatureLocationsGetAll();
-    data.locations = response.data.filter((x) => !x.isHidden);
+    data.locations = response.data.filter(x => !x.isHidden);
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
@@ -423,7 +427,7 @@ const categorizedLocations = computed(() => {
         return acc;
       }
 
-      const readings = data.locations.filter((location) => location.categoryId === category.id);
+      const readings = data.locations.filter(location => location.categoryId === category.id);
 
       if (!readings.length) {
         return acc;
@@ -433,10 +437,10 @@ const categorizedLocations = computed(() => {
 
       return acc;
     },
-    {} as Record<string, TemperatureLocationResponse[]>
+    {} as Record<string, TemperatureLocationResponse[]>,
   );
 
-  const uncategorized = data.locations.filter((location) => !location.categoryId);
+  const uncategorized = data.locations.filter(location => !location.categoryId);
 
   if (uncategorized.length) {
     groupedReadings.Uncategorized = uncategorized;
@@ -470,7 +474,7 @@ onMounted(async () => {
   await getCategories();
 
   if (timeSeriesInputs.locationIds.length === 0) {
-    timeSeriesInputs.locationIds = data.locations.map((x) => x.id as number);
+    timeSeriesInputs.locationIds = data.locations.map(x => x.id as number);
   } else {
     getTimeSeries(timeSeriesInputs);
   }
@@ -478,8 +482,8 @@ onMounted(async () => {
 
 function adjustDateRange(parameters: { days?: number; weeks?: number; months?: number }) {
   // Calculate total days from weeks and months (approximated)
-  const totalDays =
-    (parameters.days || 0) + (parameters.weeks || 0) * 7 + (parameters.months || 0) * 28;
+  const totalDays
+    = (parameters.days || 0) + (parameters.weeks || 0) * 7 + (parameters.months || 0) * 28;
 
   // Calculate the current range span in milliseconds
   const currentRangeMs = timeSeriesInputs.end.getTime() - timeSeriesInputs.start.getTime();
@@ -498,10 +502,10 @@ function adjustDateRange(parameters: { days?: number; weeks?: number; months?: n
   }
 }
 
-const getTimeSeriesDebounced = debounce(getTimeSeries, 200);
+const getTimeSeriesDebounced = debounce(getTimeSeries as (...args: unknown[]) => unknown, 200);
 
 watch(timeSeriesInputs, async (inputs) => {
-  emit('inputs-change', {
+  emit('inputsChange', {
     ...inputs,
     showHumidity: data.showHumidity,
     hideHvacActions: !data.showHvacActions,
@@ -513,12 +517,12 @@ watch(timeSeriesInputs, async (inputs) => {
 watch(
   () => [data.showHumidity, data.showHvacActions],
   () => {
-    emit('inputs-change', {
+    emit('inputsChange', {
       ...timeSeriesInputs,
       showHumidity: data.showHumidity,
       hideHvacActions: !data.showHvacActions,
     });
-  }
+  },
 );
 
 watchEffect(() => {
@@ -537,13 +541,15 @@ onUnmounted(() => {
     <div>
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <h5 class="mb-0">Locations</h5>
+          <h5 class="mb-0">
+            Locations
+          </h5>
           <button
             id="selectAllButton"
             class="btn btn-sm btn-outline-secondary ms-auto"
             @click="onSelectAllClick"
           >
-            {{ !areAllLocationsSelected ? 'Select' : 'Deselect' }} all
+            {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
           </button>
         </div>
         <div class="grid">
@@ -552,7 +558,9 @@ onUnmounted(() => {
             :key="categoryName"
             class="g-col-12 g-col-sm-4"
           >
-            <div class="fw-bold mb-1">{{ categoryName }}</div>
+            <div class="fw-bold mb-1">
+              {{ categoryName }}
+            </div>
             <div class="ps-2">
               <div v-for="location in values" :key="location.id" class="form-check">
                 <input
@@ -561,7 +569,7 @@ onUnmounted(() => {
                   :value="location.id"
                   class="form-check-input"
                   type="checkbox"
-                />
+                >
                 <label class="form-check-label" :for="`locationSelect-${location.id}`">
                   {{ location.name }}
                 </label>
@@ -577,7 +585,7 @@ onUnmounted(() => {
             v-model="data.showHumidity"
             class="form-check-input"
             type="checkbox"
-          />
+          >
           <label class="form-check-label" for="showHumidity">Show humidity</label>
         </div>
         <div class="form-check form-switch">
@@ -586,7 +594,7 @@ onUnmounted(() => {
             v-model="data.showHvacActions"
             class="form-check-input"
             type="checkbox"
-          />
+          >
           <label class="form-check-label" for="showHvacActions">Show HVAC actions</label>
         </div>
       </div>
@@ -594,11 +602,11 @@ onUnmounted(() => {
         <div class="grid mb-3">
           <div class="g-col-12 g-col-md-6">
             <label for="startDate" class="form-label">Start date</label>
-            <app-date-time-picker id="startDate" v-model="timeSeriesInputs.start" />
+            <AppDateTimePicker id="startDate" v-model="timeSeriesInputs.start" />
           </div>
           <div class="g-col-12 g-col-md-6">
             <label for="endDate" class="form-label">End date</label>
-            <app-date-time-picker
+            <AppDateTimePicker
               id="endDate"
               v-model="timeSeriesInputs.end"
               :disabled="showCurrent"
@@ -610,7 +618,7 @@ onUnmounted(() => {
                 class="form-check-input"
                 type="checkbox"
                 @change="setCurrentTimer()"
-              />
+              >
               <label class="form-check-label" for="showCurrent">Show current</label>
             </div>
           </div>
@@ -680,10 +688,10 @@ onUnmounted(() => {
     </div>
     <div class="chart-container-wrapper mt-3 position-relative">
       <div class="chart-container">
-        <canvas id="tempGraph"></canvas>
+        <canvas id="tempGraph" />
       </div>
       <div id="chartjs-tooltip" class="position-absolute d-none">
-        <div class="tooltip-body"></div>
+        <div class="tooltip-body" />
       </div>
     </div>
     <div class="mt-3 grid">
@@ -691,7 +699,7 @@ onUnmounted(() => {
         Cooling:
         {{
           data.hvacActions
-            .filter((x) => x.action === 'cooling')
+            .filter((x) => x.action === "cooling")
             .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
         }}
         min
@@ -700,13 +708,13 @@ onUnmounted(() => {
         Heating:
         {{
           data.hvacActions
-            .filter((x) => x.action === 'heating')
+            .filter((x) => x.action === "heating")
             .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
         }}
         min
       </div>
     </div>
-    <table :class="{ 'mt-3': true, table: true, 'table-dark': useDarkMode }">
+    <table class="mt-3 table" :class="{ 'table-dark': useDarkMode }">
       <thead>
         <tr>
           <th>Location</th>

@@ -3,7 +3,6 @@ import type { HttpResponse } from '@/api/http-client';
 // For IE compatibility
 declare global {
   interface Navigator {
-    // eslint-disable-next-line no-unused-vars
     msSaveBlob?: (blob: Blob, defaultName?: string) => boolean;
   }
 }
@@ -12,12 +11,13 @@ export default class DownloadHelpers {
   static saveDownloadedFile(response: HttpResponse<Blob, unknown>) {
     const headerValue = response.headers.get('content-disposition') || '';
 
-    let filename = headerValue
-      .split('; ')
-      .filter((part) => part.startsWith('filename='))[0]
-      .split('=')[1];
+    let filename
+      = (headerValue || '')
+        .split('; ')
+        .filter(part => part.startsWith('filename='))[0]
+        ?.split('=')[1] || '';
 
-    if (filename.startsWith('"')) {
+    if (filename?.startsWith('"')) {
       filename = filename.slice(1, -1);
     }
 
@@ -36,7 +36,7 @@ export default class DownloadHelpers {
       });
 
       linkElement.dispatchEvent(clickEvent);
-    } catch (e) {
+    } catch {
       // For IE compatibility
       if (window.navigator.msSaveBlob) {
         window.navigator.msSaveBlob(blob, filename);

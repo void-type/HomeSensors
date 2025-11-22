@@ -1,14 +1,15 @@
 <script lang="ts" setup>
-import { computed, onMounted, reactive, type PropType } from 'vue';
-import * as signalR from '@microsoft/signalr';
-import ApiHelpers from '@/models/ApiHelpers';
+import type { PropType } from 'vue';
 import type { MqttDiscoveryClientStatus } from '@/api/data-contracts';
-import useMessageStore from '@/stores/messageStore';
 import type { HttpResponse } from '@/api/http-client';
-import DateHelpers from '@/models/DateHelpers';
+import * as signalR from '@microsoft/signalr';
 import { parseISO } from 'date-fns';
-import useAppStore from '@/stores/appStore';
+import { computed, onMounted, reactive } from 'vue';
+import ApiHelpers from '@/models/ApiHelpers';
+import DateHelpers from '@/models/DateHelpers';
 import { formatJSON, isNil } from '@/models/FormatHelpers';
+import useAppStore from '@/stores/appStore';
+import useMessageStore from '@/stores/messageStore';
 
 const props = defineProps({
   topics: {
@@ -58,7 +59,7 @@ async function connectToHub() {
     connection = new signalR.HubConnectionBuilder()
       .withUrl('/hub/temperatures')
       .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: (retryContext) =>
+        nextRetryDelayInMilliseconds: retryContext =>
           ApiHelpers.getRetryMilliseconds(retryContext.elapsedMilliseconds),
       })
       .build();
@@ -85,7 +86,7 @@ async function onRefresh() {
 async function onStart() {
   try {
     const response = await api().mqttDiscoverySetup({
-      topics: data.topics.split(/\r?\n/g).filter((x) => !isNil(x)),
+      topics: data.topics.split(/\r?\n/g).filter(x => !isNil(x)),
     });
 
     data.status = response?.data;
@@ -146,19 +147,33 @@ onMounted(async () => {
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">Discovery</h1>
-    <p class="mt-4">See MQTT messages from the specified topics.</p>
+    <h1 class="mt-3">
+      Discovery
+    </h1>
+    <p class="mt-4">
+      See MQTT messages from the specified topics.
+    </p>
     <p>+ is a single-level wildcard. Can be used anywhere in a topic to sub a level.</p>
     <p>
       # is a multi-level wildcard. Can only be used at the end of a topic preceded by a forward
       slash.
     </p>
     <div class="btn-toolbar mt-4">
-      <button class="btn btn-primary me-2" @click.prevent.stop="onStart">Start</button>
-      <button class="btn btn-secondary me-2" @click.prevent.stop="onRestart">Restart</button>
-      <button class="btn btn-secondary me-2" @click.prevent.stop="onEnd">End</button>
-      <button class="btn btn-secondary me-2" @click.prevent.stop="onClear">Clear</button>
-      <button class="btn btn-secondary me-2" @click.prevent.stop="onRefresh">Refresh status</button>
+      <button class="btn btn-primary me-2" @click.prevent.stop="onStart">
+        Start
+      </button>
+      <button class="btn btn-secondary me-2" @click.prevent.stop="onRestart">
+        Restart
+      </button>
+      <button class="btn btn-secondary me-2" @click.prevent.stop="onEnd">
+        End
+      </button>
+      <button class="btn btn-secondary me-2" @click.prevent.stop="onClear">
+        Clear
+      </button>
+      <button class="btn btn-secondary me-2" @click.prevent.stop="onRefresh">
+        Refresh status
+      </button>
     </div>
     <div class="mt-3">
       <label for="status" class="form-label">Status</label>
@@ -168,7 +183,7 @@ onMounted(async () => {
         type="text"
         disabled
         :value="data.status.isConnected ? 'Running' : 'Not running'"
-      />
+      >
     </div>
     <div class="mt-3">
       <label for="topics" class="form-label">Topics (one per line)</label>
@@ -180,7 +195,7 @@ onMounted(async () => {
         id="feed"
         v-model="feed"
         rows="30"
-        :class="{ 'form-control': true, 'is-invalid': isFieldInError('topics') }"
+        class="form-control" :class="{ 'is-invalid': isFieldInError('topics') }"
         readonly
       />
     </div>

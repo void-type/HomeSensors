@@ -10,8 +10,7 @@ const { version } = storeToRefs(appStore);
   <footer id="footer" class="d-print-none">
     <div>
       <a href="https://github.com/void-type/HomeSensors">
-        HomeSensors {{ version }} is open source!</a
-      >
+        HomeSensors {{ version }} is open source!</a>
     </div>
     <div>
       Logo from <a href="https://www.svgrepo.com/svg/230960/home-real-estate">svgrepo.com</a>

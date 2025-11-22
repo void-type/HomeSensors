@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
 import type { AppVersion, DomainUser, WebClientInfo } from '@/api/data-contracts';
 import type { ModalParameters } from '@/models/ModalParameters';
+import { defineStore } from 'pinia';
 import DarkModeHelpers from '@/models/DarkModeHelpers';
 import UserSettingHelpers from '@/models/UserSettingHelpers';
 
@@ -42,12 +42,12 @@ export const useAppStore = defineStore('app', {
   }),
 
   getters: {
-    isFieldInError: (state) => (fieldName: string) =>
+    isFieldInError: state => (fieldName: string) =>
       state.fieldsInError
-        .map((errorField) => errorField.toLowerCase())
-        .indexOf(fieldName.toLowerCase()) > -1,
+        .map(errorField => errorField.toLowerCase())
+        .includes(fieldName.toLowerCase()),
 
-    userIsAuthorizedAs: (state) => (policy: string) =>
+    userIsAuthorizedAs: state => (policy: string) =>
       (state.user.authorizedAs || []).includes(policy),
   },
 
