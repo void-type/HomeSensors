@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/analyzers/">
+    <Project Path="analyzers/VoidCore.Analyzers/VoidCore.Analyzers.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/HomeSensors.Model/HomeSensors.Model.csproj" />
+    <Project Path="src/HomeSensors.Service/HomeSensors.Service.csproj" />
+    <Project Path="src/HomeSensors.Web/HomeSensors.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HomeSensors.Test/HomeSensors.Test.csproj" />
+  </Folder>
+</Solution>
