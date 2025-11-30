@@ -163,9 +163,14 @@ onMounted(async () => {
                   class="stale blink me-2"
                   :title="`Reading is more than ${staleLimitMinutes} minutes old.`"
                 />
-                <small class="fw-light">{{
-                  format(new Date(currentTemp.time as string), 'HH:mm')
-                }}</small>
+                <router-link
+                  :to="{ name: 'timeSeries', query: { locationIds: currentTemp.location?.id! } }"
+                  :aria-label="`Last reading at ${format(new Date(currentTemp.time as string), 'HH:mm')}. Click to view time series for this location.`"
+                >
+                  <small>{{
+                    format(new Date(currentTemp.time as string), 'HH:mm')
+                  }}</small>
+                </router-link>
               </div>
             </div>
           </div>
