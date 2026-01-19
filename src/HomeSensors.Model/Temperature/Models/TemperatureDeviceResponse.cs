@@ -4,7 +4,7 @@ public class TemperatureDeviceResponse
 {
     public TemperatureDeviceResponse(
         long id, string name, string mqttTopic,
-        long locationId, TemperatureReadingResponse? lastReading,
+        long? locationId, TemperatureReadingResponse? lastReading,
         bool isRetired, bool isInactive, bool isBatteryLevelLow
         )
     {
@@ -24,7 +24,7 @@ public class TemperatureDeviceResponse
 
     public string MqttTopic { get; }
 
-    public long LocationId { get; }
+    public long? LocationId { get; }
 
     public TemperatureReadingResponse? LastReading { get; }
 

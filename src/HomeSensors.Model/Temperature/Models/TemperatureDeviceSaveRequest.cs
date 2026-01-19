@@ -8,7 +8,7 @@ public class TemperatureDeviceSaveRequest
 
     public string MqttTopic { get; init; } = string.Empty;
 
-    public long LocationId { get; init; }
+    public long? LocationId { get; init; }
 
     public bool IsRetired { get; init; }
 }

@@ -9,12 +9,18 @@ public class HvacAction
 
     public string EntityId { get; set; } = string.Empty;
 
-    // Idle, fan, cooling, heating
+    /// <summary>
+    /// Idle, fan, cooling, heating
+    /// </summary>
     public string State { get; set; } = string.Empty;
 
-    // Last Changed indicates the last time the state of an entity was modified.
+    /// <summary>
+    /// Last Changed indicates the last time the state of an entity was modified.
+    /// </summary>
     public DateTimeOffset LastChanged { get; set; }
 
-    // Last Updated indicates the last time any change (state or attribute) was recorded for that entity.
+    /// <summary>
+    /// Last Updated indicates the last time any change (state or attribute) was recorded for that entity.
+    /// </summary>
     public DateTimeOffset LastUpdated { get; set; }
 }

@@ -122,7 +122,7 @@ export interface TemperatureDeviceResponse {
   name?: string;
   mqttTopic?: string;
   /** @format int64 */
-  locationId?: number;
+  locationId?: number | null;
   lastReading?: TemperatureReadingResponse | null;
   isRetired?: boolean;
   isLost?: boolean;
@@ -160,9 +160,9 @@ export interface TemperatureDeviceSaveRequest {
   id?: number;
   name?: string;
   mqttTopic?: string;
-  /** @format int64 */
-  locationId?: number;
   isRetired?: boolean;
+  /** @format int64 */
+  locationId?: number | null;
 }
 
 export interface TemperatureCheckLimitResponse {

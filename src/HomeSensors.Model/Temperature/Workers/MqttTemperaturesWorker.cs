@@ -116,12 +116,7 @@ public class MqttTemperaturesWorker : BackgroundService
             .TagWith($"Query called from {nameof(MqttTemperaturesWorker)}.")
             .FirstOrDefaultAsync(x => x.MqttTopic == e.ApplicationMessage.Topic);
 
-        if (device is null)
-        {
-            return;
-        }
-
-        if (device.IsRetired)
+        if (device?.IsRetired != false || !device.TemperatureLocationId.HasValue)
         {
             return;
         }
@@ -145,7 +140,7 @@ public class MqttTemperaturesWorker : BackgroundService
                 Humidity = message.Humidity,
                 TemperatureCelsius = message.Temperature_C,
                 TemperatureDevice = device,
-                TemperatureLocationId = device.TemperatureLocationId
+                TemperatureLocationId = device.TemperatureLocationId.Value
             });
 
         await dbContext.SaveChangesAsync();

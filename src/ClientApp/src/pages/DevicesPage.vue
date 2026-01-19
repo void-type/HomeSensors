@@ -343,7 +343,7 @@ onBeforeUnmount(() => {
                     }"
                     @change="onDeviceInput"
                   >
-                    <option :value="0" />
+                    <option :value="null" />
                     <option
                       v-for="location in data.locations"
                       :key="location.id"
