@@ -1,6 +1,7 @@
 import { config as fontAwesomeConfig, library } from '@fortawesome/fontawesome-svg-core';
 import {
   faBatteryQuarter,
+  faBellSlash,
   faClock,
   faMoon,
   faSearch,
@@ -19,13 +20,14 @@ import 'bootstrap';
 fontAwesomeConfig.autoAddCss = false;
 
 library.add(
-  faMoon,
-  faThumbtack,
-  faClock,
   faBatteryQuarter,
-  faTemperatureFull,
-  faSnowflake,
+  faBellSlash,
+  faClock,
+  faMoon,
   faSearch,
+  faSnowflake,
+  faTemperatureFull,
+  faThumbtack,
 );
 
 const app = createApp(App);

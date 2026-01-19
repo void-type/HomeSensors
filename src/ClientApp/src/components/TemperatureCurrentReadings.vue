@@ -119,6 +119,16 @@ function isStale(reading: TemperatureReadingResponse) {
   return result;
 }
 
+function formatReadingTime(reading: TemperatureReadingResponse) {
+  const readingDate = new Date(reading.time as string);
+  const hoursDiff = (Date.now() - readingDate.getTime()) / (1000 * 60 * 60);
+
+  if (hoursDiff > 24) {
+    return format(readingDate, 'MMM d, HH:mm');
+  }
+  return format(readingDate, 'HH:mm');
+}
+
 onMounted(async () => {
   await connectToHub();
   await getCategories();
@@ -137,18 +147,20 @@ onMounted(async () => {
                 {{ currentTemp.location?.name }}
               </div>
               <div class="h3">
-                <FontAwesomeIcon
-                  v-if="currentTemp.isHot"
-                  icon="fa-temperature-full"
-                  class="hot blink me-2"
-                  title="Hotter than limit."
-                />
-                <FontAwesomeIcon
-                  v-if="currentTemp.isCold"
-                  icon="fa-snowflake"
-                  class="cold blink me-2"
-                  title="Colder than limit."
-                />
+                <span v-if="currentTemp.isHot" title="Hotter than limit.">
+                  <FontAwesomeIcon
+                    icon="fa-temperature-full"
+                    class="hot blink me-2"
+                    aria-label="Hotter than limit."
+                  />
+                </span>
+                <span v-if="currentTemp.isCold" title="Colder than limit.">
+                  <FontAwesomeIcon
+                    icon="fa-snowflake"
+                    class="cold blink me-2"
+                    aria-label="Colder than limit."
+                  />
+                </span>
                 <span class="fw-bold">{{
                   formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit, 0)
                 }}</span>
@@ -157,18 +169,23 @@ onMounted(async () => {
                 }}</span>
               </div>
               <div>
-                <FontAwesomeIcon
+                <span
                   v-if="isStale(currentTemp)"
-                  icon="fa-clock"
-                  class="stale blink me-2"
                   :title="`Reading is more than ${staleLimitMinutes} minutes old.`"
-                />
+                >
+                  <FontAwesomeIcon
+                    icon="fa-clock"
+                    class="stale blink me-2"
+                    :aria-label="`Reading is more than ${staleLimitMinutes} minutes old.`"
+                  />
+                </span>
                 <router-link
                   :to="{ name: 'timeSeries', query: { locationIds: currentTemp.location?.id! } }"
-                  :aria-label="`Last reading at ${format(new Date(currentTemp.time as string), 'HH:mm')}. Click to view time series for this location.`"
+                  :title="`Last reading at ${formatReadingTime(currentTemp)}. Click to view time series for this location.`"
+                  :aria-label="`Last reading at ${formatReadingTime(currentTemp)}. Click to view time series for this location.`"
                 >
                   <small>{{
-                    format(new Date(currentTemp.time as string), 'HH:mm')
+                    formatReadingTime(currentTemp)
                   }}</small>
                 </router-link>
               </div>

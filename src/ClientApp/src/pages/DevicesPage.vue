@@ -269,24 +269,47 @@ onBeforeUnmount(() => {
                   {{ device.name || "New device" }}
                   <span v-if="isDeviceDirty(device)" class="badge bg-warning text-dark ms-2">Unsaved</span>
                   <span v-if="device.isRetired" class="badge bg-secondary ms-2">Retired</span>
-                  <FontAwesomeIcon
-                    v-if="device.isInactive"
+                  <span
+                    v-if="device.excludeFromInactiveAlerts" class="badge bg-secondary ms-2"
+                    title="Inactive alerts disabled."
+                    aria-label="Inactive alerts disabled."
+                  ><FontAwesomeIcon
+                    icon="fa-bell-slash"
+                    aria-hidden="true"
+                  /><FontAwesomeIcon
                     icon="fa-clock"
-                    class="text-danger ms-2"
+                    aria-hidden="true"
+                  /></span>
+                  <span
+                    v-if="device.isInactive"
                     :title="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
-                  />
-                  <FontAwesomeIcon
+                  >
+                    <FontAwesomeIcon
+                      icon="fa-clock"
+                      class="text-danger ms-2"
+                      :aria-label="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
+                    />
+                  </span>
+                  <span
                     v-if="device.isLost"
-                    icon="fa-battery-quarter"
-                    class="text-danger ms-2"
                     title="Lost. Doesn't have location."
-                  />
-                  <FontAwesomeIcon
+                  >
+                    <FontAwesomeIcon
+                      icon="fa-battery-quarter"
+                      class="text-danger ms-2"
+                      aria-label="Lost. Doesn't have location."
+                    />
+                  </span>
+                  <span
                     v-if="device.isBatteryLevelLow"
-                    icon="fa-battery-quarter"
-                    class="text-danger ms-2"
                     title="Battery low."
-                  />
+                  >
+                    <FontAwesomeIcon
+                      icon="fa-battery-quarter"
+                      class="text-danger ms-2"
+                      aria-label="Battery low."
+                    />
+                  </span>
                 </span>
               </div>
             </button>
@@ -331,6 +354,7 @@ onBeforeUnmount(() => {
                       :to="{ name: 'discoveryMain', query: { topic: device.mqttTopic } }"
                       class="btn btn-secondary"
                       title="View MQTT"
+                      aria-label="View MQTT"
                     >
                       <FontAwesomeIcon icon="fa-search" />
                     </router-link>
