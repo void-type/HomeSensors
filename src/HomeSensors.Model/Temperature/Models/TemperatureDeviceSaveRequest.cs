@@ -11,4 +11,6 @@ public class TemperatureDeviceSaveRequest
     public long? LocationId { get; init; }
 
     public bool IsRetired { get; init; }
+
+    public bool ExcludeFromInactiveAlerts { get; init; }
 }

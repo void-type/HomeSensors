@@ -128,6 +128,7 @@ export interface TemperatureDeviceResponse {
   isLost?: boolean;
   isInactive?: boolean;
   isBatteryLevelLow?: boolean;
+  excludeFromInactiveAlerts?: boolean;
 }
 
 export interface TemperatureReadingResponse {
@@ -160,9 +161,10 @@ export interface TemperatureDeviceSaveRequest {
   id?: number;
   name?: string;
   mqttTopic?: string;
-  isRetired?: boolean;
   /** @format int64 */
   locationId?: number | null;
+  isRetired?: boolean;
+  excludeFromInactiveAlerts?: boolean;
 }
 
 export interface TemperatureCheckLimitResponse {

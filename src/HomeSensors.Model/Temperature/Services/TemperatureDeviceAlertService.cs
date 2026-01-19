@@ -37,7 +37,7 @@ public class TemperatureDeviceAlertService
         var resendAfter = now.Add(betweenNotifications);
 
         var inactiveAlerts = devices
-            .Where(d => d.IsInactive)
+            .Where(d => d.IsInactive && !d.ExcludeFromInactiveAlerts)
             .Select(d => new TemperatureDeviceAlert(
                 TemperatureDeviceAlertType.DeviceInactive,
                 d,

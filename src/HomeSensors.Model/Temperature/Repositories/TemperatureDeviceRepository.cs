@@ -43,6 +43,7 @@ public class TemperatureDeviceRepository : RepositoryBase
                 x.Name,
                 x.MqttTopic,
                 x.IsRetired,
+                x.ExcludeFromInactiveAlerts,
                 LocationId = x.TemperatureLocationId,
             })
             .ToListAsync();
@@ -60,7 +61,8 @@ public class TemperatureDeviceRepository : RepositoryBase
                 lastReading: lastReading?.ToApiResponse(),
                 isRetired: x.IsRetired,
                 isInactive: !x.IsRetired && (lastReading is null || lastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-20)),
-                isBatteryLevelLow: !x.IsRetired && lastReading?.DeviceBatteryLevel is not null && lastReading.DeviceBatteryLevel < 1
+                isBatteryLevelLow: !x.IsRetired && lastReading?.DeviceBatteryLevel is not null && lastReading.DeviceBatteryLevel < 1,
+                excludeFromInactiveAlerts: x.ExcludeFromInactiveAlerts
             );
         });
     }
@@ -106,6 +108,7 @@ public class TemperatureDeviceRepository : RepositoryBase
         device.Name = request.Name;
         device.MqttTopic = request.MqttTopic;
         device.IsRetired = request.IsRetired;
+        device.ExcludeFromInactiveAlerts = request.ExcludeFromInactiveAlerts;
         device.TemperatureLocationId = request.LocationId;
 
         await _data.SaveChangesAsync();

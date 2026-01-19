@@ -40,6 +40,7 @@ function trackOriginalState(device: TemperatureDeviceResponse) {
         mqttTopic: device.mqttTopic,
         locationId: device.locationId,
         isRetired: device.isRetired,
+        excludeFromInactiveAlerts: device.excludeFromInactiveAlerts,
       }),
     );
   }
@@ -63,6 +64,7 @@ function isDeviceDirty(device: TemperatureDeviceResponse): boolean {
     mqttTopic: device.mqttTopic,
     locationId: device.locationId,
     isRetired: device.isRetired,
+    excludeFromInactiveAlerts: device.excludeFromInactiveAlerts,
   });
 
   return original !== current;
@@ -114,6 +116,7 @@ async function newDevice() {
     mqttTopic: '',
     locationId: 0,
     isRetired: false,
+    excludeFromInactiveAlerts: false,
   };
 
   data.devices.unshift(newDev);
@@ -161,6 +164,7 @@ async function saveDevice(device: TemperatureDeviceResponse) {
     mqttTopic: device.mqttTopic,
     locationId: device.locationId,
     isRetired: device.isRetired,
+    excludeFromInactiveAlerts: device.excludeFromInactiveAlerts,
   };
 
   try {
@@ -366,6 +370,16 @@ onBeforeUnmount(() => {
                       @change="onDeviceInput"
                     >
                     <label :for="`retired-${device.id}`" class="form-check-label">Retired</label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      :id="`excludeFromInactiveAlerts-${device.id}`"
+                      v-model="device.excludeFromInactiveAlerts"
+                      class="form-check-input form-check-input"
+                      type="checkbox"
+                      @change="onDeviceInput"
+                    >
+                    <label :for="`excludeFromInactiveAlerts-${device.id}`" class="form-check-label">Exclude from inactive alerts</label>
                   </div>
                 </div>
                 <div v-if="device.id" class="g-col-12">
