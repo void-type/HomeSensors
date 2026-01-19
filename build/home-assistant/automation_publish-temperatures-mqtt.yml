@@ -1,0 +1,24 @@
+alias: Publish temperatures to MQTT for HomeSensors
+triggers:
+  - trigger: state
+    entity_id:
+      - sensor.ecobee_thermostat_current_temperature
+conditions: []
+actions:
+  - action: mqtt.publish
+    metadata: {}
+    data:
+      topic: |
+        homesensors/homeassistant/{{ trigger.entity_id.split('.')[1] }}
+      payload: |
+        {
+          "time": "{{ now().isoformat() }}",
+          "model": "{{ state_attr(trigger.entity_id, 'friendly_name') }}",
+          "id": "{{ trigger.entity_id }}",
+          "channel": "home_assistant",
+          "temperature_c": {% if state_attr(trigger.entity_id, 'unit_of_measurement') == '°F' %}{{ ((trigger.to_state.state | float - 32) * 5/9) | round(2) }}{% else %}{{ trigger.to_state.state | float | round(2) }}{% endif %},
+        }
+      qos: 0
+      retain: false
+mode: queued
+max: 10
