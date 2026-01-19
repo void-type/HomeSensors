@@ -1,6 +1,6 @@
-﻿using HomeSensors.Model.Repositories;
-using HomeSensors.Model.Repositories.Models;
-using HomeSensors.Model.Services.Temperature.Poll;
+﻿using HomeSensors.Model.Temperature.Models;
+using HomeSensors.Model.Temperature.Repositories;
+using HomeSensors.Model.Temperature.Workers;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;

@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Web.Services.MqttDiscovery;
 using HomeSensors.Web.Services.PushTemperatureCurrentReadings;
+using Microsoft.AspNetCore.Mvc.Razor;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.Model.Configuration;
 
@@ -14,6 +15,11 @@ public static class WebServicesStartupExtensions
         services.AddDomainEvents(
             ServiceLifetime.Scoped,
             typeof(GetWebClientInfo).Assembly);
+
+        services.Configure<RazorViewEngineOptions>(options =>
+        {
+            options.ViewLocationExpanders.Add(new FeatureFolderViewLocationExpander());
+        });
 
         var workersConfig = config.GetSection("Workers");
 

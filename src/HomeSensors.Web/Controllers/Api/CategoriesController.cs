@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.Repositories;
-using HomeSensors.Model.Repositories.Models;
+﻿using HomeSensors.Model.Categories.Models;
+using HomeSensors.Model.Categories.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;

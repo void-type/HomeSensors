@@ -1,4 +1,4 @@
-﻿using HomeSensors.Model.Mqtt;
+﻿using HomeSensors.Model.Infrastructure.Mqtt;
 using HomeSensors.Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using MQTTnet;

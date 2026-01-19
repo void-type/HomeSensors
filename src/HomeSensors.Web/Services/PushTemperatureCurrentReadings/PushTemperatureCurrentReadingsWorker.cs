@@ -1,4 +1,4 @@
-﻿using HomeSensors.Model.Repositories;
+﻿using HomeSensors.Model.Temperature.Repositories;
 using HomeSensors.Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 

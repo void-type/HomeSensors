@@ -1,4 +1,6 @@
-﻿using HomeSensors.Model.Data.Models;
+﻿using HomeSensors.Model.Categories.Entities;
+using HomeSensors.Model.Hvac.Entities;
+using HomeSensors.Model.Temperature.Entities;
 using Microsoft.EntityFrameworkCore;
 
 #nullable disable

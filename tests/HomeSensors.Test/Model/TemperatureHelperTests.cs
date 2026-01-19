@@ -1,6 +1,5 @@
-﻿using HomeSensors.Model.Data.Models;
-using HomeSensors.Model.Helpers;
-using HomeSensors.Model.Repositories;
+﻿using HomeSensors.Model.Temperature.Entities;
+using HomeSensors.Model.Temperature.Helpers;
 using Xunit;
 
 namespace HomeSensors.Test.Model;

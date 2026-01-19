@@ -1,4 +1,4 @@
-﻿using HomeSensors.Model.Startup;
+﻿using HomeSensors.Model;
 using Serilog;
 using VoidCore.Model.Configuration;
 

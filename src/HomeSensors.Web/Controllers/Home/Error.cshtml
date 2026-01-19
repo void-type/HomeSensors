@@ -1,0 +1,22 @@
+﻿@using HomeSensors.Web.Controllers.Home
+@using VoidCore.AspNet.Configuration
+@inject WebApplicationSettings appConfig
+@model ErrorViewModel
+@{
+    ViewData["Title"] = $"{@Model.Title} | {appConfig.Name}";
+}
+
+@section Style
+{
+    <link rel="stylesheet" href="~/css/tiny-static.css" />
+}
+
+<main class="text-center">
+    <h1>@Model.Title
+        @if(Model.StatusCode > 0)
+        {
+            <text>(@Model.StatusCode)</text>
+        }
+    </h1>
+    <h2>@Model.Description</h2>
+</main>

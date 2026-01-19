@@ -1,4 +1,4 @@
-﻿using HomeSensors.Model.Startup;
+﻿using HomeSensors.Model;
 using HomeSensors.Web.Auth;
 using HomeSensors.Web.Hubs;
 using HomeSensors.Web.Startup;

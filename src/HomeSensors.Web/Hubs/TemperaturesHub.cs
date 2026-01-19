@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.Repositories;
-using HomeSensors.Model.Repositories.Models;
+﻿using HomeSensors.Model.Temperature.Models;
+using HomeSensors.Model.Temperature.Repositories;
 using Microsoft.AspNetCore.SignalR;
 
 namespace HomeSensors.Web.Hubs;
