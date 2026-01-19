@@ -463,6 +463,9 @@ function currentTimer() {
 
 function setCurrentTimer() {
   if (showCurrent.value) {
+    const future = new Date();
+    future.setMinutes(future.getMinutes() + 5);
+    timeSeriesInputs.end = future;
     currentTimer();
   } else if (lastTimeout) {
     clearTimeout(lastTimeout);
