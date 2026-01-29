@@ -1,8 +1,11 @@
 ﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Helpers;
+using HomeSensors.Model.Notifications;
 using HomeSensors.Model.Temperature.Entities;
 using HomeSensors.Model.Temperature.Helpers;
 using HomeSensors.Model.Temperature.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Messages;
 using VoidCore.Model.Text;
@@ -12,10 +15,14 @@ namespace HomeSensors.Model.Temperature.Repositories;
 public class TemperatureLocationRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
+    private readonly HybridCache _cache;
+    private readonly ITemperatureHubNotifier _hubNotifier;
 
-    public TemperatureLocationRepository(HomeSensorsContext data)
+    public TemperatureLocationRepository(HomeSensorsContext data, HybridCache cache, ITemperatureHubNotifier hubNotifier)
     {
         _data = data;
+        _cache = cache;
+        _hubNotifier = hubNotifier;
     }
 
     /// <summary>
@@ -104,9 +111,13 @@ public class TemperatureLocationRepository : RepositoryBase
         location.MinTemperatureLimitCelsius = request.MinTemperatureLimitCelsius;
         location.MaxTemperatureLimitCelsius = request.MaxTemperatureLimitCelsius;
         location.IsHidden = request.IsHidden;
+        location.Color = request.Color;
         location.CategoryId = request.CategoryId;
 
         await _data.SaveChangesAsync();
+
+        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag);
+        await _hubNotifier.NotifyCurrentReadingsChangedAsync();
 
         return Result.Ok(EntityMessage.Create("Location saved.", location.Id));
     }
@@ -140,6 +151,9 @@ public class TemperatureLocationRepository : RepositoryBase
         _data.TemperatureLocations.Remove(location);
 
         await _data.SaveChangesAsync();
+
+        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag);
+        await _hubNotifier.NotifyCurrentReadingsChangedAsync();
 
         return Result.Ok(EntityMessage.Create("Location deleted.", location.Id));
     }

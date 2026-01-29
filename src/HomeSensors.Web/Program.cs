@@ -50,8 +50,8 @@ try
     services.AddSingleton<ICurrentUserAccessor, SingleUserAccessor>();
 
     // Dependencies
-    services.AddHomeSensorsWebServices(config);
     services.AddHomeSensorsCommonServices(config);
+    services.AddHomeSensorsWebServices(config);
 
     var app = builder.Build();
 

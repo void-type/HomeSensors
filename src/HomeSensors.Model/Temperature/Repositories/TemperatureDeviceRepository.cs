@@ -1,8 +1,10 @@
 ﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Temperature.Entities;
 using HomeSensors.Model.Temperature.Helpers;
 using HomeSensors.Model.Temperature.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Messages;
 using VoidCore.Model.Text;
@@ -14,11 +16,13 @@ public class TemperatureDeviceRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
     private readonly IDateTimeService _dateTimeService;
+    private readonly HybridCache _cache;
 
-    public TemperatureDeviceRepository(HomeSensorsContext data, IDateTimeService dateTimeService)
+    public TemperatureDeviceRepository(HomeSensorsContext data, IDateTimeService dateTimeService, HybridCache cache)
     {
         _data = data;
         _dateTimeService = dateTimeService;
+        _cache = cache;
     }
 
     /// <summary>
@@ -113,6 +117,8 @@ public class TemperatureDeviceRepository : RepositoryBase
 
         await _data.SaveChangesAsync();
 
+        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag);
+
         return Result.Ok(EntityMessage.Create("Device saved.", device.Id));
     }
 
@@ -129,6 +135,8 @@ public class TemperatureDeviceRepository : RepositoryBase
         _data.TemperatureDevices.Remove(device);
 
         await _data.SaveChangesAsync();
+
+        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag);
 
         return Result.Ok(EntityMessage.Create("Device deleted.", device.Id));
     }

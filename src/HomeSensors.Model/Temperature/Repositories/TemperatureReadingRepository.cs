@@ -1,4 +1,5 @@
 ﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Hvac.Entities;
 using HomeSensors.Model.Temperature.Helpers;
 using HomeSensors.Model.Temperature.Models;
@@ -43,6 +44,10 @@ public class TemperatureReadingRepository : RepositoryBase
                 Expiration = TimeSpan.FromSeconds(60),
                 LocalCacheExpiration = TimeSpan.FromSeconds(60),
             },
+            tags: [
+                CacheHelpers.TemperatureLocationAllCacheTag,
+                CacheHelpers.CategoryAllCacheTag,
+            ],
             cancellationToken: cancellationToken);
     }
 
@@ -73,6 +78,10 @@ public class TemperatureReadingRepository : RepositoryBase
         return await _cache.GetOrCreateAsync(
             cacheKey,
             async (cancel) => await GetTimeSeriesAsync(request, cancel),
+            tags: [
+                CacheHelpers.TemperatureLocationAllCacheTag,
+                CacheHelpers.CategoryAllCacheTag,
+            ],
             cancellationToken: cancellationToken);
     }
 

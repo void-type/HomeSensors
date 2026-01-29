@@ -12,5 +12,7 @@ public class TemperatureLocationSaveRequest
 
     public bool IsHidden { get; init; }
 
+    public string Color { get; init; } = string.Empty;
+
     public long? CategoryId { get; init; }
 }

@@ -1,6 +1,4 @@
-﻿using HomeSensors.Model.Temperature.Repositories;
-using HomeSensors.Web.Hubs;
-using Microsoft.AspNetCore.SignalR;
+﻿using HomeSensors.Model.Notifications;
 
 namespace HomeSensors.Web.Services.PushTemperatureCurrentReadings;
 
@@ -11,16 +9,14 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
 {
     private readonly TimeSpan _betweenTicks;
     private readonly ILogger<PushTemperatureCurrentReadingsWorker> _logger;
-    private readonly IHubContext<TemperaturesHub> _tempHubContext;
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ITemperatureHubNotifier _hubNotifier;
 
     public PushTemperatureCurrentReadingsWorker(ILogger<PushTemperatureCurrentReadingsWorker> logger,
-        IHubContext<TemperaturesHub> tempHubContext, IServiceScopeFactory scopeFactory,
+        ITemperatureHubNotifier hubNotifier,
         PushTemperatureCurrentReadingsSettings workerSettings)
     {
         _logger = logger;
-        _tempHubContext = tempHubContext;
-        _scopeFactory = scopeFactory;
+        _hubNotifier = hubNotifier;
         _betweenTicks = TimeSpan.FromSeconds(workerSettings.BetweenTicksSeconds);
 
         logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} seconds.",
@@ -36,12 +32,7 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
         {
             try
             {
-                using var scope = _scopeFactory.CreateScope();
-                var readingRepository = scope.ServiceProvider.GetRequiredService<TemperatureReadingRepository>();
-
-                var currentReadings = await readingRepository.GetCurrentCachedAsync(true, stoppingToken);
-
-                await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.UpdateCurrentReadingsMessageName, currentReadings, cancellationToken: stoppingToken);
+                await _hubNotifier.NotifyCurrentReadingsChangedAsync(stoppingToken);
             }
             catch (Exception ex)
             {

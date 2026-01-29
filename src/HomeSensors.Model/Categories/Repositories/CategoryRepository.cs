@@ -1,7 +1,10 @@
 ﻿using HomeSensors.Model.Categories.Entities;
 using HomeSensors.Model.Categories.Models;
 using HomeSensors.Model.Data;
+using HomeSensors.Model.Helpers;
+using HomeSensors.Model.Notifications;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Messages;
 using VoidCore.Model.Text;
@@ -11,10 +14,14 @@ namespace HomeSensors.Model.Categories.Repositories;
 public class CategoryRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
+    private readonly HybridCache _cache;
+    private readonly ITemperatureHubNotifier _hubNotifier;
 
-    public CategoryRepository(HomeSensorsContext data)
+    public CategoryRepository(HomeSensorsContext data, HybridCache cache, ITemperatureHubNotifier hubNotifier)
     {
         _data = data;
+        _cache = cache;
+        _hubNotifier = hubNotifier;
     }
 
     public async Task<List<CategoryResponse>> GetAllAsync()
@@ -64,6 +71,9 @@ public class CategoryRepository : RepositoryBase
 
         await _data.SaveChangesAsync();
 
+        await _cache.RemoveByTagAsync(CacheHelpers.CategoryAllCacheTag);
+        await _hubNotifier.NotifyCurrentReadingsChangedAsync();
+
         return Result.Ok(EntityMessage.Create("Category saved.", category.Id));
     }
 
@@ -80,6 +90,9 @@ public class CategoryRepository : RepositoryBase
         _data.Categories.Remove(category);
 
         await _data.SaveChangesAsync();
+
+        await _cache.RemoveByTagAsync(CacheHelpers.CategoryAllCacheTag);
+        await _hubNotifier.NotifyCurrentReadingsChangedAsync();
 
         return Result.Ok(EntityMessage.Create("Category deleted.", category.Id));
     }

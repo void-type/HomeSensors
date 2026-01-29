@@ -129,23 +129,37 @@ function getRandomColor() {
   return color;
 }
 
-function getColor(categoryName: string) {
-  const existing = categoryColors[categoryName];
+function isValidHexColor(color: string | undefined): boolean {
+  if (!color) {
+    return false;
+  }
+  return /^#[0-9A-F]{6}$/i.test(color);
+}
 
+function getColor(location: TemperatureLocationResponse | null | undefined): string {
+  // Primary: Use location's color if set and valid
+  if (location?.color && isValidHexColor(location.color)) {
+    return location.color;
+  }
+
+  const locationName = location?.name || 'unknown';
+
+  // Secondary: Check hardcoded categoryColors for backwards compatibility
+  const existing = categoryColors[locationName];
   if (existing) {
     return existing;
   }
 
+  // Tertiary: Assign from predefinedColors pool
   const predefinedColor = predefinedColors.find(x => !Object.values(categoryColors).includes(x));
-
   if (predefinedColor) {
-    categoryColors[categoryName] = predefinedColor;
+    categoryColors[locationName] = predefinedColor;
     return predefinedColor;
   }
 
+  // Last resort: Generate random color
   const randomColor = getRandomColor();
-
-  categoryColors[categoryName] = randomColor;
+  categoryColors[locationName] = randomColor;
   return randomColor;
 }
 
@@ -179,7 +193,7 @@ function setGraphData(
   }
 
   const datasets = series?.map((s) => {
-    const lineColor = getColor(s.location?.name || 'unknown');
+    const lineColor = getColor(s.location);
 
     return {
       label: s.location?.name,

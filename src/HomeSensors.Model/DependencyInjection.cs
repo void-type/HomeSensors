@@ -4,6 +4,7 @@ using HomeSensors.Model.Hvac.Workers;
 using HomeSensors.Model.Infrastructure.Emailing;
 using HomeSensors.Model.Infrastructure.HomeAssistant;
 using HomeSensors.Model.Infrastructure.Mqtt;
+using HomeSensors.Model.Notifications;
 using HomeSensors.Model.Temperature.Repositories;
 using HomeSensors.Model.Temperature.Services;
 using HomeSensors.Model.Temperature.Workers;
@@ -39,6 +40,8 @@ public static class DependencyInjection
         services.AddScoped<TemperatureReadingRepository>();
         services.AddScoped<TemperatureDeviceRepository>();
         services.AddScoped<TemperatureLocationRepository>();
+
+        services.AddSingleton<ITemperatureHubNotifier, NoOpTemperatureHubNotifier>();
 
         services.AddFusionCache()
             .WithDefaultEntryOptions(new FusionCacheEntryOptions

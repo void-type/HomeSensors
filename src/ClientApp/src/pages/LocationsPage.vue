@@ -7,7 +7,9 @@ import type {
 } from '@/api/data-contracts';
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { onBeforeUnmount, onMounted, reactive } from 'vue';
+import { ChromePicker, tinycolor } from 'vue-color';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import ApiHelpers from '@/models/ApiHelpers';
 import { toNumberOrNull } from '@/models/FormatHelpers';
@@ -41,6 +43,7 @@ function trackOriginalState(location: TemperatureLocationResponse) {
         minTemperatureLimitCelsius: location.minTemperatureLimitCelsius,
         maxTemperatureLimitCelsius: location.maxTemperatureLimitCelsius,
         isHidden: location.isHidden,
+        color: location.color,
         categoryId: location.categoryId,
       }),
     );
@@ -65,6 +68,7 @@ function isLocationDirty(location: TemperatureLocationResponse): boolean {
     minTemperatureLimitCelsius: location.minTemperatureLimitCelsius,
     maxTemperatureLimitCelsius: location.maxTemperatureLimitCelsius,
     isHidden: location.isHidden,
+    color: location.color,
     categoryId: location.categoryId,
   });
 
@@ -86,6 +90,12 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 }
 
 function onLocationInput() {
+  updateDirtyState();
+}
+
+function onColorPickerChange(location: TemperatureLocationResponse, colorValue: unknown) {
+  const color = tinycolor(colorValue as string);
+  location.color = color.isValid() ? color.toHexString() : '';
   updateDirtyState();
 }
 
@@ -121,6 +131,7 @@ async function newLocation() {
     minTemperatureLimitCelsius: null,
     maxTemperatureLimitCelsius: null,
     isHidden: false,
+    color: '',
     categoryId: null,
   };
 
@@ -166,6 +177,7 @@ async function saveLocation(location: TemperatureLocationResponse) {
     minTemperatureLimitCelsius: toNumberOrNull(location.minTemperatureLimitCelsius),
     maxTemperatureLimitCelsius: toNumberOrNull(location.maxTemperatureLimitCelsius),
     isHidden: location.isHidden,
+    color: location.color || '',
     categoryId: toNumberOrNull(location.categoryId),
   };
 
@@ -343,6 +355,43 @@ onBeforeUnmount(() => {
                     @input="onLocationInput"
                   >
                   {{ formatTempWithUnitOrEmpty(location.maxTemperatureLimitCelsius, true) }}
+                </div>
+                <div class="g-col-12 g-col-md-6 g-col-lg-4">
+                  <label :for="`color-${location.id}`" class="form-label">Color</label>
+                  <div class="input-group input-group-sm">
+                    <input
+                      :id="`color-${location.id}`"
+                      v-model="location.color"
+                      type="text"
+                      class="form-control"
+                      :class="{
+                        'is-invalid': data.errors.includes(`color-${location.id}`),
+                      }"
+                      title="Enter color hex code"
+                      @input="onLocationInput"
+                    >
+                    <button
+                      class="btn btn-outline-secondary dropdown-toggle"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      data-bs-auto-close="outside"
+                      aria-expanded="false"
+                      aria-label="Open color picker"
+                    >
+                      <FontAwesomeIcon icon="fa-palette" :style="{ color: location.color || '#000' }" />
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3">
+                      <div class="mb-2">
+                        <small class="text-muted">Use black for default color.</small>
+                      </div>
+                      <ChromePicker
+                        :model-value="location.color"
+                        :disable-alpha="true"
+                        :disable-fields="true"
+                        @update:model-value="(color: unknown) => onColorPickerChange(location, color)"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div class="g-col-12">
                   <div class="form-check">

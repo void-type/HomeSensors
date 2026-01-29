@@ -152,6 +152,7 @@ export interface TemperatureLocationResponse {
   /** @format double */
   maxTemperatureLimitCelsius?: number | null;
   isHidden?: boolean;
+  color?: string;
   /** @format int64 */
   categoryId?: number | null;
 }
@@ -183,6 +184,7 @@ export interface TemperatureLocationSaveRequest {
   /** @format double */
   maxTemperatureLimitCelsius?: number | null;
   isHidden?: boolean;
+  color?: string;
   /** @format int64 */
   categoryId?: number | null;
 }

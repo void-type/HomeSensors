@@ -4,6 +4,7 @@ import {
   faBellSlash,
   faClock,
   faMoon,
+  faPalette,
   faSearch,
   faSnowflake,
   faTemperatureFull,
@@ -15,6 +16,7 @@ import { createApp } from 'vue';
 import router from '@/router';
 import App from './App.vue';
 import 'bootstrap';
+import 'vue-color/style.css';
 
 // Prevents inline styling to appease CSP.
 fontAwesomeConfig.autoAddCss = false;
@@ -24,6 +26,7 @@ library.add(
   faBellSlash,
   faClock,
   faMoon,
+  faPalette,
   faSearch,
   faSnowflake,
   faTemperatureFull,

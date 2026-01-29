@@ -83,5 +83,6 @@ public static class TemperatureHelpers
             minTemperatureLimitCelsius: a.MinTemperatureLimitCelsius,
             maxTemperatureLimitCelsius: a.MaxTemperatureLimitCelsius,
             isHidden: a.IsHidden,
+            color: a.Color,
             categoryId: a.CategoryId);
 }

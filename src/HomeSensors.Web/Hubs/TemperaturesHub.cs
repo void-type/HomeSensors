@@ -11,6 +11,7 @@ public class TemperaturesHub : Hub
 {
     public const string NewDiscoveryMessageMessageName = "newDiscoveryMessage";
     public const string UpdateCurrentReadingsMessageName = "updateCurrentReadings";
+    public const string UpdateCategoriesMessageName = "updateCategories";
 
     private readonly TemperatureReadingRepository _readingRepository;
 

@@ -1,6 +1,9 @@
-﻿using HomeSensors.Web.Services.MqttDiscovery;
+﻿using HomeSensors.Model.Notifications;
+using HomeSensors.Web.Services;
+using HomeSensors.Web.Services.MqttDiscovery;
 using HomeSensors.Web.Services.PushTemperatureCurrentReadings;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.Model.Configuration;
 
@@ -10,6 +13,7 @@ public static class WebServicesStartupExtensions
 {
     public static IServiceCollection AddHomeSensorsWebServices(this IServiceCollection services, IConfiguration config)
     {
+        services.Replace(ServiceDescriptor.Singleton<ITemperatureHubNotifier, TemperatureHubNotifier>());
         services.AddSingleton<MqttDiscoveryService>();
 
         services.AddDomainEvents(

@@ -14,6 +14,8 @@ public class TemperatureLocation
 
     public bool IsHidden { get; set; }
 
+    public string Color { get; set; } = string.Empty;
+
     public long? CategoryId { get; set; }
 
     public virtual Category? Category { get; set; }

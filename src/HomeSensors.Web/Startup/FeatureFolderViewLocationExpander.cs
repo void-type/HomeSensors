@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc.Razor;
+﻿using Microsoft.AspNetCore.Mvc.Razor;
 
 namespace HomeSensors.Web.Startup;
 

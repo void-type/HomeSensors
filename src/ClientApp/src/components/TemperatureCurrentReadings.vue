@@ -70,6 +70,10 @@ async function connectToHub() {
       data.currentReadings = currentReadings;
     });
 
+    connection.on('updateCategories', (categories) => {
+      data.categories = categories;
+    });
+
     connection.onreconnected(onConnectedToHub);
   }
 

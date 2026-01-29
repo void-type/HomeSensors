@@ -3,13 +3,14 @@
 public class TemperatureLocationResponse
 {
     public TemperatureLocationResponse(long id, string name, double? minTemperatureLimitCelsius,
-        double? maxTemperatureLimitCelsius, bool isHidden, long? categoryId)
+        double? maxTemperatureLimitCelsius, bool isHidden, string color, long? categoryId)
     {
         Id = id;
         Name = name;
         MinTemperatureLimitCelsius = minTemperatureLimitCelsius;
         MaxTemperatureLimitCelsius = maxTemperatureLimitCelsius;
         IsHidden = isHidden;
+        Color = color;
         CategoryId = categoryId;
     }
 
@@ -22,6 +23,8 @@ public class TemperatureLocationResponse
     public double? MaxTemperatureLimitCelsius { get; }
 
     public bool IsHidden { get; }
+
+    public string Color { get; }
 
     public long? CategoryId { get; }
 }
