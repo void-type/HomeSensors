@@ -279,6 +279,11 @@ onBeforeUnmount(() => {
             >
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
+                  <span
+                    class="color-dot me-2"
+                    :class="{ 'color-dot-empty': !location.color }"
+                    :style="location.color ? { backgroundColor: location.color } : {}"
+                  />
                   {{ location.name || "New location" }}
                   <span v-if="isLocationDirty(location)" class="badge bg-warning text-dark ms-2">Unsaved</span>
                   <span v-if="location.isHidden" class="badge bg-secondary ms-2">Hidden</span>
@@ -435,4 +440,16 @@ onBeforeUnmount(() => {
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.color-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.color-dot-empty {
+  border: 2px solid var(--bs-border-color);
+}
+</style>
