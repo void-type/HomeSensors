@@ -48,7 +48,12 @@ public class HomeSensorsContext : DbContext
 
             // Index for SummarizeTemperatureReadingsWorker.ExecuteAsync oldReadings query
             entity.HasIndex(r => new { r.IsSummary, r.TemperatureDeviceId, r.Time })
-                .IncludeProperties(r => new { r.TemperatureCelsius, r.Humidity, r.TemperatureLocationId });
+                .IncludeProperties(r => new { r.Id, r.TemperatureCelsius, r.Humidity, r.TemperatureLocationId });
+
+            // Index for GetAllAsync in TemperatureDeviceRepository
+            entity.HasIndex(r => new { r.TemperatureDeviceId, r.Time })
+                .HasDatabaseName("IX_TemperatureReadings_DeviceLatest")
+                .IncludeProperties(r => new { r.TemperatureCelsius, r.Humidity, r.DeviceBatteryLevel, r.TemperatureLocationId });
 
             entity.HasOne(x => x.TemperatureLocation)
                 .WithMany(x => x.TemperatureReadings)
@@ -78,9 +83,14 @@ public class HomeSensorsContext : DbContext
         {
             entity.ToTable("HvacAction");
 
+            // Index for HvacActionsWorker duplicate prevention
             entity.HasIndex(a => new { a.EntityId, a.LastChanged, a.LastUpdated })
                 .IncludeProperties(a => new { a.State })
                 .IsUnique();
+
+            // Index for GetHvacActionsAsync time range queries
+            entity.HasIndex(a => a.LastUpdated)
+                .IncludeProperties(a => new { a.EntityId, a.State, a.LastChanged });
         });
     }
 }

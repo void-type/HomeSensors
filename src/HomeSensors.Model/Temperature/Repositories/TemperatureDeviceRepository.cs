@@ -40,7 +40,8 @@ public class TemperatureDeviceRepository : RepositoryBase
         var data = await _data.TemperatureDevices
             .TagWith(GetTag())
             .AsNoTracking()
-            .OrderBy(x => x.Name)
+            .OrderBy(x => x.IsRetired)
+            .ThenBy(x => x.Name)
             .Select(x => new
             {
                 x.Id,

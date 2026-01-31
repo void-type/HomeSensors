@@ -4,6 +4,7 @@ using HomeSensors.Model.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HomeSensors.Model.Migrations
 {
     [DbContext(typeof(HomeSensorsContext))]
-    partial class HomeSensorsContextModelSnapshot : ModelSnapshot
+    [Migration("20260131181500_AddDeviceLatestIndex")]
+    partial class AddDeviceLatestIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,10 +73,6 @@ namespace HomeSensors.Model.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("LastUpdated");
-
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("LastUpdated"), new[] { "EntityId", "State", "LastChanged" });
 
                     b.HasIndex("EntityId", "LastChanged", "LastUpdated")
                         .IsUnique();
@@ -206,7 +205,7 @@ namespace HomeSensors.Model.Migrations
 
                     b.HasIndex("IsSummary", "TemperatureDeviceId", "Time");
 
-                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("IsSummary", "TemperatureDeviceId", "Time"), new[] { "Id", "TemperatureCelsius", "Humidity", "TemperatureLocationId" });
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("IsSummary", "TemperatureDeviceId", "Time"), new[] { "TemperatureCelsius", "Humidity", "TemperatureLocationId" });
 
                     b.ToTable("TemperatureReading", (string)null);
                 });

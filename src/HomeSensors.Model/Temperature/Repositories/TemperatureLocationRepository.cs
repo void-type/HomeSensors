@@ -33,7 +33,8 @@ public class TemperatureLocationRepository : RepositoryBase
         return (await _data.TemperatureLocations
             .TagWith(GetTag())
             .AsNoTracking()
-            .OrderBy(x => x.Name)
+            .OrderBy(x => x.IsHidden)
+            .ThenBy(x => x.Name)
             .ToListAsync())
             .ConvertAll(x => x.ToApiResponse());
     }
