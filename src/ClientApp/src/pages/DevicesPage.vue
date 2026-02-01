@@ -8,8 +8,9 @@ import type {
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { Collapse } from 'bootstrap';
 import { storeToRefs } from 'pinia';
-import { onBeforeUnmount, onMounted, reactive } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import ApiHelpers from '@/models/ApiHelpers';
 import DateHelpers from '@/models/DateHelpers';
@@ -121,6 +122,13 @@ async function newDevice() {
 
   data.devices.unshift(newDev);
   updateDirtyState();
+
+  await nextTick();
+  const collapseEl = document.getElementById('collapse-0');
+  if (collapseEl) {
+    const collapse = new Collapse(collapseEl, { toggle: false });
+    collapse.show();
+  }
 }
 
 function onDeviceInput() {
@@ -176,14 +184,14 @@ async function saveDevice(device: TemperatureDeviceResponse) {
     // Update the device in place
     const isNewDevice = device.id === 0;
     if (isNewDevice) {
-      // For new devices, we need to refetch to get the complete data with the new ID
-      // But we'll replace just this entry in the list
-      const tempIndex = data.devices.findIndex(d => d.id === 0);
-      if (tempIndex >= 0) {
-        // Remove the temporary entry
-        data.devices.splice(tempIndex, 1);
-        // Refresh the full list to get the new device with proper ID and relationships
-        await getDevices();
+      // For new devices, update the ID in place instead of refetching
+      // This preserves any dirty edits on other items
+      const newItem = data.devices.find(d => d.id === 0);
+      if (newItem) {
+        // Update the ID to the newly assigned ID
+        newItem.id = response.data.id;
+        // Track original state for this now-saved item
+        trackOriginalState(newItem);
       }
     } else {
       // Update existing device in place with the form data
@@ -209,6 +217,13 @@ async function saveDevice(device: TemperatureDeviceResponse) {
 
     const failures = (response.error as IItemSetOfIFailure).items || [];
     failures.forEach(x => data.errors.push(`${x.uiHandle}-${device.id}`));
+  }
+}
+
+async function saveAllDirty() {
+  const dirtyItems = data.devices.filter(item => isDeviceDirty(item));
+  for (const item of dirtyItems) {
+    await saveDevice(item);
   }
 }
 
@@ -253,6 +268,13 @@ onBeforeUnmount(() => {
       <button class="btn btn-primary" @click="newDevice()">
         New
       </button>
+      <button
+        class="btn btn-secondary ms-2"
+        :disabled="!data.hasDirtyDevices"
+        @click="saveAllDirty()"
+      >
+        Save All
+      </button>
       <div id="devicesAccordion" class="accordion mt-4">
         <div v-for="device in data.devices" :key="device.id" class="accordion-item">
           <h2 :id="`heading-${device.id}`" class="accordion-header">
@@ -267,7 +289,12 @@ onBeforeUnmount(() => {
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
                   {{ device.name || "New device" }}
-                  <span v-if="isDeviceDirty(device)" class="badge bg-warning text-dark ms-2">Unsaved</span>
+                  <span
+                    v-if="isDeviceDirty(device)"
+                    class="badge bg-warning text-dark ms-2"
+                    role="button"
+                    @click.stop="saveDevice(device)"
+                  >Unsaved</span>
                   <span v-if="device.isRetired" class="badge bg-secondary ms-2">Retired</span>
                   <span
                     v-if="device.excludeFromInactiveAlerts" class="badge bg-secondary ms-2"

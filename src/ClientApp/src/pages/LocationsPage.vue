@@ -8,7 +8,8 @@ import type {
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { onBeforeUnmount, onMounted, reactive } from 'vue';
+import { Collapse } from 'bootstrap';
+import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
 import { ChromePicker, tinycolor } from 'vue-color';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import ApiHelpers from '@/models/ApiHelpers';
@@ -137,6 +138,13 @@ async function newLocation() {
 
   data.locations.unshift(newLoc);
   updateDirtyState();
+
+  await nextTick();
+  const collapseEl = document.getElementById('collapse-0');
+  if (collapseEl) {
+    const collapse = new Collapse(collapseEl, { toggle: false });
+    collapse.show();
+  }
 }
 
 async function reallyDeleteLocation(location: TemperatureLocationResponse) {
@@ -190,13 +198,14 @@ async function saveLocation(location: TemperatureLocationResponse) {
     // Update the location in place
     const isNewLocation = location.id === 0;
     if (isNewLocation) {
-      // For new locations, we need to refetch to get the complete data with the new ID
-      const tempIndex = data.locations.findIndex(l => l.id === 0);
-      if (tempIndex >= 0) {
-        // Remove the temporary entry
-        data.locations.splice(tempIndex, 1);
-        // Refresh the full list to get the new location with proper ID and relationships
-        await getLocations();
+      // For new locations, update the ID in place instead of refetching
+      // This preserves any dirty edits on other items
+      const newItem = data.locations.find(l => l.id === 0);
+      if (newItem) {
+        // Update the ID to the newly assigned ID
+        newItem.id = response.data.id;
+        // Track original state for this now-saved item
+        trackOriginalState(newItem);
       }
     } else {
       // Update existing location in place with the form data
@@ -222,6 +231,13 @@ async function saveLocation(location: TemperatureLocationResponse) {
 
     const failures = (response.error as IItemSetOfIFailure).items || [];
     failures.forEach(x => data.errors.push(`${x.uiHandle}-${location.id}`));
+  }
+}
+
+async function saveAllDirty() {
+  const dirtyItems = data.locations.filter(item => isLocationDirty(item));
+  for (const item of dirtyItems) {
+    await saveLocation(item);
   }
 }
 
@@ -266,6 +282,13 @@ onBeforeUnmount(() => {
       <button class="btn btn-primary" @click="newLocation()">
         New
       </button>
+      <button
+        class="btn btn-secondary ms-2"
+        :disabled="!data.hasDirtyLocations"
+        @click="saveAllDirty()"
+      >
+        Save All
+      </button>
       <div id="locationsAccordion" class="accordion mt-4">
         <div v-for="location in data.locations" :key="location.id" class="accordion-item">
           <h2 :id="`heading-${location.id}`" class="accordion-header">
@@ -285,7 +308,12 @@ onBeforeUnmount(() => {
                     :style="location.color ? { backgroundColor: location.color } : {}"
                   />
                   {{ location.name || "New location" }}
-                  <span v-if="isLocationDirty(location)" class="badge bg-warning text-dark ms-2">Unsaved</span>
+                  <span
+                    v-if="isLocationDirty(location)"
+                    class="badge bg-warning text-dark ms-2"
+                    role="button"
+                    @click.stop="saveLocation(location)"
+                  >Unsaved</span>
                   <span v-if="location.isHidden" class="badge bg-secondary ms-2">Hidden</span>
                 </span>
               </div>

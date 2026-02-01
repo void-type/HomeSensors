@@ -7,7 +7,8 @@ import type {
 } from '@/api/data-contracts';
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
-import { onBeforeUnmount, onMounted, reactive } from 'vue';
+import { Collapse } from 'bootstrap';
+import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import ApiHelpers from '@/models/ApiHelpers';
 import useAppStore from '@/stores/appStore';
@@ -103,6 +104,13 @@ async function newCategory() {
 
   data.categories.unshift(newCat);
   updateDirtyState();
+
+  await nextTick();
+  const collapseEl = document.getElementById('collapse-0');
+  if (collapseEl) {
+    const collapse = new Collapse(collapseEl, { toggle: false });
+    collapse.show();
+  }
 }
 
 async function reallyDeleteCategory(category: TemperatureDeviceResponse) {
@@ -150,13 +158,16 @@ async function saveCategory(category: CategoryResponse) {
     // Update the category in place
     const isNewCategory = category.id === 0;
     if (isNewCategory) {
-      // For new categories, we need to refetch to get the complete data with the new ID
-      const tempIndex = data.categories.findIndex(c => c.id === 0);
-      if (tempIndex >= 0) {
-        // Remove the temporary entry
-        data.categories.splice(tempIndex, 1);
-        // Refresh the full list to get the new category with proper ID
-        await getCategories();
+      // For new categories, update the ID in place instead of refetching
+      // This preserves any dirty edits on other items
+      const newItem = data.categories.find(c => c.id === 0);
+      if (newItem) {
+        // Update the ID to the newly assigned ID
+        newItem.id = response.data.id;
+        // Track original state for this now-saved item
+        trackOriginalState(newItem);
+        // Re-sort by order since categories are ordered by 'order' field
+        data.categories.sort((a, b) => (a.order || 0) - (b.order || 0));
       }
     } else {
       // Update existing category in place with the form data
@@ -181,6 +192,13 @@ async function saveCategory(category: CategoryResponse) {
 
     const failures = (response.error as IItemSetOfIFailure).items || [];
     failures.forEach(x => data.errors.push(`${x.uiHandle}-${category.id}`));
+  }
+}
+
+async function saveAllDirty() {
+  const dirtyItems = data.categories.filter(item => isCategoryDirty(item));
+  for (const item of dirtyItems) {
+    await saveCategory(item);
   }
 }
 
@@ -224,6 +242,13 @@ onBeforeUnmount(() => {
       <button class="btn btn-primary" @click="newCategory()">
         New
       </button>
+      <button
+        class="btn btn-secondary ms-2"
+        :disabled="!data.hasDirtyCategories"
+        @click="saveAllDirty()"
+      >
+        Save All
+      </button>
       <div id="categoriesAccordion" class="accordion mt-4">
         <div v-for="category in data.categories" :key="category.id" class="accordion-item">
           <h2 :id="`heading-${category.id}`" class="accordion-header">
@@ -238,7 +263,12 @@ onBeforeUnmount(() => {
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
                   {{ category.name || "New category" }}
-                  <span v-if="isCategoryDirty(category)" class="badge bg-warning text-dark ms-2">Unsaved</span>
+                  <span
+                    v-if="isCategoryDirty(category)"
+                    class="badge bg-warning text-dark ms-2"
+                    role="button"
+                    @click.stop="saveCategory(category)"
+                  >Unsaved</span>
                 </span>
               </div>
             </button>
