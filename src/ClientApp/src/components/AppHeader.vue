@@ -2,19 +2,17 @@
 import type { HTMLInputEvent } from '@/models/HTMLInputEvent';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
 import logoSvg from '@/img/logo.svg';
 import useAppStore from '@/stores/appStore';
 
 const appStore = useAppStore();
 const { applicationName, user, useDarkMode, useFahrenheit, showHumidity } = storeToRefs(appStore);
-const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
 </script>
 
 <template>
-  <header id="header" class="navbar navbar-expand-md navbar-dark bg-primary shadow">
+  <header id="header" class="navbar navbar-expand-md navbar-dark bg-primary d-print-none">
     <nav class="container-xxl">
-      <router-link :to="{ name: 'home' }" class="navbar-brand text-light">
+      <router-link :to="{ name: 'home' }" class="navbar-brand">
         <img
           :src="logoSvg"
           alt="logo"
@@ -48,9 +46,14 @@ const userRoles = computed(() => (user.value?.authorizedAs || []).join(', '));
               data-bs-toggle="dropdown"
             ><span>{{ user.login }}</span></a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-              <li class="dropdown-item">
-                Roles: {{ userRoles }}
+              <!-- <li class="dropdown-item-text fw-bold">Roles</li>
+              <li v-for="role in user.authorizedAs" :key="role" class="dropdown-item-text">
+                {{ role }}
               </li>
+              <li v-if="(user.authorizedAs?.length || 0) < 1" class="dropdown-item-text text-muted">
+                No roles.
+              </li>
+              <li><hr class="dropdown-divider" /></li> -->
               <li class="dropdown-item">
                 <div class="form-check form-switch">
                   <label class="form-check-label" for="useDarkMode" aria-label="Use dark mode"><FontAwesomeIcon class="me-2" icon="fa-moon" />Dark mode</label>

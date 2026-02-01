@@ -378,10 +378,10 @@ onBeforeUnmount(() => {
                       @input="onDeviceInput"
                     >
                     <router-link
-                      :to="{ name: 'discoveryMain', query: { topic: device.mqttTopic } }"
+                      :to="{ name: 'mqttDiscovery', query: { topic: device.mqttTopic } }"
                       class="btn btn-secondary"
-                      title="View MQTT"
-                      aria-label="View MQTT"
+                      title="View MQTT Discovery for this topic"
+                      aria-label="View MQTT Discovery for this topic"
                     >
                       <FontAwesomeIcon icon="fa-search" />
                     </router-link>

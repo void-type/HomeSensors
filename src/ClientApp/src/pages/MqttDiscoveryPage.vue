@@ -148,7 +148,7 @@ onMounted(async () => {
 <template>
   <div class="container-xxl">
     <h1 class="mt-3">
-      Discovery
+      MQTT Discovery
     </h1>
     <p class="mt-4">
       See MQTT messages from the specified topics.

@@ -70,9 +70,9 @@ const router = createRouter({
       meta: { title: 'Categories' },
     },
     {
-      path: '/discovery',
-      name: 'discoveryMain',
-      component: () => import('@/pages/DiscoveryPage.vue'),
+      path: '/mqtt-discovery',
+      name: 'mqttDiscovery',
+      component: () => import('@/pages/MqttDiscoveryPage.vue'),
       props: (route) => {
         const topics = route.query.topic;
 
@@ -84,7 +84,7 @@ const router = createRouter({
           topics: Array.isArray(topics) ? topics : [topics],
         };
       },
-      meta: { title: 'Discovery' },
+      meta: { title: 'MQTT Discovery' },
     },
     {
       path: '/:pathMatch(.*)*',

@@ -13,8 +13,8 @@
       </router-link>
     </li>
     <li class="nav-item">
-      <router-link :to="{ name: 'discoveryMain' }" class="nav-link">
-        Discovery
+      <router-link :to="{ name: 'mqttDiscovery' }" class="nav-link">
+        MQTT
       </router-link>
     </li>
     <li class="nav-item dropdown">
@@ -29,18 +29,20 @@
         Admin
       </a>
       <ul class="dropdown-menu" aria-labelledby="administrationDropdown">
-        <li class="nav-item">
-          <router-link :to="{ name: 'devicesMain' }" class="nav-link">
+        <li>
+          <router-link :to="{ name: 'devicesMain' }" class="dropdown-item">
             Devices
           </router-link>
         </li>
-        <li class="nav-item">
-          <router-link :to="{ name: 'locationsMain' }" class="nav-link">
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <router-link :to="{ name: 'locationsMain' }" class="dropdown-item">
             Locations
           </router-link>
         </li>
-        <li class="nav-item">
-          <router-link :to="{ name: 'categoriesMain' }" class="nav-link">
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <router-link :to="{ name: 'categoriesMain' }" class="dropdown-item">
             Categories
           </router-link>
         </li>
