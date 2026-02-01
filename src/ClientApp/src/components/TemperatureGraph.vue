@@ -75,10 +75,10 @@ const timeSeriesInputs = reactive(getInitialTimeSeriesInputs());
 
 const showCurrent = ref(false);
 
-function resetTimeSeriesInputs() {
+function setTimeRange(hours: number) {
   const initialTime = startOfMinute(new Date());
 
-  timeSeriesInputs.start = addHours(initialTime, -48);
+  timeSeriesInputs.start = addHours(initialTime, -hours);
   timeSeriesInputs.end = initialTime;
 
   if (showCurrent.value) {
@@ -100,25 +100,7 @@ function onSelectAllClick() {
 
 let lineChart: Chart | null = null;
 
-const categoryColors: Record<string, string> = {
-  'Basement': '#2ac4b3',
-  'Bedroom': '#b2df8a',
-  'Garage': '#ff526f',
-  'Garage Freezer': '#73a2ef',
-  'Garage Fridge': '#3064cf',
-  'Jeff\'s Office': '#b180d0',
-  'Outside': '#feaf29',
-};
-
-const predefinedColors = [
-  '#8aaec7',
-  '#fe7db7',
-  '#33a02c',
-  '#0097fb',
-  '#914bdc',
-  '#915535',
-  '#5d5652',
-];
+const colorCache: Record<string, string> = {};
 
 function getRandomColor() {
   const letters = '0123456789ABCDEF'.split('');
@@ -137,30 +119,18 @@ function isValidHexColor(color: string | undefined): boolean {
 }
 
 function getColor(location: TemperatureLocationResponse | null | undefined): string {
-  // Primary: Use location's color if set and valid
   if (location?.color && isValidHexColor(location.color)) {
     return location.color;
   }
 
   const locationName = location?.name || 'unknown';
 
-  // Secondary: Check hardcoded categoryColors for backwards compatibility
-  const existing = categoryColors[locationName];
-  if (existing) {
-    return existing;
+  // Use cached color if available, otherwise generate and cache a random one
+  if (!colorCache[locationName]) {
+    colorCache[locationName] = getRandomColor();
   }
 
-  // Tertiary: Assign from predefinedColors pool
-  const predefinedColor = predefinedColors.find(x => !Object.values(categoryColors).includes(x));
-  if (predefinedColor) {
-    categoryColors[locationName] = predefinedColor;
-    return predefinedColor;
-  }
-
-  // Last resort: Generate random color
-  const randomColor = getRandomColor();
-  categoryColors[locationName] = randomColor;
-  return randomColor;
+  return colorCache[locationName];
 }
 
 function setGraphData(
@@ -554,219 +524,523 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
-    <div>
-      <div class="mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h5 class="mb-0">
-            Locations
-          </h5>
-          <button
-            id="selectAllButton"
-            class="btn btn-sm btn-outline-secondary ms-auto"
-            @click="onSelectAllClick"
-          >
-            {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
-          </button>
-        </div>
-        <div class="grid">
+  <div class="grid">
+    <!-- Left sidebar - desktop only -->
+    <div class="g-col-12 g-col-lg-3 d-none d-lg-block">
+      <div id="controlsAccordionDesktop" class="accordion">
+        <!-- Locations accordion item -->
+        <div class="accordion-item">
+          <div class="accordion-header">
+            <button
+              class="accordion-button"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#locationsCollapseDesktop"
+              aria-expanded="true"
+              aria-controls="locationsCollapseDesktop"
+            >
+              Locations
+            </button>
+          </div>
           <div
-            v-for="(values, categoryName) in categorizedLocations"
-            :key="categoryName"
-            class="g-col-12 g-col-sm-4"
+            id="locationsCollapseDesktop"
+            class="accordion-collapse collapse show"
+            data-bs-parent="#controlsAccordionDesktop"
           >
-            <div class="fw-bold mb-1">
-              {{ categoryName }}
+            <div class="accordion-body">
+              <button
+                class="btn btn-sm btn-outline-secondary mb-2"
+                @click="onSelectAllClick"
+              >
+                {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
+              </button>
+              <div
+                v-for="(values, categoryName) in categorizedLocations"
+                :key="categoryName"
+                class="mb-2"
+              >
+                <div class="fw-bold mb-1">
+                  {{ categoryName }}
+                </div>
+                <div class="ps-2">
+                  <div v-for="location in values" :key="location.id" class="form-check">
+                    <input
+                      :id="`locationSelectDesktop-${location.id}`"
+                      v-model="timeSeriesInputs.locationIds"
+                      :value="location.id"
+                      class="form-check-input"
+                      type="checkbox"
+                    >
+                    <label class="form-check-label" :for="`locationSelectDesktop-${location.id}`">
+                      {{ location.name }}
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="ps-2">
-              <div v-for="location in values" :key="location.id" class="form-check">
+          </div>
+        </div>
+
+        <!-- Display options accordion item -->
+        <div class="accordion-item">
+          <div class="accordion-header">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#displayCollapseDesktop"
+              aria-expanded="false"
+              aria-controls="displayCollapseDesktop"
+            >
+              Display Options
+            </button>
+          </div>
+          <div
+            id="displayCollapseDesktop"
+            class="accordion-collapse collapse"
+            data-bs-parent="#controlsAccordionDesktop"
+          >
+            <div class="accordion-body">
+              <div class="form-check form-switch">
                 <input
-                  :id="`locationSelect-${location.id}`"
-                  v-model="timeSeriesInputs.locationIds"
-                  :value="location.id"
+                  id="showHumidityDesktop"
+                  v-model="data.showHumidity"
                   class="form-check-input"
                   type="checkbox"
                 >
-                <label class="form-check-label" :for="`locationSelect-${location.id}`">
-                  {{ location.name }}
-                </label>
+                <label class="form-check-label" for="showHumidityDesktop">Show humidity</label>
+              </div>
+              <div class="form-check form-switch">
+                <input
+                  id="showHvacActionsDesktop"
+                  v-model="data.showHvacActions"
+                  class="form-check-input"
+                  type="checkbox"
+                >
+                <label class="form-check-label" for="showHvacActionsDesktop">Show HVAC actions</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date range accordion item -->
+        <div class="accordion-item">
+          <div class="accordion-header">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#dateRangeCollapseDesktop"
+              aria-expanded="false"
+              aria-controls="dateRangeCollapseDesktop"
+            >
+              Date Range
+            </button>
+          </div>
+          <div
+            id="dateRangeCollapseDesktop"
+            class="accordion-collapse collapse"
+            data-bs-parent="#controlsAccordionDesktop"
+          >
+            <div class="accordion-body">
+              <div class="mb-3">
+                <label for="startDateDesktop" class="form-label">Start date</label>
+                <AppDateTimePicker id="startDateDesktop" v-model="timeSeriesInputs.start" />
+              </div>
+              <div class="mb-3">
+                <label for="endDateDesktop" class="form-label">End date</label>
+                <AppDateTimePicker
+                  id="endDateDesktop"
+                  v-model="timeSeriesInputs.end"
+                  :disabled="showCurrent"
+                />
+                <div class="form-check mt-2">
+                  <input
+                    id="showCurrentDesktop"
+                    v-model="showCurrent"
+                    class="form-check-input"
+                    type="checkbox"
+                    @change="setCurrentTimer()"
+                  >
+                  <label class="form-check-label" for="showCurrentDesktop">Show current</label>
+                </div>
+              </div>
+              <div class="d-flex flex-column gap-2">
+                <div class="btn-group btn-group-sm">
+                  <button
+                    class="btn btn-outline-secondary"
+                    title="Back 1 Month"
+                    @click="adjustDateRange({ months: -1 })"
+                  >
+                    &laquo; Month
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    title="Forward 1 Month"
+                    @click="adjustDateRange({ months: 1 })"
+                  >
+                    Month &raquo;
+                  </button>
+                </div>
+                <div class="btn-group btn-group-sm">
+                  <button
+                    class="btn btn-outline-secondary"
+                    title="Back 1 Week"
+                    @click="adjustDateRange({ weeks: -1 })"
+                  >
+                    &laquo; Week
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    title="Forward 1 Week"
+                    @click="adjustDateRange({ weeks: 1 })"
+                  >
+                    Week &raquo;
+                  </button>
+                </div>
+                <div class="btn-group btn-group-sm">
+                  <button
+                    class="btn btn-outline-secondary"
+                    title="Back 1 Day"
+                    @click="adjustDateRange({ days: -1 })"
+                  >
+                    &laquo; Day
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    title="Forward 1 Day"
+                    @click="adjustDateRange({ days: 1 })"
+                  >
+                    Day &raquo;
+                  </button>
+                </div>
+                <div class="btn-group btn-group-sm">
+                  <button
+                    class="btn btn-outline-secondary"
+                    title="Last 48 hours"
+                    @click="setTimeRange(48)"
+                  >
+                    48h
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    title="Last 24 hours"
+                    @click="setTimeRange(24)"
+                  >
+                    24h
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
+                    title="Last 12 hours"
+                    @click="setTimeRange(12)"
+                  >
+                    12h
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="mb-3">
-        <div class="form-check form-switch">
-          <input
-            id="showHumidity"
-            v-model="data.showHumidity"
-            class="form-check-input"
-            type="checkbox"
-          >
-          <label class="form-check-label" for="showHumidity">Show humidity</label>
-        </div>
-        <div class="form-check form-switch">
-          <input
-            id="showHvacActions"
-            v-model="data.showHvacActions"
-            class="form-check-input"
-            type="checkbox"
-          >
-          <label class="form-check-label" for="showHvacActions">Show HVAC actions</label>
-        </div>
-      </div>
-      <div class="mb-3">
-        <div class="grid mb-3">
-          <div class="g-col-12 g-col-md-6">
-            <label for="startDate" class="form-label">Start date</label>
-            <AppDateTimePicker id="startDate" v-model="timeSeriesInputs.start" />
-          </div>
-          <div class="g-col-12 g-col-md-6">
-            <label for="endDate" class="form-label">End date</label>
-            <AppDateTimePicker
-              id="endDate"
-              v-model="timeSeriesInputs.end"
-              :disabled="showCurrent"
-            />
-            <div class="form-check form-check-inline mt-2">
-              <input
-                id="showCurrent"
-                v-model="showCurrent"
-                class="form-check-input"
-                type="checkbox"
-                @change="setCurrentTimer()"
+    </div>
+
+    <!-- Main content area -->
+    <div class="g-col-12 g-col-lg-9">
+      <!-- Mobile controls - only visible on screens smaller than lg -->
+      <div class="d-lg-none mb-3">
+        <div id="controlsAccordionMobile" class="accordion">
+          <!-- Locations accordion item -->
+          <div class="accordion-item">
+            <div class="accordion-header">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#locationsCollapseMobile"
+                aria-expanded="false"
+                aria-controls="locationsCollapseMobile"
               >
-              <label class="form-check-label" for="showCurrent">Show current</label>
+                Locations
+              </button>
+            </div>
+            <div
+              id="locationsCollapseMobile"
+              class="accordion-collapse collapse"
+              data-bs-parent="#controlsAccordionMobile"
+            >
+              <div class="accordion-body">
+                <button
+                  class="btn btn-sm btn-outline-secondary mb-2"
+                  @click="onSelectAllClick"
+                >
+                  {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
+                </button>
+                <div class="grid">
+                  <div
+                    v-for="(values, categoryName) in categorizedLocations"
+                    :key="categoryName"
+                    class="g-col-12 g-col-sm-4"
+                  >
+                    <div class="fw-bold mb-1">
+                      {{ categoryName }}
+                    </div>
+                    <div class="ps-2">
+                      <div v-for="location in values" :key="location.id" class="form-check">
+                        <input
+                          :id="`locationSelectMobile-${location.id}`"
+                          v-model="timeSeriesInputs.locationIds"
+                          :value="location.id"
+                          class="form-check-input"
+                          type="checkbox"
+                        >
+                        <label class="form-check-label" :for="`locationSelectMobile-${location.id}`">
+                          {{ location.name }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Display options accordion item -->
+          <div class="accordion-item">
+            <div class="accordion-header">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#displayCollapseMobile"
+                aria-expanded="false"
+                aria-controls="displayCollapseMobile"
+              >
+                Display Options
+              </button>
+            </div>
+            <div
+              id="displayCollapseMobile"
+              class="accordion-collapse collapse"
+              data-bs-parent="#controlsAccordionMobile"
+            >
+              <div class="accordion-body">
+                <div class="form-check form-switch">
+                  <input
+                    id="showHumidityMobile"
+                    v-model="data.showHumidity"
+                    class="form-check-input"
+                    type="checkbox"
+                  >
+                  <label class="form-check-label" for="showHumidityMobile">Show humidity</label>
+                </div>
+                <div class="form-check form-switch">
+                  <input
+                    id="showHvacActionsMobile"
+                    v-model="data.showHvacActions"
+                    class="form-check-input"
+                    type="checkbox"
+                  >
+                  <label class="form-check-label" for="showHvacActionsMobile">Show HVAC actions</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date range accordion item -->
+          <div class="accordion-item">
+            <div class="accordion-header">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#dateRangeCollapseMobile"
+                aria-expanded="false"
+                aria-controls="dateRangeCollapseMobile"
+              >
+                Date Range
+              </button>
+            </div>
+            <div
+              id="dateRangeCollapseMobile"
+              class="accordion-collapse collapse"
+              data-bs-parent="#controlsAccordionMobile"
+            >
+              <div class="accordion-body">
+                <div class="grid mb-3">
+                  <div class="g-col-12 g-col-md-6">
+                    <label for="startDateMobile" class="form-label">Start date</label>
+                    <AppDateTimePicker id="startDateMobile" v-model="timeSeriesInputs.start" />
+                  </div>
+                  <div class="g-col-12 g-col-md-6">
+                    <label for="endDateMobile" class="form-label">End date</label>
+                    <AppDateTimePicker
+                      id="endDateMobile"
+                      v-model="timeSeriesInputs.end"
+                      :disabled="showCurrent"
+                    />
+                    <div class="form-check form-check-inline mt-2">
+                      <input
+                        id="showCurrentMobile"
+                        v-model="showCurrent"
+                        class="form-check-input"
+                        type="checkbox"
+                        @change="setCurrentTimer()"
+                      >
+                      <label class="form-check-label" for="showCurrentMobile">Show current</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+                  <div class="btn-group btn-group-sm mb-2">
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Back 1 Month"
+                      @click="adjustDateRange({ months: -1 })"
+                    >
+                      <span>&laquo;&nbsp;</span>
+                      <span>Month</span>
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Back 1 Week"
+                      @click="adjustDateRange({ weeks: -1 })"
+                    >
+                      <span>&laquo;&nbsp;</span>
+                      <span>Week</span>
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Back 1 Day"
+                      @click="adjustDateRange({ days: -1 })"
+                    >
+                      <span>&laquo;&nbsp;</span>
+                      <span>Day</span>
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Forward 1 Day"
+                      @click="adjustDateRange({ days: 1 })"
+                    >
+                      <span>Day</span>
+                      <span>&nbsp;&raquo;</span>
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Forward 1 Week"
+                      @click="adjustDateRange({ weeks: 1 })"
+                    >
+                      <span>Week</span>
+                      <span>&nbsp;&raquo;</span>
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Forward 1 Month"
+                      @click="adjustDateRange({ months: 1 })"
+                    >
+                      <span>Month</span>
+                      <span>&nbsp;&raquo;</span>
+                    </button>
+                  </div>
+                  <div class="btn-group btn-group-sm mb-2">
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Last 48 hours"
+                      @click="setTimeRange(48)"
+                    >
+                      48h
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Last 24 hours"
+                      @click="setTimeRange(24)"
+                    >
+                      24h
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Last 12 hours"
+                      @click="setTimeRange(12)"
+                    >
+                      12h
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="d-flex justify-content-center flex-wrap gap-2">
-          <div class="btn-group btn-group-sm mb-2">
-            <button
-              class="btn btn-outline-secondary"
-              title="Back 1 Month"
-              @click="adjustDateRange({ months: -1 })"
-            >
-              <span>&laquo;&nbsp;</span>
-              <span>Month</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Back 1 Week"
-              @click="adjustDateRange({ weeks: -1 })"
-            >
-              <span>&laquo;&nbsp;</span>
-              <span>Week</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Back 1 Day"
-              @click="adjustDateRange({ days: -1 })"
-            >
-              <span>&laquo;&nbsp;</span>
-              <span>Day</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Forward 1 Day"
-              @click="adjustDateRange({ days: 1 })"
-            >
-              <span>Day</span>
-              <span>&nbsp;&raquo;</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Forward 1 Week"
-              @click="adjustDateRange({ weeks: 1 })"
-            >
-              <span>Week</span>
-              <span>&nbsp;&raquo;</span>
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              title="Forward 1 Month"
-              @click="adjustDateRange({ months: 1 })"
-            >
-              <span>Month</span>
-              <span>&nbsp;&raquo;</span>
-            </button>
-          </div>
-          <div class="btn-group btn-group-sm mb-2">
-            <button
-              class="btn btn-outline-secondary"
-              title="Reset to last 48 hours"
-              @click="resetTimeSeriesInputs()"
-            >
-              <span>Reset</span>
-            </button>
-          </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-container-wrapper position-relative">
+        <div class="chart-container">
+          <canvas id="tempGraph" />
+        </div>
+        <div id="chartjs-tooltip" class="position-absolute d-none">
+          <div class="tooltip-body" />
         </div>
       </div>
+
+      <!-- HVAC stats -->
+      <div class="mt-3 grid">
+        <div class="g-col-6 cold">
+          Cooling:
+          {{
+            data.hvacActions
+              .filter((x) => x.action === "cooling")
+              .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
+          }}
+          min
+        </div>
+        <div class="g-col-6 hot">
+          Heating:
+          {{
+            data.hvacActions
+              .filter((x) => x.action === "heating")
+              .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
+          }}
+          min
+        </div>
+      </div>
+
+      <!-- Stats table -->
+      <table class="mt-3 table" :class="{ 'table-dark': useDarkMode }">
+        <thead>
+          <tr>
+            <th>Location</th>
+            <th>Low</th>
+            <th>High</th>
+            <th>Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(series, i) in data.graphSeries" :key="i">
+            <td>{{ series.location?.name }}</td>
+            <td>
+              {{
+                data.showHumidity
+                  ? formatHumidityWithUnit(series.humidityAggregate?.minimum)
+                  : formatTempWithUnit(series.temperatureAggregate?.minimum, useFahrenheit, 1)
+              }}
+            </td>
+            <td>
+              {{
+                data.showHumidity
+                  ? formatHumidityWithUnit(series.humidityAggregate?.maximum)
+                  : formatTempWithUnit(series.temperatureAggregate?.maximum, useFahrenheit, 1)
+              }}
+            </td>
+            <td>
+              {{
+                data.showHumidity
+                  ? formatHumidityWithUnit(series.humidityAggregate?.average)
+                  : formatTempWithUnit(series.temperatureAggregate?.average, useFahrenheit, 1)
+              }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div class="chart-container-wrapper mt-3 position-relative">
-      <div class="chart-container">
-        <canvas id="tempGraph" />
-      </div>
-      <div id="chartjs-tooltip" class="position-absolute d-none">
-        <div class="tooltip-body" />
-      </div>
-    </div>
-    <div class="mt-3 grid">
-      <div class="g-col-6 cold">
-        Cooling:
-        {{
-          data.hvacActions
-            .filter((x) => x.action === "cooling")
-            .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
-        }}
-        min
-      </div>
-      <div class="g-col-6 hot">
-        Heating:
-        {{
-          data.hvacActions
-            .filter((x) => x.action === "heating")
-            .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
-        }}
-        min
-      </div>
-    </div>
-    <table class="mt-3 table" :class="{ 'table-dark': useDarkMode }">
-      <thead>
-        <tr>
-          <th>Location</th>
-          <th>Low</th>
-          <th>High</th>
-          <th>Avg</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(series, i) in data.graphSeries" :key="i">
-          <td>{{ series.location?.name }}</td>
-          <td>
-            {{
-              data.showHumidity
-                ? formatHumidityWithUnit(series.humidityAggregate?.minimum)
-                : formatTempWithUnit(series.temperatureAggregate?.minimum, useFahrenheit, 1)
-            }}
-          </td>
-          <td>
-            {{
-              data.showHumidity
-                ? formatHumidityWithUnit(series.humidityAggregate?.maximum)
-                : formatTempWithUnit(series.temperatureAggregate?.maximum, useFahrenheit, 1)
-            }}
-          </td>
-          <td>
-            {{
-              data.showHumidity
-                ? formatHumidityWithUnit(series.humidityAggregate?.average)
-                : formatTempWithUnit(series.temperatureAggregate?.average, useFahrenheit, 1)
-            }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 </template>
 
