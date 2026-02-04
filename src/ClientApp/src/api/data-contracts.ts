@@ -106,16 +106,6 @@ export interface CategorySaveRequest {
   order?: number;
 }
 
-export interface MqttDiscoveryClientStatus {
-  topics?: string[] | null;
-  isCreated?: boolean;
-  isConnected?: boolean;
-}
-
-export interface MqttDiscoverySetupRequest {
-  topics?: string[];
-}
-
 export interface TemperatureDeviceResponse {
   /** @format int64 */
   id?: number;

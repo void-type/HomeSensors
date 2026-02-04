@@ -13,8 +13,6 @@ import type {AppVersion,
   CategorySaveRequest,
   EntityMessageOfLong,
   IItemSetOfIFailure,
-  MqttDiscoveryClientStatus,
-  MqttDiscoverySetupRequest,
   TemperatureCheckLimitResponse,
   TemperatureDeviceResponse,
   TemperatureDeviceSaveRequest,
@@ -116,57 +114,6 @@ export class Api<
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
       path: `/api/categories/${id}`,
       method: "DELETE",
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags MqttDiscovery
-   * @name MqttDiscoveryStatus
-   * @request GET:/api/mqtt-discovery/status
-   * @response `200` `MqttDiscoveryClientStatus`
-   */
-  mqttDiscoveryStatus = (params: RequestParams = {}) =>
-    this.request<MqttDiscoveryClientStatus, any>({
-      path: `/api/mqtt-discovery/status`,
-      method: "GET",
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags MqttDiscovery
-   * @name MqttDiscoverySetup
-   * @request POST:/api/mqtt-discovery/setup
-   * @response `200` `MqttDiscoveryClientStatus`
-   * @response `400` `IItemSetOfIFailure`
-   */
-  mqttDiscoverySetup = (
-    data: MqttDiscoverySetupRequest,
-    params: RequestParams = {},
-  ) =>
-    this.request<MqttDiscoveryClientStatus, IItemSetOfIFailure>({
-      path: `/api/mqtt-discovery/setup`,
-      method: "POST",
-      body: data,
-      type: ContentType.Json,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags MqttDiscovery
-   * @name MqttDiscoveryTeardown
-   * @request POST:/api/mqtt-discovery/teardown
-   * @response `200` `MqttDiscoveryClientStatus`
-   */
-  mqttDiscoveryTeardown = (params: RequestParams = {}) =>
-    this.request<MqttDiscoveryClientStatus, any>({
-      path: `/api/mqtt-discovery/teardown`,
-      method: "POST",
       format: "json",
       ...params,
     });

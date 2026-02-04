@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { PropType } from 'vue';
-import type { MqttDiscoveryClientStatus } from '@/api/data-contracts';
-import type { HttpResponse } from '@/api/http-client';
+import type { MqttDiscoveryClientStatus } from '@/models/MqttDiscoveryClientStatus';
 import * as signalR from '@microsoft/signalr';
 import { parseISO } from 'date-fns';
 import { computed, onMounted, reactive } from 'vue';
@@ -31,7 +30,6 @@ const data = reactive({
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
-const api = ApiHelpers.client;
 
 const { isFieldInError } = appStore;
 
@@ -44,6 +42,7 @@ async function connectToHub() {
     if (connection !== null) {
       try {
         await connection.start();
+        await onRefresh();
       } catch {
         // If we fail to start the connection, retry after delay.
         const elapsedMilliseconds = Date.now() - startTimeMilliseconds;
@@ -71,6 +70,15 @@ async function connectToHub() {
       data.feed.unshift(formattedMessage);
       data.feed = data.feed.slice(0, 2000);
     });
+
+    connection.on('updateDiscoveryStatus', (status: MqttDiscoveryClientStatus) => {
+      data.status = status;
+      data.topics = status.topics?.join('\n') ?? data.topics;
+    });
+
+    connection.onreconnected(async () => {
+      await onRefresh();
+    });
   }
 
   startConnection();
@@ -79,17 +87,25 @@ async function connectToHub() {
 const feed = computed(() => data.feed.join('\n'));
 
 async function onRefresh() {
-  data.status = (await api().mqttDiscoveryStatus())?.data;
+  if (connection === null || connection.state !== signalR.HubConnectionState.Connected) {
+    return;
+  }
+
+  data.status = await connection.invoke<MqttDiscoveryClientStatus>('getDiscoveryStatus');
   data.topics = data.status.topics?.join('\n') ?? data.topics;
 }
 
 async function onStart() {
+  if (connection === null || connection.state !== signalR.HubConnectionState.Connected) {
+    return;
+  }
+
+  await onEnd();
+
   try {
-    const response = await api().mqttDiscoverySetup({
+    await connection.invoke('setupDiscovery', {
       topics: data.topics.split(/\r?\n/g).filter(x => !isNil(x)),
     });
-
-    data.status = response?.data;
 
     // Set querystring topic= for each topic
     const url = new URL(window.location.href);
@@ -99,21 +115,17 @@ async function onStart() {
       url.searchParams.append('topic', topic);
     });
     window.history.replaceState({}, '', url.toString());
-
-    // Recheck status to see if it connected.
-    setTimeout(() => onRefresh(), 500);
   } catch (error) {
-    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    messageStore.setErrorMessage((error as Error).message);
   }
 }
 
 async function onEnd() {
-  data.status = (await api().mqttDiscoveryTeardown())?.data;
-}
+  if (connection === null || connection.state !== signalR.HubConnectionState.Connected) {
+    return;
+  }
 
-async function onRestart() {
-  await onEnd();
-  await onStart();
+  await connection.invoke('teardownDiscovery');
 }
 
 async function onClear() {
@@ -153,25 +165,24 @@ onMounted(async () => {
     <p class="mt-4">
       See MQTT messages from the specified topics.
     </p>
-    <p>+ is a single-level wildcard. Can be used anywhere in a topic to sub a level.</p>
-    <p>
-      # is a multi-level wildcard. Can only be used at the end of a topic preceded by a forward
-      slash.
-    </p>
+    <ul>
+      <li>+ is a single-level wildcard. Can be used anywhere in a topic to sub a level.</li>
+      <li>
+        # is a multi-level wildcard. Can only be used at the end of a topic preceded by a forward
+        slash.
+      </li>
+    </ul>
     <div class="btn-toolbar mt-4">
-      <button class="btn btn-primary me-2" @click.prevent.stop="onStart">
+      <button class="btn btn-primary me-2 mb-2" @click.prevent.stop="onStart">
         Start
       </button>
-      <button class="btn btn-secondary me-2" @click.prevent.stop="onRestart">
-        Restart
-      </button>
-      <button class="btn btn-secondary me-2" @click.prevent.stop="onEnd">
+      <button class="btn btn-secondary me-2 mb-2" @click.prevent.stop="onEnd">
         End
       </button>
-      <button class="btn btn-secondary me-2" @click.prevent.stop="onClear">
+      <button class="btn btn-secondary me-2 mb-2" @click.prevent.stop="onClear">
         Clear
       </button>
-      <button class="btn btn-secondary me-2" @click.prevent.stop="onRefresh">
+      <button class="btn btn-secondary me-2 mb-2" @click.prevent.stop="onRefresh">
         Refresh status
       </button>
     </div>

@@ -37,7 +37,10 @@ async function connectToHub() {
   const startTimeMilliseconds = Date.now();
 
   async function onConnectedToHub() {
-    const response = await connection?.invoke('getCurrentReadings');
+    if (connection === null || connection.state !== signalR.HubConnectionState.Connected) {
+      return;
+    }
+    const response = await connection.invoke('getCurrentReadings');
     data.currentReadings = response;
   }
 

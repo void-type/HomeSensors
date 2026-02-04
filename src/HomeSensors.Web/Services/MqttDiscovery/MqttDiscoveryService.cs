@@ -27,7 +27,6 @@ public class MqttDiscoveryService
         _mqttFactory = mqttFactory;
         _tempHubContext = tempHubContext;
         _dateTimeService = dateTimeService;
-        _tempHubContext = tempHubContext;
     }
 
     public MqttDiscoveryClientStatus GetClientStatus()
@@ -38,11 +37,11 @@ public class MqttDiscoveryService
             IsConnected: _clientState?.Client?.IsConnected ?? false);
     }
 
-    public async Task<IResult<MqttDiscoveryClientStatus>> SetupClientAsync(MqttDiscoverySetupRequest request)
+    public async Task<VoidCore.Model.Functional.IResult> SetupClientAsync(MqttDiscoverySetupRequest request)
     {
         if (_clientState is not null)
         {
-            return Result.Fail<MqttDiscoveryClientStatus>(new Failure("Client already exists. End existing before setting up a new one."));
+            return Result.Fail(new Failure("Client already exists. End existing before setting up a new one."));
         }
 
         var client = _mqttFactory.CreateManagedMqttClient();
@@ -51,8 +50,10 @@ public class MqttDiscoveryService
 
         _logger.LogInformation("Connecting Managed MQTT client.");
 
-        client.ConnectingFailedAsync += LogConnectionFailureAsync;
-        client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLoggingAsync;
+        client.ConnectedAsync += OnStateChangeAsync;
+        client.ConnectionStateChangedAsync += OnStateChangeAsync;
+        client.ConnectingFailedAsync += OnConnectionFailureAsync;
+        client.ApplicationMessageReceivedAsync += OnMessageReceivedAsync;
 
         await client.StartAsync(_configuration.GetClientOptions());
 
@@ -67,35 +68,43 @@ public class MqttDiscoveryService
         }
         catch (MqttProtocolViolationException ex)
         {
-            TeardownClient();
-            return Result.Fail<MqttDiscoveryClientStatus>(new Failure(ex.Message, "topics"));
+            await TeardownClientAsync();
+            return Result.Fail(new Failure(ex.Message, "topics"));
         }
 
-        return Result.Ok(GetClientStatus());
+        return Result.Ok();
     }
 
-    public MqttDiscoveryClientStatus TeardownClient()
+    public async Task TeardownClientAsync()
     {
-        if (_clientState is not null)
+        if (_clientState?.Client is not null)
         {
+            _clientState.Client.ConnectedAsync -= OnStateChangeAsync;
+            _clientState.Client.ConnectionStateChangedAsync -= OnStateChangeAsync;
+            _clientState.Client.ConnectingFailedAsync -= OnConnectionFailureAsync;
+            _clientState.Client.ApplicationMessageReceivedAsync -= OnMessageReceivedAsync;
             _clientState.Client.Dispose();
-            _clientState = null;
         }
 
-        return GetClientStatus();
+        _clientState = null;
+
+        await BroadcastStatusAsync();
     }
 
-    private async Task LogConnectionFailureAsync(ConnectingFailedEventArgs e)
-    {
-        _logger.LogError(e.Exception, "MQTT client failed to connect.");
-        await Task.CompletedTask;
-    }
-
-    private async Task ProcessMessageWithExceptionLoggingAsync(MqttApplicationMessageReceivedEventArgs e)
+    private async Task OnMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         try
         {
-            await ProcessMessageAsync(e);
+            var payload = e.GetPayloadString();
+
+            if (_configuration.LogMessages)
+            {
+                MqttHelpers.LogMqttPayload(_logger, payload);
+            }
+
+            var message = new MqttDiscoveryMessage(_dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);
+
+            await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.NewDiscoveryMessageMessageName, message);
         }
         catch (Exception ex)
         {
@@ -103,17 +112,21 @@ public class MqttDiscoveryService
         }
     }
 
-    private async Task ProcessMessageAsync(MqttApplicationMessageReceivedEventArgs e)
+    private async Task OnStateChangeAsync(EventArgs e)
     {
-        var payload = e.GetPayloadString();
+        var status = GetClientStatus();
+        _logger.LogInformation("MQTT client connection state changed to {State}.", status.IsConnected ? "Connected" : "Disconnected");
+        await BroadcastStatusAsync(status);
+    }
 
-        if (_configuration.LogMessages)
-        {
-            MqttHelpers.LogMqttPayload(_logger, payload);
-        }
+    private async Task OnConnectionFailureAsync(ConnectingFailedEventArgs e)
+    {
+        _logger.LogError(e.Exception, "MQTT client failed to connect.");
+        await BroadcastStatusAsync();
+    }
 
-        var message = new MqttDiscoveryMessage(_dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);
-
-        await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.NewDiscoveryMessageMessageName, message);
+    private async Task BroadcastStatusAsync(MqttDiscoveryClientStatus? status = null)
+    {
+        await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.UpdateDiscoveryStatusMessageName, status ?? GetClientStatus());
     }
 }
