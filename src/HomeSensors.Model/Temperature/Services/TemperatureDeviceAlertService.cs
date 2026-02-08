@@ -66,11 +66,11 @@ public class TemperatureDeviceAlertService
             switch (alert.Type)
             {
                 case TemperatureDeviceAlertType.DeviceInactive:
-                    await NotifyInactiveClearAsync(alert, stoppingToken);
+                    await NotifyInactiveClearAsync(alert, devices, stoppingToken);
                     break;
 
                 case TemperatureDeviceAlertType.DeviceLowBattery:
-                    await NotifyLowBatteryClearAsync(alert, stoppingToken);
+                    await NotifyLowBatteryClearAsync(alert, devices, stoppingToken);
                     break;
             }
 
@@ -110,11 +110,12 @@ public class TemperatureDeviceAlertService
 
         _logger.LogWarning("Alert: {Subject}", subject);
 
-        await SendEmailAsync(subject, body, alert, stoppingToken);
+        await SendEmailAsync(subject, body, alert.Device, stoppingToken);
     }
 
-    private async Task NotifyInactiveClearAsync(TemperatureDeviceAlert alert, CancellationToken stoppingToken)
+    private async Task NotifyInactiveClearAsync(TemperatureDeviceAlert alert, List<TemperatureDeviceResponse> devices, CancellationToken stoppingToken)
     {
+        var device = devices.Find(d => d.Id == alert.Device.Id) ?? alert.Device;
         var locationName = alert.Location?.Name ?? "Unknown";
 
         var subject = $"{locationName} is active again";
@@ -122,7 +123,7 @@ public class TemperatureDeviceAlertService
 
         _logger.LogWarning("Alert clear: {Subject}", subject);
 
-        await SendEmailAsync(subject, body, alert, stoppingToken);
+        await SendEmailAsync(subject, body, device, stoppingToken);
     }
 
     private async Task NotifyLowBatteryAlertAsync(TemperatureDeviceAlert alert, CancellationToken stoppingToken)
@@ -134,11 +135,12 @@ public class TemperatureDeviceAlertService
 
         _logger.LogWarning("Alert: {Subject}", subject);
 
-        await SendEmailAsync(subject, body, alert, stoppingToken);
+        await SendEmailAsync(subject, body, alert.Device, stoppingToken);
     }
 
-    private async Task NotifyLowBatteryClearAsync(TemperatureDeviceAlert alert, CancellationToken stoppingToken)
+    private async Task NotifyLowBatteryClearAsync(TemperatureDeviceAlert alert, List<TemperatureDeviceResponse> devices, CancellationToken stoppingToken)
     {
+        var device = devices.Find(d => d.Id == alert.Device.Id) ?? alert.Device;
         var locationName = alert.Location?.Name ?? "Unknown";
 
         var subject = $"{locationName} no longer has a low battery";
@@ -146,15 +148,14 @@ public class TemperatureDeviceAlertService
 
         _logger.LogWarning("Alert clear: {Subject}", subject);
 
-        await SendEmailAsync(subject, body, alert, stoppingToken);
+        await SendEmailAsync(subject, body, device, stoppingToken);
     }
 
-    private async Task SendEmailAsync(string subject, string body, TemperatureDeviceAlert alert, CancellationToken stoppingToken)
+    private async Task SendEmailAsync(string subject, string body, TemperatureDeviceResponse device, CancellationToken stoppingToken)
     {
-        var device = alert.Device;
         var deviceName = $"{device.Name} ({device.MqttTopic})";
-        var readingTempString = TemperatureHelpers.GetDualTempString(alert.Device.LastReading?.TemperatureCelsius);
-        var readingTime = alert.Device.LastReading?.Time;
+        var readingTempString = TemperatureHelpers.GetDualTempString(device.LastReading?.TemperatureCelsius);
+        var readingTime = device.LastReading?.Time;
 
         await _emailNotificationService.SendAsync(e =>
         {
