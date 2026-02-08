@@ -22,7 +22,7 @@ const appStore = useAppStore();
 const messageStore = useMessageStore();
 const api = ApiHelpers.client;
 
-const { useFahrenheit, staleLimitMinutes } = storeToRefs(appStore);
+const { useFahrenheit } = storeToRefs(appStore);
 
 const data = reactive({
   devices: [] as Array<TemperatureDeviceResponse>,
@@ -42,6 +42,7 @@ function trackOriginalState(device: TemperatureDeviceResponse) {
         locationId: device.locationId,
         isRetired: device.isRetired,
         excludeFromInactiveAlerts: device.excludeFromInactiveAlerts,
+        inactiveLimitMinutes: device.inactiveLimitMinutes,
       }),
     );
   }
@@ -66,6 +67,7 @@ function isDeviceDirty(device: TemperatureDeviceResponse): boolean {
     locationId: device.locationId,
     isRetired: device.isRetired,
     excludeFromInactiveAlerts: device.excludeFromInactiveAlerts,
+    inactiveLimitMinutes: device.inactiveLimitMinutes,
   });
 
   return original !== current;
@@ -118,6 +120,7 @@ async function newDevice() {
     locationId: 0,
     isRetired: false,
     excludeFromInactiveAlerts: false,
+    inactiveLimitMinutes: 20,
   };
 
   data.devices.unshift(newDev);
@@ -173,6 +176,7 @@ async function saveDevice(device: TemperatureDeviceResponse) {
     locationId: device.locationId,
     isRetired: device.isRetired,
     excludeFromInactiveAlerts: device.excludeFromInactiveAlerts,
+    inactiveLimitMinutes: device.inactiveLimitMinutes,
   };
 
   try {
@@ -309,12 +313,12 @@ onBeforeUnmount(() => {
                   /></span>
                   <span
                     v-if="device.isInactive"
-                    :title="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
+                    :title="`Inactive. Hasn't been seen in ${device.inactiveLimitMinutes} minutes.`"
                   >
                     <FontAwesomeIcon
                       icon="fa-clock"
                       class="text-danger ms-2"
-                      :aria-label="`Inactive. Hasn't been seen in ${staleLimitMinutes} minutes.`"
+                      :aria-label="`Inactive. Hasn't been seen in ${device.inactiveLimitMinutes} minutes.`"
                     />
                   </span>
                   <span
@@ -432,6 +436,18 @@ onBeforeUnmount(() => {
                     >
                     <label :for="`excludeFromInactiveAlerts-${device.id}`" class="form-check-label">Exclude from inactive alerts</label>
                   </div>
+                </div>
+                <div class="g-col-12 g-col-md-6 g-col-lg-4">
+                  <label :for="`inactiveLimitMinutes-${device.id}`" class="form-label">Inactive limit (minutes)</label>
+                  <input
+                    :id="`inactiveLimitMinutes-${device.id}`"
+                    v-model.number="device.inactiveLimitMinutes"
+                    type="number"
+                    min="0"
+                    class="form-control form-control-sm"
+                    @input="onDeviceInput"
+                  >
+                  <small class="form-text text-body-secondary">0 = never inactive</small>
                 </div>
                 <div v-if="device.id" class="g-col-12">
                   <div>

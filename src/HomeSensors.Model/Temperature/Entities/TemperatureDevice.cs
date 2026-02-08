@@ -12,6 +12,8 @@ public class TemperatureDevice
 
     public bool ExcludeFromInactiveAlerts { get; set; }
 
+    public int InactiveLimitMinutes { get; set; } = 20;
+
     public long? TemperatureLocationId { get; set; }
 
     public virtual TemperatureLocation? TemperatureLocation { get; set; }

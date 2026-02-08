@@ -13,4 +13,6 @@ public class TemperatureDeviceSaveRequest
     public bool IsRetired { get; init; }
 
     public bool ExcludeFromInactiveAlerts { get; init; }
+
+    public int InactiveLimitMinutes { get; init; } = 20;
 }

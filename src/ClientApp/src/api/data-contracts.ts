@@ -119,6 +119,8 @@ export interface TemperatureDeviceResponse {
   isInactive?: boolean;
   isBatteryLevelLow?: boolean;
   excludeFromInactiveAlerts?: boolean;
+  /** @format int32 */
+  inactiveLimitMinutes?: number;
 }
 
 export interface TemperatureReadingResponse {
@@ -156,6 +158,8 @@ export interface TemperatureDeviceSaveRequest {
   locationId?: number | null;
   isRetired?: boolean;
   excludeFromInactiveAlerts?: boolean;
+  /** @format int32 */
+  inactiveLimitMinutes?: number;
 }
 
 export interface TemperatureCheckLimitResponse {

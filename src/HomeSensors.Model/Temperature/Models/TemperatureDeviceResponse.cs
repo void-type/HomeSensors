@@ -6,7 +6,7 @@ public class TemperatureDeviceResponse
         long id, string name, string mqttTopic,
         long? locationId, TemperatureReadingResponse? lastReading,
         bool isRetired, bool isInactive, bool isBatteryLevelLow,
-        bool excludeFromInactiveAlerts
+        bool excludeFromInactiveAlerts, int inactiveLimitMinutes
         )
     {
         Id = id;
@@ -18,6 +18,7 @@ public class TemperatureDeviceResponse
         IsInactive = isInactive;
         IsBatteryLevelLow = isBatteryLevelLow;
         ExcludeFromInactiveAlerts = excludeFromInactiveAlerts;
+        InactiveLimitMinutes = inactiveLimitMinutes;
     }
 
     public long Id { get; }
@@ -39,4 +40,6 @@ public class TemperatureDeviceResponse
     public bool IsBatteryLevelLow { get; }
 
     public bool ExcludeFromInactiveAlerts { get; }
+
+    public int InactiveLimitMinutes { get; }
 }
