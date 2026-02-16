@@ -133,6 +133,61 @@ function getColor(location: TemperatureLocationResponse | null | undefined): str
   return colorCache[locationName];
 }
 
+function getOrCreateLegendList(id: string): HTMLUListElement {
+  const container = document.getElementById(id)!;
+  let list = container.querySelector('ul');
+
+  if (!list) {
+    list = document.createElement('ul');
+    list.classList.add('legend-list');
+    container.appendChild(list);
+  }
+
+  return list;
+}
+
+const htmlLegendPlugin = {
+  id: 'htmlLegend',
+  afterUpdate(chart: Chart) {
+    const containerID = (chart.options.plugins as any)?.htmlLegend?.containerID;
+    if (!containerID) {
+      return;
+    }
+
+    const ul = getOrCreateLegendList(containerID);
+    ul.innerHTML = '';
+
+    const items = chart.options.plugins?.legend?.labels?.generateLabels?.(chart) ?? [];
+
+    items.forEach((item) => {
+      const li = document.createElement('li');
+      li.classList.add('legend-item');
+      li.onclick = () => {
+        chart.setDatasetVisibility(item.datasetIndex!, !chart.isDatasetVisible(item.datasetIndex!));
+        chart.update();
+      };
+
+      const colorBox = document.createElement('span');
+      colorBox.classList.add('legend-color-box');
+      colorBox.style.backgroundColor = item.fillStyle as string;
+      colorBox.style.borderColor = item.strokeStyle as string;
+
+      const label = document.createElement('span');
+      label.classList.add('legend-label');
+      label.textContent = item.text;
+
+      if (item.hidden) {
+        colorBox.style.opacity = '0.3';
+        label.classList.add('legend-label-hidden');
+      }
+
+      li.appendChild(colorBox);
+      li.appendChild(label);
+      ul.appendChild(li);
+    });
+  },
+};
+
 function setGraphData(
   series: Array<TemperatureTimeSeriesLocationData>,
   useF: boolean,
@@ -284,7 +339,10 @@ function setGraphData(
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'bottom',
+          display: false,
+        },
+        htmlLegend: {
+          containerID: 'chart-legend-container',
         },
         title: {
           display: false,
@@ -363,7 +421,7 @@ function setGraphData(
     },
   };
 
-  lineChart = new Chart(element, config as any);
+  lineChart = new Chart(element, { ...(config as any), plugins: [htmlLegendPlugin] });
 }
 
 async function getTimeSeries(inputs: ITimeSeriesInputs) {
@@ -976,13 +1034,14 @@ onUnmounted(() => {
         <div class="chart-container">
           <canvas id="tempGraph" />
         </div>
+        <div id="chart-legend-container" />
         <div id="chartjs-tooltip" class="position-absolute d-none">
           <div class="tooltip-body" />
         </div>
       </div>
 
       <!-- HVAC stats -->
-      <div class="mt-3 grid">
+      <div class="mt-4 grid">
         <div class="g-col-6 cold">
           Cooling:
           {{
@@ -1015,7 +1074,13 @@ onUnmounted(() => {
         </thead>
         <tbody>
           <tr v-for="(series, i) in data.graphSeries" :key="i">
-            <td>{{ series.location?.name }}</td>
+            <td>
+              <span
+                class="color-dot me-2"
+                :style="{ backgroundColor: getColor(series.location) }"
+              />
+              {{ series.location?.name }}
+            </td>
             <td>
               {{
                 data.showHumidity
@@ -1050,12 +1115,60 @@ onUnmounted(() => {
   height: 400px;
 }
 
+.color-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
 .hot {
   color: #d74040;
 }
 
 .cold {
   color: #5e83f3;
+}
+
+#chart-legend-container {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+
+:deep(.legend-list) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.5rem 1rem;
+}
+
+:deep(.legend-item) {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  gap: 0.35rem;
+}
+
+:deep(.legend-color-box) {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+:deep(.legend-label) {
+  color: var(--bs-body-color);
+}
+
+:deep(.legend-label-hidden) {
+  text-decoration: line-through;
+  opacity: 0.5;
 }
 
 #chartjs-tooltip {
