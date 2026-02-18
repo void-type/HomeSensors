@@ -10,6 +10,7 @@ import type {
 import type { HttpResponse } from '@/api/http-client';
 import type { ITemperatureGraphInputs } from '@/models/ITemperatureGraphInputs';
 import type { ITimeSeriesInputs } from '@/models/ITimeSeriesInputs';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Chart, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { addHours, startOfMinute } from 'date-fns';
@@ -574,6 +575,29 @@ watchEffect(() => {
   setGraphData(data.graphSeries, useFahrenheit.value, data.showHumidity, data.showHvacActions);
 });
 
+function formatDuration(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours === 0) {
+    return `${minutes}m`;
+  }
+
+  return `${hours}h ${minutes}m`;
+}
+
+const coolingMinutes = computed(() =>
+  data.hvacActions
+    .filter(x => x.action === 'cooling')
+    .reduce((acc, x) => acc + (x.durationMinutes || 0), 0),
+);
+
+const heatingMinutes = computed(() =>
+  data.hvacActions
+    .filter(x => x.action === 'heating')
+    .reduce((acc, x) => acc + (x.durationMinutes || 0), 0),
+);
+
 onUnmounted(() => {
   if (lastTimeout) {
     clearTimeout(lastTimeout);
@@ -1041,24 +1065,16 @@ onUnmounted(() => {
       </div>
 
       <!-- HVAC stats -->
-      <div class="mt-4 grid">
-        <div class="g-col-6 cold">
-          Cooling:
-          {{
-            data.hvacActions
-              .filter((x) => x.action === "cooling")
-              .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
-          }}
-          min
+      <div class="mt-4 d-flex gap-4">
+        <div class="cold">
+          <FontAwesomeIcon icon="fa-snowflake" aria-hidden="true" class="me-1" />
+          <span class="visually-hidden">Cooling:</span>
+          {{ formatDuration(coolingMinutes) }}
         </div>
-        <div class="g-col-6 hot">
-          Heating:
-          {{
-            data.hvacActions
-              .filter((x) => x.action === "heating")
-              .reduce((acc, x) => acc + (x.durationMinutes || 0), 0)
-          }}
-          min
+        <div class="hot">
+          <FontAwesomeIcon icon="fa-fire" aria-hidden="true" class="me-1" />
+          <span class="visually-hidden">Heating:</span>
+          {{ formatDuration(heatingMinutes) }}
         </div>
       </div>
 
