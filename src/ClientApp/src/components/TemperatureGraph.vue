@@ -101,6 +101,25 @@ function onSelectAllClick() {
 
 let lineChart: Chart | null = null;
 
+const hiddenDatasets = new Set<string>();
+const hiddenVersion = ref(0);
+
+function isDatasetHidden(locationName: string): boolean {
+  void hiddenVersion.value;
+  return hiddenDatasets.has(locationName);
+}
+
+function toggleDatasetVisibility(datasetIndex: number, locationName: string) {
+  if (hiddenDatasets.has(locationName)) {
+    hiddenDatasets.delete(locationName);
+  } else {
+    hiddenDatasets.add(locationName);
+  }
+  hiddenVersion.value++;
+  lineChart?.setDatasetVisibility(datasetIndex, !hiddenDatasets.has(locationName));
+  lineChart?.update();
+}
+
 const colorCache: Record<string, string> = {};
 
 function getRandomColor() {
@@ -134,61 +153,6 @@ function getColor(location: TemperatureLocationResponse | null | undefined): str
   return colorCache[locationName];
 }
 
-function getOrCreateLegendList(id: string): HTMLUListElement {
-  const container = document.getElementById(id)!;
-  let list = container.querySelector('ul');
-
-  if (!list) {
-    list = document.createElement('ul');
-    list.classList.add('legend-list');
-    container.appendChild(list);
-  }
-
-  return list;
-}
-
-const htmlLegendPlugin = {
-  id: 'htmlLegend',
-  afterUpdate(chart: Chart) {
-    const containerID = (chart.options.plugins as any)?.htmlLegend?.containerID;
-    if (!containerID) {
-      return;
-    }
-
-    const ul = getOrCreateLegendList(containerID);
-    ul.innerHTML = '';
-
-    const items = chart.options.plugins?.legend?.labels?.generateLabels?.(chart) ?? [];
-
-    items.forEach((item) => {
-      const li = document.createElement('li');
-      li.classList.add('legend-item');
-      li.onclick = () => {
-        chart.setDatasetVisibility(item.datasetIndex!, !chart.isDatasetVisible(item.datasetIndex!));
-        chart.update();
-      };
-
-      const colorBox = document.createElement('span');
-      colorBox.classList.add('legend-color-box');
-      colorBox.style.backgroundColor = item.fillStyle as string;
-      colorBox.style.borderColor = item.strokeStyle as string;
-
-      const label = document.createElement('span');
-      label.classList.add('legend-label');
-      label.textContent = item.text;
-
-      if (item.hidden) {
-        colorBox.style.opacity = '0.3';
-        label.classList.add('legend-label-hidden');
-      }
-
-      li.appendChild(colorBox);
-      li.appendChild(label);
-      ul.appendChild(li);
-    });
-  },
-};
-
 function setGraphData(
   series: Array<TemperatureTimeSeriesLocationData>,
   useF: boolean,
@@ -201,21 +165,8 @@ function setGraphData(
     return;
   }
 
-  const oldHiddenCategories: Array<string | null | undefined> = [];
-
   if (lineChart != null) {
-    const oldCategoryCount = lineChart?.data.datasets.length || 0;
-
-    for (let i = 0; i < oldCategoryCount; i += 1) {
-      const datasetMeta = lineChart.getDatasetMeta(i);
-      const isHidden = datasetMeta.visible === false;
-
-      if (isHidden && datasetMeta) {
-        oldHiddenCategories.push(datasetMeta.label);
-      }
-    }
-
-    lineChart?.destroy();
+    lineChart.destroy();
   }
 
   const datasets = series?.map((s) => {
@@ -233,7 +184,7 @@ function setGraphData(
             ? formatHumidity(p.humidity)
             : formatTemp(p.temperatureCelsius, useF, useF ? 1 : 2),
         })),
-      hidden: oldHiddenCategories.includes(s.location?.name),
+      hidden: hiddenDatasets.has(s.location?.name || ''),
     };
   });
 
@@ -342,9 +293,6 @@ function setGraphData(
         legend: {
           display: false,
         },
-        htmlLegend: {
-          containerID: 'chart-legend-container',
-        },
         title: {
           display: false,
         },
@@ -422,7 +370,7 @@ function setGraphData(
     },
   };
 
-  lineChart = new Chart(element, { ...(config as any), plugins: [htmlLegendPlugin] });
+  lineChart = new Chart(element, config as any);
 }
 
 async function getTimeSeries(inputs: ITimeSeriesInputs) {
@@ -654,6 +602,10 @@ onUnmounted(() => {
                       type="checkbox"
                     >
                     <label class="form-check-label" :for="`locationSelectDesktop-${location.id}`">
+                      <span
+                        class="color-dot me-1"
+                        :style="{ backgroundColor: getColor(location) }"
+                      />
                       {{ location.name }}
                     </label>
                   </div>
@@ -876,6 +828,10 @@ onUnmounted(() => {
                           type="checkbox"
                         >
                         <label class="form-check-label" :for="`locationSelectMobile-${location.id}`">
+                          <span
+                            class="color-dot me-1"
+                            :style="{ backgroundColor: getColor(location) }"
+                          />
                           {{ location.name }}
                         </label>
                       </div>
@@ -972,58 +928,127 @@ onUnmounted(() => {
                     </div>
                   </div>
                 </div>
-                <div class="d-flex justify-content-center flex-wrap gap-2">
-                  <div class="btn-group btn-group-sm mb-2">
+                <!-- Paired layout for xs screens -->
+                <div class="d-flex d-sm-none flex-column gap-2">
+                  <div class="btn-group btn-group-sm">
                     <button
                       class="btn btn-outline-secondary"
                       title="Back 1 Month"
                       @click="adjustDateRange({ months: -1 })"
                     >
-                      <span>&laquo;&nbsp;</span>
-                      <span>Month</span>
-                    </button>
-                    <button
-                      class="btn btn-outline-secondary"
-                      title="Back 1 Week"
-                      @click="adjustDateRange({ weeks: -1 })"
-                    >
-                      <span>&laquo;&nbsp;</span>
-                      <span>Week</span>
-                    </button>
-                    <button
-                      class="btn btn-outline-secondary"
-                      title="Back 1 Day"
-                      @click="adjustDateRange({ days: -1 })"
-                    >
-                      <span>&laquo;&nbsp;</span>
-                      <span>Day</span>
-                    </button>
-                    <button
-                      class="btn btn-outline-secondary"
-                      title="Forward 1 Day"
-                      @click="adjustDateRange({ days: 1 })"
-                    >
-                      <span>Day</span>
-                      <span>&nbsp;&raquo;</span>
-                    </button>
-                    <button
-                      class="btn btn-outline-secondary"
-                      title="Forward 1 Week"
-                      @click="adjustDateRange({ weeks: 1 })"
-                    >
-                      <span>Week</span>
-                      <span>&nbsp;&raquo;</span>
+                      &laquo; Month
                     </button>
                     <button
                       class="btn btn-outline-secondary"
                       title="Forward 1 Month"
                       @click="adjustDateRange({ months: 1 })"
                     >
-                      <span>Month</span>
-                      <span>&nbsp;&raquo;</span>
+                      Month &raquo;
                     </button>
                   </div>
-                  <div class="btn-group btn-group-sm mb-2">
+                  <div class="btn-group btn-group-sm">
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Back 1 Week"
+                      @click="adjustDateRange({ weeks: -1 })"
+                    >
+                      &laquo; Week
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Forward 1 Week"
+                      @click="adjustDateRange({ weeks: 1 })"
+                    >
+                      Week &raquo;
+                    </button>
+                  </div>
+                  <div class="btn-group btn-group-sm">
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Back 1 Day"
+                      @click="adjustDateRange({ days: -1 })"
+                    >
+                      &laquo; Day
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Forward 1 Day"
+                      @click="adjustDateRange({ days: 1 })"
+                    >
+                      Day &raquo;
+                    </button>
+                  </div>
+                  <div class="btn-group btn-group-sm">
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Last 48 hours"
+                      @click="setTimeRange(48)"
+                    >
+                      48h
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Last 24 hours"
+                      @click="setTimeRange(24)"
+                    >
+                      24h
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Last 12 hours"
+                      @click="setTimeRange(12)"
+                    >
+                      12h
+                    </button>
+                  </div>
+                </div>
+                <!-- Single bar layout for sm+ screens -->
+                <div class="d-none d-sm-flex flex-column align-items-center gap-2">
+                  <div class="btn-group btn-group-sm">
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Back 1 Month"
+                      @click="adjustDateRange({ months: -1 })"
+                    >
+                      &laquo; Month
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Back 1 Week"
+                      @click="adjustDateRange({ weeks: -1 })"
+                    >
+                      &laquo; Week
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Back 1 Day"
+                      @click="adjustDateRange({ days: -1 })"
+                    >
+                      &laquo; Day
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Forward 1 Day"
+                      @click="adjustDateRange({ days: 1 })"
+                    >
+                      Day &raquo;
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Forward 1 Week"
+                      @click="adjustDateRange({ weeks: 1 })"
+                    >
+                      Week &raquo;
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Forward 1 Month"
+                      @click="adjustDateRange({ months: 1 })"
+                    >
+                      Month &raquo;
+                    </button>
+                  </div>
+                  <div class="btn-group btn-group-sm">
                     <button
                       class="btn btn-outline-secondary"
                       title="Last 48 hours"
@@ -1058,38 +1083,29 @@ onUnmounted(() => {
         <div class="chart-container">
           <canvas id="tempGraph" />
         </div>
-        <div id="chart-legend-container" />
         <div id="chartjs-tooltip" class="position-absolute d-none">
           <div class="tooltip-body" />
         </div>
       </div>
 
-      <!-- HVAC stats -->
-      <div class="mt-4 d-flex gap-4">
-        <div class="cold">
-          <FontAwesomeIcon icon="fa-snowflake" aria-hidden="true" class="me-1" />
-          <span class="visually-hidden">Cooling:</span>
-          {{ formatDuration(coolingMinutes) }}
-        </div>
-        <div class="hot">
-          <FontAwesomeIcon icon="fa-fire" aria-hidden="true" class="me-1" />
-          <span class="visually-hidden">Heating:</span>
-          {{ formatDuration(heatingMinutes) }}
-        </div>
-      </div>
-
       <!-- Stats table -->
-      <table class="mt-3 table" :class="{ 'table-dark': useDarkMode }">
+      <table class="mt-2 table" :class="{ 'table-dark': useDarkMode }">
         <thead>
           <tr>
             <th>Location</th>
             <th>Low</th>
-            <th>High</th>
             <th>Avg</th>
+            <th>High</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(series, i) in data.graphSeries" :key="i">
+          <tr
+            v-for="(series, i) in data.graphSeries"
+            :key="i"
+            class="stats-row"
+            :class="{ 'stats-row-hidden': isDatasetHidden(series.location?.name || '') }"
+            @click="toggleDatasetVisibility(i, series.location?.name || '')"
+          >
             <td>
               <span
                 class="color-dot me-2"
@@ -1107,20 +1123,34 @@ onUnmounted(() => {
             <td>
               {{
                 data.showHumidity
-                  ? formatHumidityWithUnit(series.humidityAggregate?.maximum)
-                  : formatTempWithUnit(series.temperatureAggregate?.maximum, useFahrenheit, 1)
+                  ? formatHumidityWithUnit(series.humidityAggregate?.average)
+                  : formatTempWithUnit(series.temperatureAggregate?.average, useFahrenheit, 1)
               }}
             </td>
             <td>
               {{
                 data.showHumidity
-                  ? formatHumidityWithUnit(series.humidityAggregate?.average)
-                  : formatTempWithUnit(series.temperatureAggregate?.average, useFahrenheit, 1)
+                  ? formatHumidityWithUnit(series.humidityAggregate?.maximum)
+                  : formatTempWithUnit(series.temperatureAggregate?.maximum, useFahrenheit, 1)
               }}
             </td>
           </tr>
         </tbody>
       </table>
+
+      <!-- HVAC stats -->
+      <div class="mt-3 d-flex gap-4">
+        <div class="cold">
+          <FontAwesomeIcon icon="fa-snowflake" aria-hidden="true" class="me-1" />
+          <span class="visually-hidden">Cooling:</span>
+          {{ formatDuration(coolingMinutes) }}
+        </div>
+        <div class="hot">
+          <FontAwesomeIcon icon="fa-fire" aria-hidden="true" class="me-1" />
+          <span class="visually-hidden">Heating:</span>
+          {{ formatDuration(heatingMinutes) }}
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -1136,7 +1166,6 @@ onUnmounted(() => {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  vertical-align: middle;
 }
 
 .hot {
@@ -1147,44 +1176,17 @@ onUnmounted(() => {
   color: #5e83f3;
 }
 
-#chart-legend-container {
-  display: flex;
-  justify-content: center;
-  padding-top: 0.5rem;
-}
-
-:deep(.legend-list) {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  gap: 0.5rem 1rem;
-}
-
-:deep(.legend-item) {
-  display: flex;
-  align-items: center;
+.stats-row {
   cursor: pointer;
-  font-size: 0.85rem;
-  gap: 0.35rem;
+  user-select: none;
 }
 
-:deep(.legend-color-box) {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-}
-
-:deep(.legend-label) {
-  color: var(--bs-body-color);
-}
-
-:deep(.legend-label-hidden) {
-  text-decoration: line-through;
+.stats-row-hidden {
   opacity: 0.5;
+
+  td:first-child {
+    text-decoration: line-through;
+  }
 }
 
 #chartjs-tooltip {

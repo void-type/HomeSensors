@@ -474,7 +474,6 @@ onBeforeUnmount(() => {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  vertical-align: middle;
 }
 
 .color-dot-empty {

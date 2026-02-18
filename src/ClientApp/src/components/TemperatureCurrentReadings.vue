@@ -206,11 +206,11 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .hot {
-  color: #df2020;
+  color: #d74040;
 }
 
 .cold {
-  color: #abc0ff;
+  color: #5e83f3;
 }
 
 .stale {
