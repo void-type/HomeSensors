@@ -9,21 +9,20 @@ const router = createRouter({
       document.getElementById(to.hash.slice(1))?.focus();
       return {
         el: to.hash,
+        behavior: 'instant',
       };
     }
 
     if (savedPosition) {
+      savedPosition.behavior = 'instant';
       return savedPosition;
-    }
-
-    if (from.path === to.path) {
-      return undefined;
     }
 
     document.getElementById('app')?.focus();
 
     return {
       el: '#app',
+      behavior: 'instant',
     };
   },
   history: createWebHistory(import.meta.env.BASE_URL),

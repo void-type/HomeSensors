@@ -14,4 +14,13 @@ export default class RouterHelpers {
 
     document.title = title;
   }
+
+  static scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+
+    document.getElementById('main')?.focus();
+  }
 }

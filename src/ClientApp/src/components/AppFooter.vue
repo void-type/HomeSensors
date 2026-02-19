@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
+import RouterHelpers from '@/models/RouterHelpers';
 import useAppStore from '@/stores/appStore';
 
 const appStore = useAppStore();
@@ -7,7 +8,13 @@ const { version } = storeToRefs(appStore);
 </script>
 
 <template>
-  <footer id="footer" class="d-print-none">
+  <footer id="footer" class="mt-5 d-print-none border-top text-center py-3 px-0">
+    <div class="m-0 mb-4 text-center">
+      <button class="btn btn-outline-secondary" type="button" @click="RouterHelpers.scrollToTop()">
+        Back to top
+        <FontAwesomeIcon icon="fa-arrow-up" class="ms-1" />
+      </button>
+    </div>
     <div>
       <a href="https://github.com/void-type/HomeSensors">
         HomeSensors {{ version }} is open source!</a>
