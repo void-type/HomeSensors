@@ -30,8 +30,8 @@
       </a>
       <ul class="dropdown-menu" aria-labelledby="administrationDropdown">
         <li>
-          <router-link :to="{ name: 'temperatureDevicesMain' }" class="dropdown-item">
-            Temperature Devices
+          <router-link :to="{ name: 'categoriesMain' }" class="dropdown-item">
+            Categories
           </router-link>
         </li>
         <li><hr class="dropdown-divider"></li>
@@ -42,8 +42,8 @@
         </li>
         <li><hr class="dropdown-divider"></li>
         <li>
-          <router-link :to="{ name: 'categoriesMain' }" class="dropdown-item">
-            Categories
+          <router-link :to="{ name: 'temperatureDevicesMain' }" class="dropdown-item">
+            Temperature Devices
           </router-link>
         </li>
         <li><hr class="dropdown-divider"></li>
