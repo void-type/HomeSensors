@@ -2,12 +2,14 @@
 using HomeSensors.Model.Data;
 using HomeSensors.Model.Hvac.Workers;
 using HomeSensors.Model.Infrastructure.Emailing;
+using HomeSensors.Model.Infrastructure.Emailing.Repositories;
 using HomeSensors.Model.Infrastructure.HomeAssistant;
 using HomeSensors.Model.Infrastructure.Mqtt;
 using HomeSensors.Model.Notifications;
 using HomeSensors.Model.Temperature.Repositories;
 using HomeSensors.Model.Temperature.Services;
 using HomeSensors.Model.Temperature.Workers;
+using HomeSensors.Model.WaterLeak.Repositories;
 using HomeSensors.Model.WaterLeak.Services;
 using HomeSensors.Model.WaterLeak.Workers;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +34,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IEmailFactory, HtmlEmailFactory>();
         services.AddSingleton<IEmailSender, SmtpEmailer>();
-        services.AddSingleton<EmailNotificationService>();
+        services.AddScoped<EmailNotificationService>();
         services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
         services.AddSingleton<MqttFactory>();
 
@@ -40,6 +42,8 @@ public static class DependencyInjection
         services.AddScoped<TemperatureReadingRepository>();
         services.AddScoped<TemperatureDeviceRepository>();
         services.AddScoped<TemperatureLocationRepository>();
+        services.AddScoped<WaterLeakDeviceRepository>();
+        services.AddScoped<EmailRecipientRepository>();
 
         services.AddSingleton<ITemperatureHubNotifier, NoOpTemperatureHubNotifier>();
 
@@ -90,7 +94,8 @@ public static class DependencyInjection
         var mqttWaterLeaksSettings = services.AddSettingsSingleton<MqttWaterLeaksSettings>(workersConfig);
         if (mqttWaterLeaksSettings.IsEnabled)
         {
-            services.AddSingleton<WaterLeakAlertService>();
+            services.AddSingleton<WaterLeakAlertState>();
+            services.AddScoped<WaterLeakAlertService>();
             services.AddHostedService<MqttWaterLeaksWorker>();
         }
 

@@ -123,7 +123,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return Result.Ok(EntityMessage.Create("Location saved.", location.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> DeleteAsync(int id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id)
     {
         var location = await _data.TemperatureLocations
             .FirstOrDefaultAsync(x => x.Id == id);

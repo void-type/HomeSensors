@@ -52,7 +52,7 @@ public class TemperatureLocationsController : ControllerBase
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> DeleteAsync(int id)
+    public async Task<IActionResult> DeleteAsync(long id)
     {
         return await _locationRepository.DeleteAsync(id)
             .MapAsync(HttpResponder.Respond);

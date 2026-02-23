@@ -56,9 +56,11 @@ public class TemperatureDeviceAlertService
             .Concat(lowBatteryAlert)
             .ToList();
 
+        var currentAlertSet = currentAlerts.ToHashSet();
+
         // Clear alerts that are no longer current.
         var clearedAlerts = latchedAlerts
-            .Where(l => !currentAlerts.Contains(l))
+            .Where(l => !currentAlertSet.Contains(l))
             .ToList();
 
         foreach (var alert in clearedAlerts)
@@ -80,8 +82,10 @@ public class TemperatureDeviceAlertService
         // Remove alerts that need resent. They will be resent when re-added from current.
         latchedAlerts.RemoveAll(x => x.ResendAfter <= now);
 
+        var latchedAlertSet = latchedAlerts.ToHashSet();
+
         var alertsToSend = currentAlerts
-            .Where(c => !latchedAlerts.Contains(c))
+            .Where(c => !latchedAlertSet.Contains(c))
             .ToList();
 
         foreach (var alert in alertsToSend)

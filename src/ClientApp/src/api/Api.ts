@@ -11,6 +11,9 @@ import type {AppVersion,
   CategoriesDeleteParams,
   CategoryResponse,
   CategorySaveRequest,
+  EmailRecipientResponse,
+  EmailRecipientSaveRequest,
+  EmailRecipientsDeleteParams,
   EntityMessageOfLong,
   IItemSetOfIFailure,
   TemperatureCheckLimitResponse,
@@ -25,6 +28,9 @@ import type {AppVersion,
   TemperatureReadingsGetCurrentReadingForLocationParams,
   TemperatureTimeSeriesRequest,
   TemperatureTimeSeriesResponse,
+  WaterLeakDeviceResponse,
+  WaterLeakDeviceSaveRequest,
+  WaterLeakDevicesDeleteParams,
   WebClientInfo,} from "./data-contracts";
 import { ContentType, HttpClient } from "./http-client";
 import type { RequestParams } from "./http-client";
@@ -113,6 +119,62 @@ export class Api<
   ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
       path: `/api/categories/${id}`,
+      method: "DELETE",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags EmailRecipients
+   * @name EmailRecipientsGetAll
+   * @request GET:/api/email-recipients/all
+   * @response `200` `(EmailRecipientResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  emailRecipientsGetAll = (params: RequestParams = {}) =>
+    this.request<EmailRecipientResponse[], IItemSetOfIFailure>({
+      path: `/api/email-recipients/all`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags EmailRecipients
+   * @name EmailRecipientsSave
+   * @request POST:/api/email-recipients
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  emailRecipientsSave = (
+    data: EmailRecipientSaveRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/email-recipients`,
+      method: "POST",
+      body: data,
+      type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags EmailRecipients
+   * @name EmailRecipientsDelete
+   * @request DELETE:/api/email-recipients/{id}
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  emailRecipientsDelete = (
+    { id, ...query }: EmailRecipientsDeleteParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/email-recipients/${id}`,
       method: "DELETE",
       format: "json",
       ...params,
@@ -305,6 +367,62 @@ export class Api<
       method: "POST",
       body: data,
       type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags WaterLeakDevices
+   * @name WaterLeakDevicesGetAll
+   * @request GET:/api/water-leak-devices/all
+   * @response `200` `(WaterLeakDeviceResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  waterLeakDevicesGetAll = (params: RequestParams = {}) =>
+    this.request<WaterLeakDeviceResponse[], IItemSetOfIFailure>({
+      path: `/api/water-leak-devices/all`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags WaterLeakDevices
+   * @name WaterLeakDevicesSave
+   * @request POST:/api/water-leak-devices
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  waterLeakDevicesSave = (
+    data: WaterLeakDeviceSaveRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/water-leak-devices`,
+      method: "POST",
+      body: data,
+      type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags WaterLeakDevices
+   * @name WaterLeakDevicesDelete
+   * @request DELETE:/api/water-leak-devices/{id}
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  waterLeakDevicesDelete = (
+    { id, ...query }: WaterLeakDevicesDeleteParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/water-leak-devices/${id}`,
+      method: "DELETE",
       format: "json",
       ...params,
     });

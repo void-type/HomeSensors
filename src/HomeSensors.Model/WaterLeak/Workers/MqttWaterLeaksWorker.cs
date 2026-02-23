@@ -1,8 +1,10 @@
-﻿using HomeSensors.Model.Infrastructure.Emailing;
+﻿using HomeSensors.Model.Data;
+using HomeSensors.Model.Infrastructure.Emailing;
 using HomeSensors.Model.Infrastructure.Json;
 using HomeSensors.Model.Infrastructure.Mqtt;
 using HomeSensors.Model.WaterLeak.Models;
 using HomeSensors.Model.WaterLeak.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,7 +15,6 @@ using System.Diagnostics;
 using System.Text.Json;
 using VoidCore.Model.Guards;
 
-
 namespace HomeSensors.Model.WaterLeak.Workers;
 
 public class MqttWaterLeaksWorker : BackgroundService
@@ -22,68 +23,92 @@ public class MqttWaterLeaksWorker : BackgroundService
     private readonly MqttSettings _configuration;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
-    private readonly MqttWaterLeaksSettings _workerSettings;
-    private readonly EmailNotificationService _emailNotificationService;
     private readonly TimeSpan _betweenTicks;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
+    private IManagedMqttClient? _mqttClient;
+    private List<string> _currentTopics = [];
 
     public MqttWaterLeaksWorker(ILogger<MqttWaterLeaksWorker> logger, MqttSettings configuration, IServiceScopeFactory scopeFactory,
-        MqttFactory mqttFactory, MqttWaterLeaksSettings workerSettings, EmailNotificationService emailNotificationService)
+        MqttFactory mqttFactory, MqttWaterLeaksSettings workerSettings)
     {
         _logger = logger;
         _configuration = configuration;
         _scopeFactory = scopeFactory;
         _mqttFactory = mqttFactory;
-        _workerSettings = workerSettings;
-        _emailNotificationService = emailNotificationService;
         _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
 
         logger.LogInformation("Enabling background job: {JobName}.",
             nameof(MqttWaterLeaksWorker));
     }
 
+    public async Task RefreshTopicSubscriptionsAsync()
+    {
+        await _refreshLock.WaitAsync();
+
+        try
+        {
+            var newTopics = await GetTopicsAsync();
+
+            var topicsToUnsubscribe = _currentTopics.Except(newTopics).ToList();
+            await UnsubscribeFromTopicsAsync(topicsToUnsubscribe);
+
+            var topicsToSubscribe = newTopics.Except(_currentTopics).ToList();
+            await SubscribeToTopicsAsync(topicsToSubscribe);
+
+            _currentTopics = newTopics;
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var client = _mqttFactory.CreateManagedMqttClient();
-
-        _logger.LogInformation("Connecting Managed MQTT client.");
-
-        client.ConnectingFailedAsync += LogConnectionFailureAsync;
-        client.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLoggingAsync;
-
-        await client.StartAsync(_configuration.GetClientOptions());
-
-        var topics = (_workerSettings.Devices ?? []).Select(x => x.Topic).ToArray();
-
-        foreach (var topic in topics)
+        try
         {
-            _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
+            _mqttClient = _mqttFactory.CreateManagedMqttClient();
+
+            _logger.LogInformation("Connecting Managed MQTT client.");
+
+            _mqttClient.ConnectingFailedAsync += LogConnectionFailureAsync;
+            _mqttClient.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLoggingAsync;
+
+            await _mqttClient.StartAsync(_configuration.GetClientOptions());
+
+            await RefreshTopicSubscriptionsAsync();
+
+            // The client is still running, we just loop here and the Delay will listen for the stop token.
+            var timer = new PeriodicTimer(_betweenTicks);
+
+            while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
+            {
+                var startTime = Stopwatch.GetTimestamp();
+
+                try
+                {
+                    _logger.LogInformation("{JobName} job is starting.", nameof(MqttWaterLeaksWorker));
+
+                    await RefreshTopicSubscriptionsAsync();
+
+                    using var scope = _scopeFactory.CreateScope();
+                    var waterLeakAlertService = scope.ServiceProvider.GetRequiredService<WaterLeakAlertService>();
+                    await waterLeakAlertService.CheckInactiveAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttWaterLeaksWorker));
+                }
+                finally
+                {
+                    _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(MqttWaterLeaksWorker), Stopwatch.GetElapsedTime(startTime));
+                }
+            }
         }
-
-        await client.SubscribeAsync(_mqttFactory.GetTopicFilters(topics));
-
-        // The client is still running, we just loop here and the Delay will listen for the stop token.
-        var timer = new PeriodicTimer(_betweenTicks);
-
-        while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
+        finally
         {
-            var startTime = Stopwatch.GetTimestamp();
-
-            try
-            {
-                _logger.LogInformation("{JobName} job is starting.", nameof(MqttWaterLeaksWorker));
-
-                using var scope = _scopeFactory.CreateScope();
-                var waterLeakAlertService = scope.ServiceProvider.GetRequiredService<WaterLeakAlertService>();
-                await waterLeakAlertService.CheckInactiveAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttWaterLeaksWorker));
-            }
-            finally
-            {
-                _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(MqttWaterLeaksWorker), Stopwatch.GetElapsedTime(startTime));
-            }
+            _mqttClient?.Dispose();
+            _mqttClient = null;
         }
     }
 
@@ -102,7 +127,10 @@ public class MqttWaterLeaksWorker : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttWaterLeaksWorker));
-            await _emailNotificationService.NotifyErrorAsync($"Topic: {e.ApplicationMessage.Topic}\nPayload string: {e.GetPayloadString()}", $"Exception thrown in {nameof(MqttWaterLeaksWorker)}", ex);
+
+            using var scope = _scopeFactory.CreateScope();
+            var emailNotificationService = scope.ServiceProvider.GetRequiredService<EmailNotificationService>();
+            await emailNotificationService.NotifyErrorAsync($"Topic: {e.ApplicationMessage.Topic}\nPayload string: {e.GetPayloadString()}", $"Exception thrown in {nameof(MqttWaterLeaksWorker)}", ex);
         }
     }
 
@@ -110,9 +138,17 @@ public class MqttWaterLeaksWorker : BackgroundService
     {
         var payload = DeserializeWaterLeakMessage(e);
 
-        var name = (_workerSettings.Devices ?? []).FirstOrDefault(x => x.Topic == e.ApplicationMessage.Topic)?.Name ??
-            e.ApplicationMessage.Topic.Split("/").LastOrDefault() ??
-            "Unknown";
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
+
+        var device = await dbContext.WaterLeakDevices
+            .TagWith($"Query called from {nameof(MqttWaterLeaksWorker)}.")
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.MqttTopic == e.ApplicationMessage.Topic);
+
+        var name = device?.Name
+            ?? e.ApplicationMessage.Topic.Split("/").LastOrDefault()
+            ?? "Unknown";
 
         var message = new MqttWaterLeakDeviceMessage(name, payload);
 
@@ -122,10 +158,63 @@ public class MqttWaterLeaksWorker : BackgroundService
             MqttHelpers.LogMqttPayload(_logger, readableMessage);
         }
 
-        using var scope = _scopeFactory.CreateScope();
         var waterLeakAlertService = scope.ServiceProvider.GetRequiredService<WaterLeakAlertService>();
 
         await waterLeakAlertService.ProcessAsync(message);
+    }
+
+    private async Task<List<string>> GetTopicsAsync()
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
+
+        return await dbContext.WaterLeakDevices
+            .TagWith($"Query called from {nameof(MqttWaterLeaksWorker)}.")
+            .Where(x => !string.IsNullOrWhiteSpace(x.MqttTopic))
+            .Select(x => x.MqttTopic)
+            .ToListAsync();
+    }
+
+    private async Task UnsubscribeFromTopicsAsync(List<string> topics)
+    {
+        if (_mqttClient is null)
+        {
+            return;
+        }
+
+        if (topics.Count < 1)
+        {
+            return;
+        }
+
+        foreach (var topic in topics)
+        {
+            _logger.LogInformation("Unsubscribing from MQTT topic {Topic}.", topic);
+        }
+
+        await _mqttClient.UnsubscribeAsync(topics);
+    }
+
+    private async Task SubscribeToTopicsAsync(List<string> topics)
+    {
+        if (_mqttClient is null)
+        {
+            return;
+        }
+
+        if (topics.Count < 1)
+        {
+            return;
+        }
+
+        var topicFilters = _mqttFactory.GetTopicFilters(topics);
+
+        foreach (var topicFilter in topicFilters)
+        {
+            _logger.LogInformation("Subscribing to MQTT topic {Topic}.", topicFilter.Topic);
+        }
+
+        await _mqttClient.SubscribeAsync(topicFilters);
     }
 
     public static MqttWaterLeakDeviceMessagePayload DeserializeWaterLeakMessage(MqttApplicationMessageReceivedEventArgs e)

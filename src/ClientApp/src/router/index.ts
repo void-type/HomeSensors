@@ -51,16 +51,16 @@ const router = createRouter({
       meta: { title: 'Time Series' },
     },
     {
-      path: '/devices',
-      name: 'devicesMain',
-      component: () => import('@/pages/DevicesPage.vue'),
-      meta: { title: 'Devices' },
+      path: '/temperature-devices',
+      name: 'temperatureDevicesMain',
+      component: () => import('@/pages/TemperatureDevicesPage.vue'),
+      meta: { title: 'Temperature Devices' },
     },
     {
-      path: '/locations',
-      name: 'locationsMain',
-      component: () => import('@/pages/LocationsPage.vue'),
-      meta: { title: 'Locations' },
+      path: '/temperature-locations',
+      name: 'temperatureLocationsMain',
+      component: () => import('@/pages/TemperatureLocationsPage.vue'),
+      meta: { title: 'Temperature Locations' },
     },
     {
       path: '/categories',
@@ -84,6 +84,18 @@ const router = createRouter({
         };
       },
       meta: { title: 'MQTT Discovery' },
+    },
+    {
+      path: '/water-leak-devices',
+      name: 'waterLeakDevicesMain',
+      component: () => import('@/pages/WaterLeakDevicesPage.vue'),
+      meta: { title: 'Water Leak Devices' },
+    },
+    {
+      path: '/email-recipients',
+      name: 'emailRecipientsMain',
+      component: () => import('@/pages/EmailRecipientsPage.vue'),
+      meta: { title: 'Email Recipients' },
     },
     {
       path: '/:pathMatch(.*)*',

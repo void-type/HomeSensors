@@ -22,6 +22,7 @@ public class MqttTemperaturesWorker : BackgroundService
     private readonly MqttSettings _configuration;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly MqttFactory _mqttFactory;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private IManagedMqttClient? _mqttClient;
     private List<string> _currentTopics = [];
 
@@ -39,15 +40,24 @@ public class MqttTemperaturesWorker : BackgroundService
 
     public async Task RefreshTopicSubscriptionsAsync()
     {
-        var newTopics = await GetTopicsAsync();
+        await _refreshLock.WaitAsync();
 
-        var topicsToUnsubscribe = _currentTopics.Except(newTopics).ToList();
-        await UnsubscribeFromTopicsAsync(topicsToUnsubscribe);
+        try
+        {
+            var newTopics = await GetTopicsAsync();
 
-        var topicsToSubscribe = newTopics.Except(_currentTopics).ToList();
-        await SubscribeToTopicsAsync(topicsToSubscribe);
+            var topicsToUnsubscribe = _currentTopics.Except(newTopics).ToList();
+            await UnsubscribeFromTopicsAsync(topicsToUnsubscribe);
 
-        _currentTopics = newTopics;
+            var topicsToSubscribe = newTopics.Except(_currentTopics).ToList();
+            await SubscribeToTopicsAsync(topicsToSubscribe);
+
+            _currentTopics = newTopics;
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

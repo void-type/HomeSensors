@@ -77,7 +77,7 @@ public class CategoryRepository : RepositoryBase
         return Result.Ok(EntityMessage.Create("Category saved.", category.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> DeleteAsync(int id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id)
     {
         var category = await _data.Categories
             .FirstOrDefaultAsync(x => x.Id == id);

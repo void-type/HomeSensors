@@ -106,6 +106,18 @@ export interface CategorySaveRequest {
   order?: number;
 }
 
+export interface EmailRecipientResponse {
+  /** @format int64 */
+  id?: number;
+  email?: string;
+}
+
+export interface EmailRecipientSaveRequest {
+  /** @format int64 */
+  id?: number;
+  email?: string;
+}
+
 export interface TemperatureDeviceResponse {
   /** @format int64 */
   id?: number;
@@ -233,13 +245,32 @@ export interface TemperatureTimeSeriesRequest {
   trimHvacActionsToRequestedTimeRange?: boolean;
 }
 
+export interface WaterLeakDeviceResponse {
+  /** @format int64 */
+  id?: number;
+  name?: string;
+  mqttTopic?: string;
+}
+
+export interface WaterLeakDeviceSaveRequest {
+  /** @format int64 */
+  id?: number;
+  name?: string;
+  mqttTopic?: string;
+}
+
 export interface CategoriesDeleteParams {
-  /** @format int32 */
+  /** @format int64 */
+  id: number;
+}
+
+export interface EmailRecipientsDeleteParams {
+  /** @format int64 */
   id: number;
 }
 
 export interface TemperatureDevicesDeleteParams {
-  /** @format int32 */
+  /** @format int64 */
   id: number;
 }
 
@@ -250,11 +281,16 @@ export interface TemperatureLocationsCheckLimitsParams {
 }
 
 export interface TemperatureLocationsDeleteParams {
-  /** @format int32 */
+  /** @format int64 */
   id: number;
 }
 
 export interface TemperatureReadingsGetCurrentReadingForLocationParams {
   /** @format int64 */
   locationId: number;
+}
+
+export interface WaterLeakDevicesDeleteParams {
+  /** @format int64 */
+  id: number;
 }

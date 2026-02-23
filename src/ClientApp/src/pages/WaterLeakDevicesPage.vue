@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import type {
-  CategoryResponse,
   IItemSetOfIFailure,
-  TemperatureDeviceResponse,
+  WaterLeakDeviceResponse,
 } from '@/api/data-contracts';
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
@@ -19,51 +18,51 @@ const messageStore = useMessageStore();
 const api = ApiHelpers.client;
 
 const data = reactive({
-  categories: [] as Array<CategoryResponse>,
+  devices: [] as Array<WaterLeakDeviceResponse>,
   errors: [] as Array<string>,
-  originalCategories: new Map<number, string>(),
-  hasDirtyCategories: false,
+  originalDevices: new Map<number, string>(),
+  hasDirtyDevices: false,
 });
 
-function trackOriginalState(category: CategoryResponse) {
-  if (category.id !== undefined) {
-    data.originalCategories.set(
-      category.id,
+function trackOriginalState(device: WaterLeakDeviceResponse) {
+  if (device.id !== undefined) {
+    data.originalDevices.set(
+      device.id,
       JSON.stringify({
-        name: category.name,
-        order: category.order,
+        name: device.name,
+        mqttTopic: device.mqttTopic,
       }),
     );
   }
 }
 
-function isCategoryDirty(category: CategoryResponse): boolean {
-  if (category.id === 0) {
+function isDeviceDirty(device: WaterLeakDeviceResponse): boolean {
+  if (device.id === 0) {
     return true;
-  } // New categories are always dirty
-  if (category.id === undefined) {
+  }
+  if (device.id === undefined) {
     return false;
   }
 
-  const original = data.originalCategories.get(category.id);
+  const original = data.originalDevices.get(device.id);
   if (!original) {
     return false;
   }
 
   const current = JSON.stringify({
-    name: category.name,
-    order: category.order,
+    name: device.name,
+    mqttTopic: device.mqttTopic,
   });
 
   return original !== current;
 }
 
 function updateDirtyState() {
-  data.hasDirtyCategories = data.categories.some(category => isCategoryDirty(category));
+  data.hasDirtyDevices = data.devices.some(device => isDeviceDirty(device));
 }
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {
-  if (data.hasDirtyCategories) {
+  if (data.hasDirtyDevices) {
     event.preventDefault();
 
     event.returnValue = '';
@@ -72,37 +71,33 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
   return null;
 }
 
-function onCategoryInput() {
+function onDeviceInput() {
   updateDirtyState();
 }
 
-async function getCategories() {
+async function getDevices() {
   try {
-    const response = await api().categoriesGetAll();
-    data.categories = response.data.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
-    // Track original state for dirty checking
-    data.categories.forEach(category => trackOriginalState(category));
+    const response = await api().waterLeakDevicesGetAll();
+    data.devices = response.data.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    data.devices.forEach(device => trackOriginalState(device));
     updateDirtyState();
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
-async function newCategory() {
-  if (data.categories.findIndex(x => (x.id || 0) < 1) > -1) {
+async function newDevice() {
+  if (data.devices.findIndex(x => (x.id || 0) < 1) > -1) {
     return;
   }
 
-  const currentMaxOrder = Math.max(1, ...data.categories.map(x => x.order ?? 1));
-  const newOrder = Math.floor((currentMaxOrder + 10) / 10) * 10;
-
-  const newCat = {
+  const newDev = {
     id: 0,
     name: '',
-    order: newOrder,
+    mqttTopic: '',
   };
 
-  data.categories.unshift(newCat);
+  data.devices.unshift(newDev);
   updateDirtyState();
 
   await nextTick();
@@ -113,75 +108,65 @@ async function newCategory() {
   }
 }
 
-async function reallyDeleteCategory(category: TemperatureDeviceResponse) {
-  if (category.id === null || typeof category.id === 'undefined') {
+async function reallyDeleteDevice(device: WaterLeakDeviceResponse) {
+  if (device.id === null || typeof device.id === 'undefined') {
     return;
   }
 
   try {
-    const response = await api().categoriesDelete({ id: category.id });
+    const response = await api().waterLeakDevicesDelete({ id: device.id });
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
 
-    await getCategories();
+    await getDevices();
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
   }
 }
 
-async function deleteCategory(category: CategoryResponse) {
+async function deleteDevice(device: WaterLeakDeviceResponse) {
   const parameters: ModalParameters = {
-    title: 'Delete category',
-    description: 'Do you really want to delete this category?',
-    okAction: () => reallyDeleteCategory(category),
+    title: 'Delete device',
+    description: 'Do you really want to delete this water leak device?',
+    okAction: () => reallyDeleteDevice(device),
   };
 
   appStore.showModal(parameters);
 }
 
-async function saveCategory(category: CategoryResponse): Promise<boolean> {
+async function saveDevice(device: WaterLeakDeviceResponse): Promise<boolean> {
   data.errors = [];
 
   const request = {
-    id: category.id,
-    name: category.name,
-    order: category.order,
+    id: device.id,
+    name: device.name,
+    mqttTopic: device.mqttTopic,
   };
 
   try {
-    const response = await api().categoriesSave(request);
+    const response = await api().waterLeakDevicesSave(request);
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
 
-    // Update the category in place
-    const isNewCategory = category.id === 0;
-    if (isNewCategory) {
-      // For new categories, update the ID in place instead of refetching
-      // This preserves any dirty edits on other items
-      const newItem = data.categories.find(c => c.id === 0);
+    const isNewDevice = device.id === 0;
+    if (isNewDevice) {
+      const newItem = data.devices.find(d => d.id === 0);
       if (newItem) {
-        // Update the ID to the newly assigned ID
         newItem.id = response.data.id;
-        // Track original state for this now-saved item
         trackOriginalState(newItem);
-        // Re-sort by order since categories are ordered by 'order' field
-        data.categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+        data.devices.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       }
     } else {
-      // Update existing category in place with the form data
-      const existingIndex = data.categories.findIndex(c => c.id === category.id);
+      const existingIndex = data.devices.findIndex(d => d.id === device.id);
       if (existingIndex >= 0) {
-        // Merge the updated data while preserving other properties
-        data.categories[existingIndex] = {
-          ...data.categories[existingIndex],
+        data.devices[existingIndex] = {
+          ...data.devices[existingIndex],
           ...request,
         };
-        // Update original state tracking
-        trackOriginalState(data.categories[existingIndex]);
-        // Re-sort by order since categories are ordered by 'order' field
-        data.categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+        trackOriginalState(data.devices[existingIndex]);
+        data.devices.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       }
     }
 
@@ -192,15 +177,15 @@ async function saveCategory(category: CategoryResponse): Promise<boolean> {
     messageStore.setApiFailureMessages(response);
 
     const failures = (response.error as IItemSetOfIFailure).items || [];
-    failures.forEach(x => data.errors.push(`${x.uiHandle}-${category.id}`));
+    failures.forEach(x => data.errors.push(`${x.uiHandle}-${device.id}`));
     return false;
   }
 }
 
 async function saveAllDirty() {
-  const dirtyItems = data.categories.filter(item => isCategoryDirty(item));
+  const dirtyItems = data.devices.filter(item => isDeviceDirty(item));
   for (const item of dirtyItems) {
-    if (!await saveCategory(item)) {
+    if (!await saveDevice(item)) {
       break;
     }
   }
@@ -211,7 +196,7 @@ function beforeRouteChange(
   from: RouteLocationNormalized,
   next: NavigationGuardNext,
 ) {
-  if (data.hasDirtyCategories) {
+  if (data.hasDirtyDevices) {
     const parameters: ModalParameters = {
       title: 'Unsaved changes',
       description: 'You have unsaved changes. Do you really want to leave?',
@@ -228,7 +213,7 @@ onBeforeRouteUpdate(beforeRouteChange);
 onBeforeRouteLeave(beforeRouteChange);
 
 onMounted(async () => {
-  await getCategories();
+  await getDevices();
   window.addEventListener('beforeunload', handleBeforeUnload);
 });
 
@@ -240,88 +225,88 @@ onBeforeUnmount(() => {
 <template>
   <div class="container-xxl">
     <h1 class="mt-3">
-      Categories
+      Water Leak Devices
     </h1>
     <div class="mt-4">
-      <button class="btn btn-primary" @click="newCategory()">
+      <button class="btn btn-primary" @click="newDevice()">
         New
       </button>
       <button
         class="btn btn-secondary ms-2"
-        :disabled="!data.hasDirtyCategories"
+        :disabled="!data.hasDirtyDevices"
         @click="saveAllDirty()"
       >
         Save All
       </button>
-      <div id="categoriesAccordion" class="accordion mt-4">
-        <div v-for="category in data.categories" :key="category.id" class="accordion-item">
-          <h2 :id="`heading-${category.id}`" class="accordion-header">
+      <div id="devicesAccordion" class="accordion mt-4">
+        <div v-for="device in data.devices" :key="device.id" class="accordion-item">
+          <h2 :id="`heading-${device.id}`" class="accordion-header">
             <button
               class="accordion-button collapsed"
               type="button"
               data-bs-toggle="collapse"
-              :data-bs-target="`#collapse-${category.id}`"
+              :data-bs-target="`#collapse-${device.id}`"
               :aria-expanded="false"
-              :aria-controls="`collapse-${category.id}`"
+              :aria-controls="`collapse-${device.id}`"
             >
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
-                  {{ category.name || "New category" }}
+                  {{ device.name || "New device" }}
                   <span
-                    v-if="isCategoryDirty(category)"
+                    v-if="isDeviceDirty(device)"
                     class="badge bg-warning text-dark ms-2"
                     role="button"
-                    @click.stop="saveCategory(category)"
+                    @click.stop="saveDevice(device)"
                   >Unsaved</span>
                 </span>
               </div>
             </button>
           </h2>
           <div
-            :id="`collapse-${category.id}`"
+            :id="`collapse-${device.id}`"
             class="accordion-collapse collapse"
-            :aria-labelledby="`heading-${category.id}`"
-            data-bs-parent="#categoriesAccordion"
+            :aria-labelledby="`heading-${device.id}`"
+            data-bs-parent="#devicesAccordion"
           >
             <div class="accordion-body">
               <div class="grid gap-sm">
                 <div class="g-col-12 g-col-md-6 g-col-lg-4">
-                  <label :for="`name-${category.id}`" class="form-label">Name</label>
+                  <label :for="`name-${device.id}`" class="form-label">Name</label>
                   <input
-                    :id="`name-${category.id}`"
-                    v-model="category.name"
+                    :id="`name-${device.id}`"
+                    v-model="device.name"
                     required
                     type="text"
                     class="form-control form-control-sm"
                     :class="{
-                      'is-invalid': data.errors.includes(`name-${category.id}`),
+                      'is-invalid': data.errors.includes(`name-${device.id}`),
                     }"
-                    @input="onCategoryInput"
+                    @input="onDeviceInput"
                   >
                 </div>
                 <div class="g-col-12 g-col-md-6 g-col-lg-4">
-                  <label :for="`order-${category.id}`" class="form-label">Order</label>
+                  <label :for="`mqttTopic-${device.id}`" class="form-label">MQTT Topic</label>
                   <input
-                    :id="`order-${category.id}`"
-                    v-model="category.order"
+                    :id="`mqttTopic-${device.id}`"
+                    v-model="device.mqttTopic"
                     required
-                    type="number"
+                    type="text"
                     class="form-control form-control-sm"
                     :class="{
-                      'is-invalid': data.errors.includes(`order-${category.id}`),
+                      'is-invalid': data.errors.includes(`mqttTopic-${device.id}`),
                     }"
-                    @input="onCategoryInput"
+                    @input="onDeviceInput"
                   >
                 </div>
                 <div class="g-col-12">
                   <div class="btn-toolbar">
-                    <button class="btn btn-sm btn-primary me-2" @click="saveCategory(category)">
+                    <button class="btn btn-sm btn-primary me-2" @click="saveDevice(device)">
                       Save
                     </button>
                     <button
-                      v-if="category.id"
+                      v-if="device.id"
                       class="btn btn-sm btn-danger ms-auto"
-                      @click="deleteCategory(category)"
+                      @click="deleteDevice(device)"
                     >
                       Delete
                     </button>
@@ -331,8 +316,8 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-        <div v-if="data.categories.length < 1" class="text-center mt-4">
-          No categories.
+        <div v-if="data.devices.length < 1" class="text-center mt-4">
+          No water leak devices.
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
-﻿using HomeSensors.Model.Temperature.Models;
-using HomeSensors.Model.Temperature.Repositories;
-using HomeSensors.Model.Temperature.Workers;
+﻿using HomeSensors.Model.WaterLeak.Models;
+using HomeSensors.Model.WaterLeak.Repositories;
+using HomeSensors.Model.WaterLeak.Workers;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -10,13 +10,13 @@ using VoidCore.Model.Responses.Messages;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-[Route(ApiRouteAttribute.BasePath + "/temperature-devices")]
-public class TemperatureDevicesController : ControllerBase
+[Route(ApiRouteAttribute.BasePath + "/water-leak-devices")]
+public class WaterLeakDevicesController : ControllerBase
 {
-    private readonly TemperatureDeviceRepository _deviceRepository;
+    private readonly WaterLeakDeviceRepository _deviceRepository;
     private readonly IHttpContextAccessor _contextAccessor;
 
-    public TemperatureDevicesController(TemperatureDeviceRepository deviceRepository, IHttpContextAccessor contextAccessor)
+    public WaterLeakDevicesController(WaterLeakDeviceRepository deviceRepository, IHttpContextAccessor contextAccessor)
     {
         _deviceRepository = deviceRepository;
         _contextAccessor = contextAccessor;
@@ -24,7 +24,7 @@ public class TemperatureDevicesController : ControllerBase
 
     [HttpGet]
     [Route("all")]
-    [ProducesResponseType(typeof(List<TemperatureDeviceResponse>), 200)]
+    [ProducesResponseType(typeof(List<WaterLeakDeviceResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAllAsync()
     {
@@ -35,7 +35,7 @@ public class TemperatureDevicesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> SaveAsync([FromBody] TemperatureDeviceSaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] WaterLeakDeviceSaveRequest request)
     {
         return await _deviceRepository.SaveAsync(request)
             .TeeAsync(RefreshTopicSubscriptionsAsync)
@@ -59,7 +59,7 @@ public class TemperatureDevicesController : ControllerBase
             .HttpContext?
             .RequestServices?
             .GetServices<IHostedService>()?
-            .OfType<MqttTemperaturesWorker>()
+            .OfType<MqttWaterLeaksWorker>()
             .FirstOrDefault();
 
         if (worker is not null)

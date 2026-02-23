@@ -176,7 +176,7 @@ async function deleteLocation(location: TemperatureLocationResponse) {
   appStore.showModal(parameters);
 }
 
-async function saveLocation(location: TemperatureLocationResponse) {
+async function saveLocation(location: TemperatureLocationResponse): Promise<boolean> {
   data.errors = [];
 
   const request = {
@@ -225,19 +225,23 @@ async function saveLocation(location: TemperatureLocationResponse) {
 
     // Only refresh categories if needed
     await getCategories();
+    return true;
   } catch (error) {
     const response = error as HttpResponse<unknown, unknown>;
     messageStore.setApiFailureMessages(response);
 
     const failures = (response.error as IItemSetOfIFailure).items || [];
     failures.forEach(x => data.errors.push(`${x.uiHandle}-${location.id}`));
+    return false;
   }
 }
 
 async function saveAllDirty() {
   const dirtyItems = data.locations.filter(item => isLocationDirty(item));
   for (const item of dirtyItems) {
-    await saveLocation(item);
+    if (!await saveLocation(item)) {
+      break;
+    }
   }
 }
 

@@ -1,11 +1,12 @@
-﻿using VoidCore.Model.Emailing;
+﻿using HomeSensors.Model.Infrastructure.Emailing.Repositories;
+using VoidCore.Model.Emailing;
 using VoidCore.Model.Text;
 using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Infrastructure.Emailing;
 
 /// <summary>
-/// This simplifies dependencies for emailing and adds recipients from configuration.
+/// This simplifies dependencies for emailing and adds recipients from the database.
 /// </summary>
 public class EmailNotificationService
 {
@@ -13,22 +14,27 @@ public class EmailNotificationService
     private readonly IEmailFactory _emailFactory;
     private readonly NotificationsSettings _notificationsSettings;
     private readonly IDateTimeService _dateTimeService;
+    private readonly EmailRecipientRepository _emailRecipientRepository;
 
-    public EmailNotificationService(IEmailSender emailSender, IEmailFactory emailFactory, NotificationsSettings notificationsSettings, IDateTimeService dateTimeService)
+    public EmailNotificationService(IEmailSender emailSender, IEmailFactory emailFactory, NotificationsSettings notificationsSettings,
+        IDateTimeService dateTimeService, EmailRecipientRepository emailRecipientRepository)
     {
         _emailSender = emailSender;
         _emailFactory = emailFactory;
         _notificationsSettings = notificationsSettings;
         _dateTimeService = dateTimeService;
+        _emailRecipientRepository = emailRecipientRepository;
     }
 
     public async Task SendAsync(Action<EmailOptionsBuilder> configure, CancellationToken cancellationToken)
     {
+        var recipients = await _emailRecipientRepository.GetAllEmailsAsync();
+
         var newEmail = _emailFactory.Create(e =>
         {
             configure.Invoke(e);
 
-            e.AddRecipients(_notificationsSettings.EmailRecipients ?? Enumerable.Empty<string>());
+            e.AddRecipients(recipients);
             e.AddLine();
             e.AddLine($"Sent from {TextHelpers.Link(_notificationsSettings.SignatureName, _notificationsSettings.SignatureLink)}");
         });

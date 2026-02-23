@@ -30,20 +30,32 @@
       </a>
       <ul class="dropdown-menu" aria-labelledby="administrationDropdown">
         <li>
-          <router-link :to="{ name: 'devicesMain' }" class="dropdown-item">
-            Devices
+          <router-link :to="{ name: 'temperatureDevicesMain' }" class="dropdown-item">
+            Temperature Devices
           </router-link>
         </li>
         <li><hr class="dropdown-divider"></li>
         <li>
-          <router-link :to="{ name: 'locationsMain' }" class="dropdown-item">
-            Locations
+          <router-link :to="{ name: 'temperatureLocationsMain' }" class="dropdown-item">
+            Temperature Locations
           </router-link>
         </li>
         <li><hr class="dropdown-divider"></li>
         <li>
           <router-link :to="{ name: 'categoriesMain' }" class="dropdown-item">
             Categories
+          </router-link>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <router-link :to="{ name: 'waterLeakDevicesMain' }" class="dropdown-item">
+            Water Leak Devices
+          </router-link>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <router-link :to="{ name: 'emailRecipientsMain' }" class="dropdown-item">
+            Email Recipients
           </router-link>
         </li>
       </ul>

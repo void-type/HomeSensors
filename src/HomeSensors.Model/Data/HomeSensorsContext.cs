@@ -1,6 +1,8 @@
 ﻿using HomeSensors.Model.Categories.Entities;
 using HomeSensors.Model.Hvac.Entities;
+using HomeSensors.Model.Infrastructure.Emailing.Entities;
 using HomeSensors.Model.Temperature.Entities;
+using HomeSensors.Model.WaterLeak.Entities;
 using Microsoft.EntityFrameworkCore;
 
 #nullable disable
@@ -20,6 +22,8 @@ public class HomeSensorsContext : DbContext
     public virtual DbSet<TemperatureLocation> TemperatureLocations { get; set; }
     public virtual DbSet<TemperatureReading> TemperatureReadings { get; set; }
     public virtual DbSet<HvacAction> HvacActions { get; set; }
+    public virtual DbSet<WaterLeakDevice> WaterLeakDevices { get; set; }
+    public virtual DbSet<EmailRecipient> EmailRecipients { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -91,6 +95,22 @@ public class HomeSensorsContext : DbContext
             // Index for GetHvacActionsAsync time range queries
             entity.HasIndex(a => a.LastUpdated)
                 .IncludeProperties(a => new { a.EntityId, a.State, a.LastChanged });
+        });
+
+        modelBuilder.Entity<WaterLeakDevice>(entity =>
+        {
+            entity.ToTable(nameof(WaterLeakDevice));
+
+            entity.HasIndex(d => d.MqttTopic)
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<EmailRecipient>(entity =>
+        {
+            entity.ToTable(nameof(EmailRecipient));
+
+            entity.HasIndex(e => e.Email)
+                .IsUnique();
         });
     }
 }

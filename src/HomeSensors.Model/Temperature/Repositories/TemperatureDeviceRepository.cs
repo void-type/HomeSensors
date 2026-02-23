@@ -130,7 +130,7 @@ public class TemperatureDeviceRepository : RepositoryBase
         return Result.Ok(EntityMessage.Create("Device saved.", device.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> DeleteAsync(int id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id)
     {
         var device = await _data.TemperatureDevices
             .FirstOrDefaultAsync(x => x.Id == id);

@@ -166,7 +166,7 @@ async function deleteDevice(device: TemperatureDeviceResponse) {
   appStore.showModal(parameters);
 }
 
-async function saveDevice(device: TemperatureDeviceResponse) {
+async function saveDevice(device: TemperatureDeviceResponse): Promise<boolean> {
   data.errors = [];
 
   const request = {
@@ -215,19 +215,23 @@ async function saveDevice(device: TemperatureDeviceResponse) {
 
     // Only refresh locations if needed
     await getLocations();
+    return true;
   } catch (error) {
     const response = error as HttpResponse<unknown, unknown>;
     messageStore.setApiFailureMessages(response);
 
     const failures = (response.error as IItemSetOfIFailure).items || [];
     failures.forEach(x => data.errors.push(`${x.uiHandle}-${device.id}`));
+    return false;
   }
 }
 
 async function saveAllDirty() {
   const dirtyItems = data.devices.filter(item => isDeviceDirty(item));
   for (const item of dirtyItems) {
-    await saveDevice(item);
+    if (!await saveDevice(item)) {
+      break;
+    }
   }
 }
 
@@ -266,7 +270,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="container-xxl">
     <h1 class="mt-3">
-      Devices
+      Temperature Devices
     </h1>
     <div class="mt-4">
       <button class="btn btn-primary" @click="newDevice()">
@@ -482,7 +486,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
         <div v-if="data.devices.length < 1" class="text-center mt-4">
-          No devices.
+          No temperature devices.
         </div>
       </div>
     </div>

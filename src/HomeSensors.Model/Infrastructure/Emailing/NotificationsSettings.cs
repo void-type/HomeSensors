@@ -6,7 +6,6 @@ namespace HomeSensors.Model.Infrastructure.Emailing;
 public class NotificationsSettings
 {
     public bool IsEnabled { get; init; } = true;
-    public IEnumerable<string>? EmailRecipients { get; init; } = [];
     public IEnumerable<string>? OverrideEmailRecipients { get; init; } = [];
     public string EmailTextSubtype { get; init; } = "html";
     public string FromAddress { get; init; } = string.Empty;

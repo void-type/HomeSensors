@@ -1,5 +1,5 @@
-﻿using HomeSensors.Model.Categories.Models;
-using HomeSensors.Model.Categories.Repositories;
+﻿using HomeSensors.Model.Infrastructure.Emailing.Models;
+using HomeSensors.Model.Infrastructure.Emailing.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -9,32 +9,32 @@ using VoidCore.Model.Responses.Messages;
 
 namespace HomeSensors.Web.Controllers.Api;
 
-[Route(ApiRouteAttribute.BasePath + "/categories")]
-public class CategoriesController : ControllerBase
+[Route(ApiRouteAttribute.BasePath + "/email-recipients")]
+public class EmailRecipientsController : ControllerBase
 {
-    private readonly CategoryRepository _categoryRepository;
+    private readonly EmailRecipientRepository _emailRecipientRepository;
 
-    public CategoriesController(CategoryRepository categoryRepository)
+    public EmailRecipientsController(EmailRecipientRepository emailRecipientRepository)
     {
-        _categoryRepository = categoryRepository;
+        _emailRecipientRepository = emailRecipientRepository;
     }
 
     [HttpGet]
     [Route("all")]
-    [ProducesResponseType(typeof(List<CategoryResponse>), 200)]
+    [ProducesResponseType(typeof(List<EmailRecipientResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAllAsync()
     {
-        return await _categoryRepository.GetAllAsync()
+        return await _emailRecipientRepository.GetAllAsync()
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> SaveAsync([FromBody] CategorySaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] EmailRecipientSaveRequest request)
     {
-        return await _categoryRepository.SaveAsync(request)
+        return await _emailRecipientRepository.SaveAsync(request)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -44,7 +44,7 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> DeleteAsync(long id)
     {
-        return await _categoryRepository.DeleteAsync(id)
+        return await _emailRecipientRepository.DeleteAsync(id)
             .MapAsync(HttpResponder.Respond);
     }
 }
