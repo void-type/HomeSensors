@@ -250,6 +250,8 @@ export interface WaterLeakDeviceResponse {
   id?: number;
   name?: string;
   mqttTopic?: string;
+  /** @format int32 */
+  inactiveLimitMinutes?: number;
 }
 
 export interface WaterLeakDeviceSaveRequest {
@@ -257,6 +259,8 @@ export interface WaterLeakDeviceSaveRequest {
   id?: number;
   name?: string;
   mqttTopic?: string;
+  /** @format int32 */
+  inactiveLimitMinutes?: number;
 }
 
 export interface CategoriesDeleteParams {

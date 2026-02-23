@@ -147,10 +147,12 @@ public class MqttWaterLeaksWorker : BackgroundService
             .FirstOrDefaultAsync(x => x.MqttTopic == e.ApplicationMessage.Topic);
 
         var name = device?.Name
-            ?? e.ApplicationMessage.Topic.Split("/").LastOrDefault()
+            ?? e.ApplicationMessage.Topic
             ?? "Unknown";
 
-        var message = new MqttWaterLeakDeviceMessage(name, payload);
+        var inactiveLimitMinutes = device?.InactiveLimitMinutes ?? 90;
+
+        var message = new MqttWaterLeakDeviceMessage(name, payload, inactiveLimitMinutes);
 
         if (_configuration.LogMessages)
         {

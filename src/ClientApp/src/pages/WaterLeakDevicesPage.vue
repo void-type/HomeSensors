@@ -31,6 +31,7 @@ function trackOriginalState(device: WaterLeakDeviceResponse) {
       JSON.stringify({
         name: device.name,
         mqttTopic: device.mqttTopic,
+        inactiveLimitMinutes: device.inactiveLimitMinutes,
       }),
     );
   }
@@ -52,6 +53,7 @@ function isDeviceDirty(device: WaterLeakDeviceResponse): boolean {
   const current = JSON.stringify({
     name: device.name,
     mqttTopic: device.mqttTopic,
+    inactiveLimitMinutes: device.inactiveLimitMinutes,
   });
 
   return original !== current;
@@ -95,6 +97,7 @@ async function newDevice() {
     id: 0,
     name: '',
     mqttTopic: '',
+    inactiveLimitMinutes: 90,
   };
 
   data.devices.unshift(newDev);
@@ -142,6 +145,7 @@ async function saveDevice(device: WaterLeakDeviceResponse): Promise<boolean> {
     id: device.id,
     name: device.name,
     mqttTopic: device.mqttTopic,
+    inactiveLimitMinutes: device.inactiveLimitMinutes,
   };
 
   try {
@@ -285,7 +289,7 @@ onBeforeUnmount(() => {
                   >
                 </div>
                 <div class="g-col-12 g-col-md-6 g-col-lg-4">
-                  <label :for="`mqttTopic-${device.id}`" class="form-label">MQTT Topic</label>
+                  <label :for="`mqttTopic-${device.id}`" class="form-label">MQTT topic</label>
                   <input
                     :id="`mqttTopic-${device.id}`"
                     v-model="device.mqttTopic"
@@ -297,6 +301,22 @@ onBeforeUnmount(() => {
                     }"
                     @input="onDeviceInput"
                   >
+                </div>
+                <div class="g-col-12 g-col-md-6 g-col-lg-4">
+                  <label :for="`inactiveLimitMinutes-${device.id}`" class="form-label">Inactive limit (minutes)</label>
+                  <input
+                    :id="`inactiveLimitMinutes-${device.id}`"
+                    v-model.number="device.inactiveLimitMinutes"
+                    required
+                    type="number"
+                    min="0"
+                    class="form-control form-control-sm"
+                    :class="{
+                      'is-invalid': data.errors.includes(`inactiveLimitMinutes-${device.id}`),
+                    }"
+                    @input="onDeviceInput"
+                  >
+                  <small class="form-text text-body-secondary">0 = never inactive</small>
                 </div>
                 <div class="g-col-12">
                   <div class="btn-toolbar">

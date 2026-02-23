@@ -23,7 +23,7 @@ public class WaterLeakDeviceRepository : RepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.Name)
-            .Select(x => new WaterLeakDeviceResponse(x.Id, x.Name, x.MqttTopic))
+            .Select(x => new WaterLeakDeviceResponse(x.Id, x.Name, x.MqttTopic, x.InactiveLimitMinutes))
             .ToListAsync();
     }
 
@@ -39,6 +39,11 @@ public class WaterLeakDeviceRepository : RepositoryBase
         if (request.MqttTopic.IsNullOrWhiteSpace())
         {
             failures.Add(new Failure("Device requires an MQTT Topic.", "mqttTopic"));
+        }
+
+        if (request.InactiveLimitMinutes < 0)
+        {
+            failures.Add(new Failure("Inactive limit must be 0 or greater.", "inactiveLimitMinutes"));
         }
 
         if (failures.Count > 0)
@@ -57,6 +62,7 @@ public class WaterLeakDeviceRepository : RepositoryBase
 
         device.Name = request.Name;
         device.MqttTopic = request.MqttTopic;
+        device.InactiveLimitMinutes = request.InactiveLimitMinutes;
 
         await _data.SaveChangesAsync();
 

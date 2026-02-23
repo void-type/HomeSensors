@@ -73,9 +73,9 @@ SET IDENTITY_INSERT HomeSensorsTest.dbo.WaterLeakDevice ON
 GO
 
 INSERT INTO HomeSensorsTest.dbo.WaterLeakDevice
-  ([Id], [Name], [MqttTopic])
+  ([Id], [Name], [MqttTopic], [InactiveLimitMinutes])
 SELECT
-  [Id], [Name], [MqttTopic]
+  [Id], [Name], [MqttTopic], [InactiveLimitMinutes]
 FROM
   HomeSensors.dbo.WaterLeakDevice
 

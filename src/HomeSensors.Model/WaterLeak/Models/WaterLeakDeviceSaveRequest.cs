@@ -7,4 +7,6 @@ public class WaterLeakDeviceSaveRequest
     public string Name { get; init; } = string.Empty;
 
     public string MqttTopic { get; init; } = string.Empty;
+
+    public int InactiveLimitMinutes { get; init; } = 90;
 }

@@ -102,6 +102,11 @@ public class TemperatureDeviceRepository : RepositoryBase
             failures.Add(new Failure("Device requires an MQTT Topic.", "mqttTopic"));
         }
 
+        if (request.InactiveLimitMinutes < 0)
+        {
+            failures.Add(new Failure("Inactive limit must be 0 or greater.", "inactiveLimitMinutes"));
+        }
+
         if (failures.Count > 0)
         {
             return Result.Fail<EntityMessage<long>>(failures);

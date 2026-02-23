@@ -49,7 +49,7 @@ public class WaterLeakAlertService
             var lastCheckInExists = _state.LastCheckIns.TryGetValue(message.LocationName, out var lastCheckInTime);
 
             // If the last check-in was expired send clear notification.
-            if (lastCheckInExists && lastCheckInTime.AddMinutes(_mqttWaterLeaksSettings.InactiveDeviceLimitMinutes) < now)
+            if (lastCheckInExists && message.InactiveLimitMinutes > 0 && lastCheckInTime.AddMinutes(message.InactiveLimitMinutes) < now)
             {
                 await NotifyActiveAsync(message, now);
             }
@@ -77,21 +77,22 @@ public class WaterLeakAlertService
         var now = _dateTimeService.MomentWithOffset;
 
         // Sync device names from DB into LastCheckIns.
-        var deviceNames = await _data.WaterLeakDevices
+        var devices = await _data.WaterLeakDevices
             .TagWith($"Query called from {nameof(WaterLeakAlertService)}.{nameof(CheckInactiveAsync)}.")
             .AsNoTracking()
-            .Select(x => x.Name)
+            .Select(x => new { x.Name, x.InactiveLimitMinutes })
             .ToListAsync();
 
-        foreach (var name in deviceNames)
+        var deviceLimits = devices.ToDictionary(x => x.Name, x => x.InactiveLimitMinutes);
+
+        foreach (var device in devices)
         {
-            _state.LastCheckIns.TryAdd(name, now);
+            _state.LastCheckIns.TryAdd(device.Name, now);
         }
 
         // Remove stale entries that no longer exist in DB.
-        var deviceNameSet = deviceNames.ToHashSet();
         var staleKeys = _state.LastCheckIns.Keys
-            .Where(k => !deviceNameSet.Contains(k))
+            .Where(k => !deviceLimits.ContainsKey(k))
             .ToArray();
 
         foreach (var key in staleKeys)
@@ -110,7 +111,9 @@ public class WaterLeakAlertService
         }
 
         var inactiveDevices = _state.LastCheckIns
-            .Where(x => x.Value.AddMinutes(_mqttWaterLeaksSettings.InactiveDeviceLimitMinutes) < now
+            .Where(x => deviceLimits.TryGetValue(x.Key, out var limit)
+                && limit > 0
+                && x.Value.AddMinutes(limit) < now
                 && !_state.LatchedInactiveAlerts.ContainsKey(x.Key))
             .ToArray();
 

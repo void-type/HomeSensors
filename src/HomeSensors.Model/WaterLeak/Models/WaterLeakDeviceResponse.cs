@@ -2,11 +2,12 @@
 
 public class WaterLeakDeviceResponse
 {
-    public WaterLeakDeviceResponse(long id, string name, string mqttTopic)
+    public WaterLeakDeviceResponse(long id, string name, string mqttTopic, int inactiveLimitMinutes)
     {
         Id = id;
         Name = name;
         MqttTopic = mqttTopic;
+        InactiveLimitMinutes = inactiveLimitMinutes;
     }
 
     public long Id { get; }
@@ -14,4 +15,6 @@ public class WaterLeakDeviceResponse
     public string Name { get; }
 
     public string MqttTopic { get; }
+
+    public int InactiveLimitMinutes { get; }
 }
