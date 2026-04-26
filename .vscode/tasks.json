@@ -268,7 +268,7 @@
       }
     },
     {
-      "label": "create-migration",
+      "label": "create-db-migration",
       "command": "./dbCreateMigration.ps1",
       "args": ["-MigrationName", "${input:migrationName}"],
       "options": {
@@ -286,7 +286,7 @@
       }
     },
     {
-      "label": "apply-migration",
+      "label": "apply-db-migration",
       "command": "./dbApplyMigration.ps1",
       "args": ["-MigrationName", "'${input:migrationName}'"],
       "options": {
@@ -304,7 +304,7 @@
       }
     },
     {
-      "label": "remove-migration",
+      "label": "remove-db-migration",
       "command": "./dbRemoveMigration.ps1",
       "args": ["-MigrationName", "'${input:migrationName}'"],
       "options": {
