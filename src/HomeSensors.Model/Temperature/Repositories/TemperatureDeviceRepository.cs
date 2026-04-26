@@ -101,6 +101,16 @@ public class TemperatureDeviceRepository : RepositoryBase
         {
             failures.Add(new Failure("Device requires an MQTT Topic.", "mqttTopic"));
         }
+        else
+        {
+            var topicAlreadyUsed = await _data.TemperatureDevices
+                .AnyAsync(x => x.MqttTopic == request.MqttTopic && x.Id != request.Id);
+
+            if (topicAlreadyUsed)
+            {
+                failures.Add(new Failure("MQTT topic is already used by another device.", "mqttTopic"));
+            }
+        }
 
         if (request.InactiveLimitMinutes < 0)
         {
