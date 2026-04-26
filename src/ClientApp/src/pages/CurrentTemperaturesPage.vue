@@ -5,7 +5,7 @@ import TemperatureCurrentReadings from '@/components/TemperatureCurrentReadings.
 <template>
   <div class="container-xxl">
     <h1 class="mt-3">
-      Current temperatures
+      Current Temperatures
     </h1>
     <TemperatureCurrentReadings class="mt-4" />
   </div>

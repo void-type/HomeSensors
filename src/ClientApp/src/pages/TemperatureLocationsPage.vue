@@ -280,7 +280,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="container-xxl">
     <h1 class="mt-3">
-      Locations
+      Temperature Locations
     </h1>
     <div class="mt-4">
       <button class="btn btn-primary" @click="newLocation()">

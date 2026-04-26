@@ -35,7 +35,7 @@ function onInputsChange(inputs: ITemperatureGraphInputs) {
 <template>
   <div class="container-xxl">
     <h1 class="mt-3">
-      Time series
+      Time Series
     </h1>
     <TemperatureGraph
       class="mt-4"
