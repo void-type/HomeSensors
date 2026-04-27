@@ -230,6 +230,12 @@ async function saveAllDirty() {
   const dirtyItems = data.devices.filter(item => isDeviceDirty(item));
   for (const item of dirtyItems) {
     if (!await saveDevice(item)) {
+      await nextTick();
+      const collapseEl = document.getElementById(`collapse-${item.id}`);
+      if (collapseEl) {
+        const collapse = new Collapse(collapseEl, { toggle: false });
+        collapse.show();
+      }
       break;
     }
   }
