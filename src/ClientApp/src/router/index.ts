@@ -33,7 +33,7 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: () => import('@/pages/CurrentTemperaturesPage.vue'),
-      meta: { title: 'Home' },
+      meta: { title: 'Current Temperatures' },
     },
     {
       path: '/time-series',
@@ -100,7 +100,7 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)*',
       redirect: { name: 'home' },
-      meta: { title: 'Home' },
+      meta: { title: 'Current Temperatures' },
     },
   ],
 });

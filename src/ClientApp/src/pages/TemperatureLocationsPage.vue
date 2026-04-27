@@ -12,6 +12,7 @@ import { Collapse } from 'bootstrap';
 import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
 import { ChromePicker, tinycolor } from 'vue-color';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import AppPageHeading from '@/components/AppPageHeading.vue';
 import ApiHelpers from '@/models/ApiHelpers';
 import { toNumberOrNull } from '@/models/FormatHelpers';
 import { formatTempWithUnitOrEmpty } from '@/models/TempFormatHelpers';
@@ -279,9 +280,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">
-      Temperature Locations
-    </h1>
+    <AppPageHeading />
     <div class="mt-4">
       <button class="btn btn-primary" @click="newLocation()">
         New

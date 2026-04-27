@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { ITemperatureGraphInputs } from '@/models/ITemperatureGraphInputs';
 import { useRouter } from 'vue-router';
+import AppPageHeading from '@/components/AppPageHeading.vue';
 import TemperatureGraph from '@/components/TemperatureGraph.vue';
 import DateHelpers from '@/models/DateHelpers';
 
@@ -34,9 +35,7 @@ function onInputsChange(inputs: ITemperatureGraphInputs) {
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">
-      Time Series
-    </h1>
+    <AppPageHeading />
     <TemperatureGraph
       class="mt-4"
       :initial-start="startDate"

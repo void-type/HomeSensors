@@ -1,12 +1,11 @@
 <script lang="ts" setup>
+import AppPageHeading from '@/components/AppPageHeading.vue';
 import TemperatureCurrentReadings from '@/components/TemperatureCurrentReadings.vue';
 </script>
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">
-      Current Temperatures
-    </h1>
+    <AppPageHeading />
     <TemperatureCurrentReadings class="mt-4" />
   </div>
 </template>

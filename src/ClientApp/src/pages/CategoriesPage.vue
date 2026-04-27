@@ -10,6 +10,7 @@ import type { ModalParameters } from '@/models/ModalParameters';
 import { Collapse } from 'bootstrap';
 import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import AppPageHeading from '@/components/AppPageHeading.vue';
 import ApiHelpers from '@/models/ApiHelpers';
 import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
@@ -239,9 +240,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">
-      Categories
-    </h1>
+    <AppPageHeading />
     <div class="mt-4">
       <button class="btn btn-primary" @click="newCategory()">
         New

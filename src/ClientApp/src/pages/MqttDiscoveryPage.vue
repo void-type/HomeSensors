@@ -4,6 +4,7 @@ import type { MqttDiscoveryClientStatus } from '@/models/MqttDiscoveryClientStat
 import * as signalR from '@microsoft/signalr';
 import { parseISO } from 'date-fns';
 import { computed, onMounted, reactive } from 'vue';
+import AppPageHeading from '@/components/AppPageHeading.vue';
 import ApiHelpers from '@/models/ApiHelpers';
 import DateHelpers from '@/models/DateHelpers';
 import { formatJSON, isNil } from '@/models/FormatHelpers';
@@ -159,9 +160,7 @@ onMounted(async () => {
 
 <template>
   <div class="container-xxl">
-    <h1 class="mt-3">
-      MQTT Discovery
-    </h1>
+    <AppPageHeading />
     <p class="mt-4">
       See MQTT messages from the specified topics.
     </p>

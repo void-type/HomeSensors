@@ -4,7 +4,7 @@
   <ul class="navbar-nav">
     <li class="nav-item">
       <router-link :to="{ name: 'home' }" class="nav-link">
-        Home
+        Current
       </router-link>
     </li>
     <li class="nav-item">
