@@ -1,4 +1,5 @@
-﻿using HomeSensors.Model.CameraSnapshots.Services;
+﻿using HomeSensors.Model.CameraSnapshots.Helpers;
+using HomeSensors.Model.CameraSnapshots.Services;
 using HomeSensors.Model.CameraSnapshots.Settings;
 using HomeSensors.Model.Data;
 using Microsoft.EntityFrameworkCore;
@@ -14,8 +15,6 @@ namespace HomeSensors.Model.CameraSnapshots.Workers;
 /// </summary>
 public class CameraSnapshotThumbnailWorker : BackgroundService
 {
-    private static readonly string[] _supportedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
-
     private readonly ILogger<CameraSnapshotThumbnailWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly TimeSpan _betweenTicks;
@@ -62,11 +61,7 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
                         continue;
                     }
 
-                    var files = Directory.EnumerateFiles(camera.SnapshotsPath)
-                        .Where(f => _supportedExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
-                        .Select(Path.GetFileName)
-                        .Where(f => f is not null)
-                        .ToList();
+                    var files = CameraSnapshotHelpers.GetSnapshotFileNames(camera.SnapshotsPath).ToList();
 
                     foreach (var fileName in files)
                     {

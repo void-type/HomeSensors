@@ -47,7 +47,8 @@ const previewStyle = computed(() => ({
   transform: `scale(${zoomLevel.value}) translate(${panX.value / zoomLevel.value}px, ${panY.value / zoomLevel.value}px)`,
   transformOrigin: 'center center',
   transition: isPanning.value ? 'none' : 'transform 0.1s ease',
-  cursor: isPanning.value ? 'grabbing' : (zoomLevel.value > 1 ? 'grab' : 'zoom-in'),
+  cursor: isPanning.value ? 'grabbing' : (zoomLevel.value > 1 ? 'grab' : 'default'),
+  pointerEvents: 'none' as const,
 }));
 
 // --- API ---
@@ -73,22 +74,45 @@ async function loadTimeline() {
     return;
   }
 
+  if (!data.startDate || !data.endDate) {
+    messageStore.setErrorMessage('Both start and end dates are required.');
+    return;
+  }
+
+  if (data.endDate <= data.startDate) {
+    messageStore.setErrorMessage('End date must be after start date.');
+    return;
+  }
+
+  const sixMonths = 182 * 24 * 60 * 60 * 1000;
+  if (data.endDate.getTime() - data.startDate.getTime() > sixMonths) {
+    messageStore.setErrorMessage('Date range cannot exceed 6 months.');
+    return;
+  }
+
   data.isLoadingTimeline = true;
   data.items = [];
   data.selectedItem = null;
 
   try {
-    const response = await api().cameraSnapshotTimelineGetItems({
-      cameraId: data.selectedCameraId,
-      start: data.startDate ? data.startDate.toISOString() : undefined,
-      end: data.endDate ? data.endDate.toISOString() : undefined,
-    });
+    const response = await api().cameraSnapshotTimelineGetItems(
+      {
+        cameraId: data.selectedCameraId,
+        start: data.startDate ? data.startDate.toISOString() : undefined,
+        end: data.endDate ? data.endDate.toISOString() : undefined,
+      },
+      { signal: AbortSignal.timeout(30_000) },
+    );
     data.items = response.data;
     if (data.items.length > 0) {
-      data.selectedItem = data.items[0] ?? null;
+      data.selectedItem = data.items.at(-1) ?? null;
     }
   } catch (error) {
-    messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    if (error instanceof DOMException && error.name === 'TimeoutError') {
+      messageStore.setErrorMessage('Request timed out. Please try again.');
+    } else {
+      messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
+    }
   } finally {
     data.isLoadingTimeline = false;
   }
@@ -105,6 +129,26 @@ async function syncQueryParams() {
       end: data.endDate ? data.endDate.toISOString() : undefined,
     },
   });
+}
+
+// --- Date range helpers ---
+
+function adjustDateRange(params: { days?: number; weeks?: number; months?: number }) {
+  if (!data.startDate || !data.endDate) {
+    return;
+  }
+  const totalDays = (params.days ?? 0) + (params.weeks ?? 0) * 7 + (params.months ?? 0) * 28;
+  const spanMs = data.endDate.getTime() - data.startDate.getTime();
+  const newStart = new Date(data.startDate.getTime() + totalDays * 24 * 60 * 60 * 1000);
+  data.startDate = newStart;
+  data.endDate = new Date(newStart.getTime() + spanMs);
+}
+
+function setAbsoluteRange(days: number) {
+  data.endDate = defaultEndDate();
+  const start = defaultEndDate();
+  start.setDate(start.getDate() - days);
+  data.startDate = start;
 }
 
 // --- Zoom / pan ---
@@ -151,17 +195,10 @@ function resetZoom() {
   panY.value = 0;
 }
 
-function onPreviewClick() {
-  if (data.selectedItem && zoomLevel.value === 1) {
-    window.open(data.selectedItem.originalUrl, '_blank');
-  }
-}
-
 // --- Strip navigation ---
 
 function selectItem(item: CameraSnapshotTimelineItem) {
   data.selectedItem = item;
-  resetZoom();
 }
 
 function onStripKeyDown(event: KeyboardEvent) {
@@ -197,6 +234,19 @@ function formatTimestamp(timestamp: string | undefined): string {
   return new Date(timestamp).toLocaleString();
 }
 
+function defaultEndDate(): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function defaultStartDate(): Date {
+  const d = defaultEndDate();
+  d.setDate(d.getDate() - 7);
+  return d;
+}
+
 // --- Lifecycle ---
 
 onMounted(async () => {
@@ -208,9 +258,13 @@ onMounted(async () => {
   }
   if (route.query.start) {
     data.startDate = new Date(route.query.start as string);
+  } else {
+    data.startDate = defaultStartDate();
   }
   if (route.query.end) {
     data.endDate = new Date(route.query.end as string);
+  } else {
+    data.endDate = defaultEndDate();
   }
 
   await getCameras();
@@ -227,80 +281,113 @@ onMounted(async () => {
     <AppPageHeading />
 
     <!-- Controls bar -->
-    <div class="mt-3 d-flex flex-wrap gap-2 align-items-end">
-      <div>
-        <label for="camera-select" class="form-label mb-1">Camera</label>
-        <select
-          id="camera-select"
-          v-model="data.selectedCameraId"
-          class="form-select"
-          style="min-width: 160px"
-        >
-          <option v-for="cam in data.cameras" :key="cam.id" :value="cam.id">
-            {{ cam.name }}
-          </option>
-        </select>
+    <div class="mt-3 d-flex flex-column gap-2">
+      <div class="d-flex flex-wrap gap-2 align-items-end">
+        <div>
+          <label for="camera-select" class="form-label mb-1">Camera</label>
+          <select
+            id="camera-select"
+            v-model="data.selectedCameraId"
+            class="form-select"
+            style="min-width: 160px"
+          >
+            <option v-for="cam in data.cameras" :key="cam.id" :value="cam.id">
+              {{ cam.name }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label for="start-date" class="form-label mb-1">From</label>
+          <AppDateTimePicker id="start-date" v-model="data.startDate" />
+        </div>
+
+        <div>
+          <label for="end-date" class="form-label mb-1">To</label>
+          <AppDateTimePicker id="end-date" v-model="data.endDate" />
+        </div>
+
+        <button class="btn btn-primary" :disabled="data.isLoadingTimeline" @click="loadTimeline()">
+          <span v-if="data.isLoadingTimeline" class="spinner-border spinner-border-sm me-1" />
+          Load
+        </button>
       </div>
 
-      <div>
-        <label for="start-date" class="form-label mb-1">From</label>
-        <AppDateTimePicker id="start-date" v-model="data.startDate" />
+      <!-- xs: each pair stacked -->
+      <div class="d-flex d-sm-none flex-column align-items-center gap-2">
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">&laquo; Month</button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">Month &raquo;</button>
+        </div>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">&laquo; Week</button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">Week &raquo;</button>
+        </div>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">&laquo; Day</button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">Day &raquo;</button>
+        </div>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" title="Last month" @click="setAbsoluteRange(30)">Last Month</button>
+          <button class="btn btn-outline-secondary" title="Last week" @click="setAbsoluteRange(7)">Last Week</button>
+          <button class="btn btn-outline-secondary" title="Last day" @click="setAbsoluteRange(1)">Last Day</button>
+        </div>
       </div>
 
-      <div>
-        <label for="end-date" class="form-label mb-1">To</label>
-        <AppDateTimePicker id="end-date" v-model="data.endDate" />
+      <!-- sm+: single combined bar -->
+      <div class="d-none d-sm-flex flex-column align-items-center gap-2">
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">&laquo; Month</button>
+          <button class="btn btn-outline-secondary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">&laquo; Week</button>
+          <button class="btn btn-outline-secondary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">&laquo; Day</button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">Day &raquo;</button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">Week &raquo;</button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">Month &raquo;</button>
+        </div>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" title="Last month" @click="setAbsoluteRange(30)">Last Month</button>
+          <button class="btn btn-outline-secondary" title="Last week" @click="setAbsoluteRange(7)">Last Week</button>
+          <button class="btn btn-outline-secondary" title="Last day" @click="setAbsoluteRange(1)">Last Day</button>
+        </div>
       </div>
-
-      <button class="btn btn-primary" :disabled="data.isLoadingTimeline" @click="loadTimeline()">
-        <span v-if="data.isLoadingTimeline" class="spinner-border spinner-border-sm me-1" />
-        Load
-      </button>
-
-      <button
-        v-if="data.startDate || data.endDate"
-        class="btn btn-outline-secondary"
-        @click="data.startDate = undefined; data.endDate = undefined; loadTimeline()"
-      >
-        Clear dates
-      </button>
     </div>
 
     <!-- Preview panel -->
-    <div v-if="data.selectedItem" class="preview-panel mt-3">
-      <div class="preview-meta mb-1 d-flex align-items-center gap-3">
-        <span class="text-body-secondary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
-        <span class="text-body-secondary small">{{ data.selectedItem.fileName }}</span>
-        <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
-        <button v-if="zoomLevel > 1" class="btn btn-outline-secondary btn-sm py-0" @click="resetZoom()">
-          Reset zoom
-        </button>
-        <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm py-0 ms-auto">
-          Open original
-        </a>
-      </div>
+    <div v-if="data.selectedItem" class="card mt-3">
+      <div class="card-body d-flex flex-column gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <span class="text-body-secondary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
+          <span class="text-body-secondary small">{{ data.selectedItem.fileName }}</span>
+          <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
+          <button v-if="zoomLevel > 1" class="btn btn-outline-secondary btn-sm py-0" @click="resetZoom()">
+            Reset zoom
+          </button>
+          <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm py-0 ms-auto">
+            Open original
+          </a>
+        </div>
 
-      <div
-        ref="previewContainer"
-        class="preview-container"
-        @wheel.prevent="onWheel"
-        @mousedown="onMouseDown"
-        @mousemove="onMouseMove"
-        @mouseup="onMouseUp"
-        @mouseleave="onMouseLeave"
-        @click="onPreviewClick"
-      >
-        <img
-          :src="previewSrc ?? undefined"
-          :alt="data.selectedItem.fileName"
-          class="preview-image"
-          :style="previewStyle"
-          draggable="false"
+        <div
+          ref="previewContainer"
+          class="preview-container overflow-hidden d-flex align-items-center justify-content-center bg-black rounded user-select-none"
+          @wheel.prevent="onWheel"
+          @mousedown="onMouseDown"
+          @mousemove="onMouseMove"
+          @mouseup="onMouseUp"
+          @mouseleave="onMouseLeave"
         >
+          <img
+            :src="previewSrc ?? undefined"
+            :alt="data.selectedItem.fileName"
+            class="mw-100 d-block"
+            :style="previewStyle"
+            draggable="false"
+          >
+        </div>
+        <div class="text-body-secondary small">
+          Scroll to zoom · Drag to pan when zoomed
+        </div>
       </div>
-      <p class="text-body-secondary small mt-1">
-        Scroll to zoom · Drag to pan when zoomed · Click at 1× to open original
-      </p>
     </div>
 
     <div v-else-if="data.isLoadingTimeline" class="mt-4 text-center text-body-secondary">
@@ -322,7 +409,7 @@ onMounted(async () => {
     <div
       v-if="data.items.length > 0"
       id="snapshot-strip"
-      class="snapshot-strip mt-2"
+      class="snapshot-strip d-flex gap-1 overflow-x-auto py-1 mt-2"
       tabindex="0"
       role="listbox"
       aria-label="Snapshot timeline"
@@ -331,7 +418,7 @@ onMounted(async () => {
       <button
         v-for="item in data.items"
         :key="item.fileName"
-        class="strip-item"
+        class="strip-item p-0 bg-transparent flex-shrink-0"
         :class="{ 'strip-item--active': data.selectedItem?.fileName === item.fileName }"
         role="option"
         :aria-selected="data.selectedItem?.fileName === item.fileName"
@@ -341,7 +428,7 @@ onMounted(async () => {
         <img
           :src="item.smallUrl"
           :alt="item.fileName"
-          class="strip-thumb"
+          class="strip-thumb d-block rounded-1"
           loading="lazy"
           draggable="false"
         >
@@ -351,35 +438,11 @@ onMounted(async () => {
 </template>
 
 <style lang="scss" scoped>
-.preview-panel {
-  background: var(--bs-secondary-bg);
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-}
-
 .preview-container {
-  overflow: hidden;
   max-height: 75vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-  border-radius: 0.375rem;
-  user-select: none;
-}
-
-.preview-image {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  pointer-events: none;
 }
 
 .snapshot-strip {
-  display: flex;
-  gap: 4px;
-  overflow-x: auto;
-  padding: 6px 0;
   scroll-snap-type: x proximity;
 
   &:focus {
@@ -389,11 +452,7 @@ onMounted(async () => {
 }
 
 .strip-item {
-  flex: 0 0 auto;
-  padding: 0;
   border: 2px solid transparent;
-  border-radius: 4px;
-  background: none;
   cursor: pointer;
   scroll-snap-align: start;
   transition: border-color 0.1s;
@@ -410,7 +469,5 @@ onMounted(async () => {
 .strip-thumb {
   height: 90px;
   width: auto;
-  display: block;
-  border-radius: 2px;
 }
 </style>

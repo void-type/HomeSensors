@@ -751,6 +751,13 @@ onUnmounted(() => {
                 <div class="btn-group btn-group-sm">
                   <button
                     class="btn btn-outline-secondary"
+                    title="Last 1 week"
+                    @click="setTimeRange(168)"
+                  >
+                    1w
+                  </button>
+                  <button
+                    class="btn btn-outline-secondary"
                     title="Last 48 hours"
                     @click="setTimeRange(48)"
                   >
@@ -981,6 +988,13 @@ onUnmounted(() => {
                   <div class="btn-group btn-group-sm">
                     <button
                       class="btn btn-outline-secondary"
+                      title="Last 1 week"
+                      @click="setTimeRange(168)"
+                    >
+                      1w
+                    </button>
+                    <button
+                      class="btn btn-outline-secondary"
                       title="Last 48 hours"
                       @click="setTimeRange(48)"
                     >
@@ -1049,6 +1063,13 @@ onUnmounted(() => {
                     </button>
                   </div>
                   <div class="btn-group btn-group-sm">
+                    <button
+                      class="btn btn-outline-secondary"
+                      title="Last 1 week"
+                      @click="setTimeRange(168)"
+                    >
+                      1w
+                    </button>
                     <button
                       class="btn btn-outline-secondary"
                       title="Last 48 hours"

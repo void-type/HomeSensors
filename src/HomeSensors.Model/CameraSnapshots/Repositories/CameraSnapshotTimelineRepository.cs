@@ -9,8 +9,6 @@ namespace HomeSensors.Model.CameraSnapshots.Repositories;
 
 public class CameraSnapshotTimelineRepository : RepositoryBase
 {
-    private static readonly string[] _supportedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
-
     private readonly HomeSensorsContext _data;
     private readonly ThumbnailService _thumbnailService;
 
@@ -36,15 +34,27 @@ public class CameraSnapshotTimelineRepository : RepositoryBase
             return Result.Fail<List<CameraSnapshotTimelineItem>>(new Failure("Camera not found."));
         }
 
+        if (request.Start is null || request.End is null)
+        {
+            return Result.Fail<List<CameraSnapshotTimelineItem>>(new Failure("Start and end dates are required."));
+        }
+
+        if (request.End <= request.Start)
+        {
+            return Result.Fail<List<CameraSnapshotTimelineItem>>(new Failure("End date must be after start date."));
+        }
+
+        if (request.End - request.Start > TimeSpan.FromDays(182))
+        {
+            return Result.Fail<List<CameraSnapshotTimelineItem>>(new Failure("Date range cannot exceed 6 months."));
+        }
+
         if (!Directory.Exists(camera.SnapshotsPath))
         {
             return Result.Fail<List<CameraSnapshotTimelineItem>>(new Failure($"Snapshots folder not found: {camera.SnapshotsPath}"));
         }
 
-        var files = Directory.EnumerateFiles(camera.SnapshotsPath)
-            .Where(f => _supportedExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
-            .Select(f => Path.GetFileName(f))
-            .ToList();
+        var files = CameraSnapshotHelpers.GetSnapshotFileNames(camera.SnapshotsPath).ToList();
 
         var items = new List<CameraSnapshotTimelineItem>();
 
@@ -79,8 +89,8 @@ public class CameraSnapshotTimelineRepository : RepositoryBase
             items.Add(new CameraSnapshotTimelineItem(fileName, timestamp.Value, smallUrl, mediumUrl, largeUrl, originalUrl));
         }
 
-        // Sort newest first
-        items.Sort((a, b) => b.Timestamp.CompareTo(a.Timestamp));
+        // Sort oldest first (left = past, right = present)
+        items.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
 
         return Result.Ok(items);
     }

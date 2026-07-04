@@ -14,6 +14,20 @@ public static partial class CameraSnapshotHelpers
     private static partial Regex TimestampRegex();
 
     /// <summary>
+    /// Supported image file extensions for camera snapshots.
+    /// </summary>
+    public static readonly string[] SupportedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+
+    /// <summary>
+    /// Enumerate all supported snapshot file names from the given directory.
+    /// </summary>
+    public static IEnumerable<string> GetSnapshotFileNames(string snapshotsPath) =>
+        Directory.EnumerateFiles(snapshotsPath)
+            .Where(f => SupportedExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
+            .Select(Path.GetFileName)
+            .OfType<string>();
+
+    /// <summary>
     /// Parse the timestamp from a snapshot filename.
     /// Expected pattern: ..._yyyyMMdd_HHmmss anywhere in the filename.
     /// Returns null if no timestamp found.
