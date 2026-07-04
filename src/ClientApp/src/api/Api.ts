@@ -8,6 +8,13 @@
  */
 
 import type {AppVersion,
+  CameraSnapshotResponse,
+  CameraSnapshotSaveRequest,
+  CameraSnapshotsDeleteParams,
+  CameraSnapshotTimelineGetItemsParams,
+  CameraSnapshotTimelineGetOriginalParams,
+  CameraSnapshotTimelineGetThumbnailParams,
+  CameraSnapshotTimelineItem,
   CategoriesDeleteParams,
   CategoryResponse,
   CategorySaveRequest,
@@ -73,6 +80,117 @@ export class Api<
   /**
    * No description
    *
+   * @tags CameraSnapshots
+   * @name CameraSnapshotsGetAll
+   * @request GET:/api/camera-snapshots/all
+   * @response `200` `(CameraSnapshotResponse)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  cameraSnapshotsGetAll = (params: RequestParams = {}) =>
+    this.request<CameraSnapshotResponse[], IItemSetOfIFailure>({
+      path: `/api/camera-snapshots/all`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags CameraSnapshots
+   * @name CameraSnapshotsSave
+   * @request POST:/api/camera-snapshots
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  cameraSnapshotsSave = (
+    data: CameraSnapshotSaveRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/camera-snapshots`,
+      method: "POST",
+      body: data,
+      type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags CameraSnapshots
+   * @name CameraSnapshotsDelete
+   * @request DELETE:/api/camera-snapshots/{id}
+   * @response `200` `EntityMessageOfLong`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  cameraSnapshotsDelete = (
+    { id }: CameraSnapshotsDeleteParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<EntityMessageOfLong, IItemSetOfIFailure>({
+      path: `/api/camera-snapshots/${id}`,
+      method: "DELETE",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags CameraSnapshotTimeline
+   * @name CameraSnapshotTimelineGetItems
+   * @request GET:/api/camera-snapshot-timeline/{cameraId}/items
+   * @response `200` `(CameraSnapshotTimelineItem)[]`
+   * @response `400` `IItemSetOfIFailure`
+   */
+  cameraSnapshotTimelineGetItems = (
+    { cameraId, ...query }: CameraSnapshotTimelineGetItemsParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<CameraSnapshotTimelineItem[], IItemSetOfIFailure>({
+      path: `/api/camera-snapshot-timeline/${cameraId}/items`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags CameraSnapshotTimeline
+   * @name CameraSnapshotTimelineGetThumbnail
+   * @request GET:/api/camera-snapshot-timeline/{cameraId}/thumbnail/{fileName}
+   * @response `200` `File`
+   */
+  cameraSnapshotTimelineGetThumbnail = (
+    { cameraId, fileName, ...query }: CameraSnapshotTimelineGetThumbnailParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<Blob, any>({
+      path: `/api/camera-snapshot-timeline/${cameraId}/thumbnail/${fileName}`,
+      method: "GET",
+      query: query,
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags CameraSnapshotTimeline
+   * @name CameraSnapshotTimelineGetOriginal
+   * @request GET:/api/camera-snapshot-timeline/{cameraId}/original/{fileName}
+   * @response `200` `File`
+   */
+  cameraSnapshotTimelineGetOriginal = (
+    { cameraId, fileName }: CameraSnapshotTimelineGetOriginalParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<Blob, any>({
+      path: `/api/camera-snapshot-timeline/${cameraId}/original/${fileName}`,
+      method: "GET",
+      ...params,
+    });
+  /**
+   * No description
+   *
    * @tags Categories
    * @name CategoriesGetAll
    * @request GET:/api/categories/all
@@ -114,7 +232,7 @@ export class Api<
    * @response `400` `IItemSetOfIFailure`
    */
   categoriesDelete = (
-    { id, ...query }: CategoriesDeleteParams,
+    { id }: CategoriesDeleteParams,
     params: RequestParams = {},
   ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
@@ -170,7 +288,7 @@ export class Api<
    * @response `400` `IItemSetOfIFailure`
    */
   emailRecipientsDelete = (
-    { id, ...query }: EmailRecipientsDeleteParams,
+    { id }: EmailRecipientsDeleteParams,
     params: RequestParams = {},
   ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
@@ -226,7 +344,7 @@ export class Api<
    * @response `400` `IItemSetOfIFailure`
    */
   temperatureDevicesDelete = (
-    { id, ...query }: TemperatureDevicesDeleteParams,
+    { id }: TemperatureDevicesDeleteParams,
     params: RequestParams = {},
   ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
@@ -302,7 +420,7 @@ export class Api<
    * @response `400` `IItemSetOfIFailure`
    */
   temperatureLocationsDelete = (
-    { id, ...query }: TemperatureLocationsDeleteParams,
+    { id }: TemperatureLocationsDeleteParams,
     params: RequestParams = {},
   ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
@@ -337,10 +455,7 @@ export class Api<
    * @response `400` `IItemSetOfIFailure`
    */
   temperatureReadingsGetCurrentReadingForLocation = (
-    {
-      locationId,
-      ...query
-    }: TemperatureReadingsGetCurrentReadingForLocationParams,
+    { locationId }: TemperatureReadingsGetCurrentReadingForLocationParams,
     params: RequestParams = {},
   ) =>
     this.request<TemperatureReadingResponse[], IItemSetOfIFailure>({
@@ -417,7 +532,7 @@ export class Api<
    * @response `400` `IItemSetOfIFailure`
    */
   waterLeakDevicesDelete = (
-    { id, ...query }: WaterLeakDevicesDeleteParams,
+    { id }: WaterLeakDevicesDeleteParams,
     params: RequestParams = {},
   ) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({

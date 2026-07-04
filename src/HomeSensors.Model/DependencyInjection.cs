@@ -1,4 +1,8 @@
-﻿using HomeSensors.Model.Categories.Repositories;
+﻿using HomeSensors.Model.CameraSnapshots.Repositories;
+using HomeSensors.Model.CameraSnapshots.Services;
+using HomeSensors.Model.CameraSnapshots.Settings;
+using HomeSensors.Model.CameraSnapshots.Workers;
+using HomeSensors.Model.Categories.Repositories;
 using HomeSensors.Model.Data;
 using HomeSensors.Model.Hvac.Workers;
 using HomeSensors.Model.Infrastructure.Emailing;
@@ -44,6 +48,17 @@ public static class DependencyInjection
         services.AddScoped<TemperatureLocationRepository>();
         services.AddScoped<WaterLeakDeviceRepository>();
         services.AddScoped<EmailRecipientRepository>();
+
+        services.AddSettingsSingleton<CameraSnapshotSettings>(config.GetSection("CameraSnapshots"), root: true);
+        services.AddScoped<CameraSnapshotRepository>();
+        services.AddScoped<ThumbnailService>();
+        services.AddScoped<CameraSnapshotTimelineRepository>();
+
+        var cameraSnapshotWorkerSettings = services.AddSettingsSingleton<CameraSnapshotWorkerSettings>(config.GetSection("CameraSnapshots:Worker"), root: true);
+        if (cameraSnapshotWorkerSettings.IsEnabled)
+        {
+            services.AddHostedService<CameraSnapshotThumbnailWorker>();
+        }
 
         services.AddSingleton<ITemperatureHubNotifier, NoOpTemperatureHubNotifier>();
 

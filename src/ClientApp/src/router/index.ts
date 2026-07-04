@@ -98,6 +98,18 @@ const router = createRouter({
       meta: { title: 'Email Recipients' },
     },
     {
+      path: '/camera-snapshots',
+      name: 'cameraSnapshots',
+      component: () => import('@/pages/CameraSnapshotsPage.vue'),
+      meta: { title: 'Camera Snapshots' },
+    },
+    {
+      path: '/camera-snapshot-cameras',
+      name: 'cameraSnapshotCamerasMain',
+      component: () => import('@/pages/CameraSnapshotCamerasPage.vue'),
+      meta: { title: 'Camera Snapshot Cameras' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: { name: 'home' },
       meta: { title: 'Current Temperatures' },

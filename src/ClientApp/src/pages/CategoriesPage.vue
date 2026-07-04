@@ -145,9 +145,9 @@ async function saveCategory(category: CategoryResponse): Promise<boolean> {
   data.errors = [];
 
   const request = {
-    id: category.id,
-    name: category.name,
-    order: category.order,
+    id: category.id ?? 0,
+    name: category.name ?? '',
+    order: category.order ?? 0,
   };
 
   try {

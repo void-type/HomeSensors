@@ -13,8 +13,8 @@
       </router-link>
     </li>
     <li class="nav-item">
-      <router-link :to="{ name: 'mqttDiscovery' }" class="nav-link">
-        MQTT
+      <router-link :to="{ name: 'cameraSnapshots' }" class="nav-link">
+        Snapshots
       </router-link>
     </li>
     <li class="nav-item dropdown">
@@ -56,6 +56,18 @@
         <li>
           <router-link :to="{ name: 'emailRecipientsMain' }" class="dropdown-item">
             Email Recipients
+          </router-link>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li class="nav-item">
+          <router-link :to="{ name: 'mqttDiscovery' }" class="dropdown-item">
+            MQTT
+          </router-link>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <router-link :to="{ name: 'cameraSnapshotCamerasMain' }" class="dropdown-item">
+            Cameras
           </router-link>
         </li>
       </ul>

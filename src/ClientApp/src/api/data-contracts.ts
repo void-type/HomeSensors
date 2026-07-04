@@ -37,12 +37,12 @@ export interface AppVersion {
   assemblyConfiguration?: string;
 }
 
-export interface CategoryResponse {
+export interface CameraSnapshotResponse {
   /** @format int64 */
   id?: number;
   name?: string;
-  /** @format int32 */
-  order?: number;
+  snapshotsPath?: string;
+  isHidden?: boolean;
 }
 
 /** A set of items. Can optionally by a page of a full set. */
@@ -98,12 +98,39 @@ export interface UserMessage {
   message?: string;
 }
 
-export interface CategorySaveRequest {
+export interface CameraSnapshotSaveRequest {
+  /** @format int64 */
+  id?: number;
+  name?: string;
+  snapshotsPath?: string;
+  isHidden?: boolean;
+}
+
+export interface CameraSnapshotTimelineItem {
+  fileName?: string;
+  /** @format date-time */
+  timestamp?: string;
+  smallUrl?: string;
+  mediumUrl?: string;
+  largeUrl?: string;
+  originalUrl?: string;
+}
+
+export interface CategoryResponse {
   /** @format int64 */
   id?: number;
   name?: string;
   /** @format int32 */
   order?: number;
+}
+
+export interface CategorySaveRequest {
+  /** @format int64 */
+  id: number;
+  /** @minLength 1 */
+  name: string;
+  /** @format int32 */
+  order: number;
 }
 
 export interface EmailRecipientResponse {
@@ -201,13 +228,14 @@ export interface TemperatureTimeSeriesResponse {
 }
 
 export interface TemperatureTimeSeriesHvacAction {
-  action?: string;
+  /** @minLength 1 */
+  action: string;
   /** @format date-time */
-  startTime?: string;
+  startTime: string;
   /** @format date-time */
-  endTime?: string;
+  endTime: string;
   /** @format int32 */
-  durationMinutes?: number;
+  durationMinutes: number;
 }
 
 export interface TemperatureTimeSeriesLocationData {
@@ -237,12 +265,12 @@ export interface TemperatureTimeSeriesPoint {
 
 export interface TemperatureTimeSeriesRequest {
   /** @format date-time */
-  startTime?: string;
+  startTime: string;
   /** @format date-time */
-  endTime?: string;
-  locationIds?: number[];
-  includeHvacActions?: boolean;
-  trimHvacActionsToRequestedTimeRange?: boolean;
+  endTime: string;
+  locationIds: number[];
+  includeHvacActions: boolean;
+  trimHvacActionsToRequestedTimeRange: boolean;
 }
 
 export interface WaterLeakDeviceResponse {
@@ -261,6 +289,34 @@ export interface WaterLeakDeviceSaveRequest {
   mqttTopic?: string;
   /** @format int32 */
   inactiveLimitMinutes?: number;
+}
+
+export interface CameraSnapshotsDeleteParams {
+  /** @format int64 */
+  id: number;
+}
+
+export interface CameraSnapshotTimelineGetItemsParams {
+  /** @format date-time */
+  start?: string | null;
+  /** @format date-time */
+  end?: string | null;
+  /** @format int64 */
+  cameraId: number;
+}
+
+export interface CameraSnapshotTimelineGetThumbnailParams {
+  /** @default "medium" */
+  size?: string;
+  /** @format int64 */
+  cameraId: number;
+  fileName: string;
+}
+
+export interface CameraSnapshotTimelineGetOriginalParams {
+  /** @format int64 */
+  cameraId: number;
+  fileName: string;
 }
 
 export interface CategoriesDeleteParams {
