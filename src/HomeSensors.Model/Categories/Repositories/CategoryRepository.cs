@@ -63,7 +63,7 @@ public class CategoryRepository : RepositoryBase
         if (category is null)
         {
             category = new Category();
-            _data.Categories.Add(category);
+            await _data.Categories.AddAsync(category);
         }
 
         category.Name = request.Name;

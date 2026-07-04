@@ -8,6 +8,7 @@ using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
+using VoidCore.Model.Text;
 
 namespace HomeSensors.Web.Controllers.Api;
 
@@ -88,14 +89,14 @@ public class CameraSnapshotTimelineController : ControllerBase
             return NotFound("Camera not found.");
         }
 
-        var originalPath = System.IO.Path.Combine(camera.SnapshotsPath, fileName);
+        var originalPath = Path.Combine(camera.SnapshotsPath, TextHelpers.GetSafeFileName(fileName, "_"));
 
         if (!System.IO.File.Exists(originalPath))
         {
             return NotFound("Snapshot not found.");
         }
 
-        var ext = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
         var contentType = ext switch
         {
             ".png" => "image/png",

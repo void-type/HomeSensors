@@ -128,7 +128,7 @@ public class TemperatureDeviceRepository : RepositoryBase
         if (device is null)
         {
             device = new TemperatureDevice();
-            _data.TemperatureDevices.Add(device);
+            await _data.TemperatureDevices.AddAsync(device);
         }
 
         device.Name = request.Name;

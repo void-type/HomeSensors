@@ -141,8 +141,8 @@ public class MqttTemperaturesWorker : BackgroundService
             return;
         }
 
-        dbContext.TemperatureReadings
-            .Add(new TemperatureReading
+        await dbContext.TemperatureReadings
+            .AddAsync(new TemperatureReading
             {
                 Time = message.Time.ToLocalTime(),
                 DeviceBatteryLevel = message.Battery_Ok,

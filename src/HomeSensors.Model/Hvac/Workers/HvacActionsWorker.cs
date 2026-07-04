@@ -156,7 +156,7 @@ public class HvacActionsWorker : BackgroundService
                             LastUpdated = stateEntry.LastUpdated.Value
                         };
 
-                        dbContext.HvacActions.Add(newAction);
+                        await dbContext.HvacActions.AddAsync(newAction, stoppingToken);
 
                         await dbContext.SaveChangesAsync(stoppingToken);
                     }

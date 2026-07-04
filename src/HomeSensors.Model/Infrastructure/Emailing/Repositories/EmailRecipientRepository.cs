@@ -49,7 +49,7 @@ public class EmailRecipientRepository : RepositoryBase
         if (recipient is null)
         {
             recipient = new EmailRecipient();
-            _data.EmailRecipients.Add(recipient);
+            await _data.EmailRecipients.AddAsync(recipient);
         }
 
         recipient.Email = request.Email;

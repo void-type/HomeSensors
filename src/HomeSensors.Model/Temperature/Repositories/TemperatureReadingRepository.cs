@@ -116,7 +116,7 @@ public class TemperatureReadingRepository : RepositoryBase
     /// </summary>
     private async Task<List<TemperatureReadingResponse>> GetCurrentAsync(CancellationToken cancellationToken = default)
     {
-        await using var context = _contextFactory.CreateDbContext();
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var data = await context.TemperatureReadings
             .TagWith(GetTag())
@@ -152,7 +152,7 @@ public class TemperatureReadingRepository : RepositoryBase
             return [];
         }
 
-        await using var context = _contextFactory.CreateDbContext();
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var dbReadings = await context.TemperatureReadings
             .TagWith(GetTag())
@@ -217,7 +217,7 @@ public class TemperatureReadingRepository : RepositoryBase
 
     private async Task<List<TemperatureTimeSeriesHvacAction>> GetHvacActionsAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
-        await using var context = _contextFactory.CreateDbContext();
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var dbReadings = await context.HvacActions
            .TagWith(GetTag())

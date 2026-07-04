@@ -67,7 +67,7 @@ public class WaterLeakDeviceRepository : RepositoryBase
         if (device is null)
         {
             device = new WaterLeakDevice();
-            _data.WaterLeakDevices.Add(device);
+            await _data.WaterLeakDevices.AddAsync(device);
         }
 
         device.Name = request.Name;

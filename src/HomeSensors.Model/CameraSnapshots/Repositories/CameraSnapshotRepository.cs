@@ -65,7 +65,7 @@ public class CameraSnapshotRepository : RepositoryBase
         if (camera is null)
         {
             camera = new CameraSnapshot();
-            _data.CameraSnapshots.Add(camera);
+            await _data.CameraSnapshots.AddAsync(camera);
         }
 
         camera.Name = request.Name;

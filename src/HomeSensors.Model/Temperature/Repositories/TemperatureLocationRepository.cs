@@ -105,7 +105,7 @@ public class TemperatureLocationRepository : RepositoryBase
         if (location is null)
         {
             location = new TemperatureLocation();
-            _data.TemperatureLocations.Add(location);
+            await _data.TemperatureLocations.AddAsync(location);
         }
 
         location.Name = request.Name;

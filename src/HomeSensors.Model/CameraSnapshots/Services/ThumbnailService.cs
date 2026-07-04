@@ -26,7 +26,7 @@ public class ThumbnailService
     /// </summary>
     public async Task EnsureThumbnailsAsync(CameraSnapshot camera, string fileName, CancellationToken cancellationToken = default)
     {
-        var originalPath = Path.Combine(camera.SnapshotsPath, fileName);
+        var originalPath = Path.Combine(camera.SnapshotsPath, Path.GetFileName(fileName));
 
         if (!File.Exists(originalPath))
         {
@@ -112,7 +112,17 @@ public class ThumbnailService
             thumb.Settings.SetDefine("webp:lossless", "true");
         }
 
-        await thumb.WriteAsync(outputPath, cancellationToken);
+        var tmpPath = outputPath + $".{Guid.NewGuid():N}.tmp";
+        try
+        {
+            await thumb.WriteAsync(tmpPath, cancellationToken);
+            File.Move(tmpPath, outputPath, overwrite: true);
+        }
+        catch
+        {
+            File.Delete(tmpPath);
+            throw;
+        }
     }
 
     private static async Task GenerateLargeWebPAsync(MagickImage sourceImage, string outputPath, CancellationToken cancellationToken)
@@ -122,7 +132,17 @@ public class ThumbnailService
         large.Format = MagickFormat.WebP;
         large.Settings.SetDefine("webp:lossless", "true");
 
-        await large.WriteAsync(outputPath, cancellationToken);
+        var tmpPath = outputPath + $".{Guid.NewGuid():N}.tmp";
+        try
+        {
+            await large.WriteAsync(tmpPath, cancellationToken);
+            File.Move(tmpPath, outputPath, overwrite: true);
+        }
+        catch
+        {
+            File.Delete(tmpPath);
+            throw;
+        }
     }
 }
 
