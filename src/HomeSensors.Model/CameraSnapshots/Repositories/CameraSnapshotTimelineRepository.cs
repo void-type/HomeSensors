@@ -1,6 +1,5 @@
 ﻿using HomeSensors.Model.CameraSnapshots.Helpers;
 using HomeSensors.Model.CameraSnapshots.Models;
-using HomeSensors.Model.CameraSnapshots.Services;
 using HomeSensors.Model.Data;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Functional;
@@ -10,17 +9,15 @@ namespace HomeSensors.Model.CameraSnapshots.Repositories;
 public class CameraSnapshotTimelineRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
-    private readonly ThumbnailService _thumbnailService;
 
-    public CameraSnapshotTimelineRepository(HomeSensorsContext data, ThumbnailService thumbnailService)
+    public CameraSnapshotTimelineRepository(HomeSensorsContext data)
     {
         _data = data;
-        _thumbnailService = thumbnailService;
     }
 
     /// <summary>
     /// Get timeline items for a camera, filtered by optional date range.
-    /// Ensures thumbnails exist for each item (on-demand generation fallback).
+    /// Thumbnails are generated on-demand by the thumbnail endpoint or in the background by the worker.
     /// </summary>
     public async Task<IResult<List<CameraSnapshotTimelineItem>>> GetTimelineAsync(CameraSnapshotTimelineRequest request, string baseUrl)
     {
@@ -76,9 +73,6 @@ public class CameraSnapshotTimelineRepository : RepositoryBase
             {
                 continue;
             }
-
-            // On-demand fallback: ensure thumbnails exist before returning URLs
-            await _thumbnailService.EnsureThumbnailsAsync(camera, fileName);
 
             var cameraId = camera.Id;
             var smallUrl = $"{baseUrl}/api/camera-snapshot-timeline/{cameraId}/thumbnail/{Uri.EscapeDataString(fileName)}?size=small";

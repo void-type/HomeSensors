@@ -3,6 +3,7 @@ using HomeSensors.Model.CameraSnapshots.Repositories;
 using HomeSensors.Model.CameraSnapshots.Services;
 using HomeSensors.Model.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
@@ -18,6 +19,7 @@ public class CameraSnapshotTimelineController : ControllerBase
     private readonly CameraSnapshotTimelineRepository _timelineRepository;
     private readonly ThumbnailService _thumbnailService;
     private readonly HomeSensorsContext _data;
+    private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
     public CameraSnapshotTimelineController(CameraSnapshotTimelineRepository timelineRepository, ThumbnailService thumbnailService, HomeSensorsContext data)
     {
@@ -47,7 +49,6 @@ public class CameraSnapshotTimelineController : ControllerBase
 
     [HttpGet]
     [Route("{cameraId}/thumbnail/{fileName}")]
-    [ResponseCache(Duration = 3600)]
     public async Task<IActionResult> GetThumbnailAsync(long cameraId, string fileName, [FromQuery] string size = "medium")
     {
         var camera = await _data.CameraSnapshots.FirstOrDefaultAsync(x => x.Id == cameraId);
@@ -74,12 +75,12 @@ public class CameraSnapshotTimelineController : ControllerBase
             return NotFound("Thumbnail not found.");
         }
 
+        Response.Headers.CacheControl = "public, max-age=3600";
         return PhysicalFile(thumbnailPath, "image/webp");
     }
 
     [HttpGet]
     [Route("{cameraId}/original/{fileName}")]
-    [ResponseCache(Duration = 3600)]
     public async Task<IActionResult> GetOriginalAsync(long cameraId, string fileName)
     {
         var camera = await _data.CameraSnapshots.FirstOrDefaultAsync(x => x.Id == cameraId);
@@ -96,14 +97,11 @@ public class CameraSnapshotTimelineController : ControllerBase
             return NotFound("Snapshot not found.");
         }
 
-        var ext = Path.GetExtension(fileName).ToLowerInvariant();
-        var contentType = ext switch
-        {
-            ".png" => "image/png",
-            ".webp" => "image/webp",
-            _ => "image/jpeg",
-        };
+        var contentType = _contentTypeProvider.TryGetContentType(fileName, out var detected)
+            ? detected
+            : "application/octet-stream";
 
+        Response.Headers.CacheControl = "public, max-age=3600";
         return PhysicalFile(originalPath, contentType);
     }
 }
