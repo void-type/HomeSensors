@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { CameraSnapshotResponse, CameraSnapshotTimelineItem } from '@/api/data-contracts';
 import type { HttpResponse } from '@/api/http-client';
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppDateTimePicker from '@/components/AppDateTimePicker.vue';
 import AppPageHeading from '@/components/AppPageHeading.vue';
@@ -106,7 +106,9 @@ async function loadTimeline() {
     );
     data.items = response.data;
     if (data.items.length > 0) {
-      data.selectedItem = data.items.at(-1) ?? null;
+      data.selectedItem = data.items[0] ?? null;
+      await nextTick();
+      scrollStripToIndex(0);
     }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'TimeoutError') {
@@ -252,12 +254,14 @@ function onStripKeyDown(event: KeyboardEvent) {
   }
   const idx = data.items.indexOf(data.selectedItem);
   if (event.key === 'ArrowRight' && idx < data.items.length - 1) {
+    event.preventDefault();
     const nextItem = data.items[idx + 1];
     if (nextItem) {
       selectItem(nextItem);
       scrollStripToIndex(idx + 1);
     }
   } else if (event.key === 'ArrowLeft' && idx > 0) {
+    event.preventDefault();
     const prevItem = data.items[idx - 1];
     if (prevItem) {
       selectItem(prevItem);
@@ -269,7 +273,16 @@ function onStripKeyDown(event: KeyboardEvent) {
 function scrollStripToIndex(index: number) {
   const strip = document.getElementById('snapshot-strip');
   const item = strip?.children[index] as HTMLElement | undefined;
-  item?.scrollIntoView({ inline: 'nearest', behavior: 'smooth' });
+  if (!strip || !item) {
+    return;
+  }
+  const itemLeft = item.offsetLeft;
+  const itemRight = itemLeft + item.offsetWidth;
+  if (itemLeft < strip.scrollLeft) {
+    strip.scrollTo({ left: itemLeft, behavior: 'smooth' });
+  } else if (itemRight > strip.scrollLeft + strip.clientWidth) {
+    strip.scrollTo({ left: itemRight - strip.clientWidth, behavior: 'smooth' });
+  }
 }
 
 function formatTimestamp(timestamp: string | undefined): string {
@@ -434,42 +447,43 @@ onMounted(async () => {
     </div>
 
     <!-- Preview panel -->
-    <div v-if="data.selectedItem" class="card mt-3">
-      <div class="card-body d-flex flex-column gap-3">
-        <div class="d-flex flex-wrap align-items-center gap-2">
-          <span class="text-body-secondary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
-          <span class="text-body-secondary small file-name d-none d-sm-inline">{{ data.selectedItem.fileName }}</span>
-          <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
-          <button v-if="zoomLevel > 1" class="btn btn-outline-secondary btn-sm py-0" @click="resetZoom()">
-            Reset zoom
-          </button>
-          <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm py-0 ms-auto">
-            Open original
-          </a>
-        </div>
+    <div v-if="data.selectedItem" class="card mt-3 overflow-hidden" tabindex="0" @keydown="onStripKeyDown">
+      <div class="card-body d-flex flex-wrap align-items-center gap-2 py-2">
+        <span class="text-body-secondary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
+        <span class="text-body-secondary small file-name d-none d-sm-inline">{{ data.selectedItem.fileName }}</span>
+        <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
+        <button v-if="zoomLevel > 1" class="btn btn-outline-secondary btn-sm py-0" @click="resetZoom()">
+          Reset zoom
+        </button>
+        <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm py-0 ms-auto">
+          Open original
+        </a>
+      </div>
 
-        <div
-          ref="previewContainer"
-          class="preview-container overflow-hidden d-flex align-items-center justify-content-center bg-black rounded user-select-none"
-          @wheel.prevent="onWheel"
-          @mousedown="onMouseDown"
-          @mousemove="onMouseMove"
-          @mouseup="onMouseUp"
-          @mouseleave="onMouseLeave"
-          @touchstart.prevent="onTouchStart"
-          @touchmove.prevent="onTouchMove"
-          @touchend="onTouchEnd"
+      <div
+        ref="previewContainer"
+        class="preview-container overflow-hidden d-flex align-items-center justify-content-center bg-black user-select-none"
+        @wheel.prevent="onWheel"
+        @mousedown="onMouseDown"
+        @mousemove="onMouseMove"
+        @mouseup="onMouseUp"
+        @mouseleave="onMouseLeave"
+        @touchstart.prevent="onTouchStart"
+        @touchmove.prevent="onTouchMove"
+        @touchend="onTouchEnd"
+      >
+        <img
+          :src="previewSrc ?? undefined"
+          :alt="data.selectedItem.fileName"
+          class="mw-100 mh-100 d-block"
+          :style="previewStyle"
+          draggable="false"
         >
-          <img
-            :src="previewSrc ?? undefined"
-            :alt="data.selectedItem.fileName"
-            class="mw-100 d-block"
-            :style="previewStyle"
-            draggable="false"
-          >
-        </div>
+      </div>
+
+      <div class="card-body py-2">
         <div class="text-body-secondary small">
-          Scroll to zoom · Drag to pan when zoomed · Pinch to zoom on touch
+          Scroll to zoom · Drag to pan when zoomed · Pinch to zoom on touch · ← → to navigate
         </div>
       </div>
     </div>
@@ -523,7 +537,7 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .preview-container {
-  max-height: 75vh;
+  aspect-ratio: 16 / 9;
   touch-action: none;
 }
 
