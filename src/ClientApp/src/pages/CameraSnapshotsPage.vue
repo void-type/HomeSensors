@@ -316,38 +316,74 @@ onMounted(async () => {
       <!-- xs: each pair stacked -->
       <div class="d-flex d-sm-none flex-column align-items-center gap-2">
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">&laquo; Month</button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">Month &raquo;</button>
+          <button class="btn btn-outline-secondary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
+            &laquo; Month
+          </button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
+            Month &raquo;
+          </button>
         </div>
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">&laquo; Week</button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">Week &raquo;</button>
+          <button class="btn btn-outline-secondary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
+            &laquo; Week
+          </button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
+            Week &raquo;
+          </button>
         </div>
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">&laquo; Day</button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">Day &raquo;</button>
+          <button class="btn btn-outline-secondary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
+            &laquo; Day
+          </button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
+            Day &raquo;
+          </button>
         </div>
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" title="Last month" @click="setAbsoluteRange(30)">Last Month</button>
-          <button class="btn btn-outline-secondary" title="Last week" @click="setAbsoluteRange(7)">Last Week</button>
-          <button class="btn btn-outline-secondary" title="Last day" @click="setAbsoluteRange(1)">Last Day</button>
+          <button class="btn btn-outline-secondary" title="Last month" @click="setAbsoluteRange(30)">
+            Last Month
+          </button>
+          <button class="btn btn-outline-secondary" title="Last week" @click="setAbsoluteRange(7)">
+            Last Week
+          </button>
+          <button class="btn btn-outline-secondary" title="Last day" @click="setAbsoluteRange(1)">
+            Last Day
+          </button>
         </div>
       </div>
 
       <!-- sm+: single combined bar -->
       <div class="d-none d-sm-flex flex-column align-items-center gap-2">
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">&laquo; Month</button>
-          <button class="btn btn-outline-secondary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">&laquo; Week</button>
-          <button class="btn btn-outline-secondary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">&laquo; Day</button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">Day &raquo;</button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">Week &raquo;</button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">Month &raquo;</button>
+          <button class="btn btn-outline-secondary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
+            &laquo; Month
+          </button>
+          <button class="btn btn-outline-secondary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
+            &laquo; Week
+          </button>
+          <button class="btn btn-outline-secondary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
+            &laquo; Day
+          </button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
+            Day &raquo;
+          </button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
+            Week &raquo;
+          </button>
+          <button class="btn btn-outline-secondary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
+            Month &raquo;
+          </button>
         </div>
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" title="Last month" @click="setAbsoluteRange(30)">Last Month</button>
-          <button class="btn btn-outline-secondary" title="Last week" @click="setAbsoluteRange(7)">Last Week</button>
-          <button class="btn btn-outline-secondary" title="Last day" @click="setAbsoluteRange(1)">Last Day</button>
+          <button class="btn btn-outline-secondary" title="Last month" @click="setAbsoluteRange(30)">
+            Last Month
+          </button>
+          <button class="btn btn-outline-secondary" title="Last week" @click="setAbsoluteRange(7)">
+            Last Week
+          </button>
+          <button class="btn btn-outline-secondary" title="Last day" @click="setAbsoluteRange(1)">
+            Last Day
+          </button>
         </div>
       </div>
     </div>
