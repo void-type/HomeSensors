@@ -77,10 +77,9 @@ public class CameraSnapshotTimelineRepository : RepositoryBase
             var cameraId = camera.Id;
             var smallUrl = $"{baseUrl}/api/camera-snapshot-timeline/{cameraId}/thumbnail/{Uri.EscapeDataString(fileName)}?size=small";
             var mediumUrl = $"{baseUrl}/api/camera-snapshot-timeline/{cameraId}/thumbnail/{Uri.EscapeDataString(fileName)}?size=medium";
-            var largeUrl = $"{baseUrl}/api/camera-snapshot-timeline/{cameraId}/thumbnail/{Uri.EscapeDataString(fileName)}?size=large";
             var originalUrl = $"{baseUrl}/api/camera-snapshot-timeline/{cameraId}/original/{Uri.EscapeDataString(fileName)}";
 
-            items.Add(new CameraSnapshotTimelineItem(fileName, timestamp.Value, smallUrl, mediumUrl, largeUrl, originalUrl));
+            items.Add(new CameraSnapshotTimelineItem(fileName, timestamp.Value, smallUrl, mediumUrl, originalUrl));
         }
 
         // Sort oldest first (left = past, right = present)

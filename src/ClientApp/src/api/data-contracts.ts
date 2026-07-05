@@ -112,7 +112,6 @@ export interface CameraSnapshotTimelineItem {
   timestamp?: string;
   smallUrl?: string;
   mediumUrl?: string;
-  largeUrl?: string;
   originalUrl?: string;
 }
 
@@ -127,7 +126,6 @@ export interface CategoryResponse {
 export interface CategorySaveRequest {
   /** @format int64 */
   id: number;
-  /** @minLength 1 */
   name: string;
   /** @format int32 */
   order: number;
@@ -228,7 +226,6 @@ export interface TemperatureTimeSeriesResponse {
 }
 
 export interface TemperatureTimeSeriesHvacAction {
-  /** @minLength 1 */
   action: string;
   /** @format date-time */
   startTime: string;

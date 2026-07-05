@@ -379,7 +379,7 @@ export class Api<
    * @response `400` `IItemSetOfIFailure`
    */
   temperatureLocationsCheckLimits = (
-    query: TemperatureLocationsCheckLimitsParams,
+    query: TemperatureLocationsCheckLimitsParams = {},
     params: RequestParams = {},
   ) =>
     this.request<TemperatureCheckLimitResponse[], IItemSetOfIFailure>({

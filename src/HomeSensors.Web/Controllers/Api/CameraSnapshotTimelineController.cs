@@ -61,7 +61,6 @@ public class CameraSnapshotTimelineController : ControllerBase
         var thumbnailSize = size switch
         {
             "small" => ThumbnailSize.Small,
-            "large" => ThumbnailSize.Large,
             _ => ThumbnailSize.Medium,
         };
 

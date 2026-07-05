@@ -41,13 +41,11 @@ public class ThumbnailService
         var baseName = Path.GetFileNameWithoutExtension(fileName);
         var smallPath = Path.Combine(cacheDir, $"{baseName}_thumb-small.webp");
         var mediumPath = Path.Combine(cacheDir, $"{baseName}_thumb-medium.webp");
-        var largePath = Path.Combine(cacheDir, $"{baseName}_thumb-large.webp");
 
         var needsSmall = !File.Exists(smallPath);
         var needsMedium = !File.Exists(mediumPath);
-        var needsLarge = !File.Exists(largePath);
 
-        if (!needsSmall && !needsMedium && !needsLarge)
+        if (!needsSmall && !needsMedium)
         {
             return;
         }
@@ -64,11 +62,6 @@ public class ThumbnailService
             if (needsMedium)
             {
                 await GenerateThumbnailAsync(image, mediumPath, MediumHeightPx, isLossless: false, quality: 80, cancellationToken);
-            }
-
-            if (needsLarge)
-            {
-                await GenerateLargeWebPAsync(image, largePath, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -91,7 +84,6 @@ public class ThumbnailService
         {
             ThumbnailSize.Small => Path.Combine(cacheDir, $"{baseName}_thumb-small.webp"),
             ThumbnailSize.Medium => Path.Combine(cacheDir, $"{baseName}_thumb-medium.webp"),
-            ThumbnailSize.Large => Path.Combine(cacheDir, $"{baseName}_thumb-large.webp"),
             _ => throw new ArgumentOutOfRangeException(nameof(size))
         };
     }
@@ -124,31 +116,10 @@ public class ThumbnailService
             throw;
         }
     }
-
-    private static async Task GenerateLargeWebPAsync(MagickImage sourceImage, string outputPath, CancellationToken cancellationToken)
-    {
-        using var large = sourceImage.Clone() as MagickImage ?? throw new InvalidOperationException("Clone failed.");
-
-        large.Format = MagickFormat.WebP;
-        large.Settings.SetDefine("webp:lossless", "true");
-
-        var tmpPath = outputPath + $".{Guid.NewGuid():N}.tmp";
-        try
-        {
-            await large.WriteAsync(tmpPath, cancellationToken);
-            File.Move(tmpPath, outputPath, overwrite: true);
-        }
-        catch
-        {
-            File.Delete(tmpPath);
-            throw;
-        }
-    }
 }
 
 public enum ThumbnailSize
 {
     Small,
     Medium,
-    Large
 }

@@ -40,7 +40,7 @@ const previewSrc = computed(() => {
   if (!data.selectedItem) {
     return null;
   }
-  return useLargeImage.value ? data.selectedItem.largeUrl : data.selectedItem.mediumUrl;
+  return useLargeImage.value ? data.selectedItem.originalUrl : data.selectedItem.mediumUrl;
 });
 
 const previewStyle = computed(() => ({
