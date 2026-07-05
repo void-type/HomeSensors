@@ -32,6 +32,7 @@ const panX = ref(0);
 const panY = ref(0);
 const isPanning = ref(false);
 const lastMousePos = ref({ x: 0, y: 0 });
+const lastTouchDistance = ref<number | null>(null);
 const previewContainer = ref<HTMLElement | null>(null);
 
 const useLargeImage = computed(() => zoomLevel.value >= 2);
@@ -189,6 +190,50 @@ function onMouseLeave() {
   isPanning.value = false;
 }
 
+function getTouchDistance(touches: TouchList): number {
+  return Math.hypot(
+    touches[1]!.clientX - touches[0]!.clientX,
+    touches[1]!.clientY - touches[0]!.clientY,
+  );
+}
+
+function onTouchStart(event: TouchEvent) {
+  if (event.touches.length === 1) {
+    if (zoomLevel.value <= 1) {
+      return;
+    }
+    isPanning.value = true;
+    lastMousePos.value = { x: event.touches[0]!.clientX, y: event.touches[0]!.clientY };
+    lastTouchDistance.value = null;
+  } else if (event.touches.length === 2) {
+    isPanning.value = false;
+    lastTouchDistance.value = getTouchDistance(event.touches);
+  }
+}
+
+function onTouchMove(event: TouchEvent) {
+  if (event.touches.length === 1 && isPanning.value) {
+    const touch = event.touches[0]!;
+    panX.value += touch.clientX - lastMousePos.value.x;
+    panY.value += touch.clientY - lastMousePos.value.y;
+    lastMousePos.value = { x: touch.clientX, y: touch.clientY };
+  } else if (event.touches.length === 2 && lastTouchDistance.value !== null) {
+    const dist = getTouchDistance(event.touches);
+    const delta = (dist - lastTouchDistance.value) * 0.02;
+    zoomLevel.value = Math.max(1, Math.min(8, zoomLevel.value + delta));
+    lastTouchDistance.value = dist;
+    if (zoomLevel.value === 1) {
+      panX.value = 0;
+      panY.value = 0;
+    }
+  }
+}
+
+function onTouchEnd() {
+  isPanning.value = false;
+  lastTouchDistance.value = null;
+}
+
 function resetZoom() {
   zoomLevel.value = 1;
   panX.value = 0;
@@ -281,7 +326,7 @@ onMounted(async () => {
     <AppPageHeading />
 
     <!-- Controls bar -->
-    <div class="mt-3 d-flex flex-column gap-2">
+    <div class="mt-3 d-flex flex-column align-items-center gap-2">
       <div class="d-flex flex-wrap gap-2 align-items-end">
         <div>
           <label for="camera-select" class="form-label mb-1">Camera</label>
@@ -391,9 +436,9 @@ onMounted(async () => {
     <!-- Preview panel -->
     <div v-if="data.selectedItem" class="card mt-3">
       <div class="card-body d-flex flex-column gap-3">
-        <div class="d-flex align-items-center gap-3">
+        <div class="d-flex flex-wrap align-items-center gap-2">
           <span class="text-body-secondary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
-          <span class="text-body-secondary small">{{ data.selectedItem.fileName }}</span>
+          <span class="text-body-secondary small file-name d-none d-sm-inline">{{ data.selectedItem.fileName }}</span>
           <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
           <button v-if="zoomLevel > 1" class="btn btn-outline-secondary btn-sm py-0" @click="resetZoom()">
             Reset zoom
@@ -411,6 +456,9 @@ onMounted(async () => {
           @mousemove="onMouseMove"
           @mouseup="onMouseUp"
           @mouseleave="onMouseLeave"
+          @touchstart.prevent="onTouchStart"
+          @touchmove.prevent="onTouchMove"
+          @touchend="onTouchEnd"
         >
           <img
             :src="previewSrc ?? undefined"
@@ -421,7 +469,7 @@ onMounted(async () => {
           >
         </div>
         <div class="text-body-secondary small">
-          Scroll to zoom · Drag to pan when zoomed
+          Scroll to zoom · Drag to pan when zoomed · Pinch to zoom on touch
         </div>
       </div>
     </div>
@@ -476,6 +524,11 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .preview-container {
   max-height: 75vh;
+  touch-action: none;
+}
+
+.file-name {
+  word-break: break-all;
 }
 
 .snapshot-strip {
