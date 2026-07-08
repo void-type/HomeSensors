@@ -301,7 +301,7 @@ function defaultEndDate(): Date {
 
 function defaultStartDate(): Date {
   const d = defaultEndDate();
-  d.setDate(d.getDate() - 7);
+  d.setDate(d.getDate() - 1);
   return d;
 }
 
