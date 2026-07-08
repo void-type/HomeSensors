@@ -1,7 +1,12 @@
 import { config as fontAwesomeConfig, library } from '@fortawesome/fontawesome-svg-core';
 import {
+  faAngleLeft,
+  faAngleRight,
+  faAnglesLeft,
+  faAnglesRight,
   faBatteryQuarter,
   faBellSlash,
+  faCircleInfo,
   faClock,
   faFire,
   faMoon,
@@ -23,8 +28,13 @@ import 'vue-color/style.css';
 fontAwesomeConfig.autoAddCss = false;
 
 library.add(
+  faAngleLeft,
+  faAngleRight,
+  faAnglesLeft,
+  faAnglesRight,
   faBatteryQuarter,
   faBellSlash,
+  faCircleInfo,
   faClock,
   faFire,
   faMoon,

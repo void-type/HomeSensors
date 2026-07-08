@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import type { CameraSnapshotResponse, CameraSnapshotTimelineItem } from '@/api/data-contracts';
 import type { HttpResponse } from '@/api/http-client';
-import { computed, nextTick, onMounted, reactive, ref } from 'vue';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { Tooltip } from 'bootstrap';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppDateTimePicker from '@/components/AppDateTimePicker.vue';
 import AppPageHeading from '@/components/AppPageHeading.vue';
@@ -34,6 +36,23 @@ const isPanning = ref(false);
 const lastMousePos = ref({ x: 0, y: 0 });
 const lastTouchDistance = ref<number | null>(null);
 const previewContainer = ref<HTMLElement | null>(null);
+const stripEl = ref<HTMLElement | null>(null);
+
+// Info tooltip
+const infoBtn = ref<HTMLElement | null>(null);
+let bsTooltip: Tooltip | null = null;
+
+function syncTooltip() {
+  bsTooltip?.dispose();
+  bsTooltip = null;
+  if (infoBtn.value) {
+    bsTooltip = new Tooltip(infoBtn.value, { html: true, placement: 'bottom' });
+  }
+}
+
+watch(infoBtn, syncTooltip);
+watch(() => data.selectedItem, syncTooltip);
+onUnmounted(() => bsTooltip?.dispose());
 
 const useLargeImage = computed(() => zoomLevel.value >= 2);
 
@@ -248,6 +267,48 @@ function selectItem(item: CameraSnapshotTimelineItem) {
   data.selectedItem = item;
 }
 
+function navFirst() {
+  const first = data.items[0];
+  if (first) {
+    selectItem(first);
+    scrollStripToIndex(0);
+  }
+}
+
+function navPrev() {
+  if (!data.selectedItem) {
+    return;
+  }
+  const idx = data.items.indexOf(data.selectedItem);
+  if (idx > 0) {
+    const item = data.items[idx - 1]!;
+    selectItem(item);
+    scrollStripToIndex(idx - 1);
+  }
+}
+
+function navNext() {
+  if (!data.selectedItem) {
+    return;
+  }
+  const idx = data.items.indexOf(data.selectedItem);
+  if (idx < data.items.length - 1) {
+    const item = data.items[idx + 1]!;
+    selectItem(item);
+    scrollStripToIndex(idx + 1);
+  }
+}
+
+function navLast() {
+  const last = data.items[data.items.length - 1];
+  if (last) {
+    selectItem(last);
+    scrollStripToIndex(data.items.length - 1);
+  }
+}
+
+const selectedIndex = computed(() => data.selectedItem ? data.items.indexOf(data.selectedItem) : -1);
+
 function onStripKeyDown(event: KeyboardEvent) {
   if (!data.selectedItem) {
     return;
@@ -270,8 +331,12 @@ function onStripKeyDown(event: KeyboardEvent) {
   }
 }
 
+function focusStrip() {
+  stripEl.value?.focus();
+}
+
 function scrollStripToIndex(index: number) {
-  const strip = document.getElementById('snapshot-strip');
+  const strip = stripEl.value;
   const item = strip?.children[index] as HTMLElement | undefined;
   if (!strip || !item) {
     return;
@@ -289,7 +354,9 @@ function formatTimestamp(timestamp: string | undefined): string {
   if (!timestamp) {
     return '';
   }
-  return new Date(timestamp).toLocaleString();
+  const d = new Date(timestamp);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 function defaultEndDate(): Date {
@@ -309,8 +376,6 @@ function defaultStartDate(): Date {
 
 onMounted(async () => {
   // Restore from query params
-  const hasQueryParams = !!(route.query.cameraId || route.query.start || route.query.end);
-
   if (route.query.cameraId) {
     data.selectedCameraId = Number(route.query.cameraId);
   }
@@ -326,11 +391,13 @@ onMounted(async () => {
   }
 
   await getCameras();
+  await loadTimeline();
 
-  // Only auto-load when restoring from URL state; otherwise wait for user to click Load
-  if (hasQueryParams) {
-    await loadTimeline();
-  }
+  // Reload whenever camera or date range changes
+  watch(
+    () => [data.selectedCameraId, data.startDate?.getTime(), data.endDate?.getTime()],
+    () => loadTimeline(),
+  );
 });
 </script>
 
@@ -340,7 +407,7 @@ onMounted(async () => {
 
     <!-- Controls bar -->
     <div class="mt-3 d-flex flex-column align-items-center gap-2">
-      <div class="d-flex flex-wrap gap-2 align-items-end">
+      <div class="d-flex flex-wrap justify-content-center gap-2 align-items-end">
         <div>
           <label for="camera-select" class="form-label mb-1">Camera</label>
           <select
@@ -355,25 +422,22 @@ onMounted(async () => {
           </select>
         </div>
 
-        <div>
-          <label for="start-date" class="form-label mb-1">From</label>
-          <AppDateTimePicker id="start-date" v-model="data.startDate" />
-        </div>
+        <div class="d-flex gap-2 align-items-end">
+          <div>
+            <label for="start-date" class="form-label mb-1">From</label>
+            <AppDateTimePicker id="start-date" v-model="data.startDate" />
+          </div>
 
-        <div>
-          <label for="end-date" class="form-label mb-1">To</label>
-          <AppDateTimePicker id="end-date" v-model="data.endDate" />
+          <div>
+            <label for="end-date" class="form-label mb-1">To</label>
+            <AppDateTimePicker id="end-date" v-model="data.endDate" />
+          </div>
         </div>
-
-        <button class="btn btn-primary" :disabled="data.isLoadingTimeline" @click="loadTimeline()">
-          <span v-if="data.isLoadingTimeline" class="spinner-border spinner-border-sm me-1" />
-          Load
-        </button>
       </div>
 
       <!-- xs: each pair stacked -->
       <div class="d-flex d-sm-none flex-column align-items-center gap-2">
-        <div class="btn-group btn-group-sm">
+        <div class="btn-group btn-group-sm w-100">
           <button class="btn btn-outline-secondary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
             &laquo; Month
           </button>
@@ -381,7 +445,7 @@ onMounted(async () => {
             Month &raquo;
           </button>
         </div>
-        <div class="btn-group btn-group-sm">
+        <div class="btn-group btn-group-sm w-100">
           <button class="btn btn-outline-secondary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
             &laquo; Week
           </button>
@@ -389,7 +453,7 @@ onMounted(async () => {
             Week &raquo;
           </button>
         </div>
-        <div class="btn-group btn-group-sm">
+        <div class="btn-group btn-group-sm w-100">
           <button class="btn btn-outline-secondary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
             &laquo; Day
           </button>
@@ -397,7 +461,7 @@ onMounted(async () => {
             Day &raquo;
           </button>
         </div>
-        <div class="btn-group btn-group-sm">
+        <div class="btn-group btn-group-sm w-100">
           <button class="btn btn-outline-secondary" title="Last month" @click="setAbsoluteRange(30)">
             Last Month
           </button>
@@ -447,10 +511,17 @@ onMounted(async () => {
     </div>
 
     <!-- Preview panel -->
-    <div v-if="data.selectedItem" class="card mt-3 overflow-hidden" tabindex="0" @keydown="onStripKeyDown">
+    <div v-if="data.selectedItem" class="card mt-3 overflow-hidden">
       <div class="card-body d-flex flex-wrap align-items-center gap-2 py-2">
         <span class="text-body-secondary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
-        <span class="text-body-secondary small file-name d-none d-sm-inline">{{ data.selectedItem.fileName }}</span>
+        <button
+          ref="infoBtn"
+          type="button"
+          class="btn btn-link btn-sm p-0 text-body-secondary"
+          :data-bs-title="`${data.selectedItem.fileName}<br><br>Scroll to zoom<br>Drag to pan when zoomed<br>Pinch to zoom on touch<br>← → to navigate`"
+        >
+          <FontAwesomeIcon icon="fa-circle-info" />
+        </button>
         <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
         <button v-if="zoomLevel > 1" class="btn btn-outline-secondary btn-sm py-0" @click="resetZoom()">
           Reset zoom
@@ -463,6 +534,7 @@ onMounted(async () => {
       <div
         ref="previewContainer"
         class="preview-container overflow-hidden d-flex align-items-center justify-content-center bg-black user-select-none"
+        @click="focusStrip"
         @wheel.prevent="onWheel"
         @mousedown="onMouseDown"
         @mousemove="onMouseMove"
@@ -479,12 +551,6 @@ onMounted(async () => {
           :style="previewStyle"
           draggable="false"
         >
-      </div>
-
-      <div class="card-body py-2">
-        <div class="text-body-secondary small">
-          Scroll to zoom · Drag to pan when zoomed · Pinch to zoom on touch · ← → to navigate
-        </div>
       </div>
     </div>
 
@@ -503,11 +569,27 @@ onMounted(async () => {
       No snapshots found for this date range.
     </div>
 
+    <!-- Mobile snapshot navigation (xs only) -->
+    <div v-if="data.items.length > 0 && data.selectedItem" class="d-flex d-sm-none justify-content-around gap-4 mt-3">
+      <button class="btn btn-outline-secondary btn-sm" :disabled="selectedIndex <= 0" title="First" @click="navFirst()">
+        <FontAwesomeIcon icon="fa-angles-left" />
+      </button>
+      <button class="btn btn-outline-secondary btn-sm" :disabled="selectedIndex <= 0" title="Previous" @click="navPrev()">
+        <FontAwesomeIcon icon="fa-angle-left" />
+      </button>
+      <button class="btn btn-outline-secondary btn-sm" :disabled="selectedIndex >= data.items.length - 1" title="Next" @click="navNext()">
+        <FontAwesomeIcon icon="fa-angle-right" />
+      </button>
+      <button class="btn btn-outline-secondary btn-sm" :disabled="selectedIndex >= data.items.length - 1" title="Last" @click="navLast()">
+        <FontAwesomeIcon icon="fa-angles-right" />
+      </button>
+    </div>
+
     <!-- Scrub strip -->
     <div
       v-if="data.items.length > 0"
-      id="snapshot-strip"
-      class="snapshot-strip d-flex gap-1 overflow-x-auto py-1 mt-2"
+      ref="stripEl"
+      class="snapshot-strip d-flex gap-1 overflow-x-auto mt-3"
       tabindex="0"
       role="listbox"
       aria-label="Snapshot timeline"
@@ -537,12 +619,9 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .preview-container {
-  aspect-ratio: 16 / 9;
+  height: 65vh;
+  max-height: 65vh;
   touch-action: none;
-}
-
-.file-name {
-  word-break: break-all;
 }
 
 .snapshot-strip {
