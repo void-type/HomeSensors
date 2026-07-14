@@ -282,15 +282,15 @@ onBeforeUnmount(() => {
   <div class="container-xxl">
     <AppPageHeading />
     <div class="mt-4">
-      <button class="btn btn-primary" @click="newLocation()">
-        New
-      </button>
       <button
-        class="btn btn-secondary ms-2"
+        class="btn btn-primary"
         :disabled="!data.hasDirtyLocations"
         @click="saveAllDirty()"
       >
         Save All
+      </button>
+      <button class="btn btn-secondary ms-2" @click="newLocation()">
+        New
       </button>
       <div id="locationsAccordion" class="accordion mt-4">
         <div v-for="location in data.locations" :key="location.id" class="accordion-item">
@@ -414,7 +414,12 @@ onBeforeUnmount(() => {
                       aria-expanded="false"
                       aria-label="Open color picker"
                     >
-                      <FontAwesomeIcon icon="fa-palette" :style="{ color: location.color || '#000' }" />
+                      <FontAwesomeIcon icon="fa-palette" />
+                      <span
+                        class="color-dot ms-1"
+                        :class="{ 'color-dot-empty': !location.color }"
+                        :style="location.color ? { backgroundColor: location.color } : {}"
+                      />
                     </button>
                     <div class="dropdown-menu dropdown-menu-end p-3">
                       <div class="mb-2">

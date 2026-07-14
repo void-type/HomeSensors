@@ -237,15 +237,15 @@ onBeforeUnmount(() => {
   <div class="container-xxl">
     <AppPageHeading />
     <div class="mt-4">
-      <button class="btn btn-primary" @click="newDevice()">
-        New
-      </button>
       <button
-        class="btn btn-secondary ms-2"
+        class="btn btn-primary"
         :disabled="!data.hasDirtyDevices"
         @click="saveAllDirty()"
       >
         Save All
+      </button>
+      <button class="btn btn-secondary ms-2" @click="newDevice()">
+        New
       </button>
       <div id="devicesAccordion" class="accordion mt-4">
         <div v-for="device in data.devices" :key="device.id" class="accordion-item">

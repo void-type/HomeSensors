@@ -214,15 +214,15 @@ onBeforeUnmount(() => {
   <div class="container-xxl">
     <AppPageHeading />
     <div class="mt-4">
-      <button class="btn btn-primary" @click="newCamera()">
-        New
-      </button>
       <button
-        class="btn btn-secondary ms-2"
+        class="btn btn-primary"
         :disabled="!data.hasDirtyCameras"
         @click="saveAllDirty()"
       >
         Save All
+      </button>
+      <button class="btn btn-secondary ms-2" @click="newCamera()">
+        New
       </button>
       <div id="camerasAccordion" class="accordion mt-4">
         <div v-for="camera in data.cameras" :key="camera.id" class="accordion-item">

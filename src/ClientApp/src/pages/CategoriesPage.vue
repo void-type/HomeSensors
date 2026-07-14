@@ -242,15 +242,15 @@ onBeforeUnmount(() => {
   <div class="container-xxl">
     <AppPageHeading />
     <div class="mt-4">
-      <button class="btn btn-primary" @click="newCategory()">
-        New
-      </button>
       <button
-        class="btn btn-secondary ms-2"
+        class="btn btn-primary"
         :disabled="!data.hasDirtyCategories"
         @click="saveAllDirty()"
       >
         Save All
+      </button>
+      <button class="btn btn-secondary ms-2" @click="newCategory()">
+        New
       </button>
       <div id="categoriesAccordion" class="accordion mt-4">
         <div v-for="category in data.categories" :key="category.id" class="accordion-item">

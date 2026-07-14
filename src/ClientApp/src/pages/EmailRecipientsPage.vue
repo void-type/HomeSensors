@@ -223,15 +223,15 @@ onBeforeUnmount(() => {
   <div class="container-xxl">
     <AppPageHeading />
     <div class="mt-4">
-      <button class="btn btn-primary" @click="newRecipient()">
-        New
-      </button>
       <button
-        class="btn btn-secondary ms-2"
+        class="btn btn-primary"
         :disabled="!data.hasDirtyRecipients"
         @click="saveAllDirty()"
       >
         Save All
+      </button>
+      <button class="btn btn-secondary ms-2" @click="newRecipient()">
+        New
       </button>
       <div id="recipientsAccordion" class="accordion mt-4">
         <div v-for="recipient in data.recipients" :key="recipient.id" class="accordion-item">
