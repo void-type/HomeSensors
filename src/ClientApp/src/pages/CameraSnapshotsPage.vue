@@ -125,9 +125,10 @@ async function loadTimeline() {
     );
     data.items = response.data;
     if (data.items.length > 0) {
-      data.selectedItem = data.items[0] ?? null;
+      const lastIndex = data.items.length - 1;
+      data.selectedItem = data.items[lastIndex] ?? null;
       await nextTick();
-      scrollStripToIndex(0);
+      scrollStripToIndex(lastIndex);
     }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'TimeoutError') {
@@ -176,6 +177,9 @@ function setAbsoluteRange(days: number) {
 // --- Zoom / pan ---
 
 function onWheel(event: WheelEvent) {
+  if (!event.ctrlKey && !event.metaKey) {
+    return;
+  }
   event.preventDefault();
   const delta = event.deltaY > 0 ? -0.25 : 0.25;
   zoomLevel.value = Math.max(1, Math.min(8, zoomLevel.value + delta));
@@ -338,16 +342,7 @@ function focusStrip() {
 function scrollStripToIndex(index: number) {
   const strip = stripEl.value;
   const item = strip?.children[index] as HTMLElement | undefined;
-  if (!strip || !item) {
-    return;
-  }
-  const itemLeft = item.offsetLeft;
-  const itemRight = itemLeft + item.offsetWidth;
-  if (itemLeft < strip.scrollLeft) {
-    strip.scrollTo({ left: itemLeft, behavior: 'smooth' });
-  } else if (itemRight > strip.scrollLeft + strip.clientWidth) {
-    strip.scrollTo({ left: itemRight - strip.clientWidth, behavior: 'smooth' });
-  }
+  item?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
 }
 
 function formatTimestamp(timestamp: string | undefined): string {
@@ -518,7 +513,7 @@ onMounted(async () => {
           ref="infoBtn"
           type="button"
           class="btn btn-link btn-sm p-0 text-body-secondary"
-          :data-bs-title="`${data.selectedItem.fileName}<br><br>Scroll to zoom<br>Drag to pan when zoomed<br>Pinch to zoom on touch<br>← → to navigate`"
+          :data-bs-title="`${data.selectedItem.fileName}<br><br>Ctrl+Scroll to zoom<br>Drag to pan when zoomed<br>Pinch to zoom on touch<br>← → to navigate`"
         >
           <FontAwesomeIcon icon="fa-circle-info" />
         </button>
@@ -535,7 +530,7 @@ onMounted(async () => {
         ref="previewContainer"
         class="preview-container overflow-hidden d-flex align-items-center justify-content-center bg-black user-select-none"
         @click="focusStrip"
-        @wheel.prevent="onWheel"
+        @wheel="onWheel"
         @mousedown="onMouseDown"
         @mousemove="onMouseMove"
         @mouseup="onMouseUp"
@@ -626,6 +621,7 @@ onMounted(async () => {
 
 .snapshot-strip {
   scroll-snap-type: x proximity;
+  padding: 6px 4px;
 
   &:focus {
     outline: 2px solid var(--bs-primary);
@@ -635,21 +631,29 @@ onMounted(async () => {
 
 .strip-item {
   border: 2px solid transparent;
+  border-radius: var(--bs-border-radius-sm);
   cursor: pointer;
   scroll-snap-align: start;
-  transition: border-color 0.1s;
+  transition: border-color 0.1s, box-shadow 0.1s;
+
+  &:focus-visible {
+    outline: 2px solid var(--bs-secondary);
+    outline-offset: 2px;
+  }
 
   &:hover {
-    border-color: var(--bs-primary-border-subtle);
+    border-color: var(--bs-secondary-border-subtle);
   }
 
   &--active {
-    border-color: var(--bs-primary);
+    border-color: var(--bs-secondary);
+    box-shadow: 0 0 0 2px var(--bs-secondary);
   }
 }
 
 .strip-thumb {
   height: 90px;
-  width: auto;
+  width: 160px;
+  object-fit: cover;
 }
 </style>
