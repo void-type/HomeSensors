@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
                 <div v-if="camera.id" class="g-col-12">
-                  <small class="text-body-secondary">ID: {{ camera.id }}</small>
+                  <small class="text-body-primary">ID: {{ camera.id }}</small>
                 </div>
                 <div class="g-col-12">
                   <div class="btn-toolbar">

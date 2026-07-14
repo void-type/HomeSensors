@@ -10,7 +10,7 @@ const { applicationName, user, useDarkMode, useFahrenheit, showHumidity } = stor
 </script>
 
 <template>
-  <header id="header" class="navbar navbar-expand-md navbar-dark bg-primary d-print-none">
+  <header id="header" class="navbar navbar-expand-md navbar-dark bg-secondary d-print-none">
     <nav class="container-xxl">
       <router-link :to="{ name: 'home' }" class="navbar-brand">
         <img

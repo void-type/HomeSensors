@@ -321,7 +321,7 @@ onBeforeUnmount(() => {
                     }"
                     @input="onDeviceInput"
                   >
-                  <small class="form-text text-body-secondary">0 = never inactive</small>
+                  <small class="form-text text-body-primary">0 = never inactive</small>
                 </div>
                 <div class="g-col-12">
                   <div class="btn-toolbar">

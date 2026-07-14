@@ -579,7 +579,7 @@ onUnmounted(() => {
           >
             <div class="accordion-body">
               <button
-                class="btn btn-sm btn-outline-secondary mb-2"
+                class="btn btn-sm btn-outline-primary mb-2"
                 @click="onSelectAllClick"
               >
                 {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
@@ -702,14 +702,14 @@ onUnmounted(() => {
               <div class="d-flex flex-column gap-2">
                 <div class="btn-group btn-group-sm">
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Back 1 Month"
                     @click="adjustDateRange({ months: -1 })"
                   >
                     &laquo; Month
                   </button>
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Forward 1 Month"
                     @click="adjustDateRange({ months: 1 })"
                   >
@@ -718,14 +718,14 @@ onUnmounted(() => {
                 </div>
                 <div class="btn-group btn-group-sm">
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Back 1 Week"
                     @click="adjustDateRange({ weeks: -1 })"
                   >
                     &laquo; Week
                   </button>
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Forward 1 Week"
                     @click="adjustDateRange({ weeks: 1 })"
                   >
@@ -734,14 +734,14 @@ onUnmounted(() => {
                 </div>
                 <div class="btn-group btn-group-sm">
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Back 1 Day"
                     @click="adjustDateRange({ days: -1 })"
                   >
                     &laquo; Day
                   </button>
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Forward 1 Day"
                     @click="adjustDateRange({ days: 1 })"
                   >
@@ -750,28 +750,28 @@ onUnmounted(() => {
                 </div>
                 <div class="btn-group btn-group-sm">
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Last 1 week"
                     @click="setTimeRange(168)"
                   >
                     1w
                   </button>
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Last 48 hours"
                     @click="setTimeRange(48)"
                   >
                     48h
                   </button>
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Last 24 hours"
                     @click="setTimeRange(24)"
                   >
                     24h
                   </button>
                   <button
-                    class="btn btn-outline-secondary"
+                    class="btn btn-outline-primary"
                     title="Last 12 hours"
                     @click="setTimeRange(12)"
                   >
@@ -811,7 +811,7 @@ onUnmounted(() => {
             >
               <div class="accordion-body">
                 <button
-                  class="btn btn-sm btn-outline-secondary mb-2"
+                  class="btn btn-sm btn-outline-primary mb-2"
                   @click="onSelectAllClick"
                 >
                   {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
@@ -939,14 +939,14 @@ onUnmounted(() => {
                 <div class="d-flex d-sm-none flex-column gap-2">
                   <div class="btn-group btn-group-sm">
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Back 1 Month"
                       @click="adjustDateRange({ months: -1 })"
                     >
                       &laquo; Month
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Forward 1 Month"
                       @click="adjustDateRange({ months: 1 })"
                     >
@@ -955,14 +955,14 @@ onUnmounted(() => {
                   </div>
                   <div class="btn-group btn-group-sm">
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Back 1 Week"
                       @click="adjustDateRange({ weeks: -1 })"
                     >
                       &laquo; Week
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Forward 1 Week"
                       @click="adjustDateRange({ weeks: 1 })"
                     >
@@ -971,14 +971,14 @@ onUnmounted(() => {
                   </div>
                   <div class="btn-group btn-group-sm">
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Back 1 Day"
                       @click="adjustDateRange({ days: -1 })"
                     >
                       &laquo; Day
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Forward 1 Day"
                       @click="adjustDateRange({ days: 1 })"
                     >
@@ -987,28 +987,28 @@ onUnmounted(() => {
                   </div>
                   <div class="btn-group btn-group-sm">
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Last 1 week"
                       @click="setTimeRange(168)"
                     >
                       1w
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Last 48 hours"
                       @click="setTimeRange(48)"
                     >
                       48h
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Last 24 hours"
                       @click="setTimeRange(24)"
                     >
                       24h
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Last 12 hours"
                       @click="setTimeRange(12)"
                     >
@@ -1020,42 +1020,42 @@ onUnmounted(() => {
                 <div class="d-none d-sm-flex flex-column align-items-center gap-2">
                   <div class="btn-group btn-group-sm">
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Back 1 Month"
                       @click="adjustDateRange({ months: -1 })"
                     >
                       &laquo; Month
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Back 1 Week"
                       @click="adjustDateRange({ weeks: -1 })"
                     >
                       &laquo; Week
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Back 1 Day"
                       @click="adjustDateRange({ days: -1 })"
                     >
                       &laquo; Day
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Forward 1 Day"
                       @click="adjustDateRange({ days: 1 })"
                     >
                       Day &raquo;
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Forward 1 Week"
                       @click="adjustDateRange({ weeks: 1 })"
                     >
                       Week &raquo;
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Forward 1 Month"
                       @click="adjustDateRange({ months: 1 })"
                     >
@@ -1064,28 +1064,28 @@ onUnmounted(() => {
                   </div>
                   <div class="btn-group btn-group-sm">
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Last 1 week"
                       @click="setTimeRange(168)"
                     >
                       1w
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Last 48 hours"
                       @click="setTimeRange(48)"
                     >
                       48h
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Last 24 hours"
                       @click="setTimeRange(24)"
                     >
                       24h
                     </button>
                     <button
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-primary"
                       title="Last 12 hours"
                       @click="setTimeRange(12)"
                     >

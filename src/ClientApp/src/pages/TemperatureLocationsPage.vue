@@ -407,7 +407,7 @@ onBeforeUnmount(() => {
                       @input="onLocationInput"
                     >
                     <button
-                      class="btn btn-outline-secondary dropdown-toggle"
+                      class="btn btn-outline-primary dropdown-toggle"
                       type="button"
                       data-bs-toggle="dropdown"
                       data-bs-auto-close="outside"
@@ -446,7 +446,7 @@ onBeforeUnmount(() => {
                 </div>
                 <div v-if="location.id" class="g-col-12">
                   <div>
-                    <small class="text-body-secondary me-2">ID: {{ location.id }}</small>
+                    <small class="text-body-primary me-2">ID: {{ location.id }}</small>
                   </div>
                 </div>
                 <div class="g-col-12">

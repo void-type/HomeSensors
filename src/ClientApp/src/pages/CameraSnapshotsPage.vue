@@ -433,37 +433,37 @@ onMounted(async () => {
       <!-- xs: each pair stacked -->
       <div class="d-flex d-sm-none flex-column align-items-center gap-2">
         <div class="btn-group btn-group-sm w-100">
-          <button class="btn btn-outline-secondary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
+          <button class="btn btn-outline-primary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
             &laquo; Month
           </button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
+          <button class="btn btn-outline-primary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
             Month &raquo;
           </button>
         </div>
         <div class="btn-group btn-group-sm w-100">
-          <button class="btn btn-outline-secondary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
+          <button class="btn btn-outline-primary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
             &laquo; Week
           </button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
+          <button class="btn btn-outline-primary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
             Week &raquo;
           </button>
         </div>
         <div class="btn-group btn-group-sm w-100">
-          <button class="btn btn-outline-secondary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
+          <button class="btn btn-outline-primary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
             &laquo; Day
           </button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
+          <button class="btn btn-outline-primary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
             Day &raquo;
           </button>
         </div>
         <div class="btn-group btn-group-sm w-100">
-          <button class="btn btn-outline-secondary" title="Last month" @click="setAbsoluteRange(30)">
+          <button class="btn btn-outline-primary" title="Last month" @click="setAbsoluteRange(30)">
             Last Month
           </button>
-          <button class="btn btn-outline-secondary" title="Last week" @click="setAbsoluteRange(7)">
+          <button class="btn btn-outline-primary" title="Last week" @click="setAbsoluteRange(7)">
             Last Week
           </button>
-          <button class="btn btn-outline-secondary" title="Last day" @click="setAbsoluteRange(1)">
+          <button class="btn btn-outline-primary" title="Last day" @click="setAbsoluteRange(1)">
             Last Day
           </button>
         </div>
@@ -472,33 +472,33 @@ onMounted(async () => {
       <!-- sm+: single combined bar -->
       <div class="d-none d-sm-flex flex-column align-items-center gap-2">
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
+          <button class="btn btn-outline-primary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
             &laquo; Month
           </button>
-          <button class="btn btn-outline-secondary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
+          <button class="btn btn-outline-primary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
             &laquo; Week
           </button>
-          <button class="btn btn-outline-secondary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
+          <button class="btn btn-outline-primary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
             &laquo; Day
           </button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
+          <button class="btn btn-outline-primary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
             Day &raquo;
           </button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
+          <button class="btn btn-outline-primary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
             Week &raquo;
           </button>
-          <button class="btn btn-outline-secondary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
+          <button class="btn btn-outline-primary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
             Month &raquo;
           </button>
         </div>
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary" title="Last month" @click="setAbsoluteRange(30)">
+          <button class="btn btn-outline-primary" title="Last month" @click="setAbsoluteRange(30)">
             Last Month
           </button>
-          <button class="btn btn-outline-secondary" title="Last week" @click="setAbsoluteRange(7)">
+          <button class="btn btn-outline-primary" title="Last week" @click="setAbsoluteRange(7)">
             Last Week
           </button>
-          <button class="btn btn-outline-secondary" title="Last day" @click="setAbsoluteRange(1)">
+          <button class="btn btn-outline-primary" title="Last day" @click="setAbsoluteRange(1)">
             Last Day
           </button>
         </div>
@@ -508,20 +508,20 @@ onMounted(async () => {
     <!-- Preview panel -->
     <div v-if="data.selectedItem" class="card mt-3 overflow-hidden">
       <div class="card-body d-flex flex-wrap align-items-center gap-2 py-2">
-        <span class="text-body-secondary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
+        <span class="text-body-primary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
         <button
           ref="infoBtn"
           type="button"
-          class="btn btn-link btn-sm p-0 text-body-secondary"
+          class="btn btn-link btn-sm p-0 text-body-primary"
           :data-bs-title="`${data.selectedItem.fileName}<br><br>Ctrl+Scroll to zoom<br>Drag to pan when zoomed<br>Pinch to zoom on touch<br>← → to navigate`"
         >
           <FontAwesomeIcon icon="fa-circle-info" />
         </button>
         <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
-        <button v-if="zoomLevel > 1" class="btn btn-outline-secondary btn-sm py-0" @click="resetZoom()">
+        <button v-if="zoomLevel > 1" class="btn btn-outline-primary btn-sm py-0" @click="resetZoom()">
           Reset zoom
         </button>
-        <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm py-0 ms-auto">
+        <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm py-0 ms-auto">
           Open original
         </a>
       </div>
@@ -549,33 +549,33 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div v-else-if="data.isLoadingTimeline" class="mt-4 text-center text-body-secondary">
+    <div v-else-if="data.isLoadingTimeline" class="mt-4 text-center text-body-primary">
       <span class="spinner-border spinner-border-sm me-2" />
       Loading timeline…
     </div>
 
-    <div v-else-if="data.cameras.length === 0 && !data.isLoadingCameras" class="mt-4 text-center text-body-secondary">
+    <div v-else-if="data.cameras.length === 0 && !data.isLoadingCameras" class="mt-4 text-center text-body-primary">
       No cameras configured. <router-link :to="{ name: 'cameraSnapshotCamerasMain' }">
         Add a camera
       </router-link>.
     </div>
 
-    <div v-else-if="data.items.length === 0 && !data.isLoadingTimeline && data.selectedCameraId" class="mt-4 text-center text-body-secondary">
+    <div v-else-if="data.items.length === 0 && !data.isLoadingTimeline && data.selectedCameraId" class="mt-4 text-center text-body-primary">
       No snapshots found for this date range.
     </div>
 
     <!-- Mobile snapshot navigation (xs only) -->
     <div v-if="data.items.length > 0 && data.selectedItem" class="d-flex d-sm-none justify-content-around gap-4 mt-3">
-      <button class="btn btn-outline-secondary btn-sm" :disabled="selectedIndex <= 0" title="First" @click="navFirst()">
+      <button class="btn btn-outline-primary btn-sm" :disabled="selectedIndex <= 0" title="First" @click="navFirst()">
         <FontAwesomeIcon icon="fa-angles-left" />
       </button>
-      <button class="btn btn-outline-secondary btn-sm" :disabled="selectedIndex <= 0" title="Previous" @click="navPrev()">
+      <button class="btn btn-outline-primary btn-sm" :disabled="selectedIndex <= 0" title="Previous" @click="navPrev()">
         <FontAwesomeIcon icon="fa-angle-left" />
       </button>
-      <button class="btn btn-outline-secondary btn-sm" :disabled="selectedIndex >= data.items.length - 1" title="Next" @click="navNext()">
+      <button class="btn btn-outline-primary btn-sm" :disabled="selectedIndex >= data.items.length - 1" title="Next" @click="navNext()">
         <FontAwesomeIcon icon="fa-angle-right" />
       </button>
-      <button class="btn btn-outline-secondary btn-sm" :disabled="selectedIndex >= data.items.length - 1" title="Last" @click="navLast()">
+      <button class="btn btn-outline-primary btn-sm" :disabled="selectedIndex >= data.items.length - 1" title="Last" @click="navLast()">
         <FontAwesomeIcon icon="fa-angles-right" />
       </button>
     </div>
@@ -634,20 +634,22 @@ onMounted(async () => {
   border-radius: var(--bs-border-radius-sm);
   cursor: pointer;
   scroll-snap-align: start;
-  transition: border-color 0.1s, box-shadow 0.1s;
+  transition:
+    border-color 0.1s,
+    box-shadow 0.1s;
 
   &:focus-visible {
-    outline: 2px solid var(--bs-secondary);
+    outline: 2px solid var(--bs-primary);
     outline-offset: 2px;
   }
 
   &:hover {
-    border-color: var(--bs-secondary-border-subtle);
+    border-color: var(--bs-primary-border-subtle);
   }
 
   &--active {
-    border-color: var(--bs-secondary);
-    box-shadow: 0 0 0 2px var(--bs-secondary);
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 2px var(--bs-primary);
   }
 }
 

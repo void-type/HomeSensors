@@ -456,11 +456,11 @@ onBeforeUnmount(() => {
                     class="form-control form-control-sm"
                     @input="onDeviceInput"
                   >
-                  <small class="form-text text-body-secondary">0 = never inactive</small>
+                  <small class="form-text text-body-primary">0 = never inactive</small>
                 </div>
                 <div v-if="device.id" class="g-col-12">
                   <div>
-                    <small class="text-body-secondary me-2">ID: {{ device.id }}</small>
+                    <small class="text-body-primary me-2">ID: {{ device.id }}</small>
                   </div>
                   <div>
                     <small v-if="device.lastReading">Last reading:
