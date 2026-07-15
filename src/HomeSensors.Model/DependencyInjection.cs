@@ -82,6 +82,7 @@ public static class DependencyInjection
             {
                 sqlOptions.MigrationsAssembly(typeof(HomeSensorsContext).Assembly.FullName);
                 sqlOptions.CommandTimeout(120);
+                sqlOptions.EnableRetryOnFailure();
             }));
 
         var workersConfig = config.GetSection("Workers");
