@@ -127,23 +127,32 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                                 })
                                 .ToArray();
 
-                            await using var transaction = await dbContext.Database.BeginTransactionAsync(
-                                System.Data.IsolationLevel.ReadCommitted, stoppingToken);
-
-                            try
+                            // SqlServerRetryingExecutionStrategy requires user-initiated transactions to be
+                            // wrapped in ExecuteAsync so the whole operation can be retried as a unit.
+                            var strategy = dbContext.Database.CreateExecutionStrategy();
+                            await strategy.ExecuteAsync(async () =>
                             {
-                                await dbContext.TemperatureReadings.AddRangeAsync(readingsToCreate);
-                                dbContext.TemperatureReadings.RemoveRange(readingsToDelete);
+                                // Clear tracked entities so retries start with a clean state.
+                                dbContext.ChangeTracker.Clear();
 
-                                await dbContext.SaveChangesAsync(stoppingToken);
+                                await using var transaction = await dbContext.Database.BeginTransactionAsync(
+                                    System.Data.IsolationLevel.ReadCommitted, stoppingToken);
 
-                                await transaction.CommitAsync(stoppingToken);
-                            }
-                            catch
-                            {
-                                await transaction.RollbackAsync(stoppingToken);
-                                throw;
-                            }
+                                try
+                                {
+                                    await dbContext.TemperatureReadings.AddRangeAsync(readingsToCreate);
+                                    dbContext.TemperatureReadings.RemoveRange(readingsToDelete);
+
+                                    await dbContext.SaveChangesAsync(stoppingToken);
+
+                                    await transaction.CommitAsync(stoppingToken);
+                                }
+                                catch
+                                {
+                                    await transaction.RollbackAsync(stoppingToken);
+                                    throw;
+                                }
+                            });
 
                             createdCount += readingsToCreate.Length;
                             deletedCount += readingsToDelete.Length;
