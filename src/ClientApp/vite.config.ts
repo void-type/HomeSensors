@@ -76,7 +76,8 @@ export default defineConfig(async ({ command }) => {
       include: './src/**',
     },
     server: {
-      origin: 'https://localhost:5173',
+      port: 5174,
+      origin: 'https://localhost:5174',
       strictPort: true,
       https: true && {
         cert,

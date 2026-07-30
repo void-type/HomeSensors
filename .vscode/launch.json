@@ -16,7 +16,7 @@
       "name": "Web Client (Chrome debug)",
       "request": "launch",
       "type": "chrome",
-      "url": "https://localhost:5001",
+      "url": "https://localhost:5003",
       "webRoot": "${workspaceFolder}/src/ClientApp",
       "skipFiles": [
         "**/node_modules/**",
