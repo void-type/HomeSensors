@@ -109,6 +109,14 @@ function isDatasetHidden(locationName: string): boolean {
   return hiddenDatasets.has(locationName);
 }
 
+function dismissTooltip() {
+  if (lineChart) {
+    (lineChart as any).$hoveredAnnotation = null;
+    lineChart.update('none');
+  }
+  document.getElementById('chartjs-tooltip')?.classList.add('d-none');
+}
+
 function toggleDatasetVisibility(datasetIndex: number, locationName: string) {
   if (hiddenDatasets.has(locationName)) {
     hiddenDatasets.delete(locationName);
@@ -1104,7 +1112,7 @@ onUnmounted(() => {
         <div class="chart-container">
           <canvas id="tempGraph" />
         </div>
-        <div id="chartjs-tooltip" class="position-absolute d-none">
+        <div id="chartjs-tooltip" class="position-absolute d-none" @click="dismissTooltip">
           <div class="tooltip-body" />
         </div>
       </div>
@@ -1211,7 +1219,7 @@ onUnmounted(() => {
 }
 
 #chartjs-tooltip {
-  pointer-events: none;
+  cursor: pointer;
   z-index: 100;
   bottom: 0;
   left: 0;
