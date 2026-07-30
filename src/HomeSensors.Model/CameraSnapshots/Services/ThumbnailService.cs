@@ -107,7 +107,7 @@ public class ThumbnailService
         var tmpPath = outputPath + $".{Guid.NewGuid():N}.tmp";
         try
         {
-            await thumb.WriteAsync(tmpPath, cancellationToken);
+            await thumb.WriteAsync(tmpPath, MagickFormat.WebP, cancellationToken);
             File.Move(tmpPath, outputPath, overwrite: true);
         }
         catch
