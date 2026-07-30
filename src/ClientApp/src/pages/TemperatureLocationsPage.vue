@@ -13,15 +13,15 @@ import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
 import { ChromePicker, tinycolor } from 'vue-color';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import AppPageHeading from '@/components/AppPageHeading.vue';
-import ApiHelpers from '@/models/ApiHelpers';
-import { toNumberOrNull } from '@/models/FormatHelpers';
-import { formatTempWithUnitOrEmpty } from '@/models/TempFormatHelpers';
+import ApiHelper from '@/models/ApiHelper';
+import { toNumberOrNull } from '@/models/FormatHelper';
+import { formatTempWithUnitOrEmpty } from '@/models/TempFormatHelper';
 import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
-const api = ApiHelpers.client;
+const api = ApiHelper.client;
 
 const data = reactive({
   locations: [] as Array<TemperatureLocationResponse>,

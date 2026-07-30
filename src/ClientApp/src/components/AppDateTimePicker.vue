@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia';
-import DateHelpers from '@/models/DateHelpers';
+import DateHelper from '@/models/DateHelper';
 import useAppStore from '@/stores/appStore';
 import 'chartjs-adapter-date-fns';
 
@@ -25,7 +25,7 @@ const { useDarkMode } = storeToRefs(appStore);
 
 <template>
   <div v-if="props.disabled" class="form-control disabled" type="text" disabled="true">
-    {{ DateHelpers.dateTimeShortForView(modelValue) }}
+    {{ DateHelper.dateTimeShortForView(modelValue) }}
   </div>
   <v-date-picker
     v-else

@@ -6,14 +6,14 @@ import * as signalR from '@microsoft/signalr';
 import { addMinutes, format, isPast } from 'date-fns';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, reactive } from 'vue';
-import ApiHelpers from '@/models/ApiHelpers';
-import { formatHumidityWithUnit, formatTempWithUnit } from '@/models/TempFormatHelpers';
+import ApiHelper from '@/models/ApiHelper';
+import { formatHumidityWithUnit, formatTempWithUnit } from '@/models/TempFormatHelper';
 import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
-const api = ApiHelpers.client;
+const api = ApiHelper.client;
 
 const { useFahrenheit, showHumidity, staleLimitMinutes } = storeToRefs(appStore);
 
@@ -52,7 +52,7 @@ async function connectToHub() {
       } catch {
         // If we fail to start the connection, retry after delay.
         const elapsedMilliseconds = Date.now() - startTimeMilliseconds;
-        const delay = ApiHelpers.getRetryMilliseconds(elapsedMilliseconds);
+        const delay = ApiHelper.getRetryMilliseconds(elapsedMilliseconds);
         if (delay !== null) {
           setTimeout(startConnection, delay);
         }
@@ -65,7 +65,7 @@ async function connectToHub() {
       .withUrl('/hub/temperatures')
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: retryContext =>
-          ApiHelpers.getRetryMilliseconds(retryContext.elapsedMilliseconds),
+          ApiHelper.getRetryMilliseconds(retryContext.elapsedMilliseconds),
       })
       .build();
 

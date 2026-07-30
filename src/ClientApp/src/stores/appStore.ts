@@ -1,8 +1,8 @@
 import type { AppVersion, DomainUser, WebClientInfo } from '@/api/data-contracts';
 import type { ModalParameters } from '@/models/ModalParameters';
 import { defineStore } from 'pinia';
-import DarkModeHelpers from '@/models/DarkModeHelpers';
-import UserSettingHelpers from '@/models/UserSettingHelpers';
+import DarkModeHelper from '@/models/DarkModeHelper';
+import UserSettingHelper from '@/models/UserSettingHelper';
 
 interface AppStoreState {
   applicationName: string;
@@ -70,7 +70,7 @@ export const useAppStore = defineStore('app', {
     },
 
     setDarkMode(setting: boolean) {
-      DarkModeHelpers.setDarkMode(setting);
+      DarkModeHelper.setDarkMode(setting);
       this.useDarkMode = setting;
     },
 
@@ -94,12 +94,12 @@ export const useAppStore = defineStore('app', {
     },
 
     setUseFahrenheit(setting: boolean) {
-      UserSettingHelpers.setFahrenheit(setting);
+      UserSettingHelper.setFahrenheit(setting);
       this.useFahrenheit = setting;
     },
 
     setShowHumidity(setting: boolean) {
-      UserSettingHelpers.setHumidity(setting);
+      UserSettingHelper.setHumidity(setting);
       this.showHumidity = setting;
     },
   },

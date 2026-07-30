@@ -1,7 +1,7 @@
 const settingKeyEnableFahrenheit = 'enableFahrenheit';
 const settingKeyEnableHumidity = 'enableHumidity';
 
-export default class UserSettingHelpers {
+export default class UserSettingHelper {
   static getInitialFahrenheitSetting() {
     const appPreference = localStorage.getItem(settingKeyEnableFahrenheit);
 

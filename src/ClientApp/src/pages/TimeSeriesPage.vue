@@ -3,7 +3,7 @@ import type { ITemperatureGraphInputs } from '@/models/ITemperatureGraphInputs';
 import { useRouter } from 'vue-router';
 import AppPageHeading from '@/components/AppPageHeading.vue';
 import TemperatureGraph from '@/components/TemperatureGraph.vue';
-import DateHelpers from '@/models/DateHelpers';
+import DateHelper from '@/models/DateHelper';
 
 defineProps<{
   startDate?: Date;
@@ -17,8 +17,8 @@ const router = useRouter();
 
 function onInputsChange(inputs: ITemperatureGraphInputs) {
   const query = {
-    start: inputs.start ? DateHelpers.dateTimeForApi(inputs.start) : undefined,
-    end: inputs.end ? DateHelpers.dateTimeForApi(inputs.end) : undefined,
+    start: inputs.start ? DateHelper.dateTimeForApi(inputs.start) : undefined,
+    end: inputs.end ? DateHelper.dateTimeForApi(inputs.end) : undefined,
     humidity: inputs.showHumidity ? 'true' : undefined,
     locationIds:
       inputs.locationIds?.length > 0

@@ -1,8 +1,8 @@
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 import useAppStore from '@/stores/appStore';
-import { isNil } from './FormatHelpers';
+import { isNil } from './FormatHelper';
 
-export default class RouterHelpers {
+export default class RouterHelper {
   static setTitle(
     route: RouteLocationNormalizedLoaded,
     additionalTitle: string | null | undefined = null,

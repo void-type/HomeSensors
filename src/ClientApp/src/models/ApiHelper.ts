@@ -3,7 +3,7 @@ import { Api } from '../api/Api';
 
 const defaultHeaders: Record<string, string> = {};
 
-export default class ApiHelpers {
+export default class ApiHelper {
   static setHeader(headerName: string, headerValue: string) {
     defaultHeaders[headerName] = headerValue;
   }

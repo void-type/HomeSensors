@@ -16,9 +16,9 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 import { addHours, startOfMinute } from 'date-fns';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
-import ApiHelpers from '@/models/ApiHelpers';
-import DateHelpers from '@/models/DateHelpers';
-import { trimAndTitleCase } from '@/models/FormatHelpers';
+import ApiHelper from '@/models/ApiHelper.ts';
+import DateHelper from '@/models/DateHelper.ts';
+import { trimAndTitleCase } from '@/models/FormatHelper.ts';
 import { debounce } from '@/models/InputHelper';
 import {
   formatHumidity,
@@ -26,7 +26,7 @@ import {
   formatTemp,
   formatTempWithUnit,
   tempUnit,
-} from '@/models/TempFormatHelpers';
+} from '@/models/TempFormatHelper.ts';
 import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
 import AppDateTimePicker from './AppDateTimePicker.vue';
@@ -48,7 +48,7 @@ Chart.register(...registerables, annotationPlugin);
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
-const api = ApiHelpers.client;
+const api = ApiHelper.client;
 
 const { useFahrenheit, useDarkMode } = storeToRefs(appStore);
 
@@ -251,8 +251,8 @@ function setGraphData(
           const tooltipContent = {
             title: `${trimAndTitleCase(action.action || 'unknown')}: ${action.durationMinutes} min`,
             body: [
-              `Start: ${DateHelpers.dateTimeForView(startTime)}`,
-              `End: ${DateHelpers.dateTimeForView(endTime)}`,
+              `Start: ${DateHelper.dateTimeForView(startTime)}`,
+              `End: ${DateHelper.dateTimeForView(endTime)}`,
             ],
           };
 
@@ -375,8 +375,8 @@ function setGraphData(
 
 async function getTimeSeries(inputs: ITimeSeriesInputs) {
   const parameters = {
-    startTime: DateHelpers.dateTimeForApi(inputs.start),
-    endTime: DateHelpers.dateTimeForApi(inputs.end),
+    startTime: DateHelper.dateTimeForApi(inputs.start),
+    endTime: DateHelper.dateTimeForApi(inputs.end),
     locationIds: inputs.locationIds,
     includeHvacActions: true,
     trimHvacActionsToRequestedTimeRange: true,

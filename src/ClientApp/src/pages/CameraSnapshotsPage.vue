@@ -7,11 +7,11 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from
 import { useRoute, useRouter } from 'vue-router';
 import AppDateTimePicker from '@/components/AppDateTimePicker.vue';
 import AppPageHeading from '@/components/AppPageHeading.vue';
-import ApiHelpers from '@/models/ApiHelpers';
+import ApiHelper from '@/models/ApiHelper';
 import useMessageStore from '@/stores/messageStore';
 
 const messageStore = useMessageStore();
-const api = ApiHelpers.client;
+const api = ApiHelper.client;
 const route = useRoute();
 const router = useRouter();
 

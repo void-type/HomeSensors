@@ -1,5 +1,5 @@
 import { format, formatISO, formatISO9075 } from 'date-fns';
-import { isNil } from './FormatHelpers';
+import { isNil } from './FormatHelper';
 
 const formatStrings = {
   // apiDate: 'yyyy-MM-dd',
@@ -9,7 +9,7 @@ const formatStrings = {
   viewDateTimeShort: 'yyyy-MM-dd HH:mm',
 };
 
-export default class DateHelpers {
+export default class DateHelper {
   static dateForApi(value: Date) {
     return formatISO(value as Date, { representation: 'date' });
   }

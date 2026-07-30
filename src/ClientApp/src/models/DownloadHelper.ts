@@ -7,7 +7,7 @@ declare global {
   }
 }
 
-export default class DownloadHelpers {
+export default class DownloadHelper {
   static saveDownloadedFile(response: HttpResponse<Blob, unknown>) {
     const headerValue = response.headers.get('content-disposition') || '';
 

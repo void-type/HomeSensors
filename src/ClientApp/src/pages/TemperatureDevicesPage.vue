@@ -13,15 +13,15 @@ import { storeToRefs } from 'pinia';
 import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import AppPageHeading from '@/components/AppPageHeading.vue';
-import ApiHelpers from '@/models/ApiHelpers';
-import DateHelpers from '@/models/DateHelpers';
-import { formatTempWithUnit } from '@/models/TempFormatHelpers';
+import ApiHelper from '@/models/ApiHelper';
+import DateHelper from '@/models/DateHelper';
+import { formatTempWithUnit } from '@/models/TempFormatHelper';
 import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
-const api = ApiHelpers.client;
+const api = ApiHelper.client;
 
 const { useFahrenheit } = storeToRefs(appStore);
 
@@ -468,7 +468,7 @@ onBeforeUnmount(() => {
                         formatTempWithUnit(device.lastReading?.temperatureCelsius, useFahrenheit)
                       }}
                       on
-                      {{ DateHelpers.dateTimeShortForView(device.lastReading?.time || "") }}
+                      {{ DateHelper.dateTimeShortForView(device.lastReading?.time || "") }}
                     </small>
                   </div>
                 </div>

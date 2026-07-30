@@ -6,33 +6,33 @@ import AppHeader from '@/components/AppHeader.vue';
 import AppMessageCenter from '@/components/AppMessageCenter.vue';
 import AppModal from '@/components/AppModal.vue';
 import AppNav from '@/components/AppNav.vue';
-import ApiHelpers from '@/models/ApiHelpers';
-import DarkModeHelpers from '@/models/DarkModeHelpers';
-import RouterHelpers from '@/models/RouterHelpers';
-import UserSettingHelpers from '@/models/UserSettingHelpers';
+import ApiHelper from '@/models/ApiHelper';
+import DarkModeHelper from '@/models/DarkModeHelper';
+import RouterHelper from '@/models/RouterHelper';
+import UserSettingHelper from '@/models/UserSettingHelper';
 import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
 const route = useRoute();
-const api = ApiHelpers.client;
+const api = ApiHelper.client;
 
 onMounted(() => {
-  appStore.setDarkMode(DarkModeHelpers.getInitialDarkModeSetting());
+  appStore.setDarkMode(DarkModeHelper.getInitialDarkModeSetting());
 
-  appStore.setUseFahrenheit(UserSettingHelpers.getInitialFahrenheitSetting());
+  appStore.setUseFahrenheit(UserSettingHelper.getInitialFahrenheitSetting());
 
-  appStore.setShowHumidity(UserSettingHelpers.getInitialHumiditySetting());
+  appStore.setShowHumidity(UserSettingHelper.getInitialHumiditySetting());
 
   api()
     .appGetInfo()
     .then((response) => {
       appStore.setApplicationInfo(response.data);
-      RouterHelpers.setTitle(route);
+      RouterHelper.setTitle(route);
 
       if (response.data.antiforgeryToken) {
-        ApiHelpers.setHeader(
+        ApiHelper.setHeader(
           response.data.antiforgeryTokenHeaderName || 'X-Csrf-Token',
           response.data.antiforgeryToken,
         );

@@ -1,6 +1,6 @@
 import { Collapse } from 'bootstrap';
 import { createRouter, createWebHistory } from 'vue-router';
-import RouterHelpers from '@/models/RouterHelpers';
+import RouterHelper from '@/models/RouterHelper';
 import useMessageStore from '@/stores/messageStore';
 
 const router = createRouter({
@@ -131,7 +131,7 @@ router.beforeEach((to, from, next) => {
 router.afterEach((to) => {
   Collapse.getOrCreateInstance('#navbar-menu', { toggle: false }).hide();
 
-  RouterHelpers.setTitle(to);
+  RouterHelper.setTitle(to);
 });
 
 export default router;

@@ -5,9 +5,9 @@ import * as signalR from '@microsoft/signalr';
 import { parseISO } from 'date-fns';
 import { computed, onMounted, reactive } from 'vue';
 import AppPageHeading from '@/components/AppPageHeading.vue';
-import ApiHelpers from '@/models/ApiHelpers';
-import DateHelpers from '@/models/DateHelpers';
-import { formatJSON, isNil } from '@/models/FormatHelpers';
+import ApiHelper from '@/models/ApiHelper';
+import DateHelper from '@/models/DateHelper';
+import { formatJSON, isNil } from '@/models/FormatHelper';
 import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
 
@@ -47,7 +47,7 @@ async function connectToHub() {
       } catch {
         // If we fail to start the connection, retry after delay.
         const elapsedMilliseconds = Date.now() - startTimeMilliseconds;
-        const delay = ApiHelpers.getRetryMilliseconds(elapsedMilliseconds);
+        const delay = ApiHelper.getRetryMilliseconds(elapsedMilliseconds);
         if (delay !== null) {
           setTimeout(startConnection, delay);
         }
@@ -60,12 +60,12 @@ async function connectToHub() {
       .withUrl('/hub/temperatures')
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: retryContext =>
-          ApiHelpers.getRetryMilliseconds(retryContext.elapsedMilliseconds),
+          ApiHelper.getRetryMilliseconds(retryContext.elapsedMilliseconds),
       })
       .build();
 
     connection.on('newDiscoveryMessage', (message) => {
-      const formattedMessage = `${DateHelpers.dateTimeForApi(parseISO(message.time))}: ${
+      const formattedMessage = `${DateHelper.dateTimeForApi(parseISO(message.time))}: ${
         message.topic
       }\n${formatJSON(message.payload)}\n`;
       data.feed.unshift(formattedMessage);
