@@ -72,7 +72,7 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
 
                         try
                         {
-                            await thumbnailService.EnsureThumbnailsAsync(camera, fileName!, stoppingToken);
+                            await thumbnailService.EnsureThumbnailsAsync(camera, fileName, stoppingToken);
                             processedCount++;
                         }
                         catch (Exception ex)
