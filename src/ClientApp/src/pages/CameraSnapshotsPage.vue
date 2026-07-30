@@ -397,226 +397,283 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="container-xxl">
-    <AppPageHeading />
+  <div class="camera-page">
+    <div class="container-xxl camera-inner">
+      <AppPageHeading />
 
-    <!-- Controls bar -->
-    <div class="mt-3 d-flex flex-column align-items-center gap-2">
-      <div class="d-flex flex-wrap justify-content-center gap-2 align-items-end">
-        <div>
-          <label for="camera-select" class="form-label mb-1">Camera</label>
-          <select
-            id="camera-select"
-            v-model="data.selectedCameraId"
-            class="form-select"
-            style="min-width: 160px"
+      <!-- Top controls -->
+      <div class="controls-top">
+        <!-- Camera + date pickers -->
+        <div class="d-flex flex-wrap justify-content-center gap-2 align-items-end">
+          <div>
+            <label for="camera-select" class="form-label mb-1">Camera</label>
+            <select
+              id="camera-select"
+              v-model="data.selectedCameraId"
+              class="form-select"
+              style="min-width: 160px"
+            >
+              <option v-for="cam in data.cameras" :key="cam.id" :value="cam.id">
+                {{ cam.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="d-flex gap-2 align-items-end">
+            <div>
+              <label for="start-date" class="form-label mb-1">From</label>
+              <AppDateTimePicker id="start-date" v-model="data.startDate" />
+            </div>
+
+            <div>
+              <label for="end-date" class="form-label mb-1">To</label>
+              <AppDateTimePicker id="end-date" v-model="data.endDate" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Single scrollable nav row -->
+        <div class="d-flex justify-content-center mt-2">
+          <div class="d-flex gap-2 overflow-x-auto flex-nowrap pb-1">
+            <div class="btn-group btn-group-sm flex-shrink-0">
+              <button class="btn btn-outline-primary" title="Last month" @click="setAbsoluteRange(30)">
+                Last Month
+              </button>
+              <button class="btn btn-outline-primary" title="Last week" @click="setAbsoluteRange(7)">
+                Last Week
+              </button>
+              <button class="btn btn-outline-primary" title="Last day" @click="setAbsoluteRange(1)">
+                Last Day
+              </button>
+            </div>
+            <div class="btn-group btn-group-sm flex-shrink-0">
+              <button class="btn btn-outline-primary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
+                &laquo; Month
+              </button>
+              <button class="btn btn-outline-primary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
+                &laquo; Week
+              </button>
+              <button class="btn btn-outline-primary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
+                &laquo; Day
+              </button>
+              <button class="btn btn-outline-primary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
+                Day &raquo;
+              </button>
+              <button class="btn btn-outline-primary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
+                Week &raquo;
+              </button>
+              <button class="btn btn-outline-primary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
+                Month &raquo;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview area (grows to fill remaining height) -->
+      <div class="preview-area mt-2">
+        <div class="card overflow-hidden h-100">
+          <!-- Info bar: only when item is selected -->
+          <div v-if="data.selectedItem" class="card-body d-flex flex-wrap align-items-center gap-2 py-2 flex-grow-0">
+            <span class="text-body-primary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
+            <button
+              ref="infoBtn"
+              type="button"
+              class="btn btn-link btn-sm p-0 text-body-primary"
+              :data-bs-title="`${data.selectedItem.fileName}<br><br>Ctrl+Scroll to zoom<br>Drag to pan when zoomed<br>Pinch to zoom on touch<br>← → to navigate`"
+            >
+              <FontAwesomeIcon icon="fa-circle-info" />
+            </button>
+            <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
+            <button v-if="zoomLevel > 1" class="btn btn-outline-primary btn-sm py-0" @click="resetZoom()">
+              Reset zoom
+            </button>
+            <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm py-0 ms-auto">
+              Open original
+            </a>
+          </div>
+
+          <!-- Preview container (fills remaining card height) -->
+          <div
+            ref="previewContainer"
+            class="preview-container position-relative overflow-hidden d-flex align-items-center justify-content-center bg-black user-select-none"
+            @click="focusStrip"
+            @wheel="onWheel"
+            @mousedown="onMouseDown"
+            @mousemove="onMouseMove"
+            @mouseup="onMouseUp"
+            @mouseleave="onMouseLeave"
+            @touchstart.prevent="onTouchStart"
+            @touchmove.prevent="onTouchMove"
+            @touchend="onTouchEnd"
           >
-            <option v-for="cam in data.cameras" :key="cam.id" :value="cam.id">
-              {{ cam.name }}
-            </option>
-          </select>
-        </div>
+            <img
+              v-if="data.selectedItem"
+              :src="previewSrc ?? undefined"
+              :alt="data.selectedItem.fileName"
+              class="mw-100 mh-100 d-block"
+              :style="previewStyle"
+              draggable="false"
+            >
 
-        <div class="d-flex gap-2 align-items-end">
-          <div>
-            <label for="start-date" class="form-label mb-1">From</label>
-            <AppDateTimePicker id="start-date" v-model="data.startDate" />
+            <div v-else-if="data.isLoadingTimeline" class="text-white text-center">
+              <span class="spinner-border spinner-border-sm me-2" />
+              Loading timeline…
+            </div>
+
+            <div v-else-if="data.cameras.length === 0 && !data.isLoadingCameras" class="text-white text-center px-3">
+              No cameras configured.
+              <router-link :to="{ name: 'cameraSnapshotCamerasMain' }" class="text-white">
+                Add a camera
+              </router-link>.
+            </div>
+
+            <div v-else-if="data.items.length === 0 && !data.isLoadingTimeline && data.selectedCameraId" class="text-white text-center">
+              No snapshots found for this date range.
+            </div>
+
+            <!-- Navigation overlay -->
+            <div
+              v-if="data.items.length > 0 && data.selectedItem"
+              class="nav-overlay"
+            >
+              <div class="d-flex gap-1">
+                <button class="nav-overlay-btn" :disabled="selectedIndex <= 0" title="First" @click="navFirst()">
+                  <FontAwesomeIcon icon="fa-angles-left" />
+                </button>
+                <button class="nav-overlay-btn" :disabled="selectedIndex <= 0" title="Previous" @click="navPrev()">
+                  <FontAwesomeIcon icon="fa-angle-left" />
+                </button>
+                <button class="nav-overlay-btn" :disabled="selectedIndex >= data.items.length - 1" title="Next" @click="navNext()">
+                  <FontAwesomeIcon icon="fa-angle-right" />
+                </button>
+                <button class="nav-overlay-btn" :disabled="selectedIndex >= data.items.length - 1" title="Last" @click="navLast()">
+                  <FontAwesomeIcon icon="fa-angles-right" />
+                </button>
+              </div>
+            </div>
           </div>
-
-          <div>
-            <label for="end-date" class="form-label mb-1">To</label>
-            <AppDateTimePicker id="end-date" v-model="data.endDate" />
-          </div>
         </div>
       </div>
 
-      <!-- xs: each pair stacked -->
-      <div class="d-flex d-sm-none flex-column align-items-center gap-2">
-        <div class="btn-group btn-group-sm w-100">
-          <button class="btn btn-outline-primary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
-            &laquo; Month
-          </button>
-          <button class="btn btn-outline-primary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
-            Month &raquo;
-          </button>
-        </div>
-        <div class="btn-group btn-group-sm w-100">
-          <button class="btn btn-outline-primary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
-            &laquo; Week
-          </button>
-          <button class="btn btn-outline-primary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
-            Week &raquo;
-          </button>
-        </div>
-        <div class="btn-group btn-group-sm w-100">
-          <button class="btn btn-outline-primary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
-            &laquo; Day
-          </button>
-          <button class="btn btn-outline-primary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
-            Day &raquo;
-          </button>
-        </div>
-        <div class="btn-group btn-group-sm w-100">
-          <button class="btn btn-outline-primary" title="Last month" @click="setAbsoluteRange(30)">
-            Last Month
-          </button>
-          <button class="btn btn-outline-primary" title="Last week" @click="setAbsoluteRange(7)">
-            Last Week
-          </button>
-          <button class="btn btn-outline-primary" title="Last day" @click="setAbsoluteRange(1)">
-            Last Day
-          </button>
-        </div>
-      </div>
-
-      <!-- sm+: single combined bar -->
-      <div class="d-none d-sm-flex flex-column align-items-center gap-2">
-        <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-primary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
-            &laquo; Month
-          </button>
-          <button class="btn btn-outline-primary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
-            &laquo; Week
-          </button>
-          <button class="btn btn-outline-primary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
-            &laquo; Day
-          </button>
-          <button class="btn btn-outline-primary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
-            Day &raquo;
-          </button>
-          <button class="btn btn-outline-primary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
-            Week &raquo;
-          </button>
-          <button class="btn btn-outline-primary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
-            Month &raquo;
-          </button>
-        </div>
-        <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-primary" title="Last month" @click="setAbsoluteRange(30)">
-            Last Month
-          </button>
-          <button class="btn btn-outline-primary" title="Last week" @click="setAbsoluteRange(7)">
-            Last Week
-          </button>
-          <button class="btn btn-outline-primary" title="Last day" @click="setAbsoluteRange(1)">
-            Last Day
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Preview panel -->
-    <div v-if="data.selectedItem" class="card mt-3 overflow-hidden">
-      <div class="card-body d-flex flex-wrap align-items-center gap-2 py-2">
-        <span class="text-body-primary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
-        <button
-          ref="infoBtn"
-          type="button"
-          class="btn btn-link btn-sm p-0 text-body-primary"
-          :data-bs-title="`${data.selectedItem.fileName}<br><br>Ctrl+Scroll to zoom<br>Drag to pan when zoomed<br>Pinch to zoom on touch<br>← → to navigate`"
+      <!-- Bottom controls (scrub strip) -->
+      <div class="controls-bottom">
+        <div
+          ref="stripEl"
+          class="snapshot-strip d-flex gap-1 overflow-x-auto"
+          tabindex="0"
+          role="listbox"
+          aria-label="Snapshot timeline"
+          @keydown="onStripKeyDown"
         >
-          <FontAwesomeIcon icon="fa-circle-info" />
-        </button>
-        <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
-        <button v-if="zoomLevel > 1" class="btn btn-outline-primary btn-sm py-0" @click="resetZoom()">
-          Reset zoom
-        </button>
-        <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm py-0 ms-auto">
-          Open original
-        </a>
+          <!-- Skeleton placeholders while loading -->
+          <template v-if="data.isLoadingTimeline">
+            <div v-for="i in 8" :key="i" class="strip-skeleton flex-shrink-0 rounded-1" />
+          </template>
+
+          <!-- Real thumbnails -->
+          <template v-else>
+            <button
+              v-for="item in data.items"
+              :key="item.fileName"
+              class="strip-item p-0 bg-transparent flex-shrink-0"
+              :class="{ 'strip-item--active': data.selectedItem?.fileName === item.fileName }"
+              role="option"
+              :aria-selected="data.selectedItem?.fileName === item.fileName"
+              :title="formatTimestamp(item.timestamp)"
+              @click="selectItem(item)"
+            >
+              <img
+                :src="item.smallUrl"
+                :alt="item.fileName"
+                class="strip-thumb d-block rounded-1"
+                loading="lazy"
+                draggable="false"
+              >
+            </button>
+          </template>
+        </div>
       </div>
-
-      <div
-        ref="previewContainer"
-        class="preview-container overflow-hidden d-flex align-items-center justify-content-center bg-black user-select-none"
-        @click="focusStrip"
-        @wheel="onWheel"
-        @mousedown="onMouseDown"
-        @mousemove="onMouseMove"
-        @mouseup="onMouseUp"
-        @mouseleave="onMouseLeave"
-        @touchstart.prevent="onTouchStart"
-        @touchmove.prevent="onTouchMove"
-        @touchend="onTouchEnd"
-      >
-        <img
-          :src="previewSrc ?? undefined"
-          :alt="data.selectedItem.fileName"
-          class="mw-100 mh-100 d-block"
-          :style="previewStyle"
-          draggable="false"
-        >
-      </div>
-    </div>
-
-    <div v-else-if="data.isLoadingTimeline" class="mt-4 text-center text-body-primary">
-      <span class="spinner-border spinner-border-sm me-2" />
-      Loading timeline…
-    </div>
-
-    <div v-else-if="data.cameras.length === 0 && !data.isLoadingCameras" class="mt-4 text-center text-body-primary">
-      No cameras configured. <router-link :to="{ name: 'cameraSnapshotCamerasMain' }">
-        Add a camera
-      </router-link>.
-    </div>
-
-    <div v-else-if="data.items.length === 0 && !data.isLoadingTimeline && data.selectedCameraId" class="mt-4 text-center text-body-primary">
-      No snapshots found for this date range.
-    </div>
-
-    <!-- Mobile snapshot navigation (xs only) -->
-    <div v-if="data.items.length > 0 && data.selectedItem" class="d-flex d-sm-none justify-content-around gap-4 mt-3">
-      <button class="btn btn-outline-primary btn-sm" :disabled="selectedIndex <= 0" title="First" @click="navFirst()">
-        <FontAwesomeIcon icon="fa-angles-left" />
-      </button>
-      <button class="btn btn-outline-primary btn-sm" :disabled="selectedIndex <= 0" title="Previous" @click="navPrev()">
-        <FontAwesomeIcon icon="fa-angle-left" />
-      </button>
-      <button class="btn btn-outline-primary btn-sm" :disabled="selectedIndex >= data.items.length - 1" title="Next" @click="navNext()">
-        <FontAwesomeIcon icon="fa-angle-right" />
-      </button>
-      <button class="btn btn-outline-primary btn-sm" :disabled="selectedIndex >= data.items.length - 1" title="Last" @click="navLast()">
-        <FontAwesomeIcon icon="fa-angles-right" />
-      </button>
-    </div>
-
-    <!-- Scrub strip -->
-    <div
-      v-if="data.items.length > 0"
-      ref="stripEl"
-      class="snapshot-strip d-flex gap-1 overflow-x-auto mt-3"
-      tabindex="0"
-      role="listbox"
-      aria-label="Snapshot timeline"
-      @keydown="onStripKeyDown"
-    >
-      <button
-        v-for="item in data.items"
-        :key="item.fileName"
-        class="strip-item p-0 bg-transparent flex-shrink-0"
-        :class="{ 'strip-item--active': data.selectedItem?.fileName === item.fileName }"
-        role="option"
-        :aria-selected="data.selectedItem?.fileName === item.fileName"
-        :title="formatTimestamp(item.timestamp)"
-        @click="selectItem(item)"
-      >
-        <img
-          :src="item.smallUrl"
-          :alt="item.fileName"
-          class="strip-thumb d-block rounded-1"
-          loading="lazy"
-          draggable="false"
-        >
-      </button>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.camera-page {
+  min-height: calc(100dvh - var(--navbar-height));
+  display: flex;
+  flex-direction: column;
+}
+
+.camera-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 0.5rem;
+}
+
+.controls-top {
+  flex-shrink: 0;
+}
+
+.preview-area {
+  flex: 1 1 0;
+  min-height: 0;
+
+  .card {
+    min-height: 0;
+  }
+}
+
 .preview-container {
-  height: 65vh;
-  max-height: 65vh;
+  flex: 1 1 0;
+  min-height: 0;
   touch-action: none;
+}
+
+.controls-bottom {
+  flex-shrink: 0;
+}
+
+.nav-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.5rem;
+  pointer-events: none;
+}
+
+.nav-overlay-btn {
+  pointer-events: all;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.2;
+    pointer-events: none;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.65);
+  }
+
+  &:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 2px;
+  }
 }
 
 .snapshot-strip {
@@ -626,6 +683,24 @@ onMounted(async () => {
   &:focus {
     outline: 2px solid var(--bs-primary);
     outline-offset: 2px;
+  }
+}
+
+.strip-skeleton {
+  height: 90px;
+  width: 160px;
+  background-color: var(--bs-secondary-bg);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
   }
 }
 
