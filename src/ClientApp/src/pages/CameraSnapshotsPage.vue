@@ -404,28 +404,28 @@ onMounted(async () => {
       <!-- Top controls -->
       <div class="controls-top">
         <!-- Camera + date pickers -->
-        <div class="d-flex flex-wrap justify-content-center gap-2 align-items-end">
-          <div>
-            <label for="camera-select" class="form-label mb-1">Camera</label>
-            <select
-              id="camera-select"
-              v-model="data.selectedCameraId"
-              class="form-select"
-              style="min-width: 160px"
-            >
-              <option v-for="cam in data.cameras" :key="cam.id" :value="cam.id">
-                {{ cam.name }}
-              </option>
-            </select>
-          </div>
+        <div class="d-flex justify-content-center">
+          <div class="d-flex gap-2 overflow-x-auto flex-nowrap pb-1 align-items-end">
+            <div class="flex-shrink-0">
+              <label for="camera-select" class="form-label mb-1">Camera</label>
+              <select
+                id="camera-select"
+                v-model="data.selectedCameraId"
+                class="form-select"
+                style="min-width: 160px"
+              >
+                <option v-for="cam in data.cameras" :key="cam.id" :value="cam.id">
+                  {{ cam.name }}
+                </option>
+              </select>
+            </div>
 
-          <div class="d-flex gap-2 align-items-end">
-            <div>
+            <div class="flex-shrink-0">
               <label for="start-date" class="form-label mb-1">From</label>
               <AppDateTimePicker id="start-date" v-model="data.startDate" />
             </div>
 
-            <div>
+            <div class="flex-shrink-0">
               <label for="end-date" class="form-label mb-1">To</label>
               <AppDateTimePicker id="end-date" v-model="data.endDate" />
             </div>
@@ -486,10 +486,10 @@ onMounted(async () => {
             </button>
             <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
             <button v-if="zoomLevel > 1" class="btn btn-outline-primary btn-sm py-0" @click="resetZoom()">
-              Reset zoom
+              Reset
             </button>
-            <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm py-0 ms-auto">
-              Open original
+            <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm py-0 ms-auto" title="Open original">
+              <FontAwesomeIcon icon="fa-arrow-up-right-from-square" />
             </a>
           </div>
 
@@ -536,6 +536,9 @@ onMounted(async () => {
             <div
               v-if="data.items.length > 0 && data.selectedItem"
               class="nav-overlay"
+              @touchstart.stop
+              @touchmove.stop
+              @touchend.stop
             >
               <div class="d-flex gap-1">
                 <button class="nav-overlay-btn" :disabled="selectedIndex <= 0" title="First" @click="navFirst()">
