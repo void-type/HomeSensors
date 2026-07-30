@@ -15,12 +15,12 @@ export default class RouterHelpers {
     document.title = title;
   }
 
-  static scrollToTop() {
+  static scrollToTop(behavior: ScrollBehavior = 'smooth') {
+    document.getElementById('main')?.focus();
+
     window.scrollTo({
       top: 0,
-      behavior: 'smooth',
+      behavior,
     });
-
-    document.getElementById('main')?.focus();
   }
 }
