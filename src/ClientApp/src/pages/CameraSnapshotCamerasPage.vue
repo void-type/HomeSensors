@@ -8,6 +8,7 @@ import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import AppPageHeading from '@/components/AppPageHeading.vue';
 import ApiHelper from '@/models/ApiHelper';
+import { slugify } from '@/models/FormatHelper';
 import useAppStore from '@/stores/appStore';
 import useMessageStore from '@/stores/messageStore';
 
@@ -303,7 +304,7 @@ onBeforeUnmount(() => {
                     </button>
                     <router-link
                       v-if="camera.id"
-                      :to="{ name: 'cameraSnapshots', query: { cameraId: String(camera.id) } }"
+                      :to="{ name: 'cameraSnapshots', query: { camera: slugify(camera.name || '') } }"
                       class="btn btn-sm btn-secondary me-2"
                     >
                       View Timeline

@@ -8,6 +8,7 @@ import { useRoute, useRouter } from 'vue-router';
 import AppDateTimePicker from '@/components/AppDateTimePicker.vue';
 import AppPageHeading from '@/components/AppPageHeading.vue';
 import ApiHelper from '@/models/ApiHelper';
+import { slugify } from '@/models/FormatHelper';
 import useMessageStore from '@/stores/messageStore';
 
 const messageStore = useMessageStore();
@@ -144,10 +145,12 @@ async function loadTimeline() {
 }
 
 async function syncQueryParams() {
+  const selectedCamera = data.cameras.find(c => c.id === data.selectedCameraId);
+  const cameraSlug = selectedCamera?.name ? slugify(selectedCamera.name) : undefined;
   await router.replace({
     name: 'cameraSnapshots',
     query: {
-      cameraId: data.selectedCameraId ? String(data.selectedCameraId) : undefined,
+      camera: cameraSlug,
       start: data.startDate ? data.startDate.toISOString() : undefined,
       end: data.endDate ? data.endDate.toISOString() : undefined,
     },
@@ -371,9 +374,6 @@ function defaultStartDate(): Date {
 
 onMounted(async () => {
   // Restore from query params
-  if (route.query.cameraId) {
-    data.selectedCameraId = Number(route.query.cameraId);
-  }
   if (route.query.start) {
     data.startDate = new Date(route.query.start as string);
   } else {
@@ -386,6 +386,18 @@ onMounted(async () => {
   }
 
   await getCameras();
+
+  // Resolve camera from slug (preferred) or legacy numeric cameraId
+  if (route.query.camera) {
+    const slug = route.query.camera as string;
+    const match = data.cameras.find(c => c.name !== undefined && slugify(c.name) === slug);
+    if (match?.id !== undefined) {
+      data.selectedCameraId = match.id;
+    }
+  } else if (route.query.cameraId) {
+    data.selectedCameraId = Number(route.query.cameraId);
+  }
+
   await loadTimeline();
 
   // Reload whenever camera or date range changes
@@ -421,12 +433,12 @@ onMounted(async () => {
             </div>
 
             <div class="flex-shrink-0">
-              <label for="start-date" class="form-label mb-1">From</label>
+              <label for="start-date" class="form-label mb-1">Start</label>
               <AppDateTimePicker id="start-date" v-model="data.startDate" />
             </div>
 
             <div class="flex-shrink-0">
-              <label for="end-date" class="form-label mb-1">To</label>
+              <label for="end-date" class="form-label mb-1">End</label>
               <AppDateTimePicker id="end-date" v-model="data.endDate" />
             </div>
           </div>
