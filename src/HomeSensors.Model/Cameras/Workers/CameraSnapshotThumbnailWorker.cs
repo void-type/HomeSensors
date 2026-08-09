@@ -1,6 +1,7 @@
-﻿using HomeSensors.Model.CameraSnapshots.Helpers;
-using HomeSensors.Model.CameraSnapshots.Services;
-using HomeSensors.Model.CameraSnapshots.Settings;
+﻿using HomeSensors.Model.Cameras.Entities;
+using HomeSensors.Model.Cameras.Helpers;
+using HomeSensors.Model.Cameras.Services;
+using HomeSensors.Model.Cameras.Settings;
 using HomeSensors.Model.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,10 +9,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace HomeSensors.Model.CameraSnapshots.Workers;
+namespace HomeSensors.Model.Cameras.Workers;
 
 /// <summary>
-/// Background worker that pre-generates thumbnails for all camera snapshots.
+/// Background worker that pre-generates thumbnails for all cameras.
 /// </summary>
 public class CameraSnapshotThumbnailWorker : BackgroundService
 {
@@ -19,7 +20,7 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly TimeSpan _betweenTicks;
 
-    public CameraSnapshotThumbnailWorker(ILogger<CameraSnapshotThumbnailWorker> logger, IServiceScopeFactory scopeFactory, CameraSnapshotWorkerSettings workerSettings)
+    public CameraSnapshotThumbnailWorker(ILogger<CameraSnapshotThumbnailWorker> logger, IServiceScopeFactory scopeFactory, CameraWorkerSettings workerSettings)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
@@ -46,13 +47,13 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
                 var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
                 var thumbnailService = scope.ServiceProvider.GetRequiredService<ThumbnailService>();
 
-                var cameras = await dbContext.CameraSnapshots
+                var cameras = await dbContext.Cameras
                     .TagWith($"Query called from {nameof(CameraSnapshotThumbnailWorker)}.")
                     .ToListAsync(stoppingToken);
 
                 var processedCount = 0;
 
-                foreach (var camera in cameras)
+                foreach (Camera camera in cameras)
                 {
                     if (!Directory.Exists(camera.SnapshotsPath))
                     {
@@ -61,7 +62,7 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
                         continue;
                     }
 
-                    var files = CameraSnapshotHelpers.GetSnapshotFileNames(camera.SnapshotsPath).ToList();
+                    var files = CameraHelpers.GetSnapshotFileNames(camera.SnapshotsPath).ToList();
 
                     foreach (var fileName in files)
                     {

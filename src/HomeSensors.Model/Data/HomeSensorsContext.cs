@@ -1,4 +1,4 @@
-﻿using HomeSensors.Model.CameraSnapshots.Entities;
+﻿using HomeSensors.Model.Cameras.Entities;
 using HomeSensors.Model.Categories.Entities;
 using HomeSensors.Model.Hvac.Entities;
 using HomeSensors.Model.Infrastructure.Emailing.Entities;
@@ -18,7 +18,7 @@ public class HomeSensorsContext : DbContext
         ChangeTracker.LazyLoadingEnabled = false;
     }
 
-    public virtual DbSet<CameraSnapshot> CameraSnapshots { get; set; }
+    public virtual DbSet<Camera> Cameras { get; set; }
     public virtual DbSet<Category> Categories { get; set; }
     public virtual DbSet<TemperatureDevice> TemperatureDevices { get; set; }
     public virtual DbSet<TemperatureLocation> TemperatureLocations { get; set; }
@@ -29,9 +29,9 @@ public class HomeSensorsContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<CameraSnapshot>(entity =>
+        modelBuilder.Entity<Camera>(entity =>
         {
-            entity.ToTable(nameof(CameraSnapshot));
+            entity.ToTable(nameof(Camera));
 
             entity.HasIndex(c => c.Name)
                 .IsUnique();

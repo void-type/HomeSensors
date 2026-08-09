@@ -8,13 +8,13 @@
  */
 
 import type {AppVersion,
-  CameraSnapshotResponse,
-  CameraSnapshotSaveRequest,
-  CameraSnapshotsDeleteParams,
-  CameraSnapshotTimelineGetItemsParams,
-  CameraSnapshotTimelineGetOriginalParams,
-  CameraSnapshotTimelineGetThumbnailParams,
-  CameraSnapshotTimelineItem,
+  CameraResponse,
+  CameraSaveRequest,
+  CamerasDeleteParams,
+  CameraSnapshot,
+  CameraSnapshotsGetOriginalParams,
+  CameraSnapshotsGetThumbnailParams,
+  CameraSnapshotsGetTimelineParams,
   CategoriesDeleteParams,
   CategoryResponse,
   CategorySaveRequest,
@@ -80,15 +80,15 @@ export class Api<
   /**
    * No description
    *
-   * @tags CameraSnapshots
-   * @name CameraSnapshotsGetAll
-   * @request GET:/api/camera-snapshots/all
-   * @response `200` `(CameraSnapshotResponse)[]`
+   * @tags Cameras
+   * @name CamerasGetAll
+   * @request GET:/api/cameras/all
+   * @response `200` `(CameraResponse)[]`
    * @response `400` `IItemSetOfIFailure`
    */
-  cameraSnapshotsGetAll = (params: RequestParams = {}) =>
-    this.request<CameraSnapshotResponse[], IItemSetOfIFailure>({
-      path: `/api/camera-snapshots/all`,
+  camerasGetAll = (params: RequestParams = {}) =>
+    this.request<CameraResponse[], IItemSetOfIFailure>({
+      path: `/api/cameras/all`,
       method: "GET",
       format: "json",
       ...params,
@@ -96,18 +96,15 @@ export class Api<
   /**
    * No description
    *
-   * @tags CameraSnapshots
-   * @name CameraSnapshotsSave
-   * @request POST:/api/camera-snapshots
+   * @tags Cameras
+   * @name CamerasSave
+   * @request POST:/api/cameras
    * @response `200` `EntityMessageOfLong`
    * @response `400` `IItemSetOfIFailure`
    */
-  cameraSnapshotsSave = (
-    data: CameraSnapshotSaveRequest,
-    params: RequestParams = {},
-  ) =>
+  camerasSave = (data: CameraSaveRequest, params: RequestParams = {}) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
-      path: `/api/camera-snapshots`,
+      path: `/api/cameras`,
       method: "POST",
       body: data,
       type: ContentType.Json,
@@ -117,18 +114,15 @@ export class Api<
   /**
    * No description
    *
-   * @tags CameraSnapshots
-   * @name CameraSnapshotsDelete
-   * @request DELETE:/api/camera-snapshots/{id}
+   * @tags Cameras
+   * @name CamerasDelete
+   * @request DELETE:/api/cameras/{id}
    * @response `200` `EntityMessageOfLong`
    * @response `400` `IItemSetOfIFailure`
    */
-  cameraSnapshotsDelete = (
-    { id }: CameraSnapshotsDeleteParams,
-    params: RequestParams = {},
-  ) =>
+  camerasDelete = ({ id }: CamerasDeleteParams, params: RequestParams = {}) =>
     this.request<EntityMessageOfLong, IItemSetOfIFailure>({
-      path: `/api/camera-snapshots/${id}`,
+      path: `/api/cameras/${id}`,
       method: "DELETE",
       format: "json",
       ...params,
@@ -136,18 +130,18 @@ export class Api<
   /**
    * No description
    *
-   * @tags CameraSnapshotTimeline
-   * @name CameraSnapshotTimelineGetItems
-   * @request GET:/api/camera-snapshot-timeline/{cameraId}/items
-   * @response `200` `(CameraSnapshotTimelineItem)[]`
+   * @tags CameraSnapshots
+   * @name CameraSnapshotsGetTimeline
+   * @request GET:/api/camera-snapshots/{cameraId}/timeline
+   * @response `200` `(CameraSnapshot)[]`
    * @response `400` `IItemSetOfIFailure`
    */
-  cameraSnapshotTimelineGetItems = (
-    { cameraId, ...query }: CameraSnapshotTimelineGetItemsParams,
+  cameraSnapshotsGetTimeline = (
+    { cameraId, ...query }: CameraSnapshotsGetTimelineParams,
     params: RequestParams = {},
   ) =>
-    this.request<CameraSnapshotTimelineItem[], IItemSetOfIFailure>({
-      path: `/api/camera-snapshot-timeline/${cameraId}/items`,
+    this.request<CameraSnapshot[], IItemSetOfIFailure>({
+      path: `/api/camera-snapshots/${cameraId}/timeline`,
       method: "GET",
       query: query,
       format: "json",
@@ -156,17 +150,17 @@ export class Api<
   /**
    * No description
    *
-   * @tags CameraSnapshotTimeline
-   * @name CameraSnapshotTimelineGetThumbnail
-   * @request GET:/api/camera-snapshot-timeline/{cameraId}/thumbnail/{fileName}
+   * @tags CameraSnapshots
+   * @name CameraSnapshotsGetThumbnail
+   * @request GET:/api/camera-snapshots/{cameraId}/thumbnail/{fileName}
    * @response `200` `File`
    */
-  cameraSnapshotTimelineGetThumbnail = (
-    { cameraId, fileName, ...query }: CameraSnapshotTimelineGetThumbnailParams,
+  cameraSnapshotsGetThumbnail = (
+    { cameraId, fileName, ...query }: CameraSnapshotsGetThumbnailParams,
     params: RequestParams = {},
   ) =>
     this.request<Blob, any>({
-      path: `/api/camera-snapshot-timeline/${cameraId}/thumbnail/${fileName}`,
+      path: `/api/camera-snapshots/${cameraId}/thumbnail/${fileName}`,
       method: "GET",
       query: query,
       ...params,
@@ -174,17 +168,17 @@ export class Api<
   /**
    * No description
    *
-   * @tags CameraSnapshotTimeline
-   * @name CameraSnapshotTimelineGetOriginal
-   * @request GET:/api/camera-snapshot-timeline/{cameraId}/original/{fileName}
+   * @tags CameraSnapshots
+   * @name CameraSnapshotsGetOriginal
+   * @request GET:/api/camera-snapshots/{cameraId}/original/{fileName}
    * @response `200` `File`
    */
-  cameraSnapshotTimelineGetOriginal = (
-    { cameraId, fileName }: CameraSnapshotTimelineGetOriginalParams,
+  cameraSnapshotsGetOriginal = (
+    { cameraId, fileName }: CameraSnapshotsGetOriginalParams,
     params: RequestParams = {},
   ) =>
     this.request<Blob, any>({
-      path: `/api/camera-snapshot-timeline/${cameraId}/original/${fileName}`,
+      path: `/api/camera-snapshots/${cameraId}/original/${fileName}`,
       method: "GET",
       ...params,
     });

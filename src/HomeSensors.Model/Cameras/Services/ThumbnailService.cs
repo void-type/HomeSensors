@@ -1,10 +1,10 @@
-﻿using HomeSensors.Model.CameraSnapshots.Entities;
-using HomeSensors.Model.CameraSnapshots.Helpers;
-using HomeSensors.Model.CameraSnapshots.Settings;
+﻿using HomeSensors.Model.Cameras.Entities;
+using HomeSensors.Model.Cameras.Helpers;
+using HomeSensors.Model.Cameras.Settings;
 using ImageMagick;
 using Microsoft.Extensions.Logging;
 
-namespace HomeSensors.Model.CameraSnapshots.Services;
+namespace HomeSensors.Model.Cameras.Services;
 
 public class ThumbnailService
 {
@@ -12,10 +12,10 @@ public class ThumbnailService
     private const int SmallHeightPx = 180;
     private const int MediumHeightPx = 720;
 
-    private readonly CameraSnapshotSettings _settings;
+    private readonly CameraSettings _settings;
     private readonly ILogger<ThumbnailService> _logger;
 
-    public ThumbnailService(CameraSnapshotSettings settings, ILogger<ThumbnailService> logger)
+    public ThumbnailService(CameraSettings settings, ILogger<ThumbnailService> logger)
     {
         _settings = settings;
         _logger = logger;
@@ -24,7 +24,7 @@ public class ThumbnailService
     /// <summary>
     /// Ensure all thumbnail sizes exist for the given snapshot. Skips any that already exist.
     /// </summary>
-    public async Task EnsureThumbnailsAsync(CameraSnapshot camera, string fileName, CancellationToken cancellationToken = default)
+    public async Task EnsureThumbnailsAsync(Camera camera, string fileName, CancellationToken cancellationToken = default)
     {
         var originalPath = Path.Combine(camera.SnapshotsPath, Path.GetFileName(fileName));
 
@@ -33,7 +33,7 @@ public class ThumbnailService
             return;
         }
 
-        var slug = CameraSnapshotHelpers.ToSlug(camera.Name);
+        var slug = CameraHelpers.ToSlug(camera.Name);
         var cacheDir = Path.Combine(_settings.ThumbnailCachePath, slug);
 
         Directory.CreateDirectory(cacheDir);
@@ -74,9 +74,9 @@ public class ThumbnailService
     /// Get the filesystem path for a given thumbnail size.
     /// Returns null if the camera's snapshot path does not contain the file.
     /// </summary>
-    public string GetThumbnailPath(CameraSnapshot camera, string fileName, ThumbnailSize size)
+    public string GetThumbnailPath(Camera camera, string fileName, ThumbnailSize size)
     {
-        var slug = CameraSnapshotHelpers.ToSlug(camera.Name);
+        var slug = CameraHelpers.ToSlug(camera.Name);
         var cacheDir = Path.Combine(_settings.ThumbnailCachePath, slug);
         var baseName = Path.GetFileNameWithoutExtension(fileName);
 

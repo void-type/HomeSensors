@@ -1,19 +1,19 @@
-﻿using HomeSensors.Model.CameraSnapshots.Entities;
-using HomeSensors.Model.CameraSnapshots.Helpers;
-using HomeSensors.Model.CameraSnapshots.Models;
+﻿using HomeSensors.Model.Cameras.Entities;
+using HomeSensors.Model.Cameras.Helpers;
+using HomeSensors.Model.Cameras.Models;
 using HomeSensors.Model.Data;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Messages;
 using VoidCore.Model.Text;
 
-namespace HomeSensors.Model.CameraSnapshots.Repositories;
+namespace HomeSensors.Model.Cameras.Repositories;
 
-public class CameraSnapshotRepository : RepositoryBase
+public class CameraRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
 
-    public CameraSnapshotRepository(HomeSensorsContext data)
+    public CameraRepository(HomeSensorsContext data)
     {
         _data = data;
     }
@@ -21,9 +21,9 @@ public class CameraSnapshotRepository : RepositoryBase
     /// <summary>
     /// Get all cameras.
     /// </summary>
-    public async Task<List<CameraSnapshotResponse>> GetAllAsync()
+    public async Task<List<CameraResponse>> GetAllAsync()
     {
-        return (await _data.CameraSnapshots
+        return (await _data.Cameras
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.IsHidden)
@@ -32,7 +32,7 @@ public class CameraSnapshotRepository : RepositoryBase
             .ConvertAll(x => x.ToApiResponse());
     }
 
-    public async Task<IResult<EntityMessage<long>>> SaveAsync(CameraSnapshotSaveRequest request)
+    public async Task<IResult<EntityMessage<long>>> SaveAsync(CameraSaveRequest request)
     {
         var failures = new List<IFailure>();
 
@@ -46,7 +46,7 @@ public class CameraSnapshotRepository : RepositoryBase
             failures.Add(new Failure("Snapshots path is required.", "snapshotsPath"));
         }
 
-        var nameUsedByAnother = await _data.CameraSnapshots
+        var nameUsedByAnother = await _data.Cameras
             .AnyAsync(x => x.Name == request.Name && x.Id != request.Id);
 
         if (nameUsedByAnother)
@@ -59,13 +59,13 @@ public class CameraSnapshotRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(failures);
         }
 
-        var camera = await _data.CameraSnapshots
+        var camera = await _data.Cameras
             .FirstOrDefaultAsync(x => x.Id == request.Id);
 
         if (camera is null)
         {
-            camera = new CameraSnapshot();
-            await _data.CameraSnapshots.AddAsync(camera);
+            camera = new Camera();
+            await _data.Cameras.AddAsync(camera);
         }
 
         camera.Name = request.Name;
@@ -79,7 +79,7 @@ public class CameraSnapshotRepository : RepositoryBase
 
     public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id)
     {
-        var camera = await _data.CameraSnapshots
+        var camera = await _data.Cameras
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (camera is null)
@@ -87,7 +87,7 @@ public class CameraSnapshotRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(new Failure("Camera not found."));
         }
 
-        _data.CameraSnapshots.Remove(camera);
+        _data.Cameras.Remove(camera);
 
         await _data.SaveChangesAsync();
 

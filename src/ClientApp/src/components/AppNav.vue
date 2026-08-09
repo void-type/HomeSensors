@@ -66,7 +66,7 @@
         </li>
         <li><hr class="dropdown-divider"></li>
         <li>
-          <router-link :to="{ name: 'cameraSnapshotCamerasMain' }" class="dropdown-item">
+          <router-link :to="{ name: 'camerasMain' }" class="dropdown-item">
             Cameras
           </router-link>
         </li>

@@ -1,7 +1,7 @@
-﻿using HomeSensors.Model.CameraSnapshots.Repositories;
-using HomeSensors.Model.CameraSnapshots.Services;
-using HomeSensors.Model.CameraSnapshots.Settings;
-using HomeSensors.Model.CameraSnapshots.Workers;
+﻿using HomeSensors.Model.Cameras.Repositories;
+using HomeSensors.Model.Cameras.Services;
+using HomeSensors.Model.Cameras.Settings;
+using HomeSensors.Model.Cameras.Workers;
 using HomeSensors.Model.Categories.Repositories;
 using HomeSensors.Model.Data;
 using HomeSensors.Model.Hvac.Workers;
@@ -49,13 +49,13 @@ public static class DependencyInjection
         services.AddScoped<WaterLeakDeviceRepository>();
         services.AddScoped<EmailRecipientRepository>();
 
-        services.AddSettingsSingleton<CameraSnapshotSettings>(config.GetSection("CameraSnapshots"), root: true);
-        services.AddScoped<CameraSnapshotRepository>();
+        services.AddSettingsSingleton<CameraSettings>(config.GetSection("CameraSnapshots"), root: true);
+        services.AddScoped<CameraRepository>();
         services.AddScoped<ThumbnailService>();
-        services.AddScoped<CameraSnapshotTimelineRepository>();
+        services.AddScoped<CameraSnapshotRepository>();
 
-        var cameraSnapshotWorkerSettings = services.AddSettingsSingleton<CameraSnapshotWorkerSettings>(config.GetSection("CameraSnapshots:Worker"), root: true);
-        if (cameraSnapshotWorkerSettings.IsEnabled)
+        var cameraWorkerSettings = services.AddSettingsSingleton<CameraWorkerSettings>(config.GetSection("CameraSnapshots:Worker"), root: true);
+        if (cameraWorkerSettings.IsEnabled)
         {
             services.AddHostedService<CameraSnapshotThumbnailWorker>();
         }

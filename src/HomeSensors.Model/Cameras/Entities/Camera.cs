@@ -1,6 +1,6 @@
-﻿namespace HomeSensors.Model.CameraSnapshots.Entities;
+﻿namespace HomeSensors.Model.Cameras.Entities;
 
-public class CameraSnapshot
+public class Camera
 {
     public long Id { get; set; }
 

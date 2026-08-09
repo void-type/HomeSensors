@@ -1,50 +1,105 @@
-﻿using HomeSensors.Model.CameraSnapshots.Models;
-using HomeSensors.Model.CameraSnapshots.Repositories;
+﻿using HomeSensors.Model.Cameras.Models;
+using HomeSensors.Model.Cameras.Repositories;
+using HomeSensors.Model.Cameras.Services;
+using HomeSensors.Model.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
-using VoidCore.Model.Responses.Messages;
+using VoidCore.Model.Text;
 
 namespace HomeSensors.Web.Controllers.Api;
 
 [Route(ApiRouteAttribute.BasePath + "/camera-snapshots")]
 public class CameraSnapshotsController : ControllerBase
 {
-    private readonly CameraSnapshotRepository _cameraRepository;
+    private readonly CameraSnapshotRepository _cameraSnapshotRepository;
+    private readonly ThumbnailService _thumbnailService;
+    private readonly HomeSensorsContext _data;
+    private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
-    public CameraSnapshotsController(CameraSnapshotRepository cameraRepository)
+    public CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRepository, ThumbnailService thumbnailService, HomeSensorsContext data)
     {
-        _cameraRepository = cameraRepository;
+        _cameraSnapshotRepository = cameraSnapshotRepository;
+        _thumbnailService = thumbnailService;
+        _data = data;
     }
 
     [HttpGet]
-    [Route("all")]
-    [ProducesResponseType(typeof(List<CameraSnapshotResponse>), 200)]
+    [Route("{cameraId}/timeline")]
+    [ProducesResponseType(typeof(List<CameraSnapshot>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetAllAsync()
+    public async Task<IActionResult> GetTimelineAsync(long cameraId, DateTimeOffset? start, DateTimeOffset? end)
     {
-        return await _cameraRepository.GetAllAsync()
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+
+        var request = new CameraSnapshotTimelineRequest
+        {
+            CameraId = cameraId,
+            Start = start,
+            End = end,
+        };
+
+        return await _cameraSnapshotRepository.GetTimelineAsync(request, baseUrl)
             .MapAsync(HttpResponder.Respond);
     }
 
-    [HttpPost]
-    [ProducesResponseType(typeof(EntityMessage<long>), 200)]
-    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> SaveAsync([FromBody] CameraSnapshotSaveRequest request)
+    [HttpGet]
+    [Route("{cameraId}/thumbnail/{fileName}")]
+    public async Task<IActionResult> GetThumbnailAsync(long cameraId, string fileName, [FromQuery] string size = "medium")
     {
-        return await _cameraRepository.SaveAsync(request)
-            .MapAsync(HttpResponder.Respond);
+        var camera = await _data.Cameras.FirstOrDefaultAsync(x => x.Id == cameraId);
+
+        if (camera is null)
+        {
+            return NotFound("Camera not found.");
+        }
+
+        var thumbnailSize = size switch
+        {
+            "small" => ThumbnailSize.Small,
+            _ => ThumbnailSize.Medium,
+        };
+
+        await _thumbnailService.EnsureThumbnailsAsync(camera, fileName);
+
+        var thumbnailPath = _thumbnailService.GetThumbnailPath(camera, fileName, thumbnailSize);
+
+        if (!System.IO.File.Exists(thumbnailPath))
+        {
+            return NotFound("Thumbnail not found.");
+        }
+
+        Response.Headers.CacheControl = "public, max-age=3600";
+        return PhysicalFile(thumbnailPath, "image/webp");
     }
 
-    [HttpDelete]
-    [Route("{id}")]
-    [ProducesResponseType(typeof(EntityMessage<long>), 200)]
-    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> DeleteAsync(long id)
+    [HttpGet]
+    [Route("{cameraId}/original/{fileName}")]
+    public async Task<IActionResult> GetOriginalAsync(long cameraId, string fileName)
     {
-        return await _cameraRepository.DeleteAsync(id)
-            .MapAsync(HttpResponder.Respond);
+        var camera = await _data.Cameras.FirstOrDefaultAsync(x => x.Id == cameraId);
+
+        if (camera is null)
+        {
+            return NotFound("Camera not found.");
+        }
+
+        var originalPath = Path.Combine(camera.SnapshotsPath, TextHelpers.GetSafeFileName(fileName, "_"));
+
+        if (!System.IO.File.Exists(originalPath))
+        {
+            return NotFound("Snapshot not found.");
+        }
+
+        var contentType = _contentTypeProvider.TryGetContentType(fileName, out var detected)
+            ? detected
+            : "application/octet-stream";
+
+        Response.Headers.CacheControl = "public, max-age=3600";
+        return PhysicalFile(originalPath, contentType);
     }
 }

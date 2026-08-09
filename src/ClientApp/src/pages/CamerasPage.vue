@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
-import type { CameraSnapshotResponse, IItemSetOfIFailure } from '@/api/data-contracts';
+import type { CameraResponse, IItemSetOfIFailure } from '@/api/data-contracts';
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
 import { Collapse } from 'bootstrap';
@@ -17,13 +17,13 @@ const messageStore = useMessageStore();
 const api = ApiHelper.client;
 
 const data = reactive({
-  cameras: [] as Array<CameraSnapshotResponse>,
+  cameras: [] as Array<CameraResponse>,
   errors: [] as Array<string>,
   originalCameras: new Map<number, string>(),
   hasDirtyCameras: false,
 });
 
-function trackOriginalState(camera: CameraSnapshotResponse) {
+function trackOriginalState(camera: CameraResponse) {
   if (camera.id !== undefined) {
     data.originalCameras.set(
       camera.id,
@@ -36,7 +36,7 @@ function trackOriginalState(camera: CameraSnapshotResponse) {
   }
 }
 
-function isCameraDirty(camera: CameraSnapshotResponse): boolean {
+function isCameraDirty(camera: CameraResponse): boolean {
   if (camera.id === 0) {
     return true;
   }
@@ -75,7 +75,7 @@ function onCameraInput() {
 
 async function getCameras() {
   try {
-    const response = await api().cameraSnapshotsGetAll();
+    const response = await api().camerasGetAll();
     data.cameras = response.data;
     data.cameras.forEach(c => trackOriginalState(c));
     updateDirtyState();
@@ -104,13 +104,13 @@ async function newCamera() {
   }
 }
 
-async function reallyDeleteCamera(camera: CameraSnapshotResponse) {
+async function reallyDeleteCamera(camera: CameraResponse) {
   if (camera.id === null || typeof camera.id === 'undefined') {
     return;
   }
 
   try {
-    const response = await api().cameraSnapshotsDelete({ id: camera.id });
+    const response = await api().camerasDelete({ id: camera.id });
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }
@@ -120,7 +120,7 @@ async function reallyDeleteCamera(camera: CameraSnapshotResponse) {
   }
 }
 
-async function deleteCamera(camera: CameraSnapshotResponse) {
+async function deleteCamera(camera: CameraResponse) {
   const parameters: ModalParameters = {
     title: 'Delete camera',
     description: 'Do you really want to delete this camera? This will not delete any snapshots or cached thumbnails.',
@@ -129,7 +129,7 @@ async function deleteCamera(camera: CameraSnapshotResponse) {
   appStore.showModal(parameters);
 }
 
-async function saveCamera(camera: CameraSnapshotResponse): Promise<boolean> {
+async function saveCamera(camera: CameraResponse): Promise<boolean> {
   data.errors = [];
 
   const request = {
@@ -140,7 +140,7 @@ async function saveCamera(camera: CameraSnapshotResponse): Promise<boolean> {
   };
 
   try {
-    const response = await api().cameraSnapshotsSave(request);
+    const response = await api().camerasSave(request);
     if (response.data.message) {
       messageStore.setSuccessMessage(response.data.message);
     }

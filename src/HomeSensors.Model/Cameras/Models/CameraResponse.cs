@@ -1,8 +1,8 @@
-﻿namespace HomeSensors.Model.CameraSnapshots.Models;
+﻿namespace HomeSensors.Model.Cameras.Models;
 
-public class CameraSnapshotResponse
+public class CameraResponse
 {
-    public CameraSnapshotResponse(long id, string name, string snapshotsPath, bool isHidden)
+    public CameraResponse(long id, string name, string snapshotsPath, bool isHidden)
     {
         Id = id;
         Name = name;

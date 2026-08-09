@@ -1,4 +1,4 @@
-﻿namespace HomeSensors.Model.CameraSnapshots.Models;
+﻿namespace HomeSensors.Model.Cameras.Models;
 
 public class CameraSnapshotTimelineRequest
 {

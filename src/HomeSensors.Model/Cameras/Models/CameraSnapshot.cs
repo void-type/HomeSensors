@@ -1,8 +1,8 @@
-﻿namespace HomeSensors.Model.CameraSnapshots.Models;
+﻿namespace HomeSensors.Model.Cameras.Models;
 
-public class CameraSnapshotTimelineItem
+public class CameraSnapshot
 {
-    public CameraSnapshotTimelineItem(string fileName, DateTimeOffset timestamp, string smallUrl, string mediumUrl, string originalUrl)
+    public CameraSnapshot(string fileName, DateTimeOffset timestamp, string smallUrl, string mediumUrl, string originalUrl)
     {
         FileName = fileName;
         Timestamp = timestamp;

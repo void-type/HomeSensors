@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { CameraSnapshotResponse, CameraSnapshotTimelineItem } from '@/api/data-contracts';
+import type { CameraResponse, CameraSnapshot } from '@/api/data-contracts';
 import type { HttpResponse } from '@/api/http-client';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Tooltip } from 'bootstrap';
@@ -19,12 +19,12 @@ const router = useRouter();
 // --- State ---
 
 const data = reactive({
-  cameras: [] as Array<CameraSnapshotResponse>,
-  items: [] as Array<CameraSnapshotTimelineItem>,
+  cameras: [] as Array<CameraResponse>,
+  items: [] as Array<CameraSnapshot>,
   selectedCameraId: null as number | null,
   startDate: undefined as Date | undefined,
   endDate: undefined as Date | undefined,
-  selectedItem: null as CameraSnapshotTimelineItem | null,
+  selectedItem: null as CameraSnapshot | null,
   isLoadingCameras: false,
   isLoadingTimeline: false,
 });
@@ -77,7 +77,7 @@ const previewStyle = computed(() => ({
 async function getCameras() {
   data.isLoadingCameras = true;
   try {
-    const response = await api().cameraSnapshotsGetAll();
+    const response = await api().camerasGetAll();
     data.cameras = response.data.filter(c => !c.isHidden);
     if (data.cameras.length > 0 && data.selectedCameraId === null) {
       const firstCamera = data.cameras[0];
@@ -116,7 +116,7 @@ async function loadTimeline() {
   data.selectedItem = null;
 
   try {
-    const response = await api().cameraSnapshotTimelineGetItems(
+    const response = await api().cameraSnapshotsGetTimeline(
       {
         cameraId: data.selectedCameraId,
         start: data.startDate ? data.startDate.toISOString() : undefined,
@@ -270,7 +270,7 @@ function resetZoom() {
 
 // --- Strip navigation ---
 
-function selectItem(item: CameraSnapshotTimelineItem) {
+function selectItem(item: CameraSnapshot) {
   data.selectedItem = item;
 }
 
@@ -535,7 +535,7 @@ onMounted(async () => {
 
             <div v-else-if="data.cameras.length === 0 && !data.isLoadingCameras" class="text-white text-center px-3">
               No cameras configured.
-              <router-link :to="{ name: 'cameraSnapshotCamerasMain' }" class="text-white">
+              <router-link :to="{ name: 'camerasMain' }" class="text-white">
                 Add a camera
               </router-link>.
             </div>

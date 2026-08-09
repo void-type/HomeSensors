@@ -1,11 +1,11 @@
-﻿using HomeSensors.Model.CameraSnapshots.Entities;
-using HomeSensors.Model.CameraSnapshots.Models;
+﻿using HomeSensors.Model.Cameras.Entities;
+using HomeSensors.Model.Cameras.Models;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace HomeSensors.Model.CameraSnapshots.Helpers;
+namespace HomeSensors.Model.Cameras.Helpers;
 
-public static partial class CameraSnapshotHelpers
+public static partial class CameraHelpers
 {
     private static readonly TimeZoneInfo _localTimeZone = TimeZoneInfo.Local;
 
@@ -62,12 +62,12 @@ public static partial class CameraSnapshotHelpers
     [GeneratedRegex(@"[^a-z0-9]+")]
     private static partial Regex SlugCleanRegex();
 
-    [GeneratedRegex(@"-{2,}")]
+    [GeneratedRegex(@"\-{2,}")]
     private static partial Regex MultiDashRegex();
 
     /// <summary>
     /// Convert entity to API response DTO.
     /// </summary>
-    public static CameraSnapshotResponse ToApiResponse(this CameraSnapshot entity) =>
+    public static CameraResponse ToApiResponse(this Camera entity) =>
         new(entity.Id, entity.Name, entity.SnapshotsPath, entity.IsHidden);
 }

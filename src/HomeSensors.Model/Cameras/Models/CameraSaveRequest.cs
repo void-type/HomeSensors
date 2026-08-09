@@ -1,6 +1,6 @@
-﻿namespace HomeSensors.Model.CameraSnapshots.Models;
+﻿namespace HomeSensors.Model.Cameras.Models;
 
-public class CameraSnapshotSaveRequest
+public class CameraSaveRequest
 {
     public long Id { get; init; }
 

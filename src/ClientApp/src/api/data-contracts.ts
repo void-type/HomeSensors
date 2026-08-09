@@ -37,7 +37,7 @@ export interface AppVersion {
   assemblyConfiguration?: string;
 }
 
-export interface CameraSnapshotResponse {
+export interface CameraResponse {
   /** @format int64 */
   id?: number;
   name?: string;
@@ -98,7 +98,7 @@ export interface UserMessage {
   message?: string;
 }
 
-export interface CameraSnapshotSaveRequest {
+export interface CameraSaveRequest {
   /** @format int64 */
   id?: number;
   name?: string;
@@ -106,7 +106,7 @@ export interface CameraSnapshotSaveRequest {
   isHidden?: boolean;
 }
 
-export interface CameraSnapshotTimelineItem {
+export interface CameraSnapshot {
   fileName?: string;
   /** @format date-time */
   timestamp?: string;
@@ -288,12 +288,12 @@ export interface WaterLeakDeviceSaveRequest {
   inactiveLimitMinutes?: number;
 }
 
-export interface CameraSnapshotsDeleteParams {
+export interface CamerasDeleteParams {
   /** @format int64 */
   id: number;
 }
 
-export interface CameraSnapshotTimelineGetItemsParams {
+export interface CameraSnapshotsGetTimelineParams {
   /** @format date-time */
   start?: string | null;
   /** @format date-time */
@@ -302,7 +302,7 @@ export interface CameraSnapshotTimelineGetItemsParams {
   cameraId: number;
 }
 
-export interface CameraSnapshotTimelineGetThumbnailParams {
+export interface CameraSnapshotsGetThumbnailParams {
   /** @default "medium" */
   size?: string;
   /** @format int64 */
@@ -310,7 +310,7 @@ export interface CameraSnapshotTimelineGetThumbnailParams {
   fileName: string;
 }
 
-export interface CameraSnapshotTimelineGetOriginalParams {
+export interface CameraSnapshotsGetOriginalParams {
   /** @format int64 */
   cameraId: number;
   fileName: string;

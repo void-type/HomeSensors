@@ -109,10 +109,10 @@ const router = createRouter({
       meta: { title: 'Camera Snapshots' },
     },
     {
-      path: '/camera-snapshot-cameras',
-      name: 'cameraSnapshotCamerasMain',
-      component: () => import('@/pages/CameraSnapshotCamerasPage.vue'),
-      meta: { title: 'Camera Snapshot Cameras' },
+      path: '/cameras',
+      name: 'camerasMain',
+      component: () => import('@/pages/CamerasPage.vue'),
+      meta: { title: 'Cameras' },
     },
     {
       path: '/:pathMatch(.*)*',
