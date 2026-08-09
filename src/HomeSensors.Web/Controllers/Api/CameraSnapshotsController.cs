@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using VoidCore.AspNet.ClientApp;
+using VoidCore.AspNet.Configuration;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
@@ -20,13 +21,15 @@ public class CameraSnapshotsController : ControllerBase
     private readonly CameraSnapshotRepository _cameraSnapshotRepository;
     private readonly ThumbnailService _thumbnailService;
     private readonly HomeSensorsContext _data;
+    private readonly WebApplicationSettings _applicationSettings;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
-    public CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRepository, ThumbnailService thumbnailService, HomeSensorsContext data)
+    public CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRepository, ThumbnailService thumbnailService, HomeSensorsContext data, WebApplicationSettings applicationSettings)
     {
         _cameraSnapshotRepository = cameraSnapshotRepository;
         _thumbnailService = thumbnailService;
         _data = data;
+        _applicationSettings = applicationSettings;
     }
 
     [HttpGet]
@@ -35,7 +38,8 @@ public class CameraSnapshotsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetTimelineAsync(long cameraId, DateTimeOffset? start, DateTimeOffset? end, CancellationToken cancellationToken)
     {
-        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var baseUrl = _applicationSettings.BaseUrl
+            .DefaultIfNullOrWhiteSpace($"{Request.Scheme}://{Request.Host}");
 
         var request = new CameraSnapshotTimelineRequest
         {
