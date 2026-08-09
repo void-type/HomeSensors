@@ -42,6 +42,7 @@ export interface CameraResponse {
   id?: number;
   name?: string;
   snapshotsPath?: string;
+  slug?: string;
   isHidden?: boolean;
 }
 

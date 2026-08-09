@@ -52,6 +52,11 @@ public static partial class CameraHelpers
     /// <summary>
     /// Convert a camera name to a URL/path-safe slug (e.g. "Back Yard" → "back-yard").
     /// </summary>
+    public static string SelectSlug(this Camera camera) => ToSlug(camera.Name);
+
+    /// <summary>
+    /// Convert a camera name to a URL/path-safe slug (e.g. "Back Yard" → "back-yard").
+    /// </summary>
     public static string ToSlug(string name)
     {
         var lower = name.ToLowerInvariant();
@@ -69,5 +74,10 @@ public static partial class CameraHelpers
     /// Convert entity to API response DTO.
     /// </summary>
     public static CameraResponse ToApiResponse(this Camera entity) =>
-        new(entity.Id, entity.Name, entity.SnapshotsPath, entity.IsHidden);
+        new(
+            entity.Id,
+            entity.Name,
+            entity.SnapshotsPath,
+            entity.SelectSlug(),
+            entity.IsHidden);
 }

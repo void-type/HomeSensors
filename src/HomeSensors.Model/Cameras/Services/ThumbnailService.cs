@@ -33,7 +33,7 @@ public class ThumbnailService
             return;
         }
 
-        var slug = CameraHelpers.ToSlug(camera.Name);
+        var slug = camera.SelectSlug();
         var cacheDir = Path.Combine(_settings.ThumbnailCachePath, slug);
 
         Directory.CreateDirectory(cacheDir);
@@ -76,7 +76,7 @@ public class ThumbnailService
     /// </summary>
     public string GetThumbnailPath(Camera camera, string fileName, ThumbnailSize size)
     {
-        var slug = CameraHelpers.ToSlug(camera.Name);
+        var slug = camera.SelectSlug();
         var cacheDir = Path.Combine(_settings.ThumbnailCachePath, slug);
         var baseName = Path.GetFileNameWithoutExtension(fileName);
 

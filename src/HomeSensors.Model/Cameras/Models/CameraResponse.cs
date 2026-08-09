@@ -2,11 +2,12 @@
 
 public class CameraResponse
 {
-    public CameraResponse(long id, string name, string snapshotsPath, bool isHidden)
+    public CameraResponse(long id, string name, string snapshotsPath, string slug, bool isHidden)
     {
         Id = id;
         Name = name;
         SnapshotsPath = snapshotsPath;
+        Slug = slug;
         IsHidden = isHidden;
     }
 
@@ -15,6 +16,8 @@ public class CameraResponse
     public string Name { get; }
 
     public string SnapshotsPath { get; }
+
+    public string Slug { get; }
 
     public bool IsHidden { get; }
 }
