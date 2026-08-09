@@ -4,6 +4,7 @@ namespace HomeSensors.Model.Helpers;
 
 public static class CacheHelpers
 {
+    public const string CameraAllCacheTag = "Camera|All";
     public const string TemperatureDeviceAllCacheTag = "TemperatureDevice|All";
     public const string TemperatureLocationAllCacheTag = "TemperatureLocation|All";
     public const string CategoryAllCacheTag = "Category|All";

@@ -2,7 +2,9 @@
 using HomeSensors.Model.Cameras.Helpers;
 using HomeSensors.Model.Cameras.Models;
 using HomeSensors.Model.Data;
+using HomeSensors.Model.Helpers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Messages;
 using VoidCore.Model.Text;
@@ -12,24 +14,30 @@ namespace HomeSensors.Model.Cameras.Repositories;
 public class CameraRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
+    private readonly HybridCache _cache;
 
-    public CameraRepository(HomeSensorsContext data)
+    public CameraRepository(HomeSensorsContext data, HybridCache cache)
     {
         _data = data;
+        _cache = cache;
     }
 
     /// <summary>
     /// Get all cameras.
     /// </summary>
-    public async Task<List<CameraResponse>> GetAllAsync()
+    public async Task<List<CameraResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return (await _data.Cameras
-            .TagWith(GetTag())
-            .AsNoTracking()
-            .OrderBy(x => x.IsHidden)
-            .ThenBy(x => x.Name)
-            .ToListAsync())
-            .ConvertAll(x => x.ToApiResponse());
+        return await _cache.GetOrCreateAsync(
+            GetCaller(),
+            async cancel => (await _data.Cameras
+                .TagWith(GetTag())
+                .AsNoTracking()
+                .OrderBy(x => x.IsHidden)
+                .ThenBy(x => x.Name)
+                .ToListAsync(cancel))
+                .ConvertAll(x => x.ToApiResponse()),
+            tags: [CacheHelpers.CameraAllCacheTag],
+            cancellationToken: cancellationToken);
     }
 
     public async Task<IResult<EntityMessage<long>>> SaveAsync(CameraSaveRequest request)
@@ -74,6 +82,8 @@ public class CameraRepository : RepositoryBase
 
         await _data.SaveChangesAsync();
 
+        await _cache.RemoveByTagAsync(CacheHelpers.CameraAllCacheTag);
+
         return Result.Ok(EntityMessage.Create("Camera saved.", camera.Id));
     }
 
@@ -90,6 +100,8 @@ public class CameraRepository : RepositoryBase
         _data.Cameras.Remove(camera);
 
         await _data.SaveChangesAsync();
+
+        await _cache.RemoveByTagAsync(CacheHelpers.CameraAllCacheTag);
 
         return Result.Ok(EntityMessage.Create("Camera deleted.", camera.Id));
     }
