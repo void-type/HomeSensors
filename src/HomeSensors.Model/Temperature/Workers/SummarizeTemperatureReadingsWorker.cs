@@ -140,7 +140,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
 
                                 try
                                 {
-                                    await dbContext.TemperatureReadings.AddRangeAsync(readingsToCreate);
+                                    await dbContext.TemperatureReadings.AddRangeAsync(readingsToCreate, stoppingToken);
                                     dbContext.TemperatureReadings.RemoveRange(readingsToDelete);
 
                                     await dbContext.SaveChangesAsync(stoppingToken);

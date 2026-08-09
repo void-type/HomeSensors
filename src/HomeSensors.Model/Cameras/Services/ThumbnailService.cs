@@ -3,6 +3,7 @@ using HomeSensors.Model.Cameras.Helpers;
 using HomeSensors.Model.Cameras.Settings;
 using ImageMagick;
 using Microsoft.Extensions.Logging;
+using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.Cameras.Services;
 
@@ -38,7 +39,7 @@ public class ThumbnailService
 
         Directory.CreateDirectory(cacheDir);
 
-        var baseName = Path.GetFileNameWithoutExtension(fileName);
+        var baseName = TextHelpers.GetSafeFileName(Path.GetFileNameWithoutExtension(fileName), "_");
         var smallPath = Path.Combine(cacheDir, $"{baseName}_thumb-small.webp");
         var mediumPath = Path.Combine(cacheDir, $"{baseName}_thumb-medium.webp");
 
@@ -78,7 +79,7 @@ public class ThumbnailService
     {
         var slug = camera.SelectSlug();
         var cacheDir = Path.Combine(_settings.ThumbnailCachePath, slug);
-        var baseName = Path.GetFileNameWithoutExtension(fileName);
+        var baseName = TextHelpers.GetSafeFileName(Path.GetFileNameWithoutExtension(fileName), "_");
 
         return size switch
         {
@@ -108,11 +109,17 @@ public class ThumbnailService
         try
         {
             await thumb.WriteAsync(tmpPath, MagickFormat.WebP, cancellationToken);
+            // SCS0018: outputPath is constructed from admin-configured camera settings (slug, ThumbnailCachePath),
+            // not from user-supplied data. The baseName component is sanitized via GetSafeFileName upstream.
+#pragma warning disable SCS0018
             File.Move(tmpPath, outputPath, overwrite: true);
+#pragma warning restore SCS0018
         }
         catch
         {
+#pragma warning disable SCS0018
             File.Delete(tmpPath);
+#pragma warning restore SCS0018
             throw;
         }
     }

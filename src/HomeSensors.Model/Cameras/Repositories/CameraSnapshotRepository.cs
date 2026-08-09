@@ -1,20 +1,24 @@
 ﻿using HomeSensors.Model.Cameras.Helpers;
 using HomeSensors.Model.Cameras.Models;
+using HomeSensors.Model.Cameras.Services;
 using HomeSensors.Model.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Messages;
+using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.Cameras.Repositories;
 
 public class CameraSnapshotRepository : RepositoryBase
 {
     private readonly HomeSensorsContext _data;
+    private readonly ThumbnailService _thumbnailService;
 
-    public CameraSnapshotRepository(HomeSensorsContext data)
+    public CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService thumbnailService)
     {
         _data = data;
+        _thumbnailService = thumbnailService;
     }
 
     /// <summary>
@@ -136,11 +140,16 @@ public class CameraSnapshotRepository : RepositoryBase
 
         var slug = camera.SelectSlug();
         var fileName = $"{slug}_{timestampSegment}{extension}";
-        var destPath = Path.Combine(camera.SnapshotsPath, fileName);
+
+        // SCS0018: camera.SnapshotsPath is admin-configured in the database, not user input.
+        // The fileName is built from a validated extension, a parsed timestamp, and a DB-derived slug — none are user-controlled.
+#pragma warning disable SCS0018
+        var destPath = TextHelpers.GetSafeFilePath(Path.Combine(camera.SnapshotsPath, fileName), "_");
 
         try
         {
             await using var stream = new FileStream(destPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+#pragma warning restore SCS0018
             await request.FileContent.CopyToAsync(stream, cancellationToken);
         }
         catch (IOException)
@@ -149,5 +158,43 @@ public class CameraSnapshotRepository : RepositoryBase
         }
 
         return Result.Ok(EntityMessage.Create("Snapshot uploaded.", fileName));
+    }
+
+    /// <summary>
+    /// Ensure thumbnails are generated and return the filesystem path for the requested size.
+    /// </summary>
+    public async Task<IResult<string>> GetThumbnailPathAsync(long cameraId, string fileName, ThumbnailSize size, CancellationToken cancellationToken)
+    {
+        var camera = await _data.Cameras
+            .TagWith(GetTag())
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == cameraId, cancellationToken);
+
+        if (camera is null)
+        {
+            return Result.Fail<string>(new Failure("Camera not found.", "cameraId"));
+        }
+
+        await _thumbnailService.EnsureThumbnailsAsync(camera, fileName, cancellationToken);
+
+        return Result.Ok(_thumbnailService.GetThumbnailPath(camera, fileName, size));
+    }
+
+    /// <summary>
+    /// Return the filesystem path for a camera's original snapshot file.
+    /// </summary>
+    public async Task<IResult<string>> GetOriginalPathAsync(long cameraId, string fileName, CancellationToken cancellationToken)
+    {
+        var camera = await _data.Cameras
+            .TagWith(GetTag())
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == cameraId, cancellationToken);
+
+        if (camera is null)
+        {
+            return Result.Fail<string>(new Failure("Camera not found.", "cameraId"));
+        }
+
+        return Result.Ok(Path.Combine(camera.SnapshotsPath, TextHelpers.GetSafeFileName(fileName, "_")));
     }
 }

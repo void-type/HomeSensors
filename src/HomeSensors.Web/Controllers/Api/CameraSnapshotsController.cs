@@ -1,10 +1,8 @@
 ﻿using HomeSensors.Model.Cameras.Models;
 using HomeSensors.Model.Cameras.Repositories;
 using HomeSensors.Model.Cameras.Services;
-using HomeSensors.Model.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.EntityFrameworkCore;
 using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Configuration;
 using VoidCore.AspNet.Routing;
@@ -19,16 +17,12 @@ namespace HomeSensors.Web.Controllers.Api;
 public class CameraSnapshotsController : ControllerBase
 {
     private readonly CameraSnapshotRepository _cameraSnapshotRepository;
-    private readonly ThumbnailService _thumbnailService;
-    private readonly HomeSensorsContext _data;
     private readonly WebApplicationSettings _applicationSettings;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
-    public CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRepository, ThumbnailService thumbnailService, HomeSensorsContext data, WebApplicationSettings applicationSettings)
+    public CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRepository, WebApplicationSettings applicationSettings)
     {
         _cameraSnapshotRepository = cameraSnapshotRepository;
-        _thumbnailService = thumbnailService;
-        _data = data;
         _applicationSettings = applicationSettings;
     }
 
@@ -56,46 +50,40 @@ public class CameraSnapshotsController : ControllerBase
     [Route("{cameraId}/thumbnail/{fileName}")]
     public async Task<IActionResult> GetThumbnailAsync(long cameraId, string fileName, [FromQuery] string size = "medium", CancellationToken cancellationToken = default)
     {
-        var camera = await _data.Cameras.FirstOrDefaultAsync(x => x.Id == cameraId, cancellationToken);
-
-        if (camera is null)
-        {
-            return NotFound("Camera not found.");
-        }
-
         var thumbnailSize = size switch
         {
             "small" => ThumbnailSize.Small,
             _ => ThumbnailSize.Medium,
         };
 
-        await _thumbnailService.EnsureThumbnailsAsync(camera, fileName, cancellationToken);
+        var result = await _cameraSnapshotRepository.GetThumbnailPathAsync(cameraId, fileName, thumbnailSize, cancellationToken);
 
-        var thumbnailPath = _thumbnailService.GetThumbnailPath(camera, fileName, thumbnailSize);
+        if (result.IsFailed)
+        {
+            return HttpResponder.Respond(result);
+        }
 
-        if (!System.IO.File.Exists(thumbnailPath))
+        if (!System.IO.File.Exists(result.Value))
         {
             return NotFound("Thumbnail not found.");
         }
 
         Response.Headers.CacheControl = "public, max-age=3600";
-        return PhysicalFile(thumbnailPath, "image/webp");
+        return PhysicalFile(result.Value, "image/webp");
     }
 
     [HttpGet]
     [Route("{cameraId}/original/{fileName}")]
-    public async Task<IActionResult> GetOriginalAsync(long cameraId, string fileName)
+    public async Task<IActionResult> GetOriginalAsync(long cameraId, string fileName, CancellationToken cancellationToken)
     {
-        var camera = await _data.Cameras.FirstOrDefaultAsync(x => x.Id == cameraId);
+        var result = await _cameraSnapshotRepository.GetOriginalPathAsync(cameraId, fileName, cancellationToken);
 
-        if (camera is null)
+        if (result.IsFailed)
         {
-            return NotFound("Camera not found.");
+            return HttpResponder.Respond(result);
         }
 
-        var originalPath = Path.Combine(camera.SnapshotsPath, TextHelpers.GetSafeFileName(fileName, "_"));
-
-        if (!System.IO.File.Exists(originalPath))
+        if (!System.IO.File.Exists(result.Value))
         {
             return NotFound("Snapshot not found.");
         }
@@ -105,7 +93,7 @@ public class CameraSnapshotsController : ControllerBase
             : "application/octet-stream";
 
         Response.Headers.CacheControl = "public, max-age=3600";
-        return PhysicalFile(originalPath, contentType);
+        return PhysicalFile(result.Value, contentType);
     }
 
     [HttpPost]

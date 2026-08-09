@@ -73,7 +73,7 @@ public class SmtpEmailer : IEmailSender
                 message.Subject,
                 message.To);
 
-            await client.SendAsync(message);
+            await client.SendAsync(message, cancellationToken);
             await client.DisconnectAsync(true, cancellationToken);
         }
         catch (Exception ex)
