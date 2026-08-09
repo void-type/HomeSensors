@@ -9,6 +9,7 @@ using VoidCore.AspNet.ClientApp;
 using VoidCore.AspNet.Routing;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Collections;
+using VoidCore.Model.Responses.Messages;
 using VoidCore.Model.Text;
 
 namespace HomeSensors.Web.Controllers.Api;
@@ -101,5 +102,27 @@ public class CameraSnapshotsController : ControllerBase
 
         Response.Headers.CacheControl = "public, max-age=3600";
         return PhysicalFile(originalPath, contentType);
+    }
+
+    [HttpPost]
+    [Route("{cameraId}/upload")]
+    [ProducesResponseType(typeof(EntityMessage<string>), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 404)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 409)]
+    public async Task<IActionResult> UploadOriginalAsync(long cameraId, IFormFile file, [FromForm] string timestamp, CancellationToken cancellationToken)
+    {
+        await using var uploadStream = file.OpenReadStream();
+
+        var request = new CameraSnapshotUploadRequest
+        {
+            CameraId = cameraId,
+            Timestamp = timestamp,
+            FileName = file.FileName,
+            FileContent = uploadStream,
+        };
+
+        return await _cameraSnapshotRepository.UploadAsync(request, cancellationToken)
+            .MapAsync(HttpResponder.Respond);
     }
 }

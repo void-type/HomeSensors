@@ -116,6 +116,12 @@ export interface CameraSnapshot {
   originalUrl?: string;
 }
 
+/** A UI-friendly message and the Id of the entity that was affected during an event. */
+export type EntityMessageOfString = UserMessage & {
+  /** The Id of the entity affected during an event. */
+  id?: string | null;
+};
+
 export interface CategoryResponse {
   /** @format int64 */
   id?: number;
@@ -315,6 +321,11 @@ export interface CameraSnapshotsGetOriginalParams {
   /** @format int64 */
   cameraId: number;
   fileName: string;
+}
+
+export interface CameraSnapshotsUploadOriginalParams {
+  /** @format int64 */
+  cameraId: number;
 }
 
 export interface CategoriesDeleteParams {

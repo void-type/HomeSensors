@@ -15,6 +15,7 @@ import type {AppVersion,
   CameraSnapshotsGetOriginalParams,
   CameraSnapshotsGetThumbnailParams,
   CameraSnapshotsGetTimelineParams,
+  CameraSnapshotsUploadOriginalParams,
   CategoriesDeleteParams,
   CategoryResponse,
   CategorySaveRequest,
@@ -22,6 +23,7 @@ import type {AppVersion,
   EmailRecipientSaveRequest,
   EmailRecipientsDeleteParams,
   EntityMessageOfLong,
+  EntityMessageOfString,
   IItemSetOfIFailure,
   TemperatureCheckLimitResponse,
   TemperatureDeviceResponse,
@@ -180,6 +182,34 @@ export class Api<
     this.request<Blob, any>({
       path: `/api/camera-snapshots/${cameraId}/original/${fileName}`,
       method: "GET",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags CameraSnapshots
+   * @name CameraSnapshotsUploadOriginal
+   * @request POST:/api/camera-snapshots/{cameraId}/upload
+   * @response `200` `EntityMessageOfString`
+   * @response `400` `IItemSetOfIFailure`
+   * @response `404` `IItemSetOfIFailure`
+   * @response `409` `IItemSetOfIFailure`
+   */
+  cameraSnapshotsUploadOriginal = (
+    { cameraId }: CameraSnapshotsUploadOriginalParams,
+    data: {
+      /** @format binary */
+      file?: File | null;
+      timestamp?: string | null;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<EntityMessageOfString, IItemSetOfIFailure>({
+      path: `/api/camera-snapshots/${cameraId}/upload`,
+      method: "POST",
+      body: data,
+      type: ContentType.FormData,
+      format: "json",
       ...params,
     });
   /**
