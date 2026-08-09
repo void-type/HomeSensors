@@ -52,14 +52,9 @@ public static partial class CameraHelpers
     /// <summary>
     /// Convert a camera name to a URL/path-safe slug (e.g. "Back Yard" → "back-yard").
     /// </summary>
-    public static string SelectSlug(this Camera camera) => ToSlug(camera.Name);
-
-    /// <summary>
-    /// Convert a camera name to a URL/path-safe slug (e.g. "Back Yard" → "back-yard").
-    /// </summary>
-    public static string ToSlug(string name)
+    public static string SelectSlug(this Camera camera)
     {
-        var lower = name.ToLowerInvariant();
+        var lower = camera.Name.ToLowerInvariant();
         var slug = SlugCleanRegex().Replace(lower, "-");
         return MultiDashRegex().Replace(slug, "-").Trim('-');
     }
