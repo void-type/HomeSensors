@@ -23,9 +23,9 @@ public class TemperatureLocationsController : ControllerBase
     [Route("all")]
     [ProducesResponseType(typeof(List<TemperatureLocationResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetAllAsync()
+    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _locationRepository.GetAllAsync()
+        return await _locationRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -33,18 +33,18 @@ public class TemperatureLocationsController : ControllerBase
     [Route("check-limits")]
     [ProducesResponseType(typeof(List<TemperatureCheckLimitResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> CheckLimitsAsync(DateTimeOffset since, bool isAveragingEnabled)
+    public async Task<IActionResult> CheckLimitsAsync(DateTimeOffset since, bool isAveragingEnabled, CancellationToken cancellationToken)
     {
-        return await _locationRepository.CheckLimitsAsync(since, isAveragingEnabled)
+        return await _locationRepository.CheckLimitsAsync(since, isAveragingEnabled, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> SaveAsync([FromBody] TemperatureLocationSaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] TemperatureLocationSaveRequest request, CancellationToken cancellationToken)
     {
-        return await _locationRepository.SaveAsync(request)
+        return await _locationRepository.SaveAsync(request, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -52,9 +52,9 @@ public class TemperatureLocationsController : ControllerBase
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> DeleteAsync(long id)
+    public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _locationRepository.DeleteAsync(id)
+        return await _locationRepository.DeleteAsync(id, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 }

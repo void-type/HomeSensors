@@ -17,26 +17,26 @@ public class EmailRecipientRepository : RepositoryBase
         _data = data;
     }
 
-    public async Task<List<EmailRecipientResponse>> GetAllAsync()
+    public async Task<List<EmailRecipientResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         return await _data.EmailRecipients
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.Email)
             .Select(x => new EmailRecipientResponse(x.Id, x.Email))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<string>> GetAllEmailsAsync()
+    public async Task<List<string>> GetAllEmailsAsync(CancellationToken cancellationToken)
     {
         return await _data.EmailRecipients
             .TagWith(GetTag())
             .AsNoTracking()
             .Select(x => x.Email)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IResult<EntityMessage<long>>> SaveAsync(EmailRecipientSaveRequest request)
+    public async Task<IResult<EntityMessage<long>>> SaveAsync(EmailRecipientSaveRequest request, CancellationToken cancellationToken)
     {
         if (request.Email.IsNullOrWhiteSpace())
         {
@@ -44,25 +44,25 @@ public class EmailRecipientRepository : RepositoryBase
         }
 
         var recipient = await _data.EmailRecipients
-            .FirstOrDefaultAsync(x => x.Id == request.Id);
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (recipient is null)
         {
             recipient = new EmailRecipient();
-            await _data.EmailRecipients.AddAsync(recipient);
+            await _data.EmailRecipients.AddAsync(recipient, cancellationToken);
         }
 
         recipient.Email = request.Email;
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Email recipient saved.", recipient.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
         var recipient = await _data.EmailRecipients
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (recipient is null)
         {
@@ -71,7 +71,7 @@ public class EmailRecipientRepository : RepositoryBase
 
         _data.EmailRecipients.Remove(recipient);
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Email recipient deleted.", recipient.Id));
     }

@@ -32,7 +32,7 @@ public class CameraSnapshotsController : ControllerBase
     [Route("{cameraId}/timeline")]
     [ProducesResponseType(typeof(List<CameraSnapshot>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetTimelineAsync(long cameraId, DateTimeOffset? start, DateTimeOffset? end)
+    public async Task<IActionResult> GetTimelineAsync(long cameraId, DateTimeOffset? start, DateTimeOffset? end, CancellationToken cancellationToken)
     {
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
 
@@ -43,15 +43,15 @@ public class CameraSnapshotsController : ControllerBase
             End = end,
         };
 
-        return await _cameraSnapshotRepository.GetTimelineAsync(request, baseUrl)
+        return await _cameraSnapshotRepository.GetTimelineAsync(request, baseUrl, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpGet]
     [Route("{cameraId}/thumbnail/{fileName}")]
-    public async Task<IActionResult> GetThumbnailAsync(long cameraId, string fileName, [FromQuery] string size = "medium")
+    public async Task<IActionResult> GetThumbnailAsync(long cameraId, string fileName, [FromQuery] string size = "medium", CancellationToken cancellationToken = default)
     {
-        var camera = await _data.Cameras.FirstOrDefaultAsync(x => x.Id == cameraId);
+        var camera = await _data.Cameras.FirstOrDefaultAsync(x => x.Id == cameraId, cancellationToken);
 
         if (camera is null)
         {
@@ -64,7 +64,7 @@ public class CameraSnapshotsController : ControllerBase
             _ => ThumbnailSize.Medium,
         };
 
-        await _thumbnailService.EnsureThumbnailsAsync(camera, fileName);
+        await _thumbnailService.EnsureThumbnailsAsync(camera, fileName, cancellationToken);
 
         var thumbnailPath = _thumbnailService.GetThumbnailPath(camera, fileName, thumbnailSize);
 

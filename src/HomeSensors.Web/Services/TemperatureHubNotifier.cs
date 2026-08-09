@@ -17,15 +17,15 @@ public class TemperatureHubNotifier : ITemperatureHubNotifier
         _scopeFactory = scopeFactory;
     }
 
-    public async Task NotifyCurrentReadingsChangedAsync(CancellationToken cancellationToken = default)
+    public async Task NotifyCurrentReadingsChangedAsync(CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
 
         var readingRepository = scope.ServiceProvider.GetRequiredService<TemperatureReadingRepository>();
-        var currentReadings = await readingRepository.GetCurrentCachedAsync(true, cancellationToken);
+        var currentReadings = await readingRepository.GetCurrentCachedAsync(cancellationToken, refreshCache: true);
 
         var categoryRepository = scope.ServiceProvider.GetRequiredService<CategoryRepository>();
-        var categories = await categoryRepository.GetAllAsync();
+        var categories = await categoryRepository.GetAllAsync(cancellationToken);
 
         await Task.WhenAll(
             _hubContext.Clients.All.SendAsync(

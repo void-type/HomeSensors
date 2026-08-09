@@ -23,18 +23,18 @@ public class CategoriesController : ControllerBase
     [Route("all")]
     [ProducesResponseType(typeof(List<CategoryResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetAllAsync()
+    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _categoryRepository.GetAllAsync()
+        return await _categoryRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> SaveAsync([FromBody] CategorySaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] CategorySaveRequest request, CancellationToken cancellationToken)
     {
-        return await _categoryRepository.SaveAsync(request)
+        return await _categoryRepository.SaveAsync(request, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -42,9 +42,9 @@ public class CategoriesController : ControllerBase
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> DeleteAsync(long id)
+    public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _categoryRepository.DeleteAsync(id)
+        return await _categoryRepository.DeleteAsync(id, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 }

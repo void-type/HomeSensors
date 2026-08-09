@@ -27,9 +27,9 @@ public class TemperaturesHub : Hub
     // Omit async suffix for hub methods
 #pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
 
-    public async Task<List<TemperatureReadingResponse>> GetCurrentReadings()
+    public async Task<List<TemperatureReadingResponse>> GetCurrentReadings(CancellationToken cancellationToken)
     {
-        return await _readingRepository.GetCurrentCachedAsync();
+        return await _readingRepository.GetCurrentCachedAsync(cancellationToken);
     }
 
     public MqttDiscoveryClientStatus GetDiscoveryStatus()

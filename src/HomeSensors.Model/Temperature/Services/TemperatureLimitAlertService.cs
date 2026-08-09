@@ -33,7 +33,7 @@ public class TemperatureLimitAlertService
 
     public async Task ProcessAsync(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, DateTimeOffset since, bool isAveragingEnabled, CancellationToken stoppingToken)
     {
-        var failedResults = (await _locationRepository.CheckLimitsAsync(since, isAveragingEnabled))
+        var failedResults = (await _locationRepository.CheckLimitsAsync(since, isAveragingEnabled, stoppingToken))
             .Where(x => x.IsFailed)
             .ToArray();
 

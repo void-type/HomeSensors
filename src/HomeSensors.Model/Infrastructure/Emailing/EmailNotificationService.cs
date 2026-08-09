@@ -28,7 +28,7 @@ public class EmailNotificationService
 
     public async Task SendAsync(Action<EmailOptionsBuilder> configure, CancellationToken cancellationToken)
     {
-        var recipients = await _emailRecipientRepository.GetAllEmailsAsync();
+        var recipients = await _emailRecipientRepository.GetAllEmailsAsync(cancellationToken);
 
         var newEmail = _emailFactory.Create(e =>
         {

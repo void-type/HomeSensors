@@ -23,18 +23,18 @@ public class CamerasController : ControllerBase
     [Route("all")]
     [ProducesResponseType(typeof(List<CameraResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetAllAsync()
+    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _cameraRepository.GetAllAsync()
+        return await _cameraRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> SaveAsync([FromBody] CameraSaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] CameraSaveRequest request, CancellationToken cancellationToken)
     {
-        return await _cameraRepository.SaveAsync(request)
+        return await _cameraRepository.SaveAsync(request, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -42,9 +42,9 @@ public class CamerasController : ControllerBase
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> DeleteAsync(long id)
+    public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _cameraRepository.DeleteAsync(id)
+        return await _cameraRepository.DeleteAsync(id, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 }

@@ -29,9 +29,9 @@ public class TemperatureDeviceAlertService
 
     public async Task ProcessAsync(List<TemperatureDeviceAlert> latchedAlerts, DateTimeOffset now, CancellationToken stoppingToken)
     {
-        var devices = await _deviceRepository.GetAllAsync();
+        var devices = await _deviceRepository.GetAllAsync(stoppingToken);
 
-        var locations = await _locationRepository.GetAllAsync();
+        var locations = await _locationRepository.GetAllAsync(stoppingToken);
 
         var betweenNotifications = TimeSpan.FromMinutes(_alertSettings.BetweenNotificationsMinutes);
         var resendAfter = now.Add(betweenNotifications);

@@ -28,14 +28,14 @@ public class TemperatureDeviceRepository : RepositoryBase
     /// <summary>
     /// Get all devices with statuses and last readings.
     /// </summary>
-    public async Task<List<TemperatureDeviceResponse>> GetAllAsync()
+    public async Task<List<TemperatureDeviceResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var lastReadings = await _data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
             .GroupBy(x => x.TemperatureDeviceId)
             .Select(g => g.OrderByDescending(x => x.Time).First())
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var data = await _data.TemperatureDevices
             .TagWith(GetTag())
@@ -52,7 +52,7 @@ public class TemperatureDeviceRepository : RepositoryBase
                 x.InactiveLimitMinutes,
                 LocationId = x.TemperatureLocationId,
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return data.ConvertAll(x =>
         {
@@ -78,13 +78,13 @@ public class TemperatureDeviceRepository : RepositoryBase
         });
     }
 
-    public async Task<IResult<EntityMessage<long>>> SaveAsync(TemperatureDeviceSaveRequest request)
+    public async Task<IResult<EntityMessage<long>>> SaveAsync(TemperatureDeviceSaveRequest request, CancellationToken cancellationToken)
     {
         var failures = new List<IFailure>();
 
         if (!request.IsRetired)
         {
-            var locationExists = await _data.TemperatureLocations.AnyAsync(x => x.Id == request.LocationId);
+            var locationExists = await _data.TemperatureLocations.AnyAsync(x => x.Id == request.LocationId, cancellationToken);
 
             if (!locationExists)
             {
@@ -104,7 +104,7 @@ public class TemperatureDeviceRepository : RepositoryBase
         else
         {
             var topicAlreadyUsed = await _data.TemperatureDevices
-                .AnyAsync(x => x.MqttTopic == request.MqttTopic && x.Id != request.Id);
+                .AnyAsync(x => x.MqttTopic == request.MqttTopic && x.Id != request.Id, cancellationToken);
 
             if (topicAlreadyUsed)
             {
@@ -123,12 +123,12 @@ public class TemperatureDeviceRepository : RepositoryBase
         }
 
         var device = await _data.TemperatureDevices
-            .FirstOrDefaultAsync(x => x.Id == request.Id);
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (device is null)
         {
             device = new TemperatureDevice();
-            await _data.TemperatureDevices.AddAsync(device);
+            await _data.TemperatureDevices.AddAsync(device, cancellationToken);
         }
 
         device.Name = request.Name;
@@ -138,17 +138,17 @@ public class TemperatureDeviceRepository : RepositoryBase
         device.InactiveLimitMinutes = request.InactiveLimitMinutes;
         device.TemperatureLocationId = request.LocationId;
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag);
+        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag, cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Device saved.", device.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
         var device = await _data.TemperatureDevices
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (device is null)
         {
@@ -157,9 +157,9 @@ public class TemperatureDeviceRepository : RepositoryBase
 
         _data.TemperatureDevices.Remove(device);
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag);
+        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag, cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Device deleted.", device.Id));
     }

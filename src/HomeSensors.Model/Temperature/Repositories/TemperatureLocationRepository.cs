@@ -28,14 +28,14 @@ public class TemperatureLocationRepository : RepositoryBase
     /// <summary>
     /// Get all locations.
     /// </summary>
-    public async Task<List<TemperatureLocationResponse>> GetAllAsync()
+    public async Task<List<TemperatureLocationResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         return (await _data.TemperatureLocations
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.IsHidden)
             .ThenBy(x => x.Name)
-            .ToListAsync())
+            .ToListAsync(cancellationToken))
             .ConvertAll(x => x.ToApiResponse());
     }
 
@@ -44,21 +44,22 @@ public class TemperatureLocationRepository : RepositoryBase
     /// </summary>
     /// <param name="since">The time of the last check</param>
     /// <param name="isAveragingEnabled">If true, the check will average readings over the look back period</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>List of results</returns>
-    public async Task<List<TemperatureCheckLimitResponse>> CheckLimitsAsync(DateTimeOffset since, bool isAveragingEnabled)
+    public async Task<List<TemperatureCheckLimitResponse>> CheckLimitsAsync(DateTimeOffset since, bool isAveragingEnabled, CancellationToken cancellationToken)
     {
         var locations = (await _data.TemperatureLocations
             .TagWith(GetTag())
             .AsNoTracking()
-            .ToListAsync())
+            .ToListAsync(cancellationToken))
             .Select(x => x.ToApiResponse());
 
         var results = new List<TemperatureCheckLimitResponse>();
 
         foreach (var location in locations)
         {
-            var min = await GetMinExceededAsync(location, since, isAveragingEnabled);
-            var max = await GetMaxExceededAsync(location, since, isAveragingEnabled);
+            var min = await GetMinExceededAsync(location, since, isAveragingEnabled, cancellationToken);
+            var max = await GetMaxExceededAsync(location, since, isAveragingEnabled, cancellationToken);
 
             results.Add(new TemperatureCheckLimitResponse(location, min, max));
         }
@@ -66,7 +67,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return results;
     }
 
-    public async Task<IResult<EntityMessage<long>>> SaveAsync(TemperatureLocationSaveRequest request)
+    public async Task<IResult<EntityMessage<long>>> SaveAsync(TemperatureLocationSaveRequest request, CancellationToken cancellationToken)
     {
         var failures = new List<IFailure>();
 
@@ -76,7 +77,7 @@ public class TemperatureLocationRepository : RepositoryBase
         }
 
         var nameUsedByAnother = await _data.TemperatureLocations
-            .AnyAsync(x => x.Name == request.Name && x.Id != request.Id);
+            .AnyAsync(x => x.Name == request.Name && x.Id != request.Id, cancellationToken);
 
         if (nameUsedByAnother)
         {
@@ -86,7 +87,7 @@ public class TemperatureLocationRepository : RepositoryBase
         if (request.CategoryId is not null)
         {
             var category = await _data.Categories
-                .FirstOrDefaultAsync(x => x.Id == request.CategoryId);
+                .FirstOrDefaultAsync(x => x.Id == request.CategoryId, cancellationToken);
 
             if (category is null)
             {
@@ -100,12 +101,12 @@ public class TemperatureLocationRepository : RepositoryBase
         }
 
         var location = await _data.TemperatureLocations
-            .FirstOrDefaultAsync(x => x.Id == request.Id);
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (location is null)
         {
             location = new TemperatureLocation();
-            await _data.TemperatureLocations.AddAsync(location);
+            await _data.TemperatureLocations.AddAsync(location, cancellationToken);
         }
 
         location.Name = request.Name;
@@ -115,18 +116,18 @@ public class TemperatureLocationRepository : RepositoryBase
         location.Color = request.Color;
         location.CategoryId = request.CategoryId;
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag);
-        await _hubNotifier.NotifyCurrentReadingsChangedAsync();
+        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag, cancellationToken);
+        await _hubNotifier.NotifyCurrentReadingsChangedAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Location saved.", location.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
         var location = await _data.TemperatureLocations
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (location is null)
         {
@@ -134,7 +135,7 @@ public class TemperatureLocationRepository : RepositoryBase
         }
 
         var anyLocationReadings = await _data.TemperatureReadings
-            .AnyAsync(x => x.TemperatureLocationId == id);
+            .AnyAsync(x => x.TemperatureLocationId == id, cancellationToken);
 
         if (anyLocationReadings)
         {
@@ -142,7 +143,7 @@ public class TemperatureLocationRepository : RepositoryBase
         }
 
         var anyLocationDevices = await _data.TemperatureDevices
-            .AnyAsync(x => x.TemperatureLocationId == id);
+            .AnyAsync(x => x.TemperatureLocationId == id, cancellationToken);
 
         if (anyLocationDevices)
         {
@@ -151,15 +152,15 @@ public class TemperatureLocationRepository : RepositoryBase
 
         _data.TemperatureLocations.Remove(location);
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag);
-        await _hubNotifier.NotifyCurrentReadingsChangedAsync();
+        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag, cancellationToken);
+        await _hubNotifier.NotifyCurrentReadingsChangedAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Location deleted.", location.Id));
     }
 
-    private async Task<TemperatureReadingResponse?> GetMinExceededAsync(TemperatureLocationResponse location, DateTimeOffset since, bool isAveragingEnabled)
+    private async Task<TemperatureReadingResponse?> GetMinExceededAsync(TemperatureLocationResponse location, DateTimeOffset since, bool isAveragingEnabled, CancellationToken cancellationToken)
     {
         if (!location.MinTemperatureLimitCelsius.HasValue)
         {
@@ -173,7 +174,7 @@ public class TemperatureLocationRepository : RepositoryBase
                 .AsNoTracking()
                 .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id && x.TemperatureCelsius < location.MinTemperatureLimitCelsius)
                 .OrderBy(x => x.TemperatureCelsius)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             return min?.ToApiResponse();
         }
@@ -183,7 +184,7 @@ public class TemperatureLocationRepository : RepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (lookBack.Count == 0)
         {
@@ -204,7 +205,7 @@ public class TemperatureLocationRepository : RepositoryBase
         return null;
     }
 
-    private async Task<TemperatureReadingResponse?> GetMaxExceededAsync(TemperatureLocationResponse location, DateTimeOffset since, bool isAveragingEnabled)
+    private async Task<TemperatureReadingResponse?> GetMaxExceededAsync(TemperatureLocationResponse location, DateTimeOffset since, bool isAveragingEnabled, CancellationToken cancellationToken)
     {
         if (!location.MaxTemperatureLimitCelsius.HasValue)
         {
@@ -218,7 +219,7 @@ public class TemperatureLocationRepository : RepositoryBase
                 .AsNoTracking()
                 .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id && x.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
                 .OrderByDescending(x => x.TemperatureCelsius)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             return max?.ToApiResponse();
         }
@@ -228,7 +229,7 @@ public class TemperatureLocationRepository : RepositoryBase
             .TagWith(GetTag())
             .AsNoTracking()
             .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (lookBack.Count == 0)
         {

@@ -25,7 +25,7 @@ public class CameraRepository : RepositoryBase
     /// <summary>
     /// Get all cameras.
     /// </summary>
-    public async Task<List<CameraResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<CameraResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         return await _cache.GetOrCreateAsync(
             GetCaller(),
@@ -40,7 +40,7 @@ public class CameraRepository : RepositoryBase
             cancellationToken: cancellationToken);
     }
 
-    public async Task<IResult<EntityMessage<long>>> SaveAsync(CameraSaveRequest request)
+    public async Task<IResult<EntityMessage<long>>> SaveAsync(CameraSaveRequest request, CancellationToken cancellationToken)
     {
         var failures = new List<IFailure>();
 
@@ -55,7 +55,7 @@ public class CameraRepository : RepositoryBase
         }
 
         var nameUsedByAnother = await _data.Cameras
-            .AnyAsync(x => x.Name == request.Name && x.Id != request.Id);
+            .AnyAsync(x => x.Name == request.Name && x.Id != request.Id, cancellationToken);
 
         if (nameUsedByAnother)
         {
@@ -68,29 +68,29 @@ public class CameraRepository : RepositoryBase
         }
 
         var camera = await _data.Cameras
-            .FirstOrDefaultAsync(x => x.Id == request.Id);
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (camera is null)
         {
             camera = new Camera();
-            await _data.Cameras.AddAsync(camera);
+            await _data.Cameras.AddAsync(camera, cancellationToken);
         }
 
         camera.Name = request.Name;
         camera.SnapshotsPath = request.SnapshotsPath;
         camera.IsHidden = request.IsHidden;
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.CameraAllCacheTag);
+        await _cache.RemoveByTagAsync(CacheHelpers.CameraAllCacheTag, cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Camera saved.", camera.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
         var camera = await _data.Cameras
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (camera is null)
         {
@@ -99,9 +99,9 @@ public class CameraRepository : RepositoryBase
 
         _data.Cameras.Remove(camera);
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.CameraAllCacheTag);
+        await _cache.RemoveByTagAsync(CacheHelpers.CameraAllCacheTag, cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Camera deleted.", camera.Id));
     }

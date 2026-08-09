@@ -2,5 +2,5 @@
 
 public interface ITemperatureHubNotifier
 {
-    Task NotifyCurrentReadingsChangedAsync(CancellationToken cancellationToken = default);
+    Task NotifyCurrentReadingsChangedAsync(CancellationToken cancellationToken);
 }

@@ -23,18 +23,18 @@ public class EmailRecipientsController : ControllerBase
     [Route("all")]
     [ProducesResponseType(typeof(List<EmailRecipientResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetAllAsync()
+    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _emailRecipientRepository.GetAllAsync()
+        return await _emailRecipientRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> SaveAsync([FromBody] EmailRecipientSaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] EmailRecipientSaveRequest request, CancellationToken cancellationToken)
     {
-        return await _emailRecipientRepository.SaveAsync(request)
+        return await _emailRecipientRepository.SaveAsync(request, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -42,9 +42,9 @@ public class EmailRecipientsController : ControllerBase
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> DeleteAsync(long id)
+    public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _emailRecipientRepository.DeleteAsync(id)
+        return await _emailRecipientRepository.DeleteAsync(id, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 }

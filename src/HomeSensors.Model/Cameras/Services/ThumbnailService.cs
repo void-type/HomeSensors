@@ -24,7 +24,7 @@ public class ThumbnailService
     /// <summary>
     /// Ensure all thumbnail sizes exist for the given snapshot. Skips any that already exist.
     /// </summary>
-    public async Task EnsureThumbnailsAsync(Camera camera, string fileName, CancellationToken cancellationToken = default)
+    public async Task EnsureThumbnailsAsync(Camera camera, string fileName, CancellationToken cancellationToken)
     {
         var originalPath = Path.Combine(camera.SnapshotsPath, Path.GetFileName(fileName));
 

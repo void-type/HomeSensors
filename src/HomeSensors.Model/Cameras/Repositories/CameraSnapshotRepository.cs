@@ -19,12 +19,12 @@ public class CameraSnapshotRepository : RepositoryBase
     /// Get timeline items for a camera, filtered by optional date range.
     /// Thumbnails are generated on-demand by the thumbnail endpoint or in the background by the worker.
     /// </summary>
-    public async Task<IResult<List<CameraSnapshot>>> GetTimelineAsync(CameraSnapshotTimelineRequest request, string baseUrl)
+    public async Task<IResult<List<CameraSnapshot>>> GetTimelineAsync(CameraSnapshotTimelineRequest request, string baseUrl, CancellationToken cancellationToken)
     {
         var camera = await _data.Cameras
             .TagWith(GetTag())
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == request.CameraId);
+            .FirstOrDefaultAsync(x => x.Id == request.CameraId, cancellationToken);
 
         if (camera is null)
         {

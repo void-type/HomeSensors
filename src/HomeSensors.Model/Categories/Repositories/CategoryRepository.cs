@@ -24,13 +24,13 @@ public class CategoryRepository : RepositoryBase
         _hubNotifier = hubNotifier;
     }
 
-    public async Task<List<CategoryResponse>> GetAllAsync()
+    public async Task<List<CategoryResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var data = await _data.Categories
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.Name)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return data.ConvertAll(x =>
         {
@@ -43,7 +43,7 @@ public class CategoryRepository : RepositoryBase
         });
     }
 
-    public async Task<IResult<EntityMessage<long>>> SaveAsync(CategorySaveRequest request)
+    public async Task<IResult<EntityMessage<long>>> SaveAsync(CategorySaveRequest request, CancellationToken cancellationToken)
     {
         var failures = new List<IFailure>();
 
@@ -58,29 +58,29 @@ public class CategoryRepository : RepositoryBase
         }
 
         var category = await _data.Categories
-            .FirstOrDefaultAsync(x => x.Id == request.Id);
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (category is null)
         {
             category = new Category();
-            await _data.Categories.AddAsync(category);
+            await _data.Categories.AddAsync(category, cancellationToken);
         }
 
         category.Name = request.Name;
         category.Order = request.Order;
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.CategoryAllCacheTag);
-        await _hubNotifier.NotifyCurrentReadingsChangedAsync();
+        await _cache.RemoveByTagAsync(CacheHelpers.CategoryAllCacheTag, cancellationToken);
+        await _hubNotifier.NotifyCurrentReadingsChangedAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Category saved.", category.Id));
     }
 
-    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id)
+    public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
         var category = await _data.Categories
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (category is null)
         {
@@ -89,10 +89,10 @@ public class CategoryRepository : RepositoryBase
 
         _data.Categories.Remove(category);
 
-        await _data.SaveChangesAsync();
+        await _data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.CategoryAllCacheTag);
-        await _hubNotifier.NotifyCurrentReadingsChangedAsync();
+        await _cache.RemoveByTagAsync(CacheHelpers.CategoryAllCacheTag, cancellationToken);
+        await _hubNotifier.NotifyCurrentReadingsChangedAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Category deleted.", category.Id));
     }

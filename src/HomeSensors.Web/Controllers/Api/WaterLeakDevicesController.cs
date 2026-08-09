@@ -26,18 +26,18 @@ public class WaterLeakDevicesController : ControllerBase
     [Route("all")]
     [ProducesResponseType(typeof(List<WaterLeakDeviceResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetAllAsync()
+    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _deviceRepository.GetAllAsync()
+        return await _deviceRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> SaveAsync([FromBody] WaterLeakDeviceSaveRequest request)
+    public async Task<IActionResult> SaveAsync([FromBody] WaterLeakDeviceSaveRequest request, CancellationToken cancellationToken)
     {
-        return await _deviceRepository.SaveAsync(request)
+        return await _deviceRepository.SaveAsync(request, cancellationToken)
             .TeeAsync(RefreshTopicSubscriptionsAsync)
             .MapAsync(HttpResponder.Respond);
     }
@@ -46,9 +46,9 @@ public class WaterLeakDevicesController : ControllerBase
     [Route("{id}")]
     [ProducesResponseType(typeof(EntityMessage<long>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> DeleteAsync(long id)
+    public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _deviceRepository.DeleteAsync(id)
+        return await _deviceRepository.DeleteAsync(id, cancellationToken)
             .TeeAsync(RefreshTopicSubscriptionsAsync)
             .MapAsync(HttpResponder.Respond);
     }

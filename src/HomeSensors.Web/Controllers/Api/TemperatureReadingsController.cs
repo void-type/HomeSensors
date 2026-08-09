@@ -22,7 +22,7 @@ public class TemperatureReadingsController : ControllerBase
     [Route("current")]
     [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetCurrentReadingsAsync(CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetCurrentReadingsAsync(CancellationToken cancellationToken)
     {
         return await _readingRepository.GetCurrentCachedAsync(cancellationToken: cancellationToken)
             .MapAsync(HttpResponder.Respond);
@@ -32,7 +32,7 @@ public class TemperatureReadingsController : ControllerBase
     [Route("location/{locationId}")]
     [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetCurrentReadingForLocationAsync(long locationId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetCurrentReadingForLocationAsync(long locationId, CancellationToken cancellationToken)
     {
         return await _readingRepository.GetCurrentForLocationCachedAsync(locationId, cancellationToken)
             .ToResultAsync(new Failure("No current reading for location.", nameof(locationId)))
@@ -43,7 +43,7 @@ public class TemperatureReadingsController : ControllerBase
     [Route("time-series")]
     [ProducesResponseType(typeof(TemperatureTimeSeriesResponse), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
-    public async Task<IActionResult> GetTimeSeriesAsync([FromBody] TemperatureTimeSeriesRequest request, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetTimeSeriesAsync([FromBody] TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
         var timeSeriesTask = _readingRepository.GetTimeSeriesCachedAsync(request, cancellationToken);
         var actionsTask = _readingRepository.GetHvacActionsCachedAsync(request, cancellationToken);
