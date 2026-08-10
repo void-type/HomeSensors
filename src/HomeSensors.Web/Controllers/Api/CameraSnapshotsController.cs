@@ -48,6 +48,9 @@ public class CameraSnapshotsController : ControllerBase
 
     [HttpGet]
     [Route("{cameraId}/thumbnail/{fileName}")]
+    [ProducesResponseType(typeof(FileResult), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> GetThumbnailAsync(long cameraId, string fileName, [FromQuery] string size = "medium", CancellationToken cancellationToken = default)
     {
         var thumbnailSize = size switch
@@ -74,6 +77,9 @@ public class CameraSnapshotsController : ControllerBase
 
     [HttpGet]
     [Route("{cameraId}/original/{fileName}")]
+    [ProducesResponseType(typeof(FileResult), 200)]
+    [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> GetOriginalAsync(long cameraId, string fileName, CancellationToken cancellationToken)
     {
         var result = await _cameraSnapshotRepository.GetOriginalPathAsync(cameraId, fileName, cancellationToken);
@@ -98,12 +104,29 @@ public class CameraSnapshotsController : ControllerBase
 
     [HttpPost]
     [Route("{cameraId}/upload")]
+    // Suppress anti-csrf so external services can upload snapshots.
+    // TODO: when you implement authentication, remove this and require a token or other auth mechanism for uploads.
+#pragma warning disable S4502 // CSRF protections should not be disabled
+    [IgnoreAntiforgeryToken]
+#pragma warning restore S4502 // CSRF protections should not be disabled
     [ProducesResponseType(typeof(EntityMessage<string>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 404)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 409)]
-    public async Task<IActionResult> UploadOriginalAsync(long cameraId, IFormFile file, [FromForm] string timestamp, CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadOriginalAsync(long cameraId, IFormFile? file, [FromForm] string? timestamp, CancellationToken cancellationToken)
     {
+        if (file is null)
+        {
+            return Result.Fail<EntityMessage<string>>(new Failure("File is required.", "file"))
+                .Map(HttpResponder.Respond);
+        }
+
+        if (string.IsNullOrWhiteSpace(timestamp))
+        {
+            return Result.Fail<EntityMessage<string>>(new Failure("Timestamp is required.", "timestamp"))
+                .Map(HttpResponder.Respond);
+        }
+
         await using var uploadStream = file.OpenReadStream();
 
         var request = new CameraSnapshotUploadRequest
