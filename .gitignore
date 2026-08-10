@@ -268,3 +268,6 @@ __pycache__/
 appsettings.*.json
 !appsettings.example.json
 .claude/settings.local.json
+
+# Ignore bacpacs
+.bacpac
