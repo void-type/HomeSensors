@@ -144,7 +144,7 @@ public class CameraSnapshotRepository : RepositoryBase
         // SCS0018: camera.SnapshotsPath is admin-configured in the database, not user input.
         // The fileName is built from a validated extension, a parsed timestamp, and a DB-derived slug — none are user-controlled.
 #pragma warning disable SCS0018
-        var destPath = TextHelpers.GetSafeFilePath(Path.Combine(camera.SnapshotsPath, fileName), "_");
+        var destPath = Path.Combine(camera.SnapshotsPath, fileName).GetSafeFilePath("_");
 
         try
         {
@@ -195,6 +195,6 @@ public class CameraSnapshotRepository : RepositoryBase
             return Result.Fail<string>(new Failure("Camera not found.", "cameraId"));
         }
 
-        return Result.Ok(Path.Combine(camera.SnapshotsPath, TextHelpers.GetSafeFileName(fileName, "_")));
+        return Result.Ok(Path.Combine(camera.SnapshotsPath, fileName.GetSafeFileName("_")));
     }
 }

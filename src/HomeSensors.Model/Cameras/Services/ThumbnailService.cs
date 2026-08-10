@@ -39,7 +39,7 @@ public class ThumbnailService
 
         Directory.CreateDirectory(cacheDir);
 
-        var baseName = TextHelpers.GetSafeFileName(Path.GetFileNameWithoutExtension(fileName), "_");
+        var baseName = Path.GetFileNameWithoutExtension(fileName).GetSafeFileName("_");
         var smallPath = Path.Combine(cacheDir, $"{baseName}_thumb-small.webp");
         var mediumPath = Path.Combine(cacheDir, $"{baseName}_thumb-medium.webp");
 
@@ -79,7 +79,7 @@ public class ThumbnailService
     {
         var slug = camera.SelectSlug();
         var cacheDir = Path.Combine(_settings.ThumbnailCachePath, slug);
-        var baseName = TextHelpers.GetSafeFileName(Path.GetFileNameWithoutExtension(fileName), "_");
+        var baseName = Path.GetFileNameWithoutExtension(fileName).GetSafeFileName("_");
 
         return size switch
         {
