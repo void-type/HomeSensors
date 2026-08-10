@@ -156,12 +156,14 @@ export class Api<
    * @name CameraSnapshotsGetThumbnail
    * @request GET:/api/camera-snapshots/{cameraId}/thumbnail/{fileName}
    * @response `200` `File`
+   * @response `400` `IItemSetOfIFailure`
+   * @response `404` `void`
    */
   cameraSnapshotsGetThumbnail = (
     { cameraId, fileName, ...query }: CameraSnapshotsGetThumbnailParams,
     params: RequestParams = {},
   ) =>
-    this.request<Blob, any>({
+    this.request<Blob, IItemSetOfIFailure | void>({
       path: `/api/camera-snapshots/${cameraId}/thumbnail/${fileName}`,
       method: "GET",
       query: query,
@@ -174,12 +176,14 @@ export class Api<
    * @name CameraSnapshotsGetOriginal
    * @request GET:/api/camera-snapshots/{cameraId}/original/{fileName}
    * @response `200` `File`
+   * @response `400` `IItemSetOfIFailure`
+   * @response `404` `void`
    */
   cameraSnapshotsGetOriginal = (
     { cameraId, fileName }: CameraSnapshotsGetOriginalParams,
     params: RequestParams = {},
   ) =>
-    this.request<Blob, any>({
+    this.request<Blob, IItemSetOfIFailure | void>({
       path: `/api/camera-snapshots/${cameraId}/original/${fileName}`,
       method: "GET",
       ...params,

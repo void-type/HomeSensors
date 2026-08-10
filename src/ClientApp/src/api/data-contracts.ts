@@ -119,7 +119,7 @@ export interface CameraSnapshot {
 /** A UI-friendly message and the Id of the entity that was affected during an event. */
 export type EntityMessageOfString = UserMessage & {
   /** The Id of the entity affected during an event. */
-  id?: string | null;
+  id?: string;
 };
 
 export interface CategoryResponse {
