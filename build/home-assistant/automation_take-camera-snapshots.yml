@@ -1,0 +1,82 @@
+# Put these two commands in your configuration.yaml file to enable the RESTful and Shell commands used in this automation.
+# # RESTful Command
+# rest_command:
+#   # Get all cameras from HomeSensors
+#   homesensors_get_cameras:
+#     url: "https://homesensors.void-type.net/api/cameras/all"
+#     method: GET
+#     headers:
+#       Accept: application/json
+
+# # Shell Command
+# shell_command:
+#   # Upload snapshot to HomeSensors
+#   homesensors_upload_snapshot: >
+#     curl -X POST
+#     "https://homesensors.void-type.net/api/camera-snapshots/{{ camera_id }}/upload"
+#     -F "file=@{{ snapshot_file }};type=image/jpeg"
+#     -F "timestamp={{ timestamp }}"
+
+alias: Take interval camera snapshots
+description: ""
+triggers:
+  - minutes: /30
+    trigger: time_pattern
+conditions: []
+actions:
+  - variables:
+      cameras:
+        - camera.reolink_one_fluent
+        - camera.reolink_two_fluent
+        - camera.reolink_three_fluent
+        - camera.reolink_one_clear
+        - camera.reolink_two_clear
+        - camera.reolink_three_clear
+      time: "{{ now().isoformat() }}"
+  - repeat:
+      for_each: "{{ cameras }}"
+      sequence:
+        - sequence:
+            - data:
+                entity_id: "{{ repeat.item }}"
+                filename: >-
+                  /config/www/camera_snapshots/{{ repeat.item | replace('camera.',
+                  '') }}_latest.jpg
+              action: camera.snapshot
+            - condition: template
+              value_template: "{{ repeat.item.endswith('_clear') }}"
+            - variables:
+                camera_slug: >-
+                  {{ repeat.item
+                    | replace('camera.reolink_', '')
+                    | replace('_clear', '')
+                    | replace('_', '-') }}
+                snapshot_file: >-
+                  /config/www/camera_snapshots/{{ repeat.item | replace('camera.',
+                  '') }}_latest.jpg
+            - action: rest_command.homesensors_get_cameras
+              response_variable: cameras_response
+            - variables:
+                camera_id: >-
+                  {{ cameras_response.content
+                    | selectattr('slug', 'equalto', camera_slug)
+                    | map(attribute='id')
+                    | first
+                    | default(none) }}
+            - condition: template
+              value_template: "{{ camera_id is not none }}"
+            - action: shell_command.homesensors_upload_snapshot
+              data:
+                camera_id: "{{ camera_id }}"
+                snapshot_file: "{{ snapshot_file }}"
+                timestamp: "{{ time }}"
+          continue_on_error: true
+          note: >-
+            This has continue_on_error: true to continue to other cameras if
+            snapshot fails.
+  - data:
+      value: |
+        {{ time }}
+    action: input_text.set_value
+    target:
+      entity_id: input_text.camera_snapshots_last_taken
