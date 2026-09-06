@@ -358,9 +358,9 @@ function formatTimestamp(timestamp: string | undefined): string {
 }
 
 function defaultEndDate(): Date {
+  // Add a small buffer to the end to account for clock skew between client and server.
   const d = new Date();
-  d.setDate(d.getDate() + 1);
-  d.setHours(0, 0, 0, 0);
+  d.setMinutes(d.getMinutes() + 5);
   return d;
 }
 
