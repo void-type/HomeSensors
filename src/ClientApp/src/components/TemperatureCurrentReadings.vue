@@ -143,61 +143,66 @@ onMounted(async () => {
 
 <template>
   <div class="grid">
-    <div v-for="(values, categoryName) in categorizedReadings" :key="categoryName" class="g-col-12">
-      <h4>{{ categoryName }}</h4>
-      <div class="grid">
-        <div v-for="(currentTemp, i) in values" :key="i" class="g-col-6 g-col-md-4 g-col-lg-3">
-          <div class="card text-center">
-            <div class="card-body">
-              <div class="h5 mb-2">
-                {{ currentTemp.location?.name }}
-              </div>
-              <div class="h3">
+    <div
+      v-for="(values, categoryName) in categorizedReadings"
+      :key="categoryName"
+      class="g-col-12 g-col-md-6 g-col-xl-4"
+    >
+      <div class="card align-self-start">
+        <div class="card-header">
+          {{ categoryName }}
+        </div>
+        <ul class="list-group list-group-flush">
+          <li v-for="(currentTemp, i) in values" :key="i" class="list-group-item">
+            <div class="d-flex justify-content-between align-items-baseline">
+              <span class="fw-semibold">{{ currentTemp.location?.name }}</span>
+              <router-link
+                :to="{ name: 'timeSeries', query: { locationIds: currentTemp.location?.id! } }"
+                :title="`Last reading at ${formatReadingTime(currentTemp)}. Click to view time series for this location.`"
+                :aria-label="`Last reading at ${formatReadingTime(currentTemp)}. Click to view time series for this location.`"
+                class="small"
+              >
+                {{ formatReadingTime(currentTemp) }}
+              </router-link>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span>
+                <span class="fw-semibold">{{
+                  formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit, 0)
+                }}</span>
+                <span v-if="currentTemp.humidity !== null && showHumidity" class="ps-2 text-muted">{{
+                  formatHumidityWithUnit(currentTemp.humidity)
+                }}</span>
+              </span>
+              <span>
                 <span v-if="currentTemp.isHot" title="Hotter than limit.">
                   <FontAwesomeIcon
                     icon="fa-temperature-full"
-                    class="hot blink me-2"
+                    class="hot blink ms-2"
                     aria-label="Hotter than limit."
                   />
                 </span>
                 <span v-if="currentTemp.isCold" title="Colder than limit.">
                   <FontAwesomeIcon
                     icon="fa-snowflake"
-                    class="cold blink me-2"
+                    class="cold blink ms-2"
                     aria-label="Colder than limit."
                   />
                 </span>
-                <span class="fw-bold">{{
-                  formatTempWithUnit(currentTemp.temperatureCelsius, useFahrenheit, 0)
-                }}</span>
-                <span v-if="currentTemp.humidity !== null && showHumidity" class="ps-3">{{
-                  formatHumidityWithUnit(currentTemp.humidity)
-                }}</span>
-              </div>
-              <div>
                 <span
                   v-if="isStale(currentTemp)"
                   :title="`Reading is more than ${staleLimitMinutes} minutes old.`"
                 >
                   <FontAwesomeIcon
                     icon="fa-clock"
-                    class="stale blink me-2"
+                    class="stale blink ms-2"
                     :aria-label="`Reading is more than ${staleLimitMinutes} minutes old.`"
                   />
                 </span>
-                <router-link
-                  :to="{ name: 'timeSeries', query: { locationIds: currentTemp.location?.id! } }"
-                  :title="`Last reading at ${formatReadingTime(currentTemp)}. Click to view time series for this location.`"
-                  :aria-label="`Last reading at ${formatReadingTime(currentTemp)}. Click to view time series for this location.`"
-                >
-                  <small>{{
-                    formatReadingTime(currentTemp)
-                  }}</small>
-                </router-link>
-              </div>
+              </span>
             </div>
-          </div>
-        </div>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
