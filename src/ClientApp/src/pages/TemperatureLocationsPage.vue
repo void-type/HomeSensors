@@ -9,7 +9,7 @@ import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Collapse } from 'bootstrap';
-import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { ChromePicker, tinycolor } from 'vue-color';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import AppPageHeading from '@/components/AppPageHeading.vue';
@@ -34,6 +34,18 @@ const data = reactive({
   errors: [] as Array<string>,
   originalLocations: new Map<number, string>(),
   hasDirtyLocations: false,
+});
+
+const searchText = ref('');
+
+const filteredLocations = computed(() => {
+  const search = searchText.value.trim().toLowerCase();
+
+  if (!search) {
+    return data.locations;
+  }
+
+  return data.locations.filter(l => (l.name || '').toLowerCase().includes(search));
 });
 
 function trackOriginalState(location: TemperatureLocationResponse) {
@@ -292,8 +304,19 @@ onBeforeUnmount(() => {
       <button class="btn btn-secondary ms-2" @click="newLocation()">
         New
       </button>
-      <div id="locationsAccordion" class="accordion mt-4">
-        <div v-for="location in data.locations" :key="location.id" class="accordion-item">
+      <div class="mt-3">
+        <label for="locationSearch" class="form-label visually-hidden">Search</label>
+        <input
+          id="locationSearch"
+          v-model="searchText"
+          type="search"
+          inputmode="search"
+          class="form-control"
+          placeholder="Search locations..."
+        >
+      </div>
+      <div id="locationsAccordion" class="accordion mt-3">
+        <div v-for="location in filteredLocations" :key="location.id" class="accordion-item">
           <h2 :id="`heading-${location.id}`" class="accordion-header">
             <button
               class="accordion-button collapsed"
@@ -470,6 +493,9 @@ onBeforeUnmount(() => {
         </div>
         <div v-if="data.locations.length < 1" class="text-center mt-4">
           No locations.
+        </div>
+        <div v-else-if="filteredLocations.length < 1" class="text-center mt-4">
+          No locations match your search.
         </div>
       </div>
     </div>

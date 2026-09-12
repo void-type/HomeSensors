@@ -4,7 +4,7 @@ import type { CameraResponse, IItemSetOfIFailure } from '@/api/data-contracts';
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
 import { Collapse } from 'bootstrap';
-import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import AppPageHeading from '@/components/AppPageHeading.vue';
 import ApiHelper from '@/models/ApiHelper';
@@ -21,6 +21,20 @@ const data = reactive({
   errors: [] as Array<string>,
   originalCameras: new Map<number, string>(),
   hasDirtyCameras: false,
+});
+
+const searchText = ref('');
+
+const filteredCameras = computed(() => {
+  const search = searchText.value.trim().toLowerCase();
+
+  if (!search) {
+    return data.cameras;
+  }
+
+  return data.cameras.filter(c =>
+    (c.name || '').toLowerCase().includes(search)
+    || (c.snapshotsPath || '').toLowerCase().includes(search));
 });
 
 function trackOriginalState(camera: CameraResponse) {
@@ -225,8 +239,19 @@ onBeforeUnmount(() => {
       <button class="btn btn-secondary ms-2" @click="newCamera()">
         New
       </button>
-      <div id="camerasAccordion" class="accordion mt-4">
-        <div v-for="camera in data.cameras" :key="camera.id" class="accordion-item">
+      <div class="mt-3">
+        <label for="cameraSearch" class="form-label visually-hidden">Search</label>
+        <input
+          id="cameraSearch"
+          v-model="searchText"
+          type="search"
+          inputmode="search"
+          class="form-control"
+          placeholder="Search cameras..."
+        >
+      </div>
+      <div id="camerasAccordion" class="accordion mt-3">
+        <div v-for="camera in filteredCameras" :key="camera.id" class="accordion-item">
           <h2 :id="`heading-${camera.id}`" class="accordion-header">
             <button
               class="accordion-button collapsed"
@@ -320,6 +345,9 @@ onBeforeUnmount(() => {
         </div>
         <div v-if="data.cameras.length < 1" class="text-center mt-4">
           No cameras configured.
+        </div>
+        <div v-else-if="filteredCameras.length < 1" class="text-center mt-4">
+          No cameras match your search.
         </div>
       </div>
     </div>

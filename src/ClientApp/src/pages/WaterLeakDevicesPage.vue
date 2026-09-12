@@ -7,7 +7,7 @@ import type {
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
 import { Collapse } from 'bootstrap';
-import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import AppPageHeading from '@/components/AppPageHeading.vue';
 import ApiHelper from '@/models/ApiHelper';
@@ -23,6 +23,20 @@ const data = reactive({
   errors: [] as Array<string>,
   originalDevices: new Map<number, string>(),
   hasDirtyDevices: false,
+});
+
+const searchText = ref('');
+
+const filteredDevices = computed(() => {
+  const search = searchText.value.trim().toLowerCase();
+
+  if (!search) {
+    return data.devices;
+  }
+
+  return data.devices.filter(d =>
+    (d.name || '').toLowerCase().includes(search)
+    || (d.mqttTopic || '').toLowerCase().includes(search));
 });
 
 function trackOriginalState(device: WaterLeakDeviceResponse) {
@@ -247,8 +261,19 @@ onBeforeUnmount(() => {
       <button class="btn btn-secondary ms-2" @click="newDevice()">
         New
       </button>
-      <div id="devicesAccordion" class="accordion mt-4">
-        <div v-for="device in data.devices" :key="device.id" class="accordion-item">
+      <div class="mt-3">
+        <label for="deviceSearch" class="form-label visually-hidden">Search</label>
+        <input
+          id="deviceSearch"
+          v-model="searchText"
+          type="search"
+          inputmode="search"
+          class="form-control"
+          placeholder="Search devices..."
+        >
+      </div>
+      <div id="devicesAccordion" class="accordion mt-3">
+        <div v-for="device in filteredDevices" :key="device.id" class="accordion-item">
           <h2 :id="`heading-${device.id}`" class="accordion-header">
             <button
               class="accordion-button collapsed"
@@ -343,6 +368,9 @@ onBeforeUnmount(() => {
         </div>
         <div v-if="data.devices.length < 1" class="text-center mt-4">
           No water leak devices.
+        </div>
+        <div v-else-if="filteredDevices.length < 1" class="text-center mt-4">
+          No devices match your search.
         </div>
       </div>
     </div>

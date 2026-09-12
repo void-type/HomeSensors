@@ -8,7 +8,7 @@ import type {
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
 import { Collapse } from 'bootstrap';
-import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import AppPageHeading from '@/components/AppPageHeading.vue';
 import ApiHelper from '@/models/ApiHelper';
@@ -24,6 +24,18 @@ const data = reactive({
   errors: [] as Array<string>,
   originalCategories: new Map<number, string>(),
   hasDirtyCategories: false,
+});
+
+const searchText = ref('');
+
+const filteredCategories = computed(() => {
+  const search = searchText.value.trim().toLowerCase();
+
+  if (!search) {
+    return data.categories;
+  }
+
+  return data.categories.filter(c => (c.name || '').toLowerCase().includes(search));
 });
 
 function trackOriginalState(category: CategoryResponse) {
@@ -252,8 +264,19 @@ onBeforeUnmount(() => {
       <button class="btn btn-secondary ms-2" @click="newCategory()">
         New
       </button>
-      <div id="categoriesAccordion" class="accordion mt-4">
-        <div v-for="category in data.categories" :key="category.id" class="accordion-item">
+      <div class="mt-3">
+        <label for="categorySearch" class="form-label visually-hidden">Search</label>
+        <input
+          id="categorySearch"
+          v-model="searchText"
+          type="search"
+          inputmode="search"
+          class="form-control"
+          placeholder="Search categories..."
+        >
+      </div>
+      <div id="categoriesAccordion" class="accordion mt-3">
+        <div v-for="category in filteredCategories" :key="category.id" class="accordion-item">
           <h2 :id="`heading-${category.id}`" class="accordion-header">
             <button
               class="accordion-button collapsed"
@@ -332,6 +355,9 @@ onBeforeUnmount(() => {
         </div>
         <div v-if="data.categories.length < 1" class="text-center mt-4">
           No categories.
+        </div>
+        <div v-else-if="filteredCategories.length < 1" class="text-center mt-4">
+          No categories match your search.
         </div>
       </div>
     </div>

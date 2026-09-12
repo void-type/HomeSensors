@@ -7,7 +7,7 @@ import type {
 import type { HttpResponse } from '@/api/http-client';
 import type { ModalParameters } from '@/models/ModalParameters';
 import { Collapse } from 'bootstrap';
-import { nextTick, onBeforeUnmount, onMounted, reactive } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import AppPageHeading from '@/components/AppPageHeading.vue';
 import ApiHelper from '@/models/ApiHelper';
@@ -23,6 +23,18 @@ const data = reactive({
   errors: [] as Array<string>,
   originalRecipients: new Map<number, string>(),
   hasDirtyRecipients: false,
+});
+
+const searchText = ref('');
+
+const filteredRecipients = computed(() => {
+  const search = searchText.value.trim().toLowerCase();
+
+  if (!search) {
+    return data.recipients;
+  }
+
+  return data.recipients.filter(r => (r.email || '').toLowerCase().includes(search));
 });
 
 function trackOriginalState(recipient: EmailRecipientResponse) {
@@ -233,8 +245,19 @@ onBeforeUnmount(() => {
       <button class="btn btn-secondary ms-2" @click="newRecipient()">
         New
       </button>
-      <div id="recipientsAccordion" class="accordion mt-4">
-        <div v-for="recipient in data.recipients" :key="recipient.id" class="accordion-item">
+      <div class="mt-3">
+        <label for="recipientSearch" class="form-label visually-hidden">Search</label>
+        <input
+          id="recipientSearch"
+          v-model="searchText"
+          type="search"
+          inputmode="search"
+          class="form-control"
+          placeholder="Search recipients..."
+        >
+      </div>
+      <div id="recipientsAccordion" class="accordion mt-3">
+        <div v-for="recipient in filteredRecipients" :key="recipient.id" class="accordion-item">
           <h2 :id="`heading-${recipient.id}`" class="accordion-header">
             <button
               class="accordion-button collapsed"
@@ -299,6 +322,9 @@ onBeforeUnmount(() => {
         </div>
         <div v-if="data.recipients.length < 1" class="text-center mt-4">
           No email recipients.
+        </div>
+        <div v-else-if="filteredRecipients.length < 1" class="text-center mt-4">
+          No recipients match your search.
         </div>
       </div>
     </div>
