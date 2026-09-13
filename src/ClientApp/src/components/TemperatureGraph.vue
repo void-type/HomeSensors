@@ -91,6 +91,24 @@ const areAllLocationsSelected = computed(() =>
   data.locations.every(value => timeSeriesInputs.locationIds.includes(value.id as number)),
 );
 
+const activeFilterCount = computed(() => {
+  let count = 0;
+
+  if (data.locations.length > 0 && !areAllLocationsSelected.value) {
+    count += 1;
+  }
+
+  if (data.showHumidity) {
+    count += 1;
+  }
+
+  if (!data.showHvacActions) {
+    count += 1;
+  }
+
+  return count;
+});
+
 function onSelectAllClick() {
   if (areAllLocationsSelected.value) {
     timeSeriesInputs.locationIds = [];
@@ -565,197 +583,276 @@ onUnmounted(() => {
   <div class="grid">
     <!-- Left sidebar - desktop only -->
     <div class="g-col-12 g-col-lg-3 d-none d-lg-block">
-      <div id="controlsAccordionDesktop" class="accordion">
-        <!-- Locations accordion item -->
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <button
-              class="accordion-button"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#locationsCollapseDesktop"
-              aria-expanded="true"
-              aria-controls="locationsCollapseDesktop"
+      <!-- Display options -->
+      <div class="mb-4">
+        <div class="fw-bold mb-2">
+          Display Options
+        </div>
+        <div class="form-check form-switch">
+          <input
+            id="showHumidityDesktop"
+            v-model="data.showHumidity"
+            class="form-check-input"
+            type="checkbox"
+          >
+          <label class="form-check-label" for="showHumidityDesktop">Show humidity</label>
+        </div>
+        <div class="form-check form-switch">
+          <input
+            id="showHvacActionsDesktop"
+            v-model="data.showHvacActions"
+            class="form-check-input"
+            type="checkbox"
+          >
+          <label class="form-check-label" for="showHvacActionsDesktop">Show HVAC actions</label>
+        </div>
+      </div>
+
+      <!-- Date range -->
+      <div class="mb-4">
+        <div class="fw-bold mb-2">
+          Date Range
+        </div>
+        <div class="mb-3">
+          <label for="startDateDesktop" class="form-label">Start date</label>
+          <AppDateTimePicker id="startDateDesktop" v-model="timeSeriesInputs.start" />
+        </div>
+        <div class="mb-3">
+          <label for="endDateDesktop" class="form-label">End date</label>
+          <AppDateTimePicker
+            id="endDateDesktop"
+            v-model="timeSeriesInputs.end"
+            :disabled="showCurrent"
+          />
+          <div class="form-check mt-2">
+            <input
+              id="showCurrentDesktop"
+              v-model="showCurrent"
+              class="form-check-input"
+              type="checkbox"
+              @change="setCurrentTimer()"
             >
-              Locations
+            <label class="form-check-label" for="showCurrentDesktop">Show current</label>
+          </div>
+        </div>
+        <div class="d-flex flex-column gap-2">
+          <div class="btn-group btn-group-sm">
+            <button
+              class="btn btn-outline-primary"
+              title="Last 1 week"
+              @click="setTimeRange(168)"
+            >
+              1w
+            </button>
+            <button
+              class="btn btn-outline-primary"
+              title="Last 48 hours"
+              @click="setTimeRange(48)"
+            >
+              48h
+            </button>
+            <button
+              class="btn btn-outline-primary"
+              title="Last 24 hours"
+              @click="setTimeRange(24)"
+            >
+              24h
+            </button>
+            <button
+              class="btn btn-outline-primary"
+              title="Last 12 hours"
+              @click="setTimeRange(12)"
+            >
+              12h
             </button>
           </div>
-          <div
-            id="locationsCollapseDesktop"
-            class="accordion-collapse collapse show"
-            data-bs-parent="#controlsAccordionDesktop"
-          >
-            <div class="accordion-body">
-              <button
-                class="btn btn-sm btn-outline-primary mb-2"
-                @click="onSelectAllClick"
+        </div>
+      </div>
+
+      <!-- Locations -->
+      <div>
+        <div class="fw-bold mb-2">
+          Locations
+        </div>
+        <button
+          class="btn btn-sm btn-outline-primary mb-2"
+          @click="onSelectAllClick"
+        >
+          {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
+        </button>
+        <div
+          v-for="(values, categoryName) in categorizedLocations"
+          :key="categoryName"
+          class="mb-2"
+        >
+          <div class="fw-bold mb-1">
+            {{ categoryName }}
+          </div>
+          <div class="ps-2">
+            <div v-for="location in values" :key="location.id" class="form-check">
+              <input
+                :id="`locationSelectDesktop-${location.id}`"
+                v-model="timeSeriesInputs.locationIds"
+                :value="location.id"
+                class="form-check-input"
+                type="checkbox"
               >
-                {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
-              </button>
-              <div
-                v-for="(values, categoryName) in categorizedLocations"
-                :key="categoryName"
-                class="mb-2"
-              >
-                <div class="fw-bold mb-1">
-                  {{ categoryName }}
-                </div>
-                <div class="ps-2">
-                  <div v-for="location in values" :key="location.id" class="form-check">
-                    <input
-                      :id="`locationSelectDesktop-${location.id}`"
-                      v-model="timeSeriesInputs.locationIds"
-                      :value="location.id"
-                      class="form-check-input"
-                      type="checkbox"
-                    >
-                    <label class="form-check-label" :for="`locationSelectDesktop-${location.id}`">
-                      <span
-                        class="color-dot me-1"
-                        :style="{ backgroundColor: getColor(location) }"
-                      />
-                      {{ location.name }}
-                    </label>
-                  </div>
-                </div>
-              </div>
+              <label class="form-check-label" :for="`locationSelectDesktop-${location.id}`">
+                <span
+                  class="color-dot me-1"
+                  :style="{ backgroundColor: getColor(location) }"
+                />
+                {{ location.name }}
+              </label>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- Display options accordion item -->
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <button
-              class="accordion-button collapsed"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#displayCollapseDesktop"
-              aria-expanded="false"
-              aria-controls="displayCollapseDesktop"
-            >
-              Display Options
-            </button>
-          </div>
-          <div
-            id="displayCollapseDesktop"
-            class="accordion-collapse collapse"
-            data-bs-parent="#controlsAccordionDesktop"
+    <!-- Main content area -->
+    <div class="g-col-12 g-col-lg-9">
+      <!-- Controls trigger + time navigation -->
+      <div class="d-flex gap-2 overflow-x-auto flex-nowrap pb-1 mb-3">
+        <button
+          class="btn btn-outline-primary position-relative flex-shrink-0 d-lg-none"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#temperatureGraphOptions"
+          aria-controls="temperatureGraphOptions"
+          aria-label="Locations and Display Options"
+        >
+          <FontAwesomeIcon icon="fa-filter" />
+          <span
+            v-if="activeFilterCount > 0"
+            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
           >
-            <div class="accordion-body">
+            {{ activeFilterCount }}
+            <span class="visually-hidden">active filters</span>
+          </span>
+        </button>
+        <div class="btn-group btn-group-sm flex-shrink-0">
+          <button
+            class="btn btn-outline-primary"
+            title="Back 1 Day"
+            @click="adjustDateRange({ days: -1 })"
+          >
+            &laquo; Day
+          </button>
+          <button
+            class="btn btn-outline-primary"
+            title="Forward 1 Day"
+            @click="adjustDateRange({ days: 1 })"
+          >
+            Day &raquo;
+          </button>
+        </div>
+        <div class="btn-group btn-group-sm flex-shrink-0">
+          <button
+            class="btn btn-outline-primary"
+            title="Back 1 Week"
+            @click="adjustDateRange({ weeks: -1 })"
+          >
+            &laquo; Week
+          </button>
+          <button
+            class="btn btn-outline-primary"
+            title="Forward 1 Week"
+            @click="adjustDateRange({ weeks: 1 })"
+          >
+            Week &raquo;
+          </button>
+        </div>
+        <div class="btn-group btn-group-sm flex-shrink-0">
+          <button
+            class="btn btn-outline-primary"
+            title="Back 1 Month"
+            @click="adjustDateRange({ months: -1 })"
+          >
+            &laquo; Month
+          </button>
+          <button
+            class="btn btn-outline-primary"
+            title="Forward 1 Month"
+            @click="adjustDateRange({ months: 1 })"
+          >
+            Month &raquo;
+          </button>
+        </div>
+      </div>
+
+      <Teleport to="body">
+        <div
+          id="temperatureGraphOptions"
+          class="offcanvas offcanvas-end"
+          tabindex="-1"
+          aria-labelledby="temperatureGraphOptionsLabel"
+        >
+          <div class="offcanvas-header">
+            <h5 id="temperatureGraphOptionsLabel" class="offcanvas-title">
+              Graph Options
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="offcanvas"
+              aria-label="Close"
+            />
+          </div>
+          <div class="offcanvas-body">
+            <!-- Display options -->
+            <div class="mb-4">
+              <div class="fw-bold mb-2">
+                Display Options
+              </div>
               <div class="form-check form-switch">
                 <input
-                  id="showHumidityDesktop"
+                  id="showHumidityMobile"
                   v-model="data.showHumidity"
                   class="form-check-input"
                   type="checkbox"
                 >
-                <label class="form-check-label" for="showHumidityDesktop">Show humidity</label>
+                <label class="form-check-label" for="showHumidityMobile">Show humidity</label>
               </div>
               <div class="form-check form-switch">
                 <input
-                  id="showHvacActionsDesktop"
+                  id="showHvacActionsMobile"
                   v-model="data.showHvacActions"
                   class="form-check-input"
                   type="checkbox"
                 >
-                <label class="form-check-label" for="showHvacActionsDesktop">Show HVAC actions</label>
+                <label class="form-check-label" for="showHvacActionsMobile">Show HVAC actions</label>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Date range accordion item -->
-        <div class="accordion-item">
-          <div class="accordion-header">
-            <button
-              class="accordion-button collapsed"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#dateRangeCollapseDesktop"
-              aria-expanded="false"
-              aria-controls="dateRangeCollapseDesktop"
-            >
-              Date Range
-            </button>
-          </div>
-          <div
-            id="dateRangeCollapseDesktop"
-            class="accordion-collapse collapse"
-            data-bs-parent="#controlsAccordionDesktop"
-          >
-            <div class="accordion-body">
-              <div class="mb-3">
-                <label for="startDateDesktop" class="form-label">Start date</label>
-                <AppDateTimePicker id="startDateDesktop" v-model="timeSeriesInputs.start" />
+            <!-- Date range -->
+            <div class="mb-4">
+              <div class="fw-bold mb-2">
+                Date Range
               </div>
               <div class="mb-3">
-                <label for="endDateDesktop" class="form-label">End date</label>
+                <label for="startDateMobile" class="form-label">Start date</label>
+                <AppDateTimePicker id="startDateMobile" v-model="timeSeriesInputs.start" />
+              </div>
+              <div class="mb-3">
+                <label for="endDateMobile" class="form-label">End date</label>
                 <AppDateTimePicker
-                  id="endDateDesktop"
+                  id="endDateMobile"
                   v-model="timeSeriesInputs.end"
                   :disabled="showCurrent"
                 />
                 <div class="form-check mt-2">
                   <input
-                    id="showCurrentDesktop"
+                    id="showCurrentMobile"
                     v-model="showCurrent"
                     class="form-check-input"
                     type="checkbox"
                     @change="setCurrentTimer()"
                   >
-                  <label class="form-check-label" for="showCurrentDesktop">Show current</label>
+                  <label class="form-check-label" for="showCurrentMobile">Show current</label>
                 </div>
               </div>
               <div class="d-flex flex-column gap-2">
-                <div class="btn-group btn-group-sm">
-                  <button
-                    class="btn btn-outline-primary"
-                    title="Back 1 Month"
-                    @click="adjustDateRange({ months: -1 })"
-                  >
-                    &laquo; Month
-                  </button>
-                  <button
-                    class="btn btn-outline-primary"
-                    title="Forward 1 Month"
-                    @click="adjustDateRange({ months: 1 })"
-                  >
-                    Month &raquo;
-                  </button>
-                </div>
-                <div class="btn-group btn-group-sm">
-                  <button
-                    class="btn btn-outline-primary"
-                    title="Back 1 Week"
-                    @click="adjustDateRange({ weeks: -1 })"
-                  >
-                    &laquo; Week
-                  </button>
-                  <button
-                    class="btn btn-outline-primary"
-                    title="Forward 1 Week"
-                    @click="adjustDateRange({ weeks: 1 })"
-                  >
-                    Week &raquo;
-                  </button>
-                </div>
-                <div class="btn-group btn-group-sm">
-                  <button
-                    class="btn btn-outline-primary"
-                    title="Back 1 Day"
-                    @click="adjustDateRange({ days: -1 })"
-                  >
-                    &laquo; Day
-                  </button>
-                  <button
-                    class="btn btn-outline-primary"
-                    title="Forward 1 Day"
-                    @click="adjustDateRange({ days: 1 })"
-                  >
-                    Day &raquo;
-                  </button>
-                </div>
                 <div class="btn-group btn-group-sm">
                   <button
                     class="btn btn-outline-primary"
@@ -788,324 +885,49 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Main content area -->
-    <div class="g-col-12 g-col-lg-9">
-      <!-- Mobile controls - only visible on screens smaller than lg -->
-      <div class="d-lg-none mb-3">
-        <div id="controlsAccordionMobile" class="accordion">
-          <!-- Locations accordion item -->
-          <div class="accordion-item">
-            <div class="accordion-header">
-              <button
-                class="accordion-button collapsed"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#locationsCollapseMobile"
-                aria-expanded="false"
-                aria-controls="locationsCollapseMobile"
-              >
+            <!-- Locations -->
+            <div>
+              <div class="fw-bold mb-2">
                 Locations
-              </button>
-            </div>
-            <div
-              id="locationsCollapseMobile"
-              class="accordion-collapse collapse"
-              data-bs-parent="#controlsAccordionMobile"
-            >
-              <div class="accordion-body">
-                <button
-                  class="btn btn-sm btn-outline-primary mb-2"
-                  @click="onSelectAllClick"
-                >
-                  {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
-                </button>
-                <div class="grid">
-                  <div
-                    v-for="(values, categoryName) in categorizedLocations"
-                    :key="categoryName"
-                    class="g-col-12 g-col-sm-4"
-                  >
-                    <div class="fw-bold mb-1">
-                      {{ categoryName }}
-                    </div>
-                    <div class="ps-2">
-                      <div v-for="location in values" :key="location.id" class="form-check">
-                        <input
-                          :id="`locationSelectMobile-${location.id}`"
-                          v-model="timeSeriesInputs.locationIds"
-                          :value="location.id"
-                          class="form-check-input"
-                          type="checkbox"
-                        >
-                        <label class="form-check-label" :for="`locationSelectMobile-${location.id}`">
-                          <span
-                            class="color-dot me-1"
-                            :style="{ backgroundColor: getColor(location) }"
-                          />
-                          {{ location.name }}
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
-            </div>
-          </div>
-
-          <!-- Display options accordion item -->
-          <div class="accordion-item">
-            <div class="accordion-header">
               <button
-                class="accordion-button collapsed"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#displayCollapseMobile"
-                aria-expanded="false"
-                aria-controls="displayCollapseMobile"
+                class="btn btn-sm btn-outline-primary mb-2"
+                @click="onSelectAllClick"
               >
-                Display Options
+                {{ !areAllLocationsSelected ? "Select" : "Deselect" }} all
               </button>
-            </div>
-            <div
-              id="displayCollapseMobile"
-              class="accordion-collapse collapse"
-              data-bs-parent="#controlsAccordionMobile"
-            >
-              <div class="accordion-body">
-                <div class="form-check form-switch">
-                  <input
-                    id="showHumidityMobile"
-                    v-model="data.showHumidity"
-                    class="form-check-input"
-                    type="checkbox"
-                  >
-                  <label class="form-check-label" for="showHumidityMobile">Show humidity</label>
-                </div>
-                <div class="form-check form-switch">
-                  <input
-                    id="showHvacActionsMobile"
-                    v-model="data.showHvacActions"
-                    class="form-check-input"
-                    type="checkbox"
-                  >
-                  <label class="form-check-label" for="showHvacActionsMobile">Show HVAC actions</label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Date range accordion item -->
-          <div class="accordion-item">
-            <div class="accordion-header">
-              <button
-                class="accordion-button collapsed"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#dateRangeCollapseMobile"
-                aria-expanded="false"
-                aria-controls="dateRangeCollapseMobile"
+              <div
+                v-for="(values, categoryName) in categorizedLocations"
+                :key="categoryName"
+                class="mb-2"
               >
-                Date Range
-              </button>
-            </div>
-            <div
-              id="dateRangeCollapseMobile"
-              class="accordion-collapse collapse"
-              data-bs-parent="#controlsAccordionMobile"
-            >
-              <div class="accordion-body">
-                <div class="grid mb-3">
-                  <div class="g-col-12 g-col-md-6">
-                    <label for="startDateMobile" class="form-label">Start date</label>
-                    <AppDateTimePicker id="startDateMobile" v-model="timeSeriesInputs.start" />
-                  </div>
-                  <div class="g-col-12 g-col-md-6">
-                    <label for="endDateMobile" class="form-label">End date</label>
-                    <AppDateTimePicker
-                      id="endDateMobile"
-                      v-model="timeSeriesInputs.end"
-                      :disabled="showCurrent"
-                    />
-                    <div class="form-check form-check-inline mt-2">
-                      <input
-                        id="showCurrentMobile"
-                        v-model="showCurrent"
-                        class="form-check-input"
-                        type="checkbox"
-                        @change="setCurrentTimer()"
-                      >
-                      <label class="form-check-label" for="showCurrentMobile">Show current</label>
-                    </div>
-                  </div>
+                <div class="fw-bold mb-1">
+                  {{ categoryName }}
                 </div>
-                <!-- Paired layout for xs screens -->
-                <div class="d-flex d-sm-none flex-column gap-2">
-                  <div class="btn-group btn-group-sm">
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Back 1 Month"
-                      @click="adjustDateRange({ months: -1 })"
+                <div class="ps-2">
+                  <div v-for="location in values" :key="location.id" class="form-check">
+                    <input
+                      :id="`locationSelectMobile-${location.id}`"
+                      v-model="timeSeriesInputs.locationIds"
+                      :value="location.id"
+                      class="form-check-input"
+                      type="checkbox"
                     >
-                      &laquo; Month
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Forward 1 Month"
-                      @click="adjustDateRange({ months: 1 })"
-                    >
-                      Month &raquo;
-                    </button>
-                  </div>
-                  <div class="btn-group btn-group-sm">
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Back 1 Week"
-                      @click="adjustDateRange({ weeks: -1 })"
-                    >
-                      &laquo; Week
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Forward 1 Week"
-                      @click="adjustDateRange({ weeks: 1 })"
-                    >
-                      Week &raquo;
-                    </button>
-                  </div>
-                  <div class="btn-group btn-group-sm">
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Back 1 Day"
-                      @click="adjustDateRange({ days: -1 })"
-                    >
-                      &laquo; Day
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Forward 1 Day"
-                      @click="adjustDateRange({ days: 1 })"
-                    >
-                      Day &raquo;
-                    </button>
-                  </div>
-                  <div class="btn-group btn-group-sm">
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Last 1 week"
-                      @click="setTimeRange(168)"
-                    >
-                      1w
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Last 48 hours"
-                      @click="setTimeRange(48)"
-                    >
-                      48h
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Last 24 hours"
-                      @click="setTimeRange(24)"
-                    >
-                      24h
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Last 12 hours"
-                      @click="setTimeRange(12)"
-                    >
-                      12h
-                    </button>
-                  </div>
-                </div>
-                <!-- Single bar layout for sm+ screens -->
-                <div class="d-none d-sm-flex flex-column align-items-center gap-2">
-                  <div class="btn-group btn-group-sm">
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Back 1 Month"
-                      @click="adjustDateRange({ months: -1 })"
-                    >
-                      &laquo; Month
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Back 1 Week"
-                      @click="adjustDateRange({ weeks: -1 })"
-                    >
-                      &laquo; Week
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Back 1 Day"
-                      @click="adjustDateRange({ days: -1 })"
-                    >
-                      &laquo; Day
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Forward 1 Day"
-                      @click="adjustDateRange({ days: 1 })"
-                    >
-                      Day &raquo;
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Forward 1 Week"
-                      @click="adjustDateRange({ weeks: 1 })"
-                    >
-                      Week &raquo;
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Forward 1 Month"
-                      @click="adjustDateRange({ months: 1 })"
-                    >
-                      Month &raquo;
-                    </button>
-                  </div>
-                  <div class="btn-group btn-group-sm">
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Last 1 week"
-                      @click="setTimeRange(168)"
-                    >
-                      1w
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Last 48 hours"
-                      @click="setTimeRange(48)"
-                    >
-                      48h
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Last 24 hours"
-                      @click="setTimeRange(24)"
-                    >
-                      24h
-                    </button>
-                    <button
-                      class="btn btn-outline-primary"
-                      title="Last 12 hours"
-                      @click="setTimeRange(12)"
-                    >
-                      12h
-                    </button>
+                    <label class="form-check-label" :for="`locationSelectMobile-${location.id}`">
+                      <span
+                        class="color-dot me-1"
+                        :style="{ backgroundColor: getColor(location) }"
+                      />
+                      {{ location.name }}
+                    </label>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </Teleport>
 
       <!-- Chart -->
       <div class="chart-container-wrapper position-relative">
@@ -1168,7 +990,10 @@ onUnmounted(() => {
       </table>
 
       <!-- HVAC stats -->
-      <div class="mt-3 d-flex gap-4">
+      <div class="mt-3 d-flex align-items-center gap-4">
+        <div class="fw-bold">
+          HVAC runtime:
+        </div>
         <div class="cold">
           <FontAwesomeIcon icon="fa-snowflake" aria-hidden="true" class="me-1" />
           <span class="visually-hidden">Cooling:</span>

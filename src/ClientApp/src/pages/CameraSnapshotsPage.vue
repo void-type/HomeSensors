@@ -413,41 +413,35 @@ onMounted(async () => {
     <div class="container-xxl camera-inner">
       <AppPageHeading />
 
-      <!-- Top controls -->
-      <div class="controls-top">
-        <!-- Camera + date pickers -->
-        <div class="d-flex justify-content-center">
-          <div class="d-flex gap-2 overflow-x-auto flex-nowrap pb-1 align-items-end">
-            <div class="flex-shrink-0">
-              <label for="camera-select" class="form-label mb-1">Camera</label>
-              <select
-                id="camera-select"
-                v-model="data.selectedCameraId"
-                class="form-select"
-                style="min-width: 160px"
-              >
-                <option v-for="cam in data.cameras" :key="cam.id" :value="cam.id">
-                  {{ cam.name }}
-                </option>
-              </select>
-            </div>
+      <div class="camera-content">
+        <!-- Left sidebar - desktop only -->
+        <div class="camera-sidebar d-none d-lg-block">
+          <div class="mb-4">
+            <label for="camera-select" class="form-label fw-bold">Camera</label>
+            <select
+              id="camera-select"
+              v-model="data.selectedCameraId"
+              class="form-select"
+            >
+              <option v-for="cam in data.cameras" :key="cam.id" :value="cam.id">
+                {{ cam.name }}
+              </option>
+            </select>
+          </div>
 
-            <div class="flex-shrink-0">
-              <label for="start-date" class="form-label mb-1">Start</label>
+          <div>
+            <div class="fw-bold mb-2">
+              Date Range
+            </div>
+            <div class="mb-3">
+              <label for="start-date" class="form-label">Start</label>
               <AppDateTimePicker id="start-date" v-model="data.startDate" />
             </div>
-
-            <div class="flex-shrink-0">
-              <label for="end-date" class="form-label mb-1">End</label>
+            <div class="mb-3">
+              <label for="end-date" class="form-label">End</label>
               <AppDateTimePicker id="end-date" v-model="data.endDate" />
             </div>
-          </div>
-        </div>
-
-        <!-- Single scrollable nav row -->
-        <div class="d-flex justify-content-center mt-2">
-          <div class="d-flex gap-2 overflow-x-auto flex-nowrap pb-1">
-            <div class="btn-group btn-group-sm flex-shrink-0">
+            <div class="btn-group btn-group-sm w-100">
               <button class="btn btn-outline-primary" title="Last month" @click="setAbsoluteRange(30)">
                 Last Month
               </button>
@@ -458,155 +452,236 @@ onMounted(async () => {
                 Last Day
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- Main content area -->
+        <div class="camera-main">
+          <!-- Controls trigger + time navigation -->
+          <div class="controls-top d-flex gap-2 overflow-x-auto flex-nowrap pb-1">
+            <button
+              class="btn btn-outline-primary flex-shrink-0 d-lg-none"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#cameraSnapshotFilters"
+              aria-controls="cameraSnapshotFilters"
+              aria-label="Camera and Date Filters"
+            >
+              <FontAwesomeIcon icon="fa-filter" />
+            </button>
             <div class="btn-group btn-group-sm flex-shrink-0">
-              <button class="btn btn-outline-primary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
-                &laquo; Month
-              </button>
-              <button class="btn btn-outline-primary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
-                &laquo; Week
-              </button>
               <button class="btn btn-outline-primary" title="Back 1 Day" @click="adjustDateRange({ days: -1 })">
                 &laquo; Day
               </button>
               <button class="btn btn-outline-primary" title="Forward 1 Day" @click="adjustDateRange({ days: 1 })">
                 Day &raquo;
               </button>
+            </div>
+            <div class="btn-group btn-group-sm flex-shrink-0">
+              <button class="btn btn-outline-primary" title="Back 1 Week" @click="adjustDateRange({ weeks: -1 })">
+                &laquo; Week
+              </button>
               <button class="btn btn-outline-primary" title="Forward 1 Week" @click="adjustDateRange({ weeks: 1 })">
                 Week &raquo;
+              </button>
+            </div>
+            <div class="btn-group btn-group-sm flex-shrink-0">
+              <button class="btn btn-outline-primary" title="Back 1 Month" @click="adjustDateRange({ months: -1 })">
+                &laquo; Month
               </button>
               <button class="btn btn-outline-primary" title="Forward 1 Month" @click="adjustDateRange({ months: 1 })">
                 Month &raquo;
               </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Preview area (grows to fill remaining height) -->
-      <div class="preview-area mt-2">
-        <div class="card overflow-hidden h-100">
-          <!-- Info bar: only when item is selected -->
-          <div v-if="data.selectedItem" class="card-body d-flex flex-wrap align-items-center gap-2 py-2 flex-grow-0">
-            <span class="text-body-primary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
-            <button
-              ref="infoBtn"
-              type="button"
-              class="btn btn-link btn-sm p-0 text-body-primary"
-              :data-bs-title="`${data.selectedItem.fileName}<br><br>Ctrl+Scroll to zoom<br>Drag to pan when zoomed<br>Pinch to zoom on touch<br>← → to navigate`"
-            >
-              <FontAwesomeIcon icon="fa-circle-info" />
-            </button>
-            <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
-            <button v-if="zoomLevel > 1" class="btn btn-outline-primary btn-sm py-0" @click="resetZoom()">
-              Reset
-            </button>
-            <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm py-0 ms-auto" title="Open original">
-              <FontAwesomeIcon icon="fa-arrow-up-right-from-square" />
-            </a>
-          </div>
-
-          <!-- Preview container (fills remaining card height) -->
-          <div
-            ref="previewContainer"
-            class="preview-container position-relative overflow-hidden d-flex align-items-center justify-content-center bg-black user-select-none"
-            @click="focusStrip"
-            @wheel="onWheel"
-            @mousedown="onMouseDown"
-            @mousemove="onMouseMove"
-            @mouseup="onMouseUp"
-            @mouseleave="onMouseLeave"
-            @touchstart.prevent="onTouchStart"
-            @touchmove.prevent="onTouchMove"
-            @touchend="onTouchEnd"
-          >
-            <img
-              v-if="data.selectedItem"
-              :src="previewSrc ?? undefined"
-              :alt="data.selectedItem.fileName"
-              class="mw-100 mh-100 d-block"
-              :style="previewStyle"
-              draggable="false"
-            >
-
-            <div v-else-if="data.isLoadingTimeline" class="text-white text-center">
-              <span class="spinner-border spinner-border-sm me-2" />
-              Loading timeline…
-            </div>
-
-            <div v-else-if="data.cameras.length === 0 && !data.isLoadingCameras" class="text-white text-center px-3">
-              No cameras configured.
-              <router-link :to="{ name: 'camerasMain' }" class="text-white">
-                Add a camera
-              </router-link>.
-            </div>
-
-            <div v-else-if="data.items.length === 0 && !data.isLoadingTimeline && data.selectedCameraId" class="text-white text-center">
-              No snapshots found for this date range.
-            </div>
-
-            <!-- Navigation overlay -->
+          <Teleport to="body">
             <div
-              v-if="data.items.length > 0 && data.selectedItem"
-              class="nav-overlay"
-              @touchstart.stop
-              @touchmove.stop
-              @touchend.stop
+              id="cameraSnapshotFilters"
+              class="offcanvas offcanvas-end"
+              tabindex="-1"
+              aria-labelledby="cameraSnapshotFiltersLabel"
             >
-              <div class="d-flex gap-1">
-                <button class="nav-overlay-btn" :disabled="selectedIndex <= 0" title="First" @click="navFirst()">
-                  <FontAwesomeIcon icon="fa-angles-left" />
+              <div class="offcanvas-header">
+                <h5 id="cameraSnapshotFiltersLabel" class="offcanvas-title">
+                  Camera Filters
+                </h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="offcanvas"
+                  aria-label="Close"
+                />
+              </div>
+              <div class="offcanvas-body">
+                <div class="mb-4">
+                  <label for="camera-select-mobile" class="form-label fw-bold">Camera</label>
+                  <select
+                    id="camera-select-mobile"
+                    v-model="data.selectedCameraId"
+                    class="form-select"
+                  >
+                    <option v-for="cam in data.cameras" :key="cam.id" :value="cam.id">
+                      {{ cam.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <div class="fw-bold mb-2">
+                    Date Range
+                  </div>
+                  <div class="mb-3">
+                    <label for="start-date-mobile" class="form-label">Start</label>
+                    <AppDateTimePicker id="start-date-mobile" v-model="data.startDate" />
+                  </div>
+                  <div class="mb-3">
+                    <label for="end-date-mobile" class="form-label">End</label>
+                    <AppDateTimePicker id="end-date-mobile" v-model="data.endDate" />
+                  </div>
+                  <div class="btn-group btn-group-sm w-100">
+                    <button class="btn btn-outline-primary" title="Last month" @click="setAbsoluteRange(30)">
+                      Last Month
+                    </button>
+                    <button class="btn btn-outline-primary" title="Last week" @click="setAbsoluteRange(7)">
+                      Last Week
+                    </button>
+                    <button class="btn btn-outline-primary" title="Last day" @click="setAbsoluteRange(1)">
+                      Last Day
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Teleport>
+
+          <!-- Preview area (grows to fill remaining height) -->
+          <div class="preview-area mt-2">
+            <div class="card overflow-hidden h-100">
+              <!-- Info bar: only when item is selected -->
+              <div v-if="data.selectedItem" class="card-body d-flex flex-wrap align-items-center gap-2 py-2 flex-grow-0">
+                <span class="text-body-primary small">{{ formatTimestamp(data.selectedItem.timestamp) }}</span>
+                <button
+                  ref="infoBtn"
+                  type="button"
+                  class="btn btn-link btn-sm p-0 text-body-primary"
+                  :data-bs-title="`${data.selectedItem.fileName}<br><br>Ctrl+Scroll to zoom<br>Drag to pan when zoomed<br>Pinch to zoom on touch<br>← → to navigate`"
+                >
+                  <FontAwesomeIcon icon="fa-circle-info" />
                 </button>
-                <button class="nav-overlay-btn" :disabled="selectedIndex <= 0" title="Previous" @click="navPrev()">
-                  <FontAwesomeIcon icon="fa-angle-left" />
+                <span v-if="zoomLevel > 1" class="badge bg-secondary small">{{ Math.round(zoomLevel * 100) }}%</span>
+                <button v-if="zoomLevel > 1" class="btn btn-outline-primary btn-sm py-0" @click="resetZoom()">
+                  Reset
                 </button>
-                <button class="nav-overlay-btn" :disabled="selectedIndex >= data.items.length - 1" title="Next" @click="navNext()">
-                  <FontAwesomeIcon icon="fa-angle-right" />
-                </button>
-                <button class="nav-overlay-btn" :disabled="selectedIndex >= data.items.length - 1" title="Last" @click="navLast()">
-                  <FontAwesomeIcon icon="fa-angles-right" />
-                </button>
+                <a :href="data.selectedItem.originalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm py-0 ms-auto" title="Open original">
+                  <FontAwesomeIcon icon="fa-arrow-up-right-from-square" />
+                </a>
+              </div>
+
+              <!-- Preview container (fills remaining card height) -->
+              <div
+                ref="previewContainer"
+                class="preview-container position-relative overflow-hidden d-flex align-items-center justify-content-center bg-black user-select-none"
+                @click="focusStrip"
+                @wheel="onWheel"
+                @mousedown="onMouseDown"
+                @mousemove="onMouseMove"
+                @mouseup="onMouseUp"
+                @mouseleave="onMouseLeave"
+                @touchstart.prevent="onTouchStart"
+                @touchmove.prevent="onTouchMove"
+                @touchend="onTouchEnd"
+              >
+                <img
+                  v-if="data.selectedItem"
+                  :src="previewSrc ?? undefined"
+                  :alt="data.selectedItem.fileName"
+                  class="mw-100 mh-100 d-block"
+                  :style="previewStyle"
+                  draggable="false"
+                >
+
+                <div v-else-if="data.isLoadingTimeline" class="text-white text-center">
+                  <span class="spinner-border spinner-border-sm me-2" />
+                  Loading timeline…
+                </div>
+
+                <div v-else-if="data.cameras.length === 0 && !data.isLoadingCameras" class="text-white text-center px-3">
+                  No cameras configured.
+                  <router-link :to="{ name: 'camerasMain' }" class="text-white">
+                    Add a camera
+                  </router-link>.
+                </div>
+
+                <div v-else-if="data.items.length === 0 && !data.isLoadingTimeline && data.selectedCameraId" class="text-white text-center">
+                  No snapshots found for this date range.
+                </div>
+
+                <!-- Navigation overlay -->
+                <div
+                  v-if="data.items.length > 0 && data.selectedItem"
+                  class="nav-overlay"
+                  @touchstart.stop
+                  @touchmove.stop
+                  @touchend.stop
+                >
+                  <div class="d-flex gap-1">
+                    <button class="nav-overlay-btn" :disabled="selectedIndex <= 0" title="First" @click="navFirst()">
+                      <FontAwesomeIcon icon="fa-angles-left" />
+                    </button>
+                    <button class="nav-overlay-btn" :disabled="selectedIndex <= 0" title="Previous" @click="navPrev()">
+                      <FontAwesomeIcon icon="fa-angle-left" />
+                    </button>
+                    <button class="nav-overlay-btn" :disabled="selectedIndex >= data.items.length - 1" title="Next" @click="navNext()">
+                      <FontAwesomeIcon icon="fa-angle-right" />
+                    </button>
+                    <button class="nav-overlay-btn" :disabled="selectedIndex >= data.items.length - 1" title="Last" @click="navLast()">
+                      <FontAwesomeIcon icon="fa-angles-right" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Bottom controls (scrub strip) -->
-      <div class="controls-bottom">
-        <div
-          ref="stripEl"
-          class="snapshot-strip d-flex gap-1 overflow-x-auto"
-          tabindex="0"
-          role="listbox"
-          aria-label="Snapshot timeline"
-          @keydown="onStripKeyDown"
-        >
-          <!-- Skeleton placeholders while loading -->
-          <template v-if="data.isLoadingTimeline">
-            <div v-for="i in 8" :key="i" class="strip-skeleton flex-shrink-0 rounded-1" />
-          </template>
-
-          <!-- Real thumbnails -->
-          <template v-else>
-            <button
-              v-for="item in data.items"
-              :key="item.fileName"
-              class="strip-item p-0 bg-transparent flex-shrink-0"
-              :class="{ 'strip-item--active': data.selectedItem?.fileName === item.fileName }"
-              role="option"
-              :aria-selected="data.selectedItem?.fileName === item.fileName"
-              :title="formatTimestamp(item.timestamp)"
-              @click="selectItem(item)"
+          <!-- Bottom controls (scrub strip) -->
+          <div class="controls-bottom">
+            <div
+              ref="stripEl"
+              class="snapshot-strip d-flex gap-1 overflow-x-auto"
+              tabindex="0"
+              role="listbox"
+              aria-label="Snapshot timeline"
+              @keydown="onStripKeyDown"
             >
-              <img
-                :src="item.smallUrl"
-                :alt="item.fileName"
-                class="strip-thumb d-block rounded-1"
-                loading="lazy"
-                draggable="false"
-              >
-            </button>
-          </template>
+              <!-- Skeleton placeholders while loading -->
+              <template v-if="data.isLoadingTimeline">
+                <div v-for="i in 8" :key="i" class="strip-skeleton flex-shrink-0 rounded-1" />
+              </template>
+
+              <!-- Real thumbnails -->
+              <template v-else>
+                <button
+                  v-for="item in data.items"
+                  :key="item.fileName"
+                  class="strip-item p-0 bg-transparent flex-shrink-0"
+                  :class="{ 'strip-item--active': data.selectedItem?.fileName === item.fileName }"
+                  role="option"
+                  :aria-selected="data.selectedItem?.fileName === item.fileName"
+                  :title="formatTimestamp(item.timestamp)"
+                  @click="selectItem(item)"
+                >
+                  <img
+                    :src="item.smallUrl"
+                    :alt="item.fileName"
+                    class="strip-thumb d-block rounded-1"
+                    loading="lazy"
+                    draggable="false"
+                  >
+                </button>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -627,6 +702,27 @@ onMounted(async () => {
   min-height: 0;
   overflow: hidden;
   padding-bottom: 0.5rem;
+}
+
+.camera-content {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  gap: 1rem;
+}
+
+.camera-sidebar {
+  flex-shrink: 0;
+  width: 260px;
+  overflow-y: auto;
+}
+
+.camera-main {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .controls-top {
