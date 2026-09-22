@@ -16,6 +16,9 @@
 #     "https://homesensors.void-type.net/api/camera-snapshots/{{ camera_id }}/upload"
 #     -F "file=@{{ snapshot_file }};type=image/jpeg"
 #     -F "timestamp={{ timestamp }}"
+#   # Check file time for snapshot success check
+#   homesensors_get_snapshot_mtime: >-
+#     stat -c %Y "{{ file }}" 2>/dev/null || echo 0
 
 alias: Take interval camera snapshots
 description: ""
@@ -34,42 +37,76 @@ actions:
         - camera.reolink_three_clear
       time: "{{ now().isoformat() }}"
   - repeat:
-      for_each: "{{ cameras }}"
+      for_each: '{{ cameras }}'
       sequence:
         - sequence:
-            - data:
-                entity_id: "{{ repeat.item }}"
-                filename: >-
-                  /config/www/camera_snapshots/{{ repeat.item | replace('camera.',
-                  '') }}_latest.jpg
-              action: camera.snapshot
-            - condition: template
-              value_template: "{{ repeat.item.endswith('_clear') }}"
             - variables:
-                camera_slug: >-
-                  {{ repeat.item
+                camera_entity: '{{ repeat.item }}'
+                snapshot_file: >-
+                  /config/www/camera_snapshots/{{ repeat.item |
+                  replace('camera.', '') }}_latest.jpg
+            - action: shell_command.homesensors_get_snapshot_mtime
+              data:
+                file: '{{ snapshot_file }}'
+              response_variable: snapshot_mtime_baseline_response
+            - variables:
+                snapshot_mtime_baseline: '{{ snapshot_mtime_baseline_response.stdout | trim }}'
+                snapshot_mtime_latest: '{{ snapshot_mtime_baseline_response.stdout | trim }}'
+            - repeat:
+                sequence:
+                  - data:
+                      entity_id: '{{ camera_entity }}'
+                      filename: '{{ snapshot_file }}'
+                    action: camera.snapshot
+                    continue_on_error: true
+                  - action: shell_command.homesensors_get_snapshot_mtime
+                    data:
+                      file: '{{ snapshot_file }}'
+                    response_variable: snapshot_mtime_check_response
+                  - variables:
+                      snapshot_mtime_latest: '{{ snapshot_mtime_check_response.stdout | trim }}'
+                  - if:
+                      - condition: template
+                        value_template: >-
+                          {{ snapshot_mtime_latest == snapshot_mtime_baseline
+                          and repeat.index < 3 }}
+                    then:
+                      - delay:
+                          seconds: 5
+                until:
+                  - condition: template
+                    value_template: >-
+                      {{ snapshot_mtime_latest != snapshot_mtime_baseline or
+                      repeat.index >= 3 }}
+              note: >-
+                Retries the snapshot until the file's mtime actually changes
+                (proof the write succeeded) or 3 attempts are used, since
+                wifi battery cams sometimes time out. Stops early on success
+                instead of always taking 3 snapshots.
+            - condition: template
+              value_template: '{{ camera_entity.endswith(''_clear'') }}'
+            - variables:
+                camera_slug: |-
+                  {{ camera_entity
                     | replace('camera.reolink_', '')
                     | replace('_clear', '')
                     | replace('_', '-') }}
-                snapshot_file: >-
-                  /config/www/camera_snapshots/{{ repeat.item | replace('camera.',
-                  '') }}_latest.jpg
             - action: rest_command.homesensors_get_cameras
               response_variable: cameras_response
             - variables:
-                camera_id: >-
+                camera_id: |-
                   {{ cameras_response.content
                     | selectattr('slug', 'equalto', camera_slug)
                     | map(attribute='id')
                     | first
                     | default(none) }}
             - condition: template
-              value_template: "{{ camera_id is not none }}"
+              value_template: '{{ camera_id is not none }}'
             - action: shell_command.homesensors_upload_snapshot
               data:
-                camera_id: "{{ camera_id }}"
-                snapshot_file: "{{ snapshot_file }}"
-                timestamp: "{{ time }}"
+                camera_id: '{{ camera_id }}'
+                snapshot_file: '{{ snapshot_file }}'
+                timestamp: '{{ time }}'
           continue_on_error: true
           note: >-
             This has continue_on_error: true to continue to other cameras if
@@ -80,3 +117,4 @@ actions:
     action: input_text.set_value
     target:
       entity_id: input_text.camera_snapshots_last_taken
+mode: single
