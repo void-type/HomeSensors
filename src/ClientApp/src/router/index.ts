@@ -1,5 +1,6 @@
 import { Collapse } from 'bootstrap';
 import { createRouter, createWebHistory } from 'vue-router';
+import OffcanvasHelper from '@/models/OffcanvasHelper';
 import RouterHelper from '@/models/RouterHelper';
 import useMessageStore from '@/stores/messageStore';
 
@@ -125,6 +126,13 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const messageStore = useMessageStore();
   messageStore.clearMessages();
+
+  // Close any open offcanvas (e.g. mobile filter flyouts) when actually leaving a page.
+  // This must happen before the page unmounts so Bootstrap can properly remove its backdrop.
+  if (to.name !== from.name) {
+    OffcanvasHelper.closeAllOpen();
+  }
+
   next();
 });
 

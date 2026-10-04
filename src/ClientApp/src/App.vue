@@ -8,6 +8,7 @@ import AppModal from '@/components/AppModal.vue';
 import AppNav from '@/components/AppNav.vue';
 import ApiHelper from '@/models/ApiHelper';
 import DarkModeHelper from '@/models/DarkModeHelper';
+import OffcanvasHelper from '@/models/OffcanvasHelper';
 import RouterHelper from '@/models/RouterHelper';
 import UserSettingHelper from '@/models/UserSettingHelper';
 import useAppStore from '@/stores/appStore';
@@ -20,6 +21,8 @@ const api = ApiHelper.client;
 
 onMounted(() => {
   appStore.setDarkMode(DarkModeHelper.getInitialDarkModeSetting());
+
+  OffcanvasHelper.closeOnDesktopResize();
 
   appStore.setUseFahrenheit(UserSettingHelper.getInitialFahrenheitSetting());
 
