@@ -37,7 +37,6 @@ function onInputsChange(inputs: ITemperatureGraphInputs) {
   <div class="container-xxl">
     <AppPageHeading />
     <TemperatureGraph
-      class="mt-4"
       :initial-start="startDate"
       :initial-end="endDate"
       :initial-show-humidity="showHumidity"

@@ -723,13 +723,6 @@ onUnmounted(() => {
           aria-label="Locations and Display Options"
         >
           <FontAwesomeIcon icon="fa-filter" />
-          <span
-            v-if="activeFilterCount > 0"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
-          >
-            {{ activeFilterCount }}
-            <span class="visually-hidden">active filters</span>
-          </span>
         </button>
         <div class="btn-group btn-group-sm flex-shrink-0">
           <button
