@@ -91,24 +91,6 @@ const areAllLocationsSelected = computed(() =>
   data.locations.every(value => timeSeriesInputs.locationIds.includes(value.id as number)),
 );
 
-const activeFilterCount = computed(() => {
-  let count = 0;
-
-  if (data.locations.length > 0 && !areAllLocationsSelected.value) {
-    count += 1;
-  }
-
-  if (data.showHumidity) {
-    count += 1;
-  }
-
-  if (!data.showHvacActions) {
-    count += 1;
-  }
-
-  return count;
-});
-
 function onSelectAllClick() {
   if (areAllLocationsSelected.value) {
     timeSeriesInputs.locationIds = [];
