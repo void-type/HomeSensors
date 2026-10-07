@@ -263,8 +263,7 @@ onBeforeUnmount(() => {
             >
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
-                  {{ camera.name || "New camera" }}
-                  <span
+                  {{ camera.name || "New camera" }}<span
                     v-if="isCameraDirty(camera)"
                     class="badge bg-warning text-dark ms-2"
                     role="button"

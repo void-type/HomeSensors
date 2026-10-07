@@ -288,8 +288,7 @@ onBeforeUnmount(() => {
             >
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
-                  {{ category.name || "New category" }}
-                  <span
+                  {{ category.name || "New category" }}<span
                     v-if="isCategoryDirty(category)"
                     class="badge bg-warning text-dark ms-2"
                     role="button"

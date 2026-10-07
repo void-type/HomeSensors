@@ -285,8 +285,7 @@ onBeforeUnmount(() => {
             >
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
-                  {{ device.name || "New device" }}
-                  <span
+                  {{ device.name || "New device" }}<span
                     v-if="isDeviceDirty(device)"
                     class="badge bg-warning text-dark ms-2"
                     role="button"

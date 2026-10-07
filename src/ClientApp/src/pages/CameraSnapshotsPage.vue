@@ -602,8 +602,7 @@ onMounted(async () => {
                 >
 
                 <div v-else-if="data.isLoadingTimeline" class="text-white text-center">
-                  <span class="spinner-border spinner-border-sm me-2" />
-                  Loading timeline…
+                  <span class="spinner-border spinner-border-sm me-2" />Loading timeline…
                 </div>
 
                 <div v-else-if="data.cameras.length === 0 && !data.isLoadingCameras" class="text-white text-center px-3">

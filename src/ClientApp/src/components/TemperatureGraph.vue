@@ -683,8 +683,7 @@ onUnmounted(() => {
                 <span
                   class="color-dot me-1"
                   :style="{ backgroundColor: getColor(location) }"
-                />
-                {{ location.name }}
+                />{{ location.name }}
               </label>
             </div>
           </div>
@@ -893,8 +892,7 @@ onUnmounted(() => {
                       <span
                         class="color-dot me-1"
                         :style="{ backgroundColor: getColor(location) }"
-                      />
-                      {{ location.name }}
+                      />{{ location.name }}
                     </label>
                   </div>
                 </div>
@@ -936,8 +934,7 @@ onUnmounted(() => {
               <span
                 class="color-dot me-2"
                 :style="{ backgroundColor: getColor(series.location) }"
-              />
-              {{ series.location?.name }}
+              />{{ series.location?.name }}
             </td>
             <td>
               {{

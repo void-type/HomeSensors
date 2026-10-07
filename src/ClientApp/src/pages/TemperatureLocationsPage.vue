@@ -332,9 +332,7 @@ onBeforeUnmount(() => {
                     class="color-dot me-2"
                     :class="{ 'color-dot-empty': !location.color }"
                     :style="location.color ? { backgroundColor: location.color } : {}"
-                  />
-                  {{ location.name || "New location" }}
-                  <span
+                  />{{ location.name || "New location" }}<span
                     v-if="isLocationDirty(location)"
                     class="badge bg-warning text-dark ms-2"
                     role="button"

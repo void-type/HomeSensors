@@ -11,8 +11,7 @@ const { version } = storeToRefs(appStore);
   <footer id="footer" class="mt-5 d-print-none border-top text-center py-3 px-0">
     <div class="m-0 mb-4 text-center">
       <button class="btn btn-outline-primary" type="button" @click="RouterHelper.scrollToTop()">
-        Back to top
-        <FontAwesomeIcon icon="fa-arrow-up" class="ms-1" />
+        Back to top<FontAwesomeIcon icon="fa-arrow-up" class="ms-1" />
       </button>
     </div>
     <div>

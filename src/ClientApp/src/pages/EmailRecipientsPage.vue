@@ -269,8 +269,7 @@ onBeforeUnmount(() => {
             >
               <div class="d-flex align-items-center w-100">
                 <span class="me-auto">
-                  {{ recipient.email || "New recipient" }}
-                  <span
+                  {{ recipient.email || "New recipient" }}<span
                     v-if="isRecipientDirty(recipient)"
                     class="badge bg-warning text-dark ms-2"
                     role="button"
