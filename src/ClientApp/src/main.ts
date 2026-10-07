@@ -18,6 +18,7 @@ import {
   faSnowflake,
   faTemperatureFull,
   faThumbtack,
+  faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import { createPinia } from 'pinia';
 import { DatePicker, setupCalendar } from 'v-calendar';
@@ -49,6 +50,7 @@ library.add(
   faSnowflake,
   faTemperatureFull,
   faThumbtack,
+  faUser,
 );
 
 const app = createApp(App);
