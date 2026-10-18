@@ -2,8 +2,7 @@
 
 [![License](https://img.shields.io/github/license/void-type/HomeSensors.svg)](https://github.com/void-type/HomeSensors/blob/main/LICENSE.txt)
 [![ReleaseVersion](https://img.shields.io/github/release/void-type/HomeSensors.svg)](https://github.com/void-type/HomeSensors/releases)
-[![Build Status](https://img.shields.io/azure-devops/build/void-type/VoidCore/25/main)](https://dev.azure.com/void-type/VoidCore/_build/latest?definitionId=25&branchName=main)
-[![Test Coverage](https://img.shields.io/azure-devops/coverage/void-type/VoidCore/25/main)](https://dev.azure.com/void-type/VoidCore/_build/latest?definitionId=25&branchName=main)
+[![Build Status](https://github.com/void-type/HomeSensors/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/void-type/HomeSensors/actions/workflows/ci.yml)
 
 A solution to gather data from various sensors and display it. Built using ASP.NET Core and Vue.
 
@@ -59,6 +58,8 @@ Run the registerService script on the server to get the service going to read th
 Make an IIS website pointing to the web app folder.
 
 ## Deploy updates
+
+CI runs on [GitHub Actions](https://github.com/void-type/HomeSensors/actions/workflows/ci.yml). To tag and create a GitHub release, run the CI workflow manually on main. Deployment is done from a local build.
 
 Run ./build/build.ps1
 
