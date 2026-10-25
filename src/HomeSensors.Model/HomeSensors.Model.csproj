@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="15.0.0" />
-        <PackageReference Include="MailKit" Version="4.18.2" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.14" />
-        <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
-        <PackageReference Include="VoidCore.Model" Version="16.0.7" />
-        <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.9.0" />
+        <PackageReference Include="Magick.NET-Q8-AnyCPU" />
+        <PackageReference Include="MailKit" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+        <PackageReference Include="Microsoft.Extensions.Http" />
+        <PackageReference Include="MQTTnet.Extensions.ManagedClient" />
+        <PackageReference Include="System.Security.Cryptography.Pkcs" />
+        <PackageReference Include="VoidCore.Model" />
+        <PackageReference Include="ZiggyCreatures.FusionCache" />
 
         <!-- <ProjectReference Include="..\..\..\VoidCore\src\VoidCore.Model\VoidCore.Model.csproj" /> -->
     </ItemGroup>
