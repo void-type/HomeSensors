@@ -12,32 +12,21 @@ using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Temperature.Repositories;
 
-public class TemperatureDeviceRepository : RepositoryBase
+public class TemperatureDeviceRepository(HomeSensorsContext data, IDateTimeService dateTimeService, HybridCache cache) : RepositoryBase
 {
-    private readonly HomeSensorsContext _data;
-    private readonly IDateTimeService _dateTimeService;
-    private readonly HybridCache _cache;
-
-    public TemperatureDeviceRepository(HomeSensorsContext data, IDateTimeService dateTimeService, HybridCache cache)
-    {
-        _data = data;
-        _dateTimeService = dateTimeService;
-        _cache = cache;
-    }
-
     /// <summary>
     /// Get all devices with statuses and last readings.
     /// </summary>
     public async Task<List<TemperatureDeviceResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        var lastReadings = await _data.TemperatureReadings
+        var lastReadings = await data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
             .GroupBy(x => x.TemperatureDeviceId)
             .Select(g => g.OrderByDescending(x => x.Time).First())
             .ToListAsync(cancellationToken);
 
-        var data = await _data.TemperatureDevices
+        var devices = await data.TemperatureDevices
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.IsRetired)
@@ -54,13 +43,13 @@ public class TemperatureDeviceRepository : RepositoryBase
             })
             .ToListAsync(cancellationToken);
 
-        return data.ConvertAll(x =>
+        return devices.ConvertAll(x =>
         {
             var lastReading = lastReadings.Find(r => r.TemperatureDeviceId == x.Id);
 
             var isInactive = !x.IsRetired
                 && x.InactiveLimitMinutes > 0
-                && (lastReading is null || lastReading.Time < _dateTimeService.MomentWithOffset.AddMinutes(-x.InactiveLimitMinutes));
+                && (lastReading is null || lastReading.Time < dateTimeService.MomentWithOffset.AddMinutes(-x.InactiveLimitMinutes));
 
             return new TemperatureDeviceResponse
             (
@@ -84,7 +73,7 @@ public class TemperatureDeviceRepository : RepositoryBase
 
         if (!request.IsRetired)
         {
-            var locationExists = await _data.TemperatureLocations.AnyAsync(x => x.Id == request.LocationId, cancellationToken);
+            var locationExists = await data.TemperatureLocations.AnyAsync(x => x.Id == request.LocationId, cancellationToken);
 
             if (!locationExists)
             {
@@ -103,7 +92,7 @@ public class TemperatureDeviceRepository : RepositoryBase
         }
         else
         {
-            var topicAlreadyUsed = await _data.TemperatureDevices
+            var topicAlreadyUsed = await data.TemperatureDevices
                 .AnyAsync(x => x.MqttTopic == request.MqttTopic && x.Id != request.Id, cancellationToken);
 
             if (topicAlreadyUsed)
@@ -122,13 +111,13 @@ public class TemperatureDeviceRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(failures);
         }
 
-        var device = await _data.TemperatureDevices
+        var device = await data.TemperatureDevices
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (device is null)
         {
             device = new TemperatureDevice();
-            await _data.TemperatureDevices.AddAsync(device, cancellationToken);
+            await data.TemperatureDevices.AddAsync(device, cancellationToken);
         }
 
         device.Name = request.Name;
@@ -138,16 +127,16 @@ public class TemperatureDeviceRepository : RepositoryBase
         device.InactiveLimitMinutes = request.InactiveLimitMinutes;
         device.TemperatureLocationId = request.LocationId;
 
-        await _data.SaveChangesAsync(cancellationToken);
+        await data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag, cancellationToken);
+        await cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag, cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Device saved.", device.Id));
     }
 
     public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        var device = await _data.TemperatureDevices
+        var device = await data.TemperatureDevices
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (device is null)
@@ -155,11 +144,11 @@ public class TemperatureDeviceRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(new Failure("Device not found."));
         }
 
-        _data.TemperatureDevices.Remove(device);
+        data.TemperatureDevices.Remove(device);
 
-        await _data.SaveChangesAsync(cancellationToken);
+        await data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag, cancellationToken);
+        await cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag, cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Device deleted.", device.Id));
     }

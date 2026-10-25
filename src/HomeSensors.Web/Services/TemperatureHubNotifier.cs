@@ -6,20 +6,11 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace HomeSensors.Web.Services;
 
-public class TemperatureHubNotifier : ITemperatureHubNotifier
+public class TemperatureHubNotifier(IHubContext<TemperaturesHub> hubContext, IServiceScopeFactory scopeFactory) : ITemperatureHubNotifier
 {
-    private readonly IHubContext<TemperaturesHub> _hubContext;
-    private readonly IServiceScopeFactory _scopeFactory;
-
-    public TemperatureHubNotifier(IHubContext<TemperaturesHub> hubContext, IServiceScopeFactory scopeFactory)
-    {
-        _hubContext = hubContext;
-        _scopeFactory = scopeFactory;
-    }
-
     public async Task NotifyCurrentReadingsChangedAsync(CancellationToken cancellationToken)
     {
-        using var scope = _scopeFactory.CreateScope();
+        using var scope = scopeFactory.CreateScope();
 
         var readingRepository = scope.ServiceProvider.GetRequiredService<TemperatureReadingRepository>();
         var currentReadings = await readingRepository.GetCurrentCachedAsync(cancellationToken, refreshCache: true);
@@ -28,12 +19,12 @@ public class TemperatureHubNotifier : ITemperatureHubNotifier
         var categories = await categoryRepository.GetAllAsync(cancellationToken);
 
         await Task.WhenAll(
-            _hubContext.Clients.All.SendAsync(
+            hubContext.Clients.All.SendAsync(
                 TemperaturesHub.UpdateCurrentReadingsMessageName,
                 currentReadings,
                 cancellationToken: cancellationToken),
 
-            _hubContext.Clients.All.SendAsync(
+            hubContext.Clients.All.SendAsync(
                 TemperaturesHub.UpdateCategoriesMessageName,
                 categories,
                 cancellationToken: cancellationToken));

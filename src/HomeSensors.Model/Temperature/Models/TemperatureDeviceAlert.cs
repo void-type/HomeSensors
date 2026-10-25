@@ -2,20 +2,12 @@
 
 namespace HomeSensors.Model.Temperature.Models;
 
-public class TemperatureDeviceAlert : ValueObject
+public class TemperatureDeviceAlert(TemperatureDeviceAlertType type, TemperatureDeviceResponse device, TemperatureLocationResponse? location, DateTimeOffset resendAfter) : ValueObject
 {
-    public TemperatureDeviceAlert(TemperatureDeviceAlertType type, TemperatureDeviceResponse device, TemperatureLocationResponse? location, DateTimeOffset resendAfter)
-    {
-        Type = type;
-        Device = device;
-        Location = location;
-        ResendAfter = resendAfter;
-    }
-
-    public TemperatureDeviceAlertType Type { get; }
-    public TemperatureDeviceResponse Device { get; }
-    public TemperatureLocationResponse? Location { get; }
-    public DateTimeOffset ResendAfter { get; }
+    public TemperatureDeviceAlertType Type { get; } = type;
+    public TemperatureDeviceResponse Device { get; } = device;
+    public TemperatureLocationResponse? Location { get; } = location;
+    public DateTimeOffset ResendAfter { get; } = resendAfter;
 
     protected override IEnumerable<object> GetEqualityComponents()
     {

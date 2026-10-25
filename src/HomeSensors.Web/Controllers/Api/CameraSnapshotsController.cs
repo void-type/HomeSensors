@@ -14,17 +14,9 @@ using VoidCore.Model.Text;
 namespace HomeSensors.Web.Controllers.Api;
 
 [Route(ApiRouteAttribute.BasePath + "/camera-snapshots")]
-public class CameraSnapshotsController : ControllerBase
+public class CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRepository, WebApplicationSettings applicationSettings) : ControllerBase
 {
-    private readonly CameraSnapshotRepository _cameraSnapshotRepository;
-    private readonly WebApplicationSettings _applicationSettings;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
-
-    public CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRepository, WebApplicationSettings applicationSettings)
-    {
-        _cameraSnapshotRepository = cameraSnapshotRepository;
-        _applicationSettings = applicationSettings;
-    }
 
     [HttpGet]
     [Route("{cameraId}/timeline")]
@@ -32,7 +24,7 @@ public class CameraSnapshotsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetTimelineAsync(long cameraId, DateTimeOffset? start, DateTimeOffset? end, CancellationToken cancellationToken)
     {
-        var baseUrl = _applicationSettings.BaseUrl
+        var baseUrl = applicationSettings.BaseUrl
             .DefaultIfNullOrWhiteSpace($"{Request.Scheme}://{Request.Host}");
 
         var request = new CameraSnapshotTimelineRequest
@@ -42,7 +34,7 @@ public class CameraSnapshotsController : ControllerBase
             End = end,
         };
 
-        return await _cameraSnapshotRepository.GetTimelineAsync(request, baseUrl, cancellationToken)
+        return await cameraSnapshotRepository.GetTimelineAsync(request, baseUrl, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -59,7 +51,7 @@ public class CameraSnapshotsController : ControllerBase
             _ => ThumbnailSize.Medium,
         };
 
-        var result = await _cameraSnapshotRepository.GetThumbnailPathAsync(cameraId, fileName, thumbnailSize, cancellationToken);
+        var result = await cameraSnapshotRepository.GetThumbnailPathAsync(cameraId, fileName, thumbnailSize, cancellationToken);
 
         if (result.IsFailed)
         {
@@ -82,7 +74,7 @@ public class CameraSnapshotsController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetOriginalAsync(long cameraId, string fileName, CancellationToken cancellationToken)
     {
-        var result = await _cameraSnapshotRepository.GetOriginalPathAsync(cameraId, fileName, cancellationToken);
+        var result = await cameraSnapshotRepository.GetOriginalPathAsync(cameraId, fileName, cancellationToken);
 
         if (result.IsFailed)
         {
@@ -137,7 +129,7 @@ public class CameraSnapshotsController : ControllerBase
             FileContent = uploadStream,
         };
 
-        return await _cameraSnapshotRepository.UploadAsync(request, cancellationToken)
+        return await cameraSnapshotRepository.UploadAsync(request, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 }

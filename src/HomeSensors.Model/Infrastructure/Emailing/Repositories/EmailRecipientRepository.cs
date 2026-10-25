@@ -8,18 +8,11 @@ using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.Infrastructure.Emailing.Repositories;
 
-public class EmailRecipientRepository : RepositoryBase
+public class EmailRecipientRepository(HomeSensorsContext data) : RepositoryBase
 {
-    private readonly HomeSensorsContext _data;
-
-    public EmailRecipientRepository(HomeSensorsContext data)
-    {
-        _data = data;
-    }
-
     public async Task<List<EmailRecipientResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _data.EmailRecipients
+        return await data.EmailRecipients
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.Email)
@@ -29,7 +22,7 @@ public class EmailRecipientRepository : RepositoryBase
 
     public async Task<List<string>> GetAllEmailsAsync(CancellationToken cancellationToken)
     {
-        return await _data.EmailRecipients
+        return await data.EmailRecipients
             .TagWith(GetTag())
             .AsNoTracking()
             .Select(x => x.Email)
@@ -43,25 +36,25 @@ public class EmailRecipientRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(new Failure("Email is required.", "email"));
         }
 
-        var recipient = await _data.EmailRecipients
+        var recipient = await data.EmailRecipients
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (recipient is null)
         {
             recipient = new EmailRecipient();
-            await _data.EmailRecipients.AddAsync(recipient, cancellationToken);
+            await data.EmailRecipients.AddAsync(recipient, cancellationToken);
         }
 
         recipient.Email = request.Email;
 
-        await _data.SaveChangesAsync(cancellationToken);
+        await data.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Email recipient saved.", recipient.Id));
     }
 
     public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        var recipient = await _data.EmailRecipients
+        var recipient = await data.EmailRecipients
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (recipient is null)
@@ -69,9 +62,9 @@ public class EmailRecipientRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(new Failure("Email recipient not found."));
         }
 
-        _data.EmailRecipients.Remove(recipient);
+        data.EmailRecipients.Remove(recipient);
 
-        await _data.SaveChangesAsync(cancellationToken);
+        await data.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Email recipient deleted.", recipient.Id));
     }

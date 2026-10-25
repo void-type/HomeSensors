@@ -1,45 +1,31 @@
 ﻿namespace HomeSensors.Model.Temperature.Models;
 
-public class TemperatureDeviceResponse
-{
-    public TemperatureDeviceResponse(
-        long id, string name, string mqttTopic,
-        long? locationId, TemperatureReadingResponse? lastReading,
-        bool isRetired, bool isInactive, bool isBatteryLevelLow,
-        bool excludeFromInactiveAlerts, int inactiveLimitMinutes
+public class TemperatureDeviceResponse(
+    long id, string name, string mqttTopic,
+    long? locationId, TemperatureReadingResponse? lastReading,
+    bool isRetired, bool isInactive, bool isBatteryLevelLow,
+    bool excludeFromInactiveAlerts, int inactiveLimitMinutes
         )
-    {
-        Id = id;
-        Name = name;
-        MqttTopic = mqttTopic;
-        LocationId = locationId;
-        LastReading = lastReading;
-        IsRetired = isRetired;
-        IsInactive = isInactive;
-        IsBatteryLevelLow = isBatteryLevelLow;
-        ExcludeFromInactiveAlerts = excludeFromInactiveAlerts;
-        InactiveLimitMinutes = inactiveLimitMinutes;
-    }
+{
+    public long Id { get; } = id;
 
-    public long Id { get; }
+    public string Name { get; } = name;
 
-    public string Name { get; }
+    public string MqttTopic { get; } = mqttTopic;
 
-    public string MqttTopic { get; }
+    public long? LocationId { get; } = locationId;
 
-    public long? LocationId { get; }
+    public TemperatureReadingResponse? LastReading { get; } = lastReading;
 
-    public TemperatureReadingResponse? LastReading { get; }
-
-    public bool IsRetired { get; }
+    public bool IsRetired { get; } = isRetired;
 
     public bool IsLost { get; }
 
-    public bool IsInactive { get; }
+    public bool IsInactive { get; } = isInactive;
 
-    public bool IsBatteryLevelLow { get; }
+    public bool IsBatteryLevelLow { get; } = isBatteryLevelLow;
 
-    public bool ExcludeFromInactiveAlerts { get; }
+    public bool ExcludeFromInactiveAlerts { get; } = excludeFromInactiveAlerts;
 
-    public int InactiveLimitMinutes { get; }
+    public int InactiveLimitMinutes { get; } = inactiveLimitMinutes;
 }

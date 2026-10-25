@@ -1,17 +1,10 @@
 ﻿namespace HomeSensors.Model.Categories.Models;
 
-public class CategoryResponse
+public class CategoryResponse(long id, string name, int order)
 {
-    public CategoryResponse(long id, string name, int order)
-    {
-        Id = id;
-        Name = name;
-        Order = order;
-    }
+    public long Id { get; } = id;
 
-    public long Id { get; }
+    public string Name { get; } = name;
 
-    public string Name { get; }
-
-    public int Order { get; }
+    public int Order { get; } = order;
 }

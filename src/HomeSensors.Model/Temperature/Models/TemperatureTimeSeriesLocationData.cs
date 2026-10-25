@@ -1,20 +1,12 @@
 ﻿namespace HomeSensors.Model.Temperature.Models;
 
-public class TemperatureTimeSeriesLocationData
+public class TemperatureTimeSeriesLocationData(TemperatureLocationResponse location, TemperatureTimeSeriesAggregate temperatureAggregate, TemperatureTimeSeriesAggregate humidityAggregate, List<TemperatureTimeSeriesPoint> points)
 {
-    public TemperatureTimeSeriesLocationData(TemperatureLocationResponse location, TemperatureTimeSeriesAggregate temperatureAggregate, TemperatureTimeSeriesAggregate humidityAggregate, List<TemperatureTimeSeriesPoint> points)
-    {
-        Location = location;
-        TemperatureAggregate = temperatureAggregate;
-        HumidityAggregate = humidityAggregate;
-        Points = points;
-    }
+    public TemperatureLocationResponse Location { get; } = location;
 
-    public TemperatureLocationResponse Location { get; }
+    public TemperatureTimeSeriesAggregate TemperatureAggregate { get; } = temperatureAggregate;
 
-    public TemperatureTimeSeriesAggregate TemperatureAggregate { get; }
+    public TemperatureTimeSeriesAggregate HumidityAggregate { get; } = humidityAggregate;
 
-    public TemperatureTimeSeriesAggregate HumidityAggregate { get; }
-
-    public List<TemperatureTimeSeriesPoint> Points { get; }
+    public List<TemperatureTimeSeriesPoint> Points { get; } = points;
 }

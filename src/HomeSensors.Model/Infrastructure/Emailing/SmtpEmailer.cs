@@ -10,18 +10,9 @@ namespace HomeSensors.Model.Infrastructure.Emailing;
 /// <summary>
 /// Send emails using SMTP. Users can be overridden in sub-prod using the Notifications.OverrideEmailRecipients configuration item.
 /// </summary>
-public class SmtpEmailer : IEmailSender
+public class SmtpEmailer(ILogger<SmtpEmailer> logger, NotificationsSettings notificationsSettings, ApplicationSettings applicationSettings) : IEmailSender
 {
-    private readonly NotificationsSettings _notificationsSettings;
-    private readonly ApplicationSettings _applicationSettings;
-    private readonly ILogger _logger;
-
-    public SmtpEmailer(ILogger<SmtpEmailer> logger, NotificationsSettings notificationsSettings, ApplicationSettings applicationSettings)
-    {
-        _applicationSettings = applicationSettings;
-        _logger = logger;
-        _notificationsSettings = notificationsSettings;
-    }
+    private readonly ILogger _logger = logger;
 
     /// <summary>
     /// Send an email.
@@ -30,7 +21,7 @@ public class SmtpEmailer : IEmailSender
     /// <param name="cancellationToken">A cancellation token</param>
     public async Task SendEmail(Email email, CancellationToken cancellationToken)
     {
-        if (!_notificationsSettings.IsEnabled)
+        if (!notificationsSettings.IsEnabled)
         {
             _logger.LogWarning("Notifications are disabled. Not sending email \"{Subject}\" to {Recipients}",
                 email.Subject,
@@ -40,9 +31,9 @@ public class SmtpEmailer : IEmailSender
         }
 
         var message = new MimeMessage();
-        message.From.Add(new MailboxAddress(_applicationSettings.Name, _notificationsSettings.FromAddress));
+        message.From.Add(new MailboxAddress(applicationSettings.Name, notificationsSettings.FromAddress));
         message.Subject = email.Subject;
-        message.Body = new TextPart(_notificationsSettings.EmailTextSubtype)
+        message.Body = new TextPart(notificationsSettings.EmailTextSubtype)
         {
             Text = email.Message
         };
@@ -56,16 +47,16 @@ public class SmtpEmailer : IEmailSender
         try
         {
             await client.ConnectAsync(
-                _notificationsSettings.SmtpAddress,
-                _notificationsSettings.SmtpPort,
-                _notificationsSettings.SmtpSecureSocketOption,
+                notificationsSettings.SmtpAddress,
+                notificationsSettings.SmtpPort,
+                notificationsSettings.SmtpSecureSocketOption,
                 cancellationToken: cancellationToken);
 
-            if (_notificationsSettings.SmtpUseAuthentication)
+            if (notificationsSettings.SmtpUseAuthentication)
             {
                 await client.AuthenticateAsync(
-                    _notificationsSettings.SmtpUserName,
-                    _notificationsSettings.SmtpPassword,
+                    notificationsSettings.SmtpUserName,
+                    notificationsSettings.SmtpPassword,
                     cancellationToken);
             }
 
@@ -84,7 +75,7 @@ public class SmtpEmailer : IEmailSender
 
     private IEnumerable<string> ResolveRecipients(IEnumerable<string> originalRecipients)
     {
-        var overrideRecipients = _notificationsSettings.OverrideEmailRecipients;
+        var overrideRecipients = notificationsSettings.OverrideEmailRecipients;
 
         if (overrideRecipients?.Any() != true)
         {

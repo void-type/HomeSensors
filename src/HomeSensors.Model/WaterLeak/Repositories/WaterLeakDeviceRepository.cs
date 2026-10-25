@@ -8,18 +8,11 @@ using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.WaterLeak.Repositories;
 
-public class WaterLeakDeviceRepository : RepositoryBase
+public class WaterLeakDeviceRepository(HomeSensorsContext data) : RepositoryBase
 {
-    private readonly HomeSensorsContext _data;
-
-    public WaterLeakDeviceRepository(HomeSensorsContext data)
-    {
-        _data = data;
-    }
-
     public async Task<List<WaterLeakDeviceResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _data.WaterLeakDevices
+        return await data.WaterLeakDevices
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.Name)
@@ -42,7 +35,7 @@ public class WaterLeakDeviceRepository : RepositoryBase
         }
         else
         {
-            var topicAlreadyUsed = await _data.WaterLeakDevices
+            var topicAlreadyUsed = await data.WaterLeakDevices
                 .AnyAsync(x => x.MqttTopic == request.MqttTopic && x.Id != request.Id, cancellationToken);
 
             if (topicAlreadyUsed)
@@ -61,27 +54,27 @@ public class WaterLeakDeviceRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(failures);
         }
 
-        var device = await _data.WaterLeakDevices
+        var device = await data.WaterLeakDevices
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (device is null)
         {
             device = new WaterLeakDevice();
-            await _data.WaterLeakDevices.AddAsync(device, cancellationToken);
+            await data.WaterLeakDevices.AddAsync(device, cancellationToken);
         }
 
         device.Name = request.Name;
         device.MqttTopic = request.MqttTopic;
         device.InactiveLimitMinutes = request.InactiveLimitMinutes;
 
-        await _data.SaveChangesAsync(cancellationToken);
+        await data.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Device saved.", device.Id));
     }
 
     public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        var device = await _data.WaterLeakDevices
+        var device = await data.WaterLeakDevices
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (device is null)
@@ -89,9 +82,9 @@ public class WaterLeakDeviceRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(new Failure("Device not found."));
         }
 
-        _data.WaterLeakDevices.Remove(device);
+        data.WaterLeakDevices.Remove(device);
 
-        await _data.SaveChangesAsync(cancellationToken);
+        await data.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Device deleted.", device.Id));
     }

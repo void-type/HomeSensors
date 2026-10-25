@@ -10,24 +10,10 @@ using VoidCore.Model.Time;
 
 namespace HomeSensors.Web.Services.MqttDiscovery;
 
-public class MqttDiscoveryService
+public class MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSettings configuration,
+    MqttFactory mqttFactory, IHubContext<TemperaturesHub> tempHubContext, IDateTimeService dateTimeService)
 {
-    private readonly ILogger<MqttDiscoveryService> _logger;
-    private readonly MqttSettings _configuration;
-    private readonly MqttFactory _mqttFactory;
-    private readonly IHubContext<TemperaturesHub> _tempHubContext;
-    private readonly IDateTimeService _dateTimeService;
     private MqttDiscoveryClientState? _clientState;
-
-    public MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSettings configuration,
-        MqttFactory mqttFactory, IHubContext<TemperaturesHub> tempHubContext, IDateTimeService dateTimeService)
-    {
-        _logger = logger;
-        _configuration = configuration;
-        _mqttFactory = mqttFactory;
-        _tempHubContext = tempHubContext;
-        _dateTimeService = dateTimeService;
-    }
 
     public MqttDiscoveryClientStatus GetClientStatus()
     {
@@ -44,27 +30,27 @@ public class MqttDiscoveryService
             return Result.Fail(new Failure("Client already exists. End existing before setting up a new one."));
         }
 
-        var client = _mqttFactory.CreateManagedMqttClient();
+        var client = mqttFactory.CreateManagedMqttClient();
 
         _clientState = new(request.Topics, client);
 
-        _logger.LogInformation("Connecting Managed MQTT client.");
+        logger.LogInformation("Connecting Managed MQTT client.");
 
         client.ConnectedAsync += OnStateChangeAsync;
         client.ConnectionStateChangedAsync += OnStateChangeAsync;
         client.ConnectingFailedAsync += OnConnectionFailureAsync;
         client.ApplicationMessageReceivedAsync += OnMessageReceivedAsync;
 
-        await client.StartAsync(_configuration.GetClientOptions());
+        await client.StartAsync(configuration.GetClientOptions());
 
         foreach (var topic in request.Topics)
         {
-            _logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
+            logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
         }
 
         try
         {
-            await client.SubscribeAsync(_mqttFactory.GetTopicFilters(request.Topics));
+            await client.SubscribeAsync(mqttFactory.GetTopicFilters(request.Topics));
         }
         catch (MqttProtocolViolationException ex)
         {
@@ -97,36 +83,36 @@ public class MqttDiscoveryService
         {
             var payload = e.GetPayloadString();
 
-            if (_configuration.LogMessages)
+            if (configuration.LogMessages)
             {
-                MqttHelpers.LogMqttPayload(_logger, payload);
+                MqttHelpers.LogMqttPayload(logger, payload);
             }
 
-            var message = new MqttDiscoveryMessage(_dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);
+            var message = new MqttDiscoveryMessage(dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);
 
-            await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.NewDiscoveryMessageMessageName, message);
+            await tempHubContext.Clients.All.SendAsync(TemperaturesHub.NewDiscoveryMessageMessageName, message);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttDiscoveryService));
+            logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttDiscoveryService));
         }
     }
 
     private async Task OnStateChangeAsync(EventArgs e)
     {
         var status = GetClientStatus();
-        _logger.LogInformation("MQTT client connection state changed to {State}.", status.IsConnected ? "Connected" : "Disconnected");
+        logger.LogInformation("MQTT client connection state changed to {State}.", status.IsConnected ? "Connected" : "Disconnected");
         await BroadcastStatusAsync(status);
     }
 
     private async Task OnConnectionFailureAsync(ConnectingFailedEventArgs e)
     {
-        _logger.LogError(e.Exception, "MQTT client failed to connect.");
+        logger.LogError(e.Exception, "MQTT client failed to connect.");
         await BroadcastStatusAsync();
     }
 
     private async Task BroadcastStatusAsync(MqttDiscoveryClientStatus? status = null)
     {
-        await _tempHubContext.Clients.All.SendAsync(TemperaturesHub.UpdateDiscoveryStatusMessageName, status ?? GetClientStatus());
+        await tempHubContext.Clients.All.SendAsync(TemperaturesHub.UpdateDiscoveryStatusMessageName, status ?? GetClientStatus());
     }
 }

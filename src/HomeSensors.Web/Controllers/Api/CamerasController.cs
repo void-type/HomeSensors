@@ -10,22 +10,15 @@ using VoidCore.Model.Responses.Messages;
 namespace HomeSensors.Web.Controllers.Api;
 
 [Route(ApiRouteAttribute.BasePath + "/cameras")]
-public class CamerasController : ControllerBase
+public class CamerasController(CameraRepository cameraRepository) : ControllerBase
 {
-    private readonly CameraRepository _cameraRepository;
-
-    public CamerasController(CameraRepository cameraRepository)
-    {
-        _cameraRepository = cameraRepository;
-    }
-
     [HttpGet]
     [Route("all")]
     [ProducesResponseType(typeof(List<CameraResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _cameraRepository.GetAllAsync(cancellationToken)
+        return await cameraRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -34,7 +27,7 @@ public class CamerasController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> SaveAsync([FromBody] CameraSaveRequest request, CancellationToken cancellationToken)
     {
-        return await _cameraRepository.SaveAsync(request, cancellationToken)
+        return await cameraRepository.SaveAsync(request, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -44,7 +37,7 @@ public class CamerasController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _cameraRepository.DeleteAsync(id, cancellationToken)
+        return await cameraRepository.DeleteAsync(id, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 }

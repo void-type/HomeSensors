@@ -11,24 +11,15 @@ using VoidCore.Model.Responses.Messages;
 namespace HomeSensors.Web.Controllers.Api;
 
 [Route(ApiRouteAttribute.BasePath + "/water-leak-devices")]
-public class WaterLeakDevicesController : ControllerBase
+public class WaterLeakDevicesController(WaterLeakDeviceRepository deviceRepository, IHttpContextAccessor contextAccessor) : ControllerBase
 {
-    private readonly WaterLeakDeviceRepository _deviceRepository;
-    private readonly IHttpContextAccessor _contextAccessor;
-
-    public WaterLeakDevicesController(WaterLeakDeviceRepository deviceRepository, IHttpContextAccessor contextAccessor)
-    {
-        _deviceRepository = deviceRepository;
-        _contextAccessor = contextAccessor;
-    }
-
     [HttpGet]
     [Route("all")]
     [ProducesResponseType(typeof(List<WaterLeakDeviceResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _deviceRepository.GetAllAsync(cancellationToken)
+        return await deviceRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -37,7 +28,7 @@ public class WaterLeakDevicesController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> SaveAsync([FromBody] WaterLeakDeviceSaveRequest request, CancellationToken cancellationToken)
     {
-        return await _deviceRepository.SaveAsync(request, cancellationToken)
+        return await deviceRepository.SaveAsync(request, cancellationToken)
             .TeeAsync(RefreshTopicSubscriptionsAsync)
             .MapAsync(HttpResponder.Respond);
     }
@@ -48,14 +39,14 @@ public class WaterLeakDevicesController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _deviceRepository.DeleteAsync(id, cancellationToken)
+        return await deviceRepository.DeleteAsync(id, cancellationToken)
             .TeeAsync(RefreshTopicSubscriptionsAsync)
             .MapAsync(HttpResponder.Respond);
     }
 
     private async Task RefreshTopicSubscriptionsAsync()
     {
-        var worker = _contextAccessor?
+        var worker = contextAccessor?
             .HttpContext?
             .RequestServices?
             .GetServices<IHostedService>()?

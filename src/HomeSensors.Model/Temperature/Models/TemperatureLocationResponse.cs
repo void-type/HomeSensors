@@ -1,30 +1,19 @@
 ﻿namespace HomeSensors.Model.Temperature.Models;
 
-public class TemperatureLocationResponse
+public class TemperatureLocationResponse(long id, string name, double? minTemperatureLimitCelsius,
+    double? maxTemperatureLimitCelsius, bool isHidden, string color, long? categoryId)
 {
-    public TemperatureLocationResponse(long id, string name, double? minTemperatureLimitCelsius,
-        double? maxTemperatureLimitCelsius, bool isHidden, string color, long? categoryId)
-    {
-        Id = id;
-        Name = name;
-        MinTemperatureLimitCelsius = minTemperatureLimitCelsius;
-        MaxTemperatureLimitCelsius = maxTemperatureLimitCelsius;
-        IsHidden = isHidden;
-        Color = color;
-        CategoryId = categoryId;
-    }
+    public long Id { get; } = id;
 
-    public long Id { get; }
+    public string Name { get; } = name;
 
-    public string Name { get; }
+    public double? MinTemperatureLimitCelsius { get; } = minTemperatureLimitCelsius;
 
-    public double? MinTemperatureLimitCelsius { get; }
+    public double? MaxTemperatureLimitCelsius { get; } = maxTemperatureLimitCelsius;
 
-    public double? MaxTemperatureLimitCelsius { get; }
+    public bool IsHidden { get; } = isHidden;
 
-    public bool IsHidden { get; }
+    public string Color { get; } = color;
 
-    public string Color { get; }
-
-    public long? CategoryId { get; }
+    public long? CategoryId { get; } = categoryId;
 }

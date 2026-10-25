@@ -12,25 +12,15 @@ using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.Temperature.Repositories;
 
-public class TemperatureLocationRepository : RepositoryBase
+public class TemperatureLocationRepository(HomeSensorsContext data, HybridCache cache, ITemperatureHubNotifier hubNotifier) : RepositoryBase
 {
-    private readonly HomeSensorsContext _data;
-    private readonly HybridCache _cache;
-    private readonly ITemperatureHubNotifier _hubNotifier;
-
-    public TemperatureLocationRepository(HomeSensorsContext data, HybridCache cache, ITemperatureHubNotifier hubNotifier)
-    {
-        _data = data;
-        _cache = cache;
-        _hubNotifier = hubNotifier;
-    }
 
     /// <summary>
     /// Get all locations.
     /// </summary>
     public async Task<List<TemperatureLocationResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return (await _data.TemperatureLocations
+        return (await data.TemperatureLocations
             .TagWith(GetTag())
             .AsNoTracking()
             .OrderBy(x => x.IsHidden)
@@ -48,7 +38,7 @@ public class TemperatureLocationRepository : RepositoryBase
     /// <returns>List of results</returns>
     public async Task<List<TemperatureCheckLimitResponse>> CheckLimitsAsync(DateTimeOffset since, bool isAveragingEnabled, CancellationToken cancellationToken)
     {
-        var locations = (await _data.TemperatureLocations
+        var locations = (await data.TemperatureLocations
             .TagWith(GetTag())
             .AsNoTracking()
             .ToListAsync(cancellationToken))
@@ -76,7 +66,7 @@ public class TemperatureLocationRepository : RepositoryBase
             failures.Add(new Failure("Name is required.", "name"));
         }
 
-        var nameUsedByAnother = await _data.TemperatureLocations
+        var nameUsedByAnother = await data.TemperatureLocations
             .AnyAsync(x => x.Name == request.Name && x.Id != request.Id, cancellationToken);
 
         if (nameUsedByAnother)
@@ -86,7 +76,7 @@ public class TemperatureLocationRepository : RepositoryBase
 
         if (request.CategoryId is not null)
         {
-            var category = await _data.Categories
+            var category = await data.Categories
                 .FirstOrDefaultAsync(x => x.Id == request.CategoryId, cancellationToken);
 
             if (category is null)
@@ -100,13 +90,13 @@ public class TemperatureLocationRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(failures);
         }
 
-        var location = await _data.TemperatureLocations
+        var location = await data.TemperatureLocations
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (location is null)
         {
             location = new TemperatureLocation();
-            await _data.TemperatureLocations.AddAsync(location, cancellationToken);
+            await data.TemperatureLocations.AddAsync(location, cancellationToken);
         }
 
         location.Name = request.Name;
@@ -116,17 +106,17 @@ public class TemperatureLocationRepository : RepositoryBase
         location.Color = request.Color;
         location.CategoryId = request.CategoryId;
 
-        await _data.SaveChangesAsync(cancellationToken);
+        await data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag, cancellationToken);
-        await _hubNotifier.NotifyCurrentReadingsChangedAsync(cancellationToken);
+        await cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag, cancellationToken);
+        await hubNotifier.NotifyCurrentReadingsChangedAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Location saved.", location.Id));
     }
 
     public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        var location = await _data.TemperatureLocations
+        var location = await data.TemperatureLocations
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (location is null)
@@ -134,7 +124,7 @@ public class TemperatureLocationRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(new Failure("Location not found."));
         }
 
-        var anyLocationReadings = await _data.TemperatureReadings
+        var anyLocationReadings = await data.TemperatureReadings
             .AnyAsync(x => x.TemperatureLocationId == id, cancellationToken);
 
         if (anyLocationReadings)
@@ -142,7 +132,7 @@ public class TemperatureLocationRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(new Failure("Location has readings and cannot be deleted."));
         }
 
-        var anyLocationDevices = await _data.TemperatureDevices
+        var anyLocationDevices = await data.TemperatureDevices
             .AnyAsync(x => x.TemperatureLocationId == id, cancellationToken);
 
         if (anyLocationDevices)
@@ -150,12 +140,12 @@ public class TemperatureLocationRepository : RepositoryBase
             return Result.Fail<EntityMessage<long>>(new Failure("Location is related to a device. Change the device's location before deleting the location."));
         }
 
-        _data.TemperatureLocations.Remove(location);
+        data.TemperatureLocations.Remove(location);
 
-        await _data.SaveChangesAsync(cancellationToken);
+        await data.SaveChangesAsync(cancellationToken);
 
-        await _cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag, cancellationToken);
-        await _hubNotifier.NotifyCurrentReadingsChangedAsync(cancellationToken);
+        await cache.RemoveByTagAsync(CacheHelpers.TemperatureLocationAllCacheTag, cancellationToken);
+        await hubNotifier.NotifyCurrentReadingsChangedAsync(cancellationToken);
 
         return Result.Ok(EntityMessage.Create("Location deleted.", location.Id));
     }
@@ -169,7 +159,7 @@ public class TemperatureLocationRepository : RepositoryBase
 
         if (!isAveragingEnabled)
         {
-            var min = await _data.TemperatureReadings
+            var min = await data.TemperatureReadings
                 .TagWith(GetTag())
                 .AsNoTracking()
                 .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id && x.TemperatureCelsius < location.MinTemperatureLimitCelsius)
@@ -180,7 +170,7 @@ public class TemperatureLocationRepository : RepositoryBase
         }
 
         // If averaging enabled, test average over the look back period.
-        var lookBack = await _data.TemperatureReadings
+        var lookBack = await data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
             .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id)
@@ -214,7 +204,7 @@ public class TemperatureLocationRepository : RepositoryBase
 
         if (!isAveragingEnabled)
         {
-            var max = await _data.TemperatureReadings
+            var max = await data.TemperatureReadings
                 .TagWith(GetTag())
                 .AsNoTracking()
                 .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id && x.TemperatureCelsius > location.MaxTemperatureLimitCelsius)
@@ -225,7 +215,7 @@ public class TemperatureLocationRepository : RepositoryBase
         }
 
         // If averaging enabled, test average over the look back period.
-        var lookBack = await _data.TemperatureReadings
+        var lookBack = await data.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
             .Where(x => x.Time >= since && x.TemperatureLocationId == location.Id)

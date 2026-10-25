@@ -1,23 +1,14 @@
 ﻿namespace HomeSensors.Model.Cameras.Models;
 
-public class CameraResponse
+public class CameraResponse(long id, string name, string snapshotsPath, string slug, bool isHidden)
 {
-    public CameraResponse(long id, string name, string snapshotsPath, string slug, bool isHidden)
-    {
-        Id = id;
-        Name = name;
-        SnapshotsPath = snapshotsPath;
-        Slug = slug;
-        IsHidden = isHidden;
-    }
+    public long Id { get; } = id;
 
-    public long Id { get; }
+    public string Name { get; } = name;
 
-    public string Name { get; }
+    public string SnapshotsPath { get; } = snapshotsPath;
 
-    public string SnapshotsPath { get; }
+    public string Slug { get; } = slug;
 
-    public string Slug { get; }
-
-    public bool IsHidden { get; }
+    public bool IsHidden { get; } = isHidden;
 }

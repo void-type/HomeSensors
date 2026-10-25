@@ -8,32 +8,17 @@ using VoidCore.Model.Functional;
 
 namespace HomeSensors.Model.Temperature.Services;
 
-public class TemperatureDeviceAlertService
+public class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService> logger,
+    TemperatureLocationRepository locationRepository, TemperatureDeviceRepository deviceRepository,
+    EmailNotificationService emailNotificationService, TemperatureAlertsSettings alertSettings)
 {
-    private readonly ILogger<TemperatureDeviceAlertService> _logger;
-    private readonly TemperatureLocationRepository _locationRepository;
-    private readonly TemperatureDeviceRepository _deviceRepository;
-    private readonly EmailNotificationService _emailNotificationService;
-    private readonly TemperatureAlertsSettings _alertSettings;
-
-    public TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService> logger,
-        TemperatureLocationRepository locationRepository, TemperatureDeviceRepository deviceRepository,
-        EmailNotificationService emailNotificationService, TemperatureAlertsSettings alertSettings)
-    {
-        _logger = logger;
-        _locationRepository = locationRepository;
-        _deviceRepository = deviceRepository;
-        _emailNotificationService = emailNotificationService;
-        _alertSettings = alertSettings;
-    }
-
     public async Task ProcessAsync(List<TemperatureDeviceAlert> latchedAlerts, DateTimeOffset now, CancellationToken stoppingToken)
     {
-        var devices = await _deviceRepository.GetAllAsync(stoppingToken);
+        var devices = await deviceRepository.GetAllAsync(stoppingToken);
 
-        var locations = await _locationRepository.GetAllAsync(stoppingToken);
+        var locations = await locationRepository.GetAllAsync(stoppingToken);
 
-        var betweenNotifications = TimeSpan.FromMinutes(_alertSettings.BetweenNotificationsMinutes);
+        var betweenNotifications = TimeSpan.FromMinutes(alertSettings.BetweenNotificationsMinutes);
         var resendAfter = now.Add(betweenNotifications);
 
         var inactiveAlerts = devices
@@ -112,7 +97,7 @@ public class TemperatureDeviceAlertService
         var subject = $"{locationName} is inactive";
         var body = $"The temperature sensor in {locationName} hasn't sent a reading in a while.";
 
-        _logger.LogWarning("Alert: {Subject}", subject);
+        logger.LogWarning("Alert: {Subject}", subject);
 
         await SendEmailAsync(subject, body, alert.Device, stoppingToken);
     }
@@ -125,7 +110,7 @@ public class TemperatureDeviceAlertService
         var subject = $"{locationName} is active again";
         var body = $"The temperature sensor in {locationName} is sending readings again.";
 
-        _logger.LogWarning("Alert clear: {Subject}", subject);
+        logger.LogWarning("Alert clear: {Subject}", subject);
 
         await SendEmailAsync(subject, body, device, stoppingToken);
     }
@@ -137,7 +122,7 @@ public class TemperatureDeviceAlertService
         var subject = $"{locationName} has a low battery";
         var body = $"The temperature sensor in {locationName} has a low battery.";
 
-        _logger.LogWarning("Alert: {Subject}", subject);
+        logger.LogWarning("Alert: {Subject}", subject);
 
         await SendEmailAsync(subject, body, alert.Device, stoppingToken);
     }
@@ -150,7 +135,7 @@ public class TemperatureDeviceAlertService
         var subject = $"{locationName} no longer has a low battery";
         var body = $"The temperature sensor in {locationName} no longer has a low battery.";
 
-        _logger.LogWarning("Alert clear: {Subject}", subject);
+        logger.LogWarning("Alert clear: {Subject}", subject);
 
         await SendEmailAsync(subject, body, device, stoppingToken);
     }
@@ -161,7 +146,7 @@ public class TemperatureDeviceAlertService
         var readingTempString = TemperatureHelpers.GetDualTempString(device.LastReading?.TemperatureCelsius);
         var readingTime = device.LastReading?.Time;
 
-        await _emailNotificationService.SendAsync(e =>
+        await emailNotificationService.SendAsync(e =>
         {
             e.SetSubject(subject);
 

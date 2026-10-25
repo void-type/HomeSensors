@@ -10,18 +10,8 @@ using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Temperature.Repositories;
 
-public class TemperatureReadingRepository : RepositoryBase
+public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> contextFactory, IDateTimeService dateTimeService, HybridCache cache) : RepositoryBase
 {
-    private readonly IDbContextFactory<HomeSensorsContext> _contextFactory;
-    private readonly IDateTimeService _dateTimeService;
-    private readonly HybridCache _cache;
-
-    public TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> contextFactory, IDateTimeService dateTimeService, HybridCache cache)
-    {
-        _contextFactory = contextFactory;
-        _dateTimeService = dateTimeService;
-        _cache = cache;
-    }
 
     /// <summary>
     /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
@@ -33,10 +23,10 @@ public class TemperatureReadingRepository : RepositoryBase
 
         if (refreshCache)
         {
-            await _cache.RemoveAsync(cacheKey, cancellationToken);
+            await cache.RemoveAsync(cacheKey, cancellationToken);
         }
 
-        return await _cache.GetOrCreateAsync(
+        return await cache.GetOrCreateAsync(
             cacheKey,
             async cancel => await GetCurrentAsync(cancel),
             options: new()
@@ -67,7 +57,7 @@ public class TemperatureReadingRepository : RepositoryBase
     public async Task<List<TemperatureTimeSeriesLocationData>> GetTimeSeriesCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
         // Prevent caching incomplete series to stay current.
-        if (request.EndTime >= _dateTimeService.MomentWithOffset)
+        if (request.EndTime >= dateTimeService.MomentWithOffset)
         {
             return await GetTimeSeriesAsync(request, cancellationToken);
         }
@@ -75,7 +65,7 @@ public class TemperatureReadingRepository : RepositoryBase
         var caller = GetCaller();
         var cacheKey = $"{caller}|{request.StartTime:o}|{request.EndTime:o}|{string.Join(",", request.LocationIds.Order())}|{request.IncludeHvacActions}|{request.TrimHvacActionsToRequestedTimeRange}";
 
-        return await _cache.GetOrCreateAsync(
+        return await cache.GetOrCreateAsync(
             cacheKey,
             async (cancel) => await GetTimeSeriesAsync(request, cancel),
             tags: [
@@ -97,7 +87,7 @@ public class TemperatureReadingRepository : RepositoryBase
         }
 
         // Prevent caching incomplete series to stay current.
-        if (request.EndTime >= _dateTimeService.MomentWithOffset)
+        if (request.EndTime >= dateTimeService.MomentWithOffset)
         {
             return await GetHvacActionsAsync(request, cancellationToken);
         }
@@ -105,7 +95,7 @@ public class TemperatureReadingRepository : RepositoryBase
         var caller = GetCaller();
         var cacheKey = $"{caller}|{request.StartTime:o}|{request.EndTime:o}";
 
-        return await _cache.GetOrCreateAsync(
+        return await cache.GetOrCreateAsync(
             cacheKey,
             async (cancel) => await GetHvacActionsAsync(request, cancel),
             cancellationToken: cancellationToken);
@@ -116,24 +106,24 @@ public class TemperatureReadingRepository : RepositoryBase
     /// </summary>
     private async Task<List<TemperatureReadingResponse>> GetCurrentAsync(CancellationToken cancellationToken)
     {
-        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var data = await context.TemperatureReadings
+        var readings = await context.TemperatureReadings
             .TagWith(GetTag())
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
             .ThenInclude(x => x!.Category)
-            .Where(x => !x.IsSummary && x.Time >= _dateTimeService.MomentWithOffset.AddDays(-1))
+            .Where(x => !x.IsSummary && x.Time >= dateTimeService.MomentWithOffset.AddDays(-1))
             .GroupBy(x => x.TemperatureLocationId)
             .Select(g => g.OrderByDescending(x => x.Time).First())
             .ToListAsync(cancellationToken);
 
-        var orderedData = data
+        var orderedReadings = readings
             .OrderBy(x => x.TemperatureLocation!.Category!.Order)
             .ThenBy(x => x.TemperatureLocation!.Name)
             .ToList();
 
-        return orderedData.ConvertAll(x => new TemperatureReadingResponse(
+        return orderedReadings.ConvertAll(x => new TemperatureReadingResponse(
             time: x.Time,
             humidity: x.Humidity,
             temperatureCelsius: x.TemperatureCelsius,
@@ -152,7 +142,7 @@ public class TemperatureReadingRepository : RepositoryBase
             return [];
         }
 
-        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var dbReadings = await context.TemperatureReadings
             .TagWith(GetTag())
@@ -217,7 +207,7 @@ public class TemperatureReadingRepository : RepositoryBase
 
     private async Task<List<TemperatureTimeSeriesHvacAction>> GetHvacActionsAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
-        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var dbReadings = await context.HvacActions
            .TagWith(GetTag())
@@ -278,7 +268,7 @@ public class TemperatureReadingRepository : RepositoryBase
 
                 var endTime = nextAction is not null
                     ? nextAction.LastUpdated
-                    : _dateTimeService.MomentWithOffset;
+                    : dateTimeService.MomentWithOffset;
 
                 if (endTime <= startTime)
                 {

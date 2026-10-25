@@ -10,22 +10,15 @@ using VoidCore.Model.Responses.Messages;
 namespace HomeSensors.Web.Controllers.Api;
 
 [Route(ApiRouteAttribute.BasePath + "/temperature-locations")]
-public class TemperatureLocationsController : ControllerBase
+public class TemperatureLocationsController(TemperatureLocationRepository locationRepository) : ControllerBase
 {
-    private readonly TemperatureLocationRepository _locationRepository;
-
-    public TemperatureLocationsController(TemperatureLocationRepository locationRepository)
-    {
-        _locationRepository = locationRepository;
-    }
-
     [HttpGet]
     [Route("all")]
     [ProducesResponseType(typeof(List<TemperatureLocationResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _locationRepository.GetAllAsync(cancellationToken)
+        return await locationRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -35,7 +28,7 @@ public class TemperatureLocationsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> CheckLimitsAsync(DateTimeOffset since, bool isAveragingEnabled, CancellationToken cancellationToken)
     {
-        return await _locationRepository.CheckLimitsAsync(since, isAveragingEnabled, cancellationToken)
+        return await locationRepository.CheckLimitsAsync(since, isAveragingEnabled, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -44,7 +37,7 @@ public class TemperatureLocationsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> SaveAsync([FromBody] TemperatureLocationSaveRequest request, CancellationToken cancellationToken)
     {
-        return await _locationRepository.SaveAsync(request, cancellationToken)
+        return await locationRepository.SaveAsync(request, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -54,7 +47,7 @@ public class TemperatureLocationsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _locationRepository.DeleteAsync(id, cancellationToken)
+        return await locationRepository.DeleteAsync(id, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 }

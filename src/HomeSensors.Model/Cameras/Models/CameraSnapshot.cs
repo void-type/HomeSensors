@@ -1,23 +1,14 @@
 ﻿namespace HomeSensors.Model.Cameras.Models;
 
-public class CameraSnapshot
+public class CameraSnapshot(string fileName, DateTimeOffset timestamp, string smallUrl, string mediumUrl, string originalUrl)
 {
-    public CameraSnapshot(string fileName, DateTimeOffset timestamp, string smallUrl, string mediumUrl, string originalUrl)
-    {
-        FileName = fileName;
-        Timestamp = timestamp;
-        SmallUrl = smallUrl;
-        MediumUrl = mediumUrl;
-        OriginalUrl = originalUrl;
-    }
+    public string FileName { get; } = fileName;
 
-    public string FileName { get; }
+    public DateTimeOffset Timestamp { get; } = timestamp;
 
-    public DateTimeOffset Timestamp { get; }
+    public string SmallUrl { get; } = smallUrl;
 
-    public string SmallUrl { get; }
+    public string MediumUrl { get; } = mediumUrl;
 
-    public string MediumUrl { get; }
-
-    public string OriginalUrl { get; }
+    public string OriginalUrl { get; } = originalUrl;
 }

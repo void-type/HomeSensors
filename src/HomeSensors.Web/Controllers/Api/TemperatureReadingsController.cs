@@ -9,22 +9,15 @@ using VoidCore.Model.Responses.Collections;
 namespace HomeSensors.Web.Controllers.Api;
 
 [Route(ApiRouteAttribute.BasePath + "/temperature-readings")]
-public class TemperatureReadingsController : ControllerBase
+public class TemperatureReadingsController(TemperatureReadingRepository readingRepository) : ControllerBase
 {
-    private readonly TemperatureReadingRepository _readingRepository;
-
-    public TemperatureReadingsController(TemperatureReadingRepository readingRepository)
-    {
-        _readingRepository = readingRepository;
-    }
-
     [HttpGet]
     [Route("current")]
     [ProducesResponseType(typeof(List<TemperatureReadingResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetCurrentReadingsAsync(CancellationToken cancellationToken)
     {
-        return await _readingRepository.GetCurrentCachedAsync(cancellationToken: cancellationToken)
+        return await readingRepository.GetCurrentCachedAsync(cancellationToken: cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -34,7 +27,7 @@ public class TemperatureReadingsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetCurrentReadingForLocationAsync(long locationId, CancellationToken cancellationToken)
     {
-        return await _readingRepository.GetCurrentForLocationCachedAsync(locationId, cancellationToken)
+        return await readingRepository.GetCurrentForLocationCachedAsync(locationId, cancellationToken)
             .ToResultAsync(new Failure("No current reading for location.", nameof(locationId)))
             .MapAsync(HttpResponder.Respond);
     }
@@ -45,8 +38,8 @@ public class TemperatureReadingsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetTimeSeriesAsync([FromBody] TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
-        var timeSeriesTask = _readingRepository.GetTimeSeriesCachedAsync(request, cancellationToken);
-        var actionsTask = _readingRepository.GetHvacActionsCachedAsync(request, cancellationToken);
+        var timeSeriesTask = readingRepository.GetTimeSeriesCachedAsync(request, cancellationToken);
+        var actionsTask = readingRepository.GetHvacActionsCachedAsync(request, cancellationToken);
 
         // Comment this out to run tasks in series.
         await Task.WhenAll(timeSeriesTask, actionsTask);

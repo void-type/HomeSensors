@@ -7,20 +7,11 @@ using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.Cameras.Services;
 
-public class ThumbnailService
+public class ThumbnailService(CameraSettings settings, ILogger<ThumbnailService> logger)
 {
     // Height-based sizes to accommodate variable aspect ratios (16:9, 1:1, 32:9, etc.)
     private const int SmallHeightPx = 180;
     private const int MediumHeightPx = 720;
-
-    private readonly CameraSettings _settings;
-    private readonly ILogger<ThumbnailService> _logger;
-
-    public ThumbnailService(CameraSettings settings, ILogger<ThumbnailService> logger)
-    {
-        _settings = settings;
-        _logger = logger;
-    }
 
     /// <summary>
     /// Ensure all thumbnail sizes exist for the given snapshot. Skips any that already exist.
@@ -35,7 +26,7 @@ public class ThumbnailService
         }
 
         var slug = camera.SelectSlug();
-        var cacheDir = Path.Combine(_settings.ThumbnailCachePath, slug);
+        var cacheDir = Path.Combine(settings.ThumbnailCachePath, slug);
 
         Directory.CreateDirectory(cacheDir);
 
@@ -67,7 +58,7 @@ public class ThumbnailService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate thumbnails for {OriginalPath}.", originalPath);
+            logger.LogError(ex, "Failed to generate thumbnails for {OriginalPath}.", originalPath);
         }
     }
 
@@ -78,7 +69,7 @@ public class ThumbnailService
     public string GetThumbnailPath(Camera camera, string fileName, ThumbnailSize size)
     {
         var slug = camera.SelectSlug();
-        var cacheDir = Path.Combine(_settings.ThumbnailCachePath, slug);
+        var cacheDir = Path.Combine(settings.ThumbnailCachePath, slug);
         var baseName = Path.GetFileNameWithoutExtension(fileName).GetSafeFileName("_");
 
         return size switch

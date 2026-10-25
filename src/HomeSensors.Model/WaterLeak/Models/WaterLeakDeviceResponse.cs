@@ -1,20 +1,12 @@
 ﻿namespace HomeSensors.Model.WaterLeak.Models;
 
-public class WaterLeakDeviceResponse
+public class WaterLeakDeviceResponse(long id, string name, string mqttTopic, int inactiveLimitMinutes)
 {
-    public WaterLeakDeviceResponse(long id, string name, string mqttTopic, int inactiveLimitMinutes)
-    {
-        Id = id;
-        Name = name;
-        MqttTopic = mqttTopic;
-        InactiveLimitMinutes = inactiveLimitMinutes;
-    }
+    public long Id { get; } = id;
 
-    public long Id { get; }
+    public string Name { get; } = name;
 
-    public string Name { get; }
+    public string MqttTopic { get; } = mqttTopic;
 
-    public string MqttTopic { get; }
-
-    public int InactiveLimitMinutes { get; }
+    public int InactiveLimitMinutes { get; } = inactiveLimitMinutes;
 }

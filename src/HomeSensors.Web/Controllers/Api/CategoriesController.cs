@@ -10,22 +10,15 @@ using VoidCore.Model.Responses.Messages;
 namespace HomeSensors.Web.Controllers.Api;
 
 [Route(ApiRouteAttribute.BasePath + "/categories")]
-public class CategoriesController : ControllerBase
+public class CategoriesController(CategoryRepository categoryRepository) : ControllerBase
 {
-    private readonly CategoryRepository _categoryRepository;
-
-    public CategoriesController(CategoryRepository categoryRepository)
-    {
-        _categoryRepository = categoryRepository;
-    }
-
     [HttpGet]
     [Route("all")]
     [ProducesResponseType(typeof(List<CategoryResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _categoryRepository.GetAllAsync(cancellationToken)
+        return await categoryRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -34,7 +27,7 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> SaveAsync([FromBody] CategorySaveRequest request, CancellationToken cancellationToken)
     {
-        return await _categoryRepository.SaveAsync(request, cancellationToken)
+        return await categoryRepository.SaveAsync(request, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -44,7 +37,7 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _categoryRepository.DeleteAsync(id, cancellationToken)
+        return await categoryRepository.DeleteAsync(id, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 }

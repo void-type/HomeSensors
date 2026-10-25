@@ -1,17 +1,10 @@
 ﻿namespace HomeSensors.Model.Temperature.Models;
 
-public class TemperatureTimeSeriesPoint
+public class TemperatureTimeSeriesPoint(DateTimeOffset time, double? temperatureCelsius, double? humidity)
 {
-    public TemperatureTimeSeriesPoint(DateTimeOffset time, double? temperatureCelsius, double? humidity)
-    {
-        Time = time;
-        TemperatureCelsius = temperatureCelsius;
-        Humidity = humidity;
-    }
+    public DateTimeOffset Time { get; } = time;
 
-    public DateTimeOffset Time { get; }
+    public double? TemperatureCelsius { get; } = temperatureCelsius;
 
-    public double? TemperatureCelsius { get; }
-
-    public double? Humidity { get; }
+    public double? Humidity { get; } = humidity;
 }

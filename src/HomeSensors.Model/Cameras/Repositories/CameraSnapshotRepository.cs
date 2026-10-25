@@ -10,16 +10,8 @@ using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.Cameras.Repositories;
 
-public class CameraSnapshotRepository : RepositoryBase
+public class CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService thumbnailService) : RepositoryBase
 {
-    private readonly HomeSensorsContext _data;
-    private readonly ThumbnailService _thumbnailService;
-
-    public CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService thumbnailService)
-    {
-        _data = data;
-        _thumbnailService = thumbnailService;
-    }
 
     /// <summary>
     /// Get timeline items for a camera, filtered by optional date range.
@@ -27,7 +19,7 @@ public class CameraSnapshotRepository : RepositoryBase
     /// </summary>
     public async Task<IResult<List<CameraSnapshot>>> GetTimelineAsync(CameraSnapshotTimelineRequest request, string baseUrl, CancellationToken cancellationToken)
     {
-        var camera = await _data.Cameras
+        var camera = await data.Cameras
             .TagWith(GetTag())
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == request.CameraId, cancellationToken);
@@ -103,7 +95,7 @@ public class CameraSnapshotRepository : RepositoryBase
     {
         var failures = new List<IFailure>();
 
-        var camera = await _data.Cameras
+        var camera = await data.Cameras
             .TagWith(GetTag())
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == request.CameraId, cancellationToken);
@@ -165,7 +157,7 @@ public class CameraSnapshotRepository : RepositoryBase
     /// </summary>
     public async Task<IResult<string>> GetThumbnailPathAsync(long cameraId, string fileName, ThumbnailSize size, CancellationToken cancellationToken)
     {
-        var camera = await _data.Cameras
+        var camera = await data.Cameras
             .TagWith(GetTag())
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == cameraId, cancellationToken);
@@ -175,9 +167,9 @@ public class CameraSnapshotRepository : RepositoryBase
             return Result.Fail<string>(new Failure("Camera not found.", "cameraId"));
         }
 
-        await _thumbnailService.EnsureThumbnailsAsync(camera, fileName, cancellationToken);
+        await thumbnailService.EnsureThumbnailsAsync(camera, fileName, cancellationToken);
 
-        return Result.Ok(_thumbnailService.GetThumbnailPath(camera, fileName, size));
+        return Result.Ok(thumbnailService.GetThumbnailPath(camera, fileName, size));
     }
 
     /// <summary>
@@ -185,7 +177,7 @@ public class CameraSnapshotRepository : RepositoryBase
     /// </summary>
     public async Task<IResult<string>> GetOriginalPathAsync(long cameraId, string fileName, CancellationToken cancellationToken)
     {
-        var camera = await _data.Cameras
+        var camera = await data.Cameras
             .TagWith(GetTag())
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == cameraId, cancellationToken);

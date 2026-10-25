@@ -1,14 +1,8 @@
 ﻿namespace HomeSensors.Model.Infrastructure.Emailing.Models;
 
-public class EmailRecipientResponse
+public class EmailRecipientResponse(long id, string email)
 {
-    public EmailRecipientResponse(long id, string email)
-    {
-        Id = id;
-        Email = email;
-    }
+    public long Id { get; } = id;
 
-    public long Id { get; }
-
-    public string Email { get; }
+    public string Email { get; } = email;
 }

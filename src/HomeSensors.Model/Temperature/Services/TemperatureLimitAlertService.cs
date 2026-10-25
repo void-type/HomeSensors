@@ -7,33 +7,18 @@ using Microsoft.Extensions.Logging;
 
 namespace HomeSensors.Model.Temperature.Services;
 
-public class TemperatureLimitAlertService
+public class TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> logger,
+    TemperatureLocationRepository locationRepository, TemperatureReadingRepository readingRepository,
+    EmailNotificationService emailNotificationService, TemperatureAlertsSettings alertSettings)
 {
     private const string ColdStatus = "cold";
     private const string HotStatus = "hot";
     private const string MinStatus = "minimum";
     private const string MaxStatus = "maximum";
 
-    private readonly ILogger<TemperatureLimitAlertService> _logger;
-    private readonly TemperatureLocationRepository _locationRepository;
-    private readonly TemperatureReadingRepository _readingRepository;
-    private readonly EmailNotificationService _emailNotificationService;
-    private readonly TemperatureAlertsSettings _alertSettings;
-
-    public TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> logger,
-        TemperatureLocationRepository locationRepository, TemperatureReadingRepository readingRepository,
-        EmailNotificationService emailNotificationService, TemperatureAlertsSettings alertSettings)
-    {
-        _logger = logger;
-        _locationRepository = locationRepository;
-        _readingRepository = readingRepository;
-        _emailNotificationService = emailNotificationService;
-        _alertSettings = alertSettings;
-    }
-
     public async Task ProcessAsync(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, DateTimeOffset since, bool isAveragingEnabled, CancellationToken stoppingToken)
     {
-        var failedResults = (await _locationRepository.CheckLimitsAsync(since, isAveragingEnabled, stoppingToken))
+        var failedResults = (await locationRepository.CheckLimitsAsync(since, isAveragingEnabled, stoppingToken))
             .Where(x => x.IsFailed)
             .ToArray();
 
@@ -47,7 +32,7 @@ public class TemperatureLimitAlertService
 
     private async Task ProcessAlertsAsync(List<TemperatureLimitAlert> latchedAlerts, DateTimeOffset now, TemperatureCheckLimitResponse[] failedResults, CancellationToken stoppingToken)
     {
-        var betweenNotifications = TimeSpan.FromMinutes(_alertSettings.BetweenNotificationsMinutes);
+        var betweenNotifications = TimeSpan.FromMinutes(alertSettings.BetweenNotificationsMinutes);
 
         foreach (var failedResult in failedResults)
         {
@@ -85,7 +70,7 @@ public class TemperatureLimitAlertService
         {
             var location = alert.Result.Location;
 
-            var maybeReading = await _readingRepository
+            var maybeReading = await readingRepository
                 .GetCurrentForLocationCachedAsync(location.Id, stoppingToken);
 
             if (maybeReading.HasNoValue)
@@ -127,9 +112,9 @@ public class TemperatureLimitAlertService
         var readingTempString = TemperatureHelpers.GetDualTempString(reading.TemperatureCelsius);
         var limitTempString = TemperatureHelpers.GetDualTempString(limit);
 
-        var lookBackMinutes = _alertSettings.LookBackMinutes;
+        var lookBackMinutes = alertSettings.LookBackMinutes;
 
-        _logger.LogWarning("Temperature limit exceeded: {LocationName} was as {HotOrCold} as {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.",
+        logger.LogWarning("Temperature limit exceeded: {LocationName} was as {HotOrCold} as {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.",
             locationName,
             hotOrCold,
             readingTempString,
@@ -137,7 +122,7 @@ public class TemperatureLimitAlertService
             limitTempString,
             lookBackMinutes);
 
-        await _emailNotificationService.SendAsync(e =>
+        await emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"{locationName} is {hotOrCold} ({readingTempString})");
 
@@ -160,9 +145,9 @@ public class TemperatureLimitAlertService
         var readingTempString = TemperatureHelpers.GetDualTempString(reading.TemperatureCelsius);
         var limitTempString = TemperatureHelpers.GetDualTempString(limit);
 
-        var lookBackMinutes = _alertSettings.LookBackMinutes;
+        var lookBackMinutes = alertSettings.LookBackMinutes;
 
-        _logger.LogWarning("Temperature within limit: {LocationName} is no longer {HotOrCold}. Currently {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.",
+        logger.LogWarning("Temperature within limit: {LocationName} is no longer {HotOrCold}. Currently {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.",
             location.Name,
             alert.Status,
             readingTempString,
@@ -170,7 +155,7 @@ public class TemperatureLimitAlertService
             limitTempString,
             lookBackMinutes);
 
-        await _emailNotificationService.SendAsync(e =>
+        await emailNotificationService.SendAsync(e =>
         {
             e.SetSubject($"{location.Name} is no longer {alert.Status} ({readingTempString})");
 

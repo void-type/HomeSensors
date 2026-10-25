@@ -10,22 +10,15 @@ using VoidCore.Model.Responses.Messages;
 namespace HomeSensors.Web.Controllers.Api;
 
 [Route(ApiRouteAttribute.BasePath + "/email-recipients")]
-public class EmailRecipientsController : ControllerBase
+public class EmailRecipientsController(EmailRecipientRepository emailRecipientRepository) : ControllerBase
 {
-    private readonly EmailRecipientRepository _emailRecipientRepository;
-
-    public EmailRecipientsController(EmailRecipientRepository emailRecipientRepository)
-    {
-        _emailRecipientRepository = emailRecipientRepository;
-    }
-
     [HttpGet]
     [Route("all")]
     [ProducesResponseType(typeof(List<EmailRecipientResponse>), 200)]
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _emailRecipientRepository.GetAllAsync(cancellationToken)
+        return await emailRecipientRepository.GetAllAsync(cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -34,7 +27,7 @@ public class EmailRecipientsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> SaveAsync([FromBody] EmailRecipientSaveRequest request, CancellationToken cancellationToken)
     {
-        return await _emailRecipientRepository.SaveAsync(request, cancellationToken)
+        return await emailRecipientRepository.SaveAsync(request, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 
@@ -44,7 +37,7 @@ public class EmailRecipientsController : ControllerBase
     [ProducesResponseType(typeof(IItemSet<IFailure>), 400)]
     public async Task<IActionResult> DeleteAsync(long id, CancellationToken cancellationToken)
     {
-        return await _emailRecipientRepository.DeleteAsync(id, cancellationToken)
+        return await emailRecipientRepository.DeleteAsync(id, cancellationToken)
             .MapAsync(HttpResponder.Respond);
     }
 }
