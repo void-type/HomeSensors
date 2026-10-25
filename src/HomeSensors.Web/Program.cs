@@ -1,7 +1,9 @@
 ﻿using HomeSensors.Model;
+using HomeSensors.Model.Data;
 using HomeSensors.Web.Auth;
 using HomeSensors.Web.Hubs;
 using HomeSensors.Web.Startup;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using VoidCore.AspNet.Configuration;
 using VoidCore.AspNet.Logging;
@@ -54,6 +56,15 @@ try
     services.AddHomeSensorsWebServices(config);
 
     var app = builder.Build();
+
+    // Apply pending migrations before hosted services (workers) start.
+    // EF tooling aborts the host at Build(), so this doesn't run during dotnet ef commands.
+    var contextFactory = app.Services.GetRequiredService<IDbContextFactory<HomeSensorsContext>>();
+    await using (var context = await contextFactory.CreateDbContextAsync())
+    {
+        Log.Information("Applying database migrations.");
+        await context.Database.MigrateAsync();
+    }
 
     // Middleware pipeline
     app.UseAlwaysOnShortCircuit();

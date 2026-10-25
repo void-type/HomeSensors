@@ -39,7 +39,9 @@ You can use the [.NET SDK](https://dot.net/download) and [Node.js LTS](https://n
 
 This project uses Entity Framework Code First.
 
-Use the `dbApplyMigration.ps1` script to create or update the database.
+Pending migrations are applied automatically when the web app starts, including after deployment. The service doesn't migrate, so start the web app before the service.
+
+Use the `dbApplyMigration.ps1` script to create or update the database without starting the web app.
 
 Use the `dbCreateMigration.ps1` script to create a migration after you make changes to the DbContext or models.
 
@@ -51,7 +53,7 @@ Run ./build/build.ps1.
 
 Run the web and service deploy scripts from the code repo to get the code and settings on an app server with .NET, SQL Server and IIS. For the deployment scripts to work, you'll need the file shares for the deployed files and settings. I use Windows File Shares. You can adjust these paths in the buildSettings.ps1 script.
 
-Use the database migration section above to deploy a new database.
+Start the web app to create the database (see the database section above).
 
 Run the registerService script on the server to get the service going to read the MQTT feed.
 
@@ -63,7 +65,7 @@ CI runs on [GitHub Actions](https://github.com/void-type/HomeSensors/actions/wor
 
 Run ./build/build.ps1
 
-Use the database migration section above to deploy any migrations needed. Be sure to run these in a test environment in case there's data loss!
+Migrations are applied when the web app starts after deployment. Be sure to try these in a test environment in case there's data loss!
 
 Run the following  on the service server as an administrator. This will stop the service and pause so you can deploy, then it will restart the service.
 
@@ -73,4 +75,4 @@ Get-Service HomeSensors | Stop-Service; pause; Get-Service HomeSensors | Start-S
 
 Run the web and service deploy scripts from the code repo to get the code and settings on the app server.
 
-Hit enter on your "Get-Service" prompt to start the service. The web app should come online after the deployment.
+The web app should come online after the deployment and apply any migrations. Load the site once if it's idle, then hit enter on your "Get-Service" prompt to start the service.
