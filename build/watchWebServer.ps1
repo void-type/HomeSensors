@@ -14,6 +14,9 @@ try {
 
   Set-Location $webProjectFolder
 
+  # Work around dotnet watch crashing on NBGV's shared PrivateP2PCaching.proj (dotnet/sdk#54552).
+  $env:NBGV_CacheMode = 'None'
+
   dotnet watch -- /DisableVueDevServer=$DisableVueDevServer
 
 } finally {
