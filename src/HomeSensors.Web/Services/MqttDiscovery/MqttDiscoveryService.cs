@@ -6,12 +6,11 @@ using MQTTnet.Client;
 using MQTTnet.Exceptions;
 using MQTTnet.Extensions.ManagedClient;
 using VoidCore.Model.Functional;
-using VoidCore.Model.Time;
 
 namespace HomeSensors.Web.Services.MqttDiscovery;
 
 public class MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSettings configuration,
-    MqttFactory mqttFactory, IHubContext<TemperaturesHub> tempHubContext, IDateTimeService dateTimeService)
+    MqttFactory mqttFactory, IHubContext<TemperaturesHub> tempHubContext, TimeProvider timeProvider)
 {
     private MqttDiscoveryClientState? _clientState;
 
@@ -88,7 +87,7 @@ public class MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSett
                 MqttHelpers.LogMqttPayload(logger, payload);
             }
 
-            var message = new MqttDiscoveryMessage(dateTimeService.MomentWithOffset, e.ApplicationMessage.Topic, payload);
+            var message = new MqttDiscoveryMessage(timeProvider.GetUtcNow(), e.ApplicationMessage.Topic, payload);
 
             await tempHubContext.Clients.All.SendAsync(TemperaturesHub.NewDiscoveryMessageMessageName, message);
         }

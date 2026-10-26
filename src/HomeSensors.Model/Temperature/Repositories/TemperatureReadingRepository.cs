@@ -6,11 +6,10 @@ using HomeSensors.Model.Temperature.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using VoidCore.Model.Functional;
-using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Temperature.Repositories;
 
-public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> contextFactory, IDateTimeService dateTimeService, HybridCache cache) : RepositoryBase
+public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> contextFactory, TimeProvider timeProvider, HybridCache cache) : RepositoryBase
 {
 
     /// <summary>
@@ -57,7 +56,7 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
     public async Task<List<TemperatureTimeSeriesLocationData>> GetTimeSeriesCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
         // Prevent caching incomplete series to stay current.
-        if (request.EndTime >= dateTimeService.MomentWithOffset)
+        if (request.EndTime >= timeProvider.GetUtcNow())
         {
             return await GetTimeSeriesAsync(request, cancellationToken);
         }
@@ -87,7 +86,7 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
         }
 
         // Prevent caching incomplete series to stay current.
-        if (request.EndTime >= dateTimeService.MomentWithOffset)
+        if (request.EndTime >= timeProvider.GetUtcNow())
         {
             return await GetHvacActionsAsync(request, cancellationToken);
         }
@@ -113,7 +112,7 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
             .AsNoTracking()
             .Include(x => x.TemperatureLocation)
             .ThenInclude(x => x!.Category)
-            .Where(x => !x.IsSummary && x.Time >= dateTimeService.MomentWithOffset.AddDays(-1))
+            .Where(x => !x.IsSummary && x.Time >= timeProvider.GetUtcNow().AddDays(-1))
             .GroupBy(x => x.TemperatureLocationId)
             .Select(g => g.OrderByDescending(x => x.Time).First())
             .ToListAsync(cancellationToken);
@@ -268,7 +267,7 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
 
                 var endTime = nextAction is not null
                     ? nextAction.LastUpdated
-                    : dateTimeService.MomentWithOffset;
+                    : timeProvider.GetUtcNow();
 
                 if (endTime <= startTime)
                 {

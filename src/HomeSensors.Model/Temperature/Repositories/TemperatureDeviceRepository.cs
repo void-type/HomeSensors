@@ -8,11 +8,10 @@ using Microsoft.Extensions.Caching.Hybrid;
 using VoidCore.Model.Functional;
 using VoidCore.Model.Responses.Messages;
 using VoidCore.Model.Text;
-using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Temperature.Repositories;
 
-public class TemperatureDeviceRepository(HomeSensorsContext data, IDateTimeService dateTimeService, HybridCache cache) : RepositoryBase
+public class TemperatureDeviceRepository(HomeSensorsContext data, TimeProvider timeProvider, HybridCache cache) : RepositoryBase
 {
     /// <summary>
     /// Get all devices with statuses and last readings.
@@ -49,7 +48,7 @@ public class TemperatureDeviceRepository(HomeSensorsContext data, IDateTimeServi
 
             var isInactive = !x.IsRetired
                 && x.InactiveLimitMinutes > 0
-                && (lastReading is null || lastReading.Time < dateTimeService.MomentWithOffset.AddMinutes(-x.InactiveLimitMinutes));
+                && (lastReading is null || lastReading.Time < timeProvider.GetUtcNow().AddMinutes(-x.InactiveLimitMinutes));
 
             return new TemperatureDeviceResponse
             (

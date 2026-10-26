@@ -1,7 +1,6 @@
 ﻿using HomeSensors.Model.Infrastructure.Emailing.Repositories;
 using VoidCore.Model.Emailing;
 using VoidCore.Model.Text;
-using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Infrastructure.Emailing;
 
@@ -9,7 +8,7 @@ namespace HomeSensors.Model.Infrastructure.Emailing;
 /// This simplifies dependencies for emailing and adds recipients from the database.
 /// </summary>
 public class EmailNotificationService(IEmailSender emailSender, IEmailFactory emailFactory, NotificationsSettings notificationsSettings,
-    IDateTimeService dateTimeService, EmailRecipientRepository emailRecipientRepository)
+    TimeProvider timeProvider, EmailRecipientRepository emailRecipientRepository)
 {
     public async Task SendAsync(Action<EmailOptionsBuilder> configure, CancellationToken cancellationToken)
     {
@@ -43,7 +42,7 @@ public class EmailNotificationService(IEmailSender emailSender, IEmailFactory em
             }
 
             e.AddLine();
-            e.AddLine($"Time: {dateTimeService.MomentWithOffset}");
+            e.AddLine($"Time: {timeProvider.GetUtcNow()}");
         }, default);
     }
 }

@@ -5,16 +5,15 @@ using HomeSensors.Model.WaterLeak.Workers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using VoidCore.Model.Text;
-using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.WaterLeak.Services;
 
-public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, IDateTimeService dateTimeService, EmailNotificationService emailNotificationService,
+public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimeProvider timeProvider, EmailNotificationService emailNotificationService,
     MqttWaterLeaksSettings mqttWaterLeaksSettings, WaterLeakAlertState state, HomeSensorsContext data)
 {
     public async Task ProcessAsync(MqttWaterLeakDeviceMessage message)
     {
-        var now = dateTimeService.MomentWithOffset;
+        var now = timeProvider.GetUtcNow();
 
         // Clear expired latched alerts so they can be sent again.
         var expiredAlerts = state.LatchedMessageAlerts
@@ -57,7 +56,7 @@ public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, IDateT
 
     public async Task CheckInactiveAsync()
     {
-        var now = dateTimeService.MomentWithOffset;
+        var now = timeProvider.GetUtcNow();
 
         // Sync device names from DB into LastCheckIns.
         var devices = await data.WaterLeakDevices

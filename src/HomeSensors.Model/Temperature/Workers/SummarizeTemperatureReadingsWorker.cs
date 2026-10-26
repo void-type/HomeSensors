@@ -7,7 +7,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using VoidCore.Model.Functional;
-using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Temperature.Workers;
 
@@ -18,19 +17,19 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
 {
     private readonly ILogger<SummarizeTemperatureReadingsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IDateTimeService _dateTimeService;
+    private readonly TimeProvider _timeProvider;
     private readonly TimeSpan _betweenTicks;
     private readonly TimeSpan _summarizeCutoff;
     private const int SummarizeIntervalMinutes = 5;
     private readonly SummarizeTemperatureReadingsSettings _workerSettings;
 
     public SummarizeTemperatureReadingsWorker(ILogger<SummarizeTemperatureReadingsWorker> logger, IServiceScopeFactory scopeFactory,
-        IDateTimeService dateTimeService, SummarizeTemperatureReadingsSettings workerSettings)
+        TimeProvider timeProvider, SummarizeTemperatureReadingsSettings workerSettings)
     {
         _workerSettings = workerSettings;
         _logger = logger;
         _scopeFactory = scopeFactory;
-        _dateTimeService = dateTimeService;
+        _timeProvider = timeProvider;
         _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
         _summarizeCutoff = TimeSpan.FromDays(workerSettings.SummarizeCutoffDays);
 
@@ -57,7 +56,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
                 using var scope = _scopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
 
-                var cutoffLimit = _dateTimeService.MomentWithOffset
+                var cutoffLimit = _timeProvider.GetUtcNow()
                     .Subtract(_summarizeCutoff)
                     .RoundDownMinutes(SummarizeIntervalMinutes);
 

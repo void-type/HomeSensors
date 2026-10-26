@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using VoidCore.Model.Time;
 
 namespace HomeSensors.Model.Temperature.Workers;
 
@@ -15,15 +14,15 @@ public class TemperatureAlertsWorker : BackgroundService
 {
     private readonly ILogger<TemperatureAlertsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IDateTimeService _dateTimeService;
+    private readonly TimeProvider _timeProvider;
     private readonly TemperatureAlertsSettings _alertSettings;
 
-    public TemperatureAlertsWorker(ILogger<TemperatureAlertsWorker> logger, IServiceScopeFactory scopeFactory, IDateTimeService dateTimeService,
+    public TemperatureAlertsWorker(ILogger<TemperatureAlertsWorker> logger, IServiceScopeFactory scopeFactory, TimeProvider timeProvider,
         TemperatureAlertsSettings alertSettings)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
-        _dateTimeService = dateTimeService;
+        _timeProvider = timeProvider;
         _alertSettings = alertSettings;
 
         logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
@@ -39,7 +38,7 @@ public class TemperatureAlertsWorker : BackgroundService
 
         var betweenTicks = TimeSpan.FromMinutes(_alertSettings.BetweenTicksMinutes);
         var timer = new PeriodicTimer(betweenTicks);
-        var lastTick = _dateTimeService.MomentWithOffset;
+        var lastTick = _timeProvider.GetUtcNow();
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
@@ -49,7 +48,7 @@ public class TemperatureAlertsWorker : BackgroundService
             {
                 _logger.LogInformation("{JobName} job is starting.", nameof(TemperatureAlertsWorker));
 
-                var now = _dateTimeService.MomentWithOffset;
+                var now = _timeProvider.GetUtcNow();
 
                 using var scope = _scopeFactory.CreateScope();
 

@@ -23,7 +23,6 @@ using MQTTnet;
 using System.Net.Http.Headers;
 using VoidCore.Model.Configuration;
 using VoidCore.Model.Emailing;
-using VoidCore.Model.Time;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace HomeSensors.Model;
@@ -39,7 +38,7 @@ public static class DependencyInjection
         services.AddSingleton<IEmailFactory, HtmlEmailFactory>();
         services.AddSingleton<IEmailSender, SmtpEmailer>();
         services.AddScoped<EmailNotificationService>();
-        services.AddSingleton<IDateTimeService, UtcNowDateTimeService>();
+        services.AddSingleton(TimeProvider.System);
         services.AddSingleton<MqttFactory>();
 
         services.AddScoped<CategoryRepository>();
