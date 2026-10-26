@@ -6,6 +6,7 @@ using HomeSensors.Web.Startup;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using VoidCore.AspNet.Configuration;
+using VoidCore.AspNet.Health;
 using VoidCore.AspNet.Logging;
 using VoidCore.AspNet.Routing;
 using VoidCore.AspNet.Security;
@@ -54,6 +55,7 @@ try
     // Dependencies
     services.AddHomeSensorsCommonServices(config);
     services.AddHomeSensorsWebServices(config);
+    services.AddHomeSensorsHealthChecks(config);
 
     var app = builder.Build();
 
@@ -78,6 +80,7 @@ try
     app.UseCurrentUserLogging();
     app.UseSwaggerAndUi();
     app.MapHub<TemperaturesHub>("/hub/temperatures");
+    app.MapHealthEndpoint();
     app.UseSpaEndpoints();
 
     Log.Information("Starting host.");

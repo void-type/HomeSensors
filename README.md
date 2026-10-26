@@ -76,3 +76,12 @@ Get-Service HomeSensors | Stop-Service; pause; Get-Service HomeSensors | Start-S
 Run the web and service deploy scripts from the code repo to get the code and settings on the app server.
 
 The web app should come online after the deployment and apply any migrations. Load the site once if it's idle, then hit enter on your "Get-Service" prompt to start the service.
+
+## Health Check
+
+`GET /health` on the web app returns 200 when healthy and 503 when unhealthy. The JSON body lists each check with its description and any error message, so an external monitor can alert on it and relay the details.
+
+- `database` verifies the database connection.
+- `temperature-readings` verifies that a reading was recorded recently. Because the service has no endpoint of its own, this also detects a stopped service or MQTT worker. Configure it under `HealthChecks` (see appsettings.example.json). The defaults are enabled with a 30 minute limit.
+
+The error messages can include server names, so only expose this endpoint to trusted monitors.
