@@ -624,7 +624,7 @@ onMounted(async () => {
                   @touchmove.stop
                   @touchend.stop
                 >
-                  <div class="d-flex gap-1">
+                  <div class="d-flex justify-content-between w-100">
                     <button class="nav-overlay-btn" :disabled="selectedIndex <= 0" title="First" @click="navFirst()">
                       <FontAwesomeIcon icon="fa-angles-left" />
                     </button>

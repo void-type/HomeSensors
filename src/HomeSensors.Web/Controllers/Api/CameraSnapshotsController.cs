@@ -16,6 +16,10 @@ namespace HomeSensors.Web.Controllers.Api;
 [Route(ApiRouteAttribute.BasePath + "/camera-snapshots")]
 public class CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRepository, WebApplicationSettings applicationSettings) : ControllerBase
 {
+    // Snapshot files are timestamped, never overwritten (uploads conflict), and thumbnails are derived from them,
+    // so successful responses can be cached indefinitely.
+    private const string ImmutableCacheControl = "public, max-age=31536000, immutable";
+
     private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
     [HttpGet]
@@ -63,7 +67,7 @@ public class CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRe
             return NotFound("Thumbnail not found.");
         }
 
-        Response.Headers.CacheControl = "public, max-age=3600";
+        Response.Headers.CacheControl = ImmutableCacheControl;
         return PhysicalFile(result.Value, "image/webp");
     }
 
@@ -90,7 +94,7 @@ public class CameraSnapshotsController(CameraSnapshotRepository cameraSnapshotRe
             ? detected
             : "application/octet-stream";
 
-        Response.Headers.CacheControl = "public, max-age=3600";
+        Response.Headers.CacheControl = ImmutableCacheControl;
         return PhysicalFile(result.Value, contentType);
     }
 
