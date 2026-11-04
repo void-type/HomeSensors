@@ -89,11 +89,7 @@ public class MqttWaterLeaksWorker : BackgroundService
                 {
                     _logger.LogInformation("{JobName} job is starting.", nameof(MqttWaterLeaksWorker));
 
-                    await RefreshTopicSubscriptionsAsync();
-
-                    using var scope = _scopeFactory.CreateScope();
-                    var waterLeakAlertService = scope.ServiceProvider.GetRequiredService<WaterLeakAlertService>();
-                    await waterLeakAlertService.CheckInactiveAsync();
+                    await CheckInactiveDevicesAsync();
                 }
                 catch (Exception ex)
                 {
@@ -110,6 +106,15 @@ public class MqttWaterLeaksWorker : BackgroundService
             _mqttClient?.Dispose();
             _mqttClient = null;
         }
+    }
+
+    private async Task CheckInactiveDevicesAsync()
+    {
+        await RefreshTopicSubscriptionsAsync();
+
+        using var scope = _scopeFactory.CreateScope();
+        var waterLeakAlertService = scope.ServiceProvider.GetRequiredService<WaterLeakAlertService>();
+        await waterLeakAlertService.CheckInactiveAsync();
     }
 
     private async Task LogConnectionFailureAsync(ConnectingFailedEventArgs e)

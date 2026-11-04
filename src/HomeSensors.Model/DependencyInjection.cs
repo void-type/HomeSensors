@@ -1,21 +1,13 @@
-﻿using HomeSensors.Model.Cameras.Repositories;
-using HomeSensors.Model.Cameras.Services;
-using HomeSensors.Model.Cameras.Settings;
-using HomeSensors.Model.Cameras.Workers;
+﻿using HomeSensors.Model.Cameras;
 using HomeSensors.Model.Categories.Repositories;
 using HomeSensors.Model.Data;
-using HomeSensors.Model.Hvac.Workers;
+using HomeSensors.Model.Hvac;
 using HomeSensors.Model.Infrastructure.Emailing;
 using HomeSensors.Model.Infrastructure.Emailing.Repositories;
 using HomeSensors.Model.Infrastructure.HomeAssistant;
 using HomeSensors.Model.Infrastructure.Mqtt;
-using HomeSensors.Model.Notifications;
-using HomeSensors.Model.Temperature.Repositories;
-using HomeSensors.Model.Temperature.Services;
-using HomeSensors.Model.Temperature.Workers;
-using HomeSensors.Model.WaterLeak.Repositories;
-using HomeSensors.Model.WaterLeak.Services;
-using HomeSensors.Model.WaterLeak.Workers;
+using HomeSensors.Model.Temperature;
+using HomeSensors.Model.WaterLeak;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,24 +34,7 @@ public static class DependencyInjection
         services.AddSingleton<MqttFactory>();
 
         services.AddScoped<CategoryRepository>();
-        services.AddScoped<TemperatureReadingRepository>();
-        services.AddScoped<TemperatureDeviceRepository>();
-        services.AddScoped<TemperatureLocationRepository>();
-        services.AddScoped<WaterLeakDeviceRepository>();
         services.AddScoped<EmailRecipientRepository>();
-
-        services.AddSettingsSingleton<CameraSettings>(config.GetSection("CameraSnapshots"), root: true);
-        services.AddScoped<CameraRepository>();
-        services.AddScoped<ThumbnailService>();
-        services.AddScoped<CameraSnapshotRepository>();
-
-        var cameraWorkerSettings = services.AddSettingsSingleton<CameraWorkerSettings>(config.GetSection("CameraSnapshots:Worker"), root: true);
-        if (cameraWorkerSettings.IsEnabled)
-        {
-            services.AddHostedService<CameraSnapshotThumbnailWorker>();
-        }
-
-        services.AddSingleton<ITemperatureHubNotifier, NoOpTemperatureHubNotifier>();
 
         services.AddFusionCache()
             .WithDefaultEntryOptions(new FusionCacheEntryOptions
@@ -84,41 +59,10 @@ public static class DependencyInjection
                 sqlOptions.EnableRetryOnFailure();
             }));
 
-        var workersConfig = config.GetSection("Workers");
-
-        var alertsSettings = services.AddSettingsSingleton<TemperatureAlertsSettings>(workersConfig);
-        if (alertsSettings.IsEnabled)
-        {
-            services.AddScoped<TemperatureLimitAlertService>();
-            services.AddScoped<TemperatureDeviceAlertService>();
-            services.AddHostedService<TemperatureAlertsWorker>();
-        }
-
-        var mqttTemperaturesSettings = services.AddSettingsSingleton<MqttTemperaturesSettings>(workersConfig);
-        if (mqttTemperaturesSettings.IsEnabled)
-        {
-            services.AddHostedService<MqttTemperaturesWorker>();
-        }
-
-        var summarizeSettings = services.AddSettingsSingleton<SummarizeTemperatureReadingsSettings>(workersConfig);
-        if (summarizeSettings.IsEnabled)
-        {
-            services.AddHostedService<SummarizeTemperatureReadingsWorker>();
-        }
-
-        var mqttWaterLeaksSettings = services.AddSettingsSingleton<MqttWaterLeaksSettings>(workersConfig);
-        if (mqttWaterLeaksSettings.IsEnabled)
-        {
-            services.AddSingleton<WaterLeakAlertState>();
-            services.AddScoped<WaterLeakAlertService>();
-            services.AddHostedService<MqttWaterLeaksWorker>();
-        }
-
-        var hvacSettings = services.AddSettingsSingleton<HvacActionsSettings>(workersConfig);
-        if (hvacSettings.IsEnabled)
-        {
-            services.AddHostedService<HvacActionsWorker>();
-        }
+        services.AddCameraServices(config);
+        services.AddTemperatureServices(config);
+        services.AddWaterLeakServices(config);
+        services.AddHvacServices(config);
 
         return services;
     }

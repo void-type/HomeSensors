@@ -17,6 +17,11 @@ public class TemperatureAlertsWorker : BackgroundService
     private readonly TimeProvider _timeProvider;
     private readonly TemperatureAlertsSettings _alertSettings;
 
+    // Store previously sent alerts. We will only remind about them every few hours.
+    private readonly List<TemperatureLimitAlert> _latchedLimitAlerts = [];
+    private readonly List<TemperatureDeviceAlert> _latchedDeviceAlerts = [];
+    private DateTimeOffset _lastTick;
+
     public TemperatureAlertsWorker(ILogger<TemperatureAlertsWorker> logger, IServiceScopeFactory scopeFactory, TimeProvider timeProvider,
         TemperatureAlertsSettings alertSettings)
     {
@@ -32,13 +37,9 @@ public class TemperatureAlertsWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Store previously sent alerts. We will only remind about them every few hours.
-        var latchedLimitAlerts = new List<TemperatureLimitAlert>();
-        var latchedDeviceAlerts = new List<TemperatureDeviceAlert>();
-
         var betweenTicks = TimeSpan.FromMinutes(_alertSettings.BetweenTicksMinutes);
         var timer = new PeriodicTimer(betweenTicks);
-        var lastTick = _timeProvider.GetUtcNow();
+        _lastTick = _timeProvider.GetUtcNow();
 
         while (await timer.WaitForNextTickAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
         {
@@ -48,23 +49,7 @@ public class TemperatureAlertsWorker : BackgroundService
             {
                 _logger.LogInformation("{JobName} job is starting.", nameof(TemperatureAlertsWorker));
 
-                var now = _timeProvider.GetUtcNow();
-
-                using var scope = _scopeFactory.CreateScope();
-
-                var limitsService = scope.ServiceProvider.GetRequiredService<TemperatureLimitAlertService>();
-                var devicesService = scope.ServiceProvider.GetRequiredService<TemperatureDeviceAlertService>();
-
-                var isAveragingEnabled = _alertSettings.LookBackMinutes > 0;
-
-                var since = isAveragingEnabled
-                    ? now.Subtract(TimeSpan.FromMinutes(_alertSettings.LookBackMinutes))
-                    : lastTick;
-
-                await limitsService.ProcessAsync(latchedLimitAlerts, now, since, isAveragingEnabled, stoppingToken);
-                await devicesService.ProcessAsync(latchedDeviceAlerts, now, stoppingToken);
-
-                lastTick = now;
+                await CheckAlertsAsync(stoppingToken);
             }
             catch (Exception ex)
             {
@@ -75,5 +60,26 @@ public class TemperatureAlertsWorker : BackgroundService
                 _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(TemperatureAlertsWorker), Stopwatch.GetElapsedTime(startTime));
             }
         }
+    }
+
+    private async Task CheckAlertsAsync(CancellationToken stoppingToken)
+    {
+        var now = _timeProvider.GetUtcNow();
+
+        using var scope = _scopeFactory.CreateScope();
+
+        var limitsService = scope.ServiceProvider.GetRequiredService<TemperatureLimitAlertService>();
+        var devicesService = scope.ServiceProvider.GetRequiredService<TemperatureDeviceAlertService>();
+
+        var isAveragingEnabled = _alertSettings.LookBackMinutes > 0;
+
+        var since = isAveragingEnabled
+            ? now.Subtract(TimeSpan.FromMinutes(_alertSettings.LookBackMinutes))
+            : _lastTick;
+
+        await limitsService.ProcessAsync(_latchedLimitAlerts, now, since, isAveragingEnabled, stoppingToken);
+        await devicesService.ProcessAsync(_latchedDeviceAlerts, now, stoppingToken);
+
+        _lastTick = now;
     }
 }

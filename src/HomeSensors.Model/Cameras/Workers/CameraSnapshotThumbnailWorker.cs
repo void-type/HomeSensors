@@ -43,54 +43,7 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
             {
                 _logger.LogInformation("{JobName} job is starting.", nameof(CameraSnapshotThumbnailWorker));
 
-                using var scope = _scopeFactory.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
-                var thumbnailService = scope.ServiceProvider.GetRequiredService<ThumbnailService>();
-
-                var cameras = await dbContext.Cameras
-                    .TagWith($"Query called from {nameof(CameraSnapshotThumbnailWorker)}.")
-                    .ToListAsync(stoppingToken);
-
-                var processedCount = 0;
-
-                foreach (Camera camera in cameras)
-                {
-                    if (!Directory.Exists(camera.SnapshotsPath))
-                    {
-                        _logger.LogWarning("{JobName}: Snapshots path not found for camera {CameraName}: {Path}.",
-                            nameof(CameraSnapshotThumbnailWorker), camera.Name, camera.SnapshotsPath);
-                        continue;
-                    }
-
-                    var files = CameraHelpers.GetSnapshotFileNames(camera.SnapshotsPath).ToList();
-
-                    foreach (var fileName in files)
-                    {
-                        if (stoppingToken.IsCancellationRequested)
-                        {
-                            break;
-                        }
-
-                        try
-                        {
-                            await thumbnailService.EnsureThumbnailsAsync(camera, fileName, stoppingToken);
-                            processedCount++;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "{JobName}: Error generating thumbnails for {FileName} in camera {CameraName}.",
-                                nameof(CameraSnapshotThumbnailWorker), fileName, camera.Name);
-                        }
-                    }
-
-                    if (stoppingToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-                }
-
-                _logger.LogInformation("{JobName} job processed {ProcessedCount} snapshot(s).",
-                    nameof(CameraSnapshotThumbnailWorker), processedCount);
+                await ProcessAllCamerasAsync(stoppingToken);
             }
             catch (Exception ex)
             {
@@ -99,5 +52,65 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
 
             _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(CameraSnapshotThumbnailWorker), Stopwatch.GetElapsedTime(startTime));
         }
+    }
+
+    private async Task ProcessAllCamerasAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<HomeSensorsContext>();
+        var thumbnailService = scope.ServiceProvider.GetRequiredService<ThumbnailService>();
+
+        var cameras = await dbContext.Cameras
+            .TagWith($"Query called from {nameof(CameraSnapshotThumbnailWorker)}.")
+            .ToListAsync(stoppingToken);
+
+        var processedCount = 0;
+
+        foreach (var camera in cameras)
+        {
+            processedCount += await ProcessCameraAsync(thumbnailService, camera, stoppingToken);
+
+            if (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+        }
+
+        _logger.LogInformation("{JobName} job processed {ProcessedCount} snapshot(s).",
+            nameof(CameraSnapshotThumbnailWorker), processedCount);
+    }
+
+    private async Task<int> ProcessCameraAsync(ThumbnailService thumbnailService, Camera camera, CancellationToken stoppingToken)
+    {
+        if (!Directory.Exists(camera.SnapshotsPath))
+        {
+            _logger.LogWarning("{JobName}: Snapshots path not found for camera {CameraName}: {Path}.",
+                nameof(CameraSnapshotThumbnailWorker), camera.Name, camera.SnapshotsPath);
+            return 0;
+        }
+
+        var files = CameraHelpers.GetSnapshotFileNames(camera.SnapshotsPath).ToList();
+        var processedCount = 0;
+
+        foreach (var fileName in files)
+        {
+            if (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            try
+            {
+                await thumbnailService.EnsureThumbnailsAsync(camera, fileName, stoppingToken);
+                processedCount++;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{JobName}: Error generating thumbnails for {FileName} in camera {CameraName}.",
+                    nameof(CameraSnapshotThumbnailWorker), fileName, camera.Name);
+            }
+        }
+
+        return processedCount;
     }
 }

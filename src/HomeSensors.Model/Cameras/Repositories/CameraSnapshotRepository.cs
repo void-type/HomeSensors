@@ -29,17 +29,17 @@ public class CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService 
             return Result.Fail<List<CameraSnapshot>>(new Failure("Camera not found."));
         }
 
-        if (request.Start is null || request.End is null)
+        if (request.Start is not { } start || request.End is not { } end)
         {
             return Result.Fail<List<CameraSnapshot>>(new Failure("Start and end dates are required."));
         }
 
-        if (request.End <= request.Start)
+        if (end <= start)
         {
             return Result.Fail<List<CameraSnapshot>>(new Failure("End date must be after start date."));
         }
 
-        if (request.End - request.Start > TimeSpan.FromDays(182))
+        if (end - start > TimeSpan.FromDays(182))
         {
             return Result.Fail<List<CameraSnapshot>>(new Failure("Date range cannot exceed 6 months."));
         }
@@ -62,12 +62,7 @@ public class CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService 
                 continue;
             }
 
-            if (request.Start is not null && timestamp < request.Start)
-            {
-                continue;
-            }
-
-            if (request.End is not null && timestamp > request.End)
+            if (timestamp < start || timestamp > end)
             {
                 continue;
             }
