@@ -68,7 +68,11 @@ const previewStyle = computed(() => ({
   transform: `scale(${zoomLevel.value}) translate(${panX.value / zoomLevel.value}px, ${panY.value / zoomLevel.value}px)`,
   transformOrigin: 'center center',
   transition: isPanning.value ? 'none' : 'transform 0.1s ease',
-  cursor: isPanning.value ? 'grabbing' : (zoomLevel.value > 1 ? 'grab' : 'default'),
+  cursor: isPanning.value
+    ? 'grabbing'
+    : (zoomLevel.value > 1
+        ? 'grab'
+        : 'default'),
   pointerEvents: 'none' as const,
 }));
 
@@ -81,7 +85,9 @@ async function getCameras() {
     data.cameras = response.data.filter(c => !c.isHidden);
     if (data.cameras.length > 0 && data.selectedCameraId === null) {
       const firstCamera = data.cameras[0];
-      data.selectedCameraId = firstCamera !== undefined && firstCamera.id !== undefined ? firstCamera.id : null;
+      data.selectedCameraId = firstCamera !== undefined && firstCamera.id !== undefined
+        ? firstCamera.id
+        : null;
     }
   } catch (error) {
     messageStore.setApiFailureMessages(error as HttpResponse<unknown, unknown>);
@@ -119,10 +125,16 @@ async function loadTimeline() {
     const response = await api().cameraSnapshotsGetTimeline(
       {
         cameraId: data.selectedCameraId,
-        start: data.startDate ? data.startDate.toISOString() : undefined,
-        end: data.endDate ? data.endDate.toISOString() : undefined,
+        start: data.startDate
+          ? data.startDate.toISOString()
+          : undefined,
+        end: data.endDate
+          ? data.endDate.toISOString()
+          : undefined,
       },
-      { signal: AbortSignal.timeout(30_000) },
+      {
+        signal: AbortSignal.timeout(30_000),
+      },
     );
     data.items = response.data;
     if (data.items.length > 0) {
@@ -146,13 +158,19 @@ async function loadTimeline() {
 
 async function syncQueryParams() {
   const selectedCamera = data.cameras.find(c => c.id === data.selectedCameraId);
-  const cameraSlug = selectedCamera?.name ? slugify(selectedCamera.name) : undefined;
+  const cameraSlug = selectedCamera?.name
+    ? slugify(selectedCamera.name)
+    : undefined;
   await router.replace({
     name: 'cameraSnapshots',
     query: {
       camera: cameraSlug,
-      start: data.startDate ? data.startDate.toISOString() : undefined,
-      end: data.endDate ? data.endDate.toISOString() : undefined,
+      start: data.startDate
+        ? data.startDate.toISOString()
+        : undefined,
+      end: data.endDate
+        ? data.endDate.toISOString()
+        : undefined,
     },
   });
 }
@@ -184,7 +202,9 @@ function onWheel(event: WheelEvent) {
     return;
   }
   event.preventDefault();
-  const delta = event.deltaY > 0 ? -0.25 : 0.25;
+  const delta = event.deltaY > 0
+    ? -0.25
+    : 0.25;
   zoomLevel.value = Math.max(1, Math.min(8, zoomLevel.value + delta));
 
   if (zoomLevel.value === 1) {
@@ -314,7 +334,9 @@ function navLast() {
   }
 }
 
-const selectedIndex = computed(() => data.selectedItem ? data.items.indexOf(data.selectedItem) : -1);
+const selectedIndex = computed(() => data.selectedItem
+  ? data.items.indexOf(data.selectedItem)
+  : -1);
 
 function onStripKeyDown(event: KeyboardEvent) {
   if (!data.selectedItem) {
@@ -402,7 +424,11 @@ onMounted(async () => {
 
   // Reload whenever camera or date range changes
   watch(
-    () => [data.selectedCameraId, data.startDate?.getTime(), data.endDate?.getTime()],
+    () => [
+      data.selectedCameraId,
+      data.startDate?.getTime(),
+      data.endDate?.getTime(),
+    ],
     () => loadTimeline(),
   );
 });

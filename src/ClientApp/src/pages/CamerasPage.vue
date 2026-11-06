@@ -169,7 +169,10 @@ async function saveCamera(camera: CameraResponse): Promise<boolean> {
     } else {
       const existingIndex = data.cameras.findIndex(c => c.id === camera.id);
       if (existingIndex >= 0) {
-        data.cameras[existingIndex] = { ...data.cameras[existingIndex], ...request };
+        data.cameras[existingIndex] = {
+          ...data.cameras[existingIndex],
+          ...request,
+        };
         trackOriginalState(data.cameras[existingIndex]);
       }
     }

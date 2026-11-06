@@ -57,9 +57,13 @@ const data = reactive({
   categories: [] as Array<CategoryResponse>,
   graphSeries: [] as Array<TemperatureTimeSeriesLocationData>,
   hvacActions: [] as Array<TemperatureTimeSeriesHvacAction>,
-  showHumidity: props.initialShowHumidity !== undefined ? props.initialShowHumidity : false,
+  showHumidity: props.initialShowHumidity !== undefined
+    ? props.initialShowHumidity
+    : false,
   showHvacActions:
-    props.initialHideHvacActions !== undefined ? !props.initialHideHvacActions : true,
+    props.initialHideHvacActions !== undefined
+      ? !props.initialHideHvacActions
+      : true,
 });
 
 function getInitialTimeSeriesInputs(): ITimeSeriesInputs {
@@ -206,7 +210,9 @@ function setGraphData(
                 return earliest;
               }
               const currentTime = new Date(current.time).getTime();
-              return currentTime < earliest.getTime() ? new Date(current.time) : earliest;
+              return currentTime < earliest.getTime()
+                ? new Date(current.time)
+                : earliest;
             },
             new Date(series[0]?.points?.[0]?.time || Date.now()),
           )
@@ -222,7 +228,9 @@ function setGraphData(
                 return latest;
               }
               const currentTime = new Date(current.time).getTime();
-              return currentTime > latest.getTime() ? new Date(current.time) : latest;
+              return currentTime > latest.getTime()
+                ? new Date(current.time)
+                : latest;
             },
             new Date(series[0]?.points?.[0]?.time || 0),
           )
@@ -247,7 +255,9 @@ function setGraphData(
       xMin: startTimeOrEarliest,
       xMax: endTimeOrLatest,
       backgroundColor:
-        action.action === 'heating' ? 'rgba(255, 100, 100, 0.2)' : 'rgba(100, 150, 255, 0.2)',
+        action.action === 'heating'
+          ? 'rgba(255, 100, 100, 0.2)'
+          : 'rgba(100, 150, 255, 0.2)',
       borderColor: 'transparent',
       drawTime: 'beforeDatasetsDraw',
       display: true,
@@ -334,11 +344,15 @@ function setGraphData(
           },
           callbacks: {
             label: (item: TooltipItem<'line'>) =>
-              `${item.dataset.label}: ${item.formattedValue}${showHumidity ? '%' : tempUnit(useF)}`,
+              `${item.dataset.label}: ${item.formattedValue}${showHumidity
+                ? '%'
+                : tempUnit(useF)}`,
           },
         },
         annotation: {
-          annotations: showHvacActions ? hvacAnnotations : [],
+          annotations: showHvacActions
+            ? hvacAnnotations
+            : [],
         },
       },
 

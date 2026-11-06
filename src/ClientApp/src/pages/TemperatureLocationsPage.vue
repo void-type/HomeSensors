@@ -109,7 +109,9 @@ function onLocationInput() {
 
 function onColorPickerChange(location: TemperatureLocationResponse, colorValue: unknown) {
   const color = tinycolor(colorValue as string);
-  location.color = color.isValid() ? color.toHexString() : '';
+  location.color = color.isValid()
+    ? color.toHexString()
+    : '';
   updateDirtyState();
 }
 

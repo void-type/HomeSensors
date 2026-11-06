@@ -15,8 +15,12 @@ export function formatTemp(
 
   const tempDecimals = useFahrenheit ? 0 : 1;
 
-  const decimals = decimalsOverride > -1 ? decimalsOverride : tempDecimals;
-  const convertedTemp = useFahrenheit ? (tempCelsius || 0) * 1.8 + 32 : tempCelsius || 0;
+  const decimals = decimalsOverride > -1
+    ? decimalsOverride
+    : tempDecimals;
+  const convertedTemp = useFahrenheit
+    ? (tempCelsius || 0) * 1.8 + 32
+    : tempCelsius || 0;
   return Math.round(convertedTemp * 10 ** decimals) / 10 ** decimals;
 }
 

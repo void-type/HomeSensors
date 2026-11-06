@@ -17,8 +17,12 @@ const router = useRouter();
 
 function onInputsChange(inputs: ITemperatureGraphInputs) {
   const query = {
-    start: inputs.start ? DateHelper.dateTimeForApi(inputs.start) : undefined,
-    end: inputs.end ? DateHelper.dateTimeForApi(inputs.end) : undefined,
+    start: inputs.start
+      ? DateHelper.dateTimeForApi(inputs.start)
+      : undefined,
+    end: inputs.end
+      ? DateHelper.dateTimeForApi(inputs.end)
+      : undefined,
     humidity: inputs.showHumidity ? 'true' : undefined,
     locationIds:
       inputs.locationIds?.length > 0

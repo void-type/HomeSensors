@@ -137,7 +137,10 @@ function formatReadingTime(reading: TemperatureReadingResponse) {
 }
 
 onMounted(async () => {
-  await Promise.all([connectToHub(), getCategories()]);
+  await Promise.all([
+    connectToHub(),
+    getCategories(),
+  ]);
 });
 </script>
 

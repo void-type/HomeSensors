@@ -26,28 +26,45 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-annotation": "^3.1.0",
     "date-fns": "^4.4.0",
-    "pinia": "^3.0.4",
+    "pinia": "^4.1.0",
     "v-calendar": "^3.1.2",
     "vue": "^3.5.44",
     "vue-color": "^3.3.3",
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^8.3.0",
+    "@antfu/eslint-config": "^10.0.0",
     "@tsconfig/node18": "^18.2.7",
     "@types/bootstrap": "^5.2.11",
-    "@types/node": "^25.9.9",
+    "@types/node": "^26.6.6",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vue/tsconfig": "^0.9.1",
     "cross-env": "^10.1.0",
-    "eslint": "^10.13.0",
+    "eslint": "^10.14.0",
     "eslint-plugin-format": "^2.0.1",
-    "npm-check-updates": "^21.0.3",
-    "npm-run-all": "^4.1.5",
-    "sass": "^1.106.1",
+    "npm-check-updates": "^23.1.1",
+    "npm-run-all2": "^9.0.4",
+    "sass": "^1.107.1",
     "swagger-typescript-api": "^13.13.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.5",
-    "vue-tsc": "^3.3.13"
+    "vue-tsc": "^3.3.14"
+  },
+  "overrides": {
+    "@eslint/config-array": {
+      "minimatch": "^11.0.4"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.4"
+    },
+    "eslint": {
+      "minimatch": "^11.0.4"
+    },
+    "micromark-extension-math": {
+      "katex": "^0.19.1"
+    },
+    "oxfmt": {
+      "tinypool": "^2.2.0"
+    }
   }
 }

@@ -47,8 +47,12 @@ const router = createRouter({
       component: () => import('@/pages/TimeSeriesPage.vue'),
       props: (route) => {
         return {
-          startDate: route.query.start ? new Date(route.query.start as string) : undefined,
-          endDate: route.query.end ? new Date(route.query.end as string) : undefined,
+          startDate: route.query.start
+            ? new Date(route.query.start as string)
+            : undefined,
+          endDate: route.query.end
+            ? new Date(route.query.end as string)
+            : undefined,
           showHumidity: route.query.humidity === 'true',
           locationIds: route.query.locationIds,
           hideHvacActions: route.query.hideHvacActions === 'true',
@@ -86,7 +90,9 @@ const router = createRouter({
         }
 
         return {
-          topics: Array.isArray(topics) ? topics : [topics],
+          topics: Array.isArray(topics)
+            ? topics
+            : [topics],
         };
       },
       meta: { title: 'MQTT Discovery' },
