@@ -10,7 +10,7 @@ public static partial class CameraHelpers
     private static readonly TimeZoneInfo _localTimeZone = TimeZoneInfo.Local;
 
     // Matches timestamp pattern yyyyMMdd_HHmmss anywhere in the filename
-    [GeneratedRegex(@"(\d{8}_\d{6})")]
+    [GeneratedRegex(@"(?<timestamp>\d{8}_\d{6})", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex TimestampRegex();
 
     /// <summary>
@@ -41,7 +41,7 @@ public static partial class CameraHelpers
             return null;
         }
 
-        if (!DateTime.TryParseExact(match.Groups[1].Value, "yyyyMMdd_HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+        if (!DateTime.TryParseExact(match.Groups["timestamp"].Value, "yyyyMMdd_HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
         {
             return null;
         }
@@ -59,10 +59,10 @@ public static partial class CameraHelpers
         return MultiDashRegex().Replace(slug, "-").Trim('-');
     }
 
-    [GeneratedRegex(@"[^a-z0-9]+")]
+    [GeneratedRegex(@"[^a-z0-9]+", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex SlugCleanRegex();
 
-    [GeneratedRegex(@"\-{2,}")]
+    [GeneratedRegex(@"\-{2,}", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex MultiDashRegex();
 
     /// <summary>

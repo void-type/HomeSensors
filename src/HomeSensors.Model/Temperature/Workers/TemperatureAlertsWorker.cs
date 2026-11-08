@@ -10,7 +10,7 @@ namespace HomeSensors.Model.Temperature.Workers;
 /// <summary>
 /// This worker checks for limit outliers and sends an email.
 /// </summary>
-public class TemperatureAlertsWorker : BackgroundService
+public partial class TemperatureAlertsWorker : BackgroundService
 {
     private readonly ILogger<TemperatureAlertsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
@@ -30,9 +30,7 @@ public class TemperatureAlertsWorker : BackgroundService
         _timeProvider = timeProvider;
         _alertSettings = alertSettings;
 
-        logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
-            nameof(TemperatureAlertsWorker),
-            alertSettings.BetweenTicksMinutes);
+        EnablingBackgroundJob(logger, nameof(TemperatureAlertsWorker), alertSettings.BetweenTicksMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -47,17 +45,18 @@ public class TemperatureAlertsWorker : BackgroundService
 
             try
             {
-                _logger.LogInformation("{JobName} job is starting.", nameof(TemperatureAlertsWorker));
+                JobStarting(_logger, nameof(TemperatureAlertsWorker));
 
                 await CheckAlertsAsync(stoppingToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(TemperatureAlertsWorker));
+                WorkerFailed(_logger, ex, nameof(TemperatureAlertsWorker));
             }
             finally
             {
-                _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(TemperatureAlertsWorker), Stopwatch.GetElapsedTime(startTime));
+                var elapsed = Stopwatch.GetElapsedTime(startTime);
+                JobFinished(_logger, nameof(TemperatureAlertsWorker), elapsed);
             }
         }
     }
@@ -82,4 +81,16 @@ public class TemperatureAlertsWorker : BackgroundService
 
         _lastTick = now;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.")]
+    private static partial void EnablingBackgroundJob(ILogger logger, string jobName, int betweenTicksMinutes);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is starting.")]
+    private static partial void JobStarting(ILogger logger, string jobName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception thrown in {WorkerName}.")]
+    private static partial void WorkerFailed(ILogger logger, Exception exception, string workerName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is finished in {ElapsedTime}.")]
+    private static partial void JobFinished(ILogger logger, string jobName, TimeSpan elapsedTime);
 }

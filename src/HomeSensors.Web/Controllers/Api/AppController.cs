@@ -42,11 +42,3 @@ public class AppController : ControllerBase
             .Map(HttpResponder.Respond);
     }
 }
-
-internal record AppVersion(
-    string? Version,
-    bool IsPublicRelease,
-    bool IsPrerelease,
-    string GitCommitId,
-    DateTime GitCommitDate,
-    string AssemblyConfiguration);

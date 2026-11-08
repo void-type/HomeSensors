@@ -11,56 +11,11 @@ public static class SecurityStartupExtensions
 
         app.UseContentSecurityPolicy(options =>
         {
-            options.BaseUri
-                .AllowSelf();
-
-            options.FrameSources
-                .AllowNone();
-
-            options.FrameAncestors
-                .Allow("https://hass.void-type.net");
-
-            options.DefaultSources
-                .AllowSelf();
-
-            options.ObjectSources
-                .AllowNone();
-
-            options.ImageSources
-                .AllowSelf()
-                // Bootstrap and other webpacked assets are loaded from inline data.
-                .Allow("data:");
-
-            options.ScriptSources
-                .AllowSelf();
-
-            options.StyleSources
-                .AllowSelf();
+            ConfigureBaseDirectives(options);
 
             if (vueDevServerEnabled)
             {
-                // In development we need to allow unsafe eval of scripts for Vue's runtime compiler.
-                options.ScriptSources
-                    // Vite dev server
-                    .Allow("https://" + vueDevServerHost)
-                    .AllowUnsafeInline()
-                    .AllowUnsafeEval();
-
-                options.StyleSources
-                    // Vite dev server
-                    .Allow("https://" + vueDevServerHost)
-                    .AllowUnsafeInline();
-
-                options.ImageSources
-                    .Allow("https://" + vueDevServerHost);
-
-                // .NET and Vite hot reloading use web sockets
-                options.ConnectSources
-                    .AllowSelf()
-                    // Vite dev server
-                    .Allow("https://" + vueDevServerHost)
-                    .Allow("ws:")
-                    .Allow("wss:");
+                ConfigureDevServerDirectives(options, vueDevServerHost);
             }
             else
             {
@@ -77,5 +32,60 @@ public static class SecurityStartupExtensions
         });
 
         return app;
+    }
+
+    private static void ConfigureBaseDirectives(CspOptionsBuilder options)
+    {
+        options.BaseUri
+            .AllowSelf();
+
+        options.FrameSources
+            .AllowNone();
+
+        options.FrameAncestors
+            .Allow("https://hass.void-type.net");
+
+        options.DefaultSources
+            .AllowSelf();
+
+        options.ObjectSources
+            .AllowNone();
+
+        options.ImageSources
+            .AllowSelf()
+            // Bootstrap and other webpacked assets are loaded from inline data.
+            .Allow("data:");
+
+        options.ScriptSources
+            .AllowSelf();
+
+        options.StyleSources
+            .AllowSelf();
+    }
+
+    private static void ConfigureDevServerDirectives(CspOptionsBuilder options, string vueDevServerHost)
+    {
+        // In development we need to allow unsafe eval of scripts for Vue's runtime compiler.
+        options.ScriptSources
+            // Vite dev server
+            .Allow("https://" + vueDevServerHost)
+            .AllowUnsafeInline()
+            .AllowUnsafeEval();
+
+        options.StyleSources
+            // Vite dev server
+            .Allow("https://" + vueDevServerHost)
+            .AllowUnsafeInline();
+
+        options.ImageSources
+            .Allow("https://" + vueDevServerHost);
+
+        // .NET and Vite hot reloading use web sockets
+        options.ConnectSources
+            .AllowSelf()
+            // Vite dev server
+            .Allow("https://" + vueDevServerHost)
+            .Allow("ws:")
+            .Allow("wss:");
     }
 }

@@ -5,7 +5,7 @@ namespace HomeSensors.Web.Services.PushTemperatureCurrentReadings;
 /// <summary>
 /// This worker broadcasts current readings to all of the TemperatureHub SignalR clients.
 /// </summary>
-public class PushTemperatureCurrentReadingsWorker : BackgroundService
+public partial class PushTemperatureCurrentReadingsWorker : BackgroundService
 {
     private readonly TimeSpan _betweenTicks;
     private readonly ILogger<PushTemperatureCurrentReadingsWorker> _logger;
@@ -19,9 +19,7 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
         _hubNotifier = hubNotifier;
         _betweenTicks = TimeSpan.FromSeconds(workerSettings.BetweenTicksSeconds);
 
-        logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} seconds.",
-            nameof(PushTemperatureCurrentReadingsWorker),
-            workerSettings.BetweenTicksSeconds);
+        EnablingBackgroundJob(logger, nameof(PushTemperatureCurrentReadingsWorker), workerSettings.BetweenTicksSeconds);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,8 +34,14 @@ public class PushTemperatureCurrentReadingsWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(PushTemperatureCurrentReadingsWorker));
+                WorkerFailed(_logger, ex, nameof(PushTemperatureCurrentReadingsWorker));
             }
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Enabling background job: {JobName} every {BetweenTicksMinutes} seconds.")]
+    private static partial void EnablingBackgroundJob(ILogger logger, string jobName, int betweenTicksMinutes);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception thrown in {WorkerName}.")]
+    private static partial void WorkerFailed(ILogger logger, Exception exception, string workerName);
 }

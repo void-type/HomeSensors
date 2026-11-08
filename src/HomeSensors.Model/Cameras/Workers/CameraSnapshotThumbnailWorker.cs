@@ -14,7 +14,7 @@ namespace HomeSensors.Model.Cameras.Workers;
 /// <summary>
 /// Background worker that pre-generates thumbnails for all cameras.
 /// </summary>
-public class CameraSnapshotThumbnailWorker : BackgroundService
+public partial class CameraSnapshotThumbnailWorker : BackgroundService
 {
     private readonly ILogger<CameraSnapshotThumbnailWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
@@ -26,9 +26,7 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
         _scopeFactory = scopeFactory;
         _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
 
-        logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
-            nameof(CameraSnapshotThumbnailWorker),
-            workerSettings.BetweenTicksMinutes);
+        EnablingBackgroundJob(logger, nameof(CameraSnapshotThumbnailWorker), workerSettings.BetweenTicksMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -41,16 +39,17 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
 
             try
             {
-                _logger.LogInformation("{JobName} job is starting.", nameof(CameraSnapshotThumbnailWorker));
+                JobStarting(_logger, nameof(CameraSnapshotThumbnailWorker));
 
                 await ProcessAllCamerasAsync(stoppingToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(CameraSnapshotThumbnailWorker));
+                WorkerFailed(_logger, ex, nameof(CameraSnapshotThumbnailWorker));
             }
 
-            _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(CameraSnapshotThumbnailWorker), Stopwatch.GetElapsedTime(startTime));
+            var elapsed = Stopwatch.GetElapsedTime(startTime);
+            JobFinished(_logger, nameof(CameraSnapshotThumbnailWorker), elapsed);
         }
     }
 
@@ -76,16 +75,14 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
             }
         }
 
-        _logger.LogInformation("{JobName} job processed {ProcessedCount} snapshot(s).",
-            nameof(CameraSnapshotThumbnailWorker), processedCount);
+        JobProcessedSnapshots(_logger, nameof(CameraSnapshotThumbnailWorker), processedCount);
     }
 
     private async Task<int> ProcessCameraAsync(ThumbnailService thumbnailService, Camera camera, CancellationToken stoppingToken)
     {
         if (!Directory.Exists(camera.SnapshotsPath))
         {
-            _logger.LogWarning("{JobName}: Snapshots path not found for camera {CameraName}: {Path}.",
-                nameof(CameraSnapshotThumbnailWorker), camera.Name, camera.SnapshotsPath);
+            SnapshotsPathNotFound(_logger, nameof(CameraSnapshotThumbnailWorker), camera.Name, camera.SnapshotsPath);
             return 0;
         }
 
@@ -106,11 +103,31 @@ public class CameraSnapshotThumbnailWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{JobName}: Error generating thumbnails for {FileName} in camera {CameraName}.",
-                    nameof(CameraSnapshotThumbnailWorker), fileName, camera.Name);
+                ThumbnailGenerationFailed(_logger, ex, nameof(CameraSnapshotThumbnailWorker), fileName, camera.Name);
             }
         }
 
         return processedCount;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.")]
+    private static partial void EnablingBackgroundJob(ILogger logger, string jobName, int betweenTicksMinutes);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is starting.")]
+    private static partial void JobStarting(ILogger logger, string jobName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception thrown in {WorkerName}.")]
+    private static partial void WorkerFailed(ILogger logger, Exception exception, string workerName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is finished in {ElapsedTime}.")]
+    private static partial void JobFinished(ILogger logger, string jobName, TimeSpan elapsedTime);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job processed {ProcessedCount} snapshot(s).")]
+    private static partial void JobProcessedSnapshots(ILogger logger, string jobName, int processedCount);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "{JobName}: Snapshots path not found for camera {CameraName}: {Path}.")]
+    private static partial void SnapshotsPathNotFound(ILogger logger, string jobName, string cameraName, string path);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "{JobName}: Error generating thumbnails for {FileName} in camera {CameraName}.")]
+    private static partial void ThumbnailGenerationFailed(ILogger logger, Exception exception, string jobName, string fileName, string cameraName);
 }

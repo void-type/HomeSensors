@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Globalization;
 using VoidCore.Model.Functional;
 
 namespace HomeSensors.Model.Temperature.Workers;
@@ -13,7 +14,7 @@ namespace HomeSensors.Model.Temperature.Workers;
 /// <summary>
 /// This worker compresses older data by summarizing into regular average intervals.
 /// </summary>
-public class SummarizeTemperatureReadingsWorker : BackgroundService
+public partial class SummarizeTemperatureReadingsWorker : BackgroundService
 {
     private readonly ILogger<SummarizeTemperatureReadingsWorker> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
@@ -33,9 +34,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
         _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
         _summarizeCutoff = TimeSpan.FromDays(workerSettings.SummarizeCutoffDays);
 
-        logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
-            nameof(SummarizeTemperatureReadingsWorker),
-            workerSettings.BetweenTicksMinutes);
+        EnablingBackgroundJob(logger, nameof(SummarizeTemperatureReadingsWorker), workerSettings.BetweenTicksMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -51,16 +50,17 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
 
             try
             {
-                _logger.LogInformation("{JobName} job is starting.", nameof(SummarizeTemperatureReadingsWorker));
+                JobStarting(_logger, nameof(SummarizeTemperatureReadingsWorker));
 
                 await SummarizeAllDevicesAsync(stoppingToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(SummarizeTemperatureReadingsWorker));
+                WorkerFailed(_logger, ex, nameof(SummarizeTemperatureReadingsWorker));
             }
 
-            _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(SummarizeTemperatureReadingsWorker), Stopwatch.GetElapsedTime(startTime));
+            var elapsed = Stopwatch.GetElapsedTime(startTime);
+            JobFinished(_logger, nameof(SummarizeTemperatureReadingsWorker), elapsed);
         }
     }
 
@@ -87,7 +87,7 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception thrown in {WorkerName} while processing device {Name} {MqTtTopic}.", nameof(SummarizeTemperatureReadingsWorker), device.Name, device.MqttTopic);
+                DeviceWorkerFailed(_logger, ex, nameof(SummarizeTemperatureReadingsWorker), device.Name, device.MqttTopic);
             }
 
             if (stoppingToken.IsCancellationRequested)
@@ -96,7 +96,8 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
             }
         }
 
-        _logger.LogInformation("Summarized data older than {Cutoff}. Deleted {DeletedCount} rows and added {CreatedCount} rows.", cutoffLimit.ToString("o"), counts.Deleted, counts.Created);
+        var cutoffText = cutoffLimit.ToString("o", CultureInfo.InvariantCulture);
+        Summarized(_logger, cutoffText, counts.Deleted, counts.Created);
     }
 
     private async Task SummarizeDeviceAsync(HomeSensorsContext dbContext, long deviceId, DateTimeOffset cutoffLimit, SummarizeCounts counts, CancellationToken stoppingToken)
@@ -192,6 +193,24 @@ public class SummarizeTemperatureReadingsWorker : BackgroundService
             }
         });
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.")]
+    private static partial void EnablingBackgroundJob(ILogger logger, string jobName, int betweenTicksMinutes);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is starting.")]
+    private static partial void JobStarting(ILogger logger, string jobName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception thrown in {WorkerName}.")]
+    private static partial void WorkerFailed(ILogger logger, Exception exception, string workerName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is finished in {ElapsedTime}.")]
+    private static partial void JobFinished(ILogger logger, string jobName, TimeSpan elapsedTime);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception thrown in {WorkerName} while processing device {Name} {MqTtTopic}.")]
+    private static partial void DeviceWorkerFailed(ILogger logger, Exception exception, string workerName, string name, string mqTtTopic);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Summarized data older than {Cutoff}. Deleted {DeletedCount} rows and added {CreatedCount} rows.")]
+    private static partial void Summarized(ILogger logger, string cutoff, int deletedCount, int createdCount);
 
     private sealed record OldReading(long Id, DateTimeOffset Time, long TemperatureDeviceId, long TemperatureLocationId, double? TemperatureCelsius, double? Humidity);
 

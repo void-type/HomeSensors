@@ -5,11 +5,11 @@ namespace HomeSensors.Model.Cameras.Entities;
 
 public class CameraConfiguration : IEntityTypeConfiguration<Camera>
 {
-    public void Configure(EntityTypeBuilder<Camera> entity)
+    public void Configure(EntityTypeBuilder<Camera> builder)
     {
-        entity.ToTable(nameof(Camera));
+        builder.ToTable(nameof(Camera));
 
-        entity.HasIndex(c => c.Name)
+        builder.HasIndex(c => c.Name)
             .IsUnique();
     }
 }

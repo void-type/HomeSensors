@@ -7,7 +7,7 @@ using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.Cameras.Services;
 
-public class ThumbnailService(CameraSettings settings, ILogger<ThumbnailService> logger)
+public partial class ThumbnailService(CameraSettings settings, ILogger<ThumbnailService> logger)
 {
     // Height-based sizes to accommodate variable aspect ratios (16:9, 1:1, 32:9, etc.)
     private const int SmallHeightPx = 180;
@@ -58,7 +58,7 @@ public class ThumbnailService(CameraSettings settings, ILogger<ThumbnailService>
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to generate thumbnails for {OriginalPath}.", originalPath);
+            FailedToGenerateThumbnails(logger, ex, originalPath);
         }
     }
 
@@ -100,24 +100,15 @@ public class ThumbnailService(CameraSettings settings, ILogger<ThumbnailService>
         try
         {
             await thumb.WriteAsync(tmpPath, MagickFormat.WebP, cancellationToken);
-            // SCS0018: outputPath is constructed from admin-configured camera settings (slug, ThumbnailCachePath),
-            // not from user-supplied data. The baseName component is sanitized via GetSafeFileName upstream.
-#pragma warning disable SCS0018
             File.Move(tmpPath, outputPath, overwrite: true);
-#pragma warning restore SCS0018
         }
         catch
         {
-#pragma warning disable SCS0018
             File.Delete(tmpPath);
-#pragma warning restore SCS0018
             throw;
         }
     }
-}
 
-public enum ThumbnailSize
-{
-    Small,
-    Medium,
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to generate thumbnails for {OriginalPath}.")]
+    private static partial void FailedToGenerateThumbnails(ILogger logger, Exception exception, string originalPath);
 }

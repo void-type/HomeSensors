@@ -1,6 +1,7 @@
 ﻿using HomeSensors.Model.Data;
 using HomeSensors.Model.Helpers;
 using HomeSensors.Model.Hvac.Entities;
+using HomeSensors.Model.Temperature.Entities;
 using HomeSensors.Model.Temperature.Helpers;
 using HomeSensors.Model.Temperature.Models;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
     /// <summary>
     /// Gets the latest reading from each location. Limited to locations that have readings within the last 24 hours.
     /// </summary>
+    /// <param name="cancellationToken">A cancellation token</param>
     /// <param name="refreshCache">Pass true to force refresh of the cache. Use when scheduled and all other clients can use same cached interval.</param>
     public async Task<List<TemperatureReadingResponse>> GetCurrentCachedAsync(CancellationToken cancellationToken, bool refreshCache = false)
     {
@@ -53,6 +55,7 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
     /// <param name="request">TemperatureTimeSeriesRequest</param>
+    /// <param name="cancellationToken">A cancellation token</param>
     public async Task<List<TemperatureTimeSeriesLocationData>> GetTimeSeriesCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
         // Prevent caching incomplete series to stay current.
@@ -78,6 +81,7 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
     /// Pull a time series of HVAC actions.
     /// </summary>
     /// <param name="request">TemperatureTimeSeriesRequest</param>
+    /// <param name="cancellationToken">A cancellation token</param>
     public async Task<List<TemperatureTimeSeriesHvacAction>> GetHvacActionsCachedAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
         if (!request.IncludeHvacActions)
@@ -119,7 +123,7 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
 
         var orderedReadings = readings
             .OrderBy(x => x.TemperatureLocation!.Category!.Order)
-            .ThenBy(x => x.TemperatureLocation!.Name)
+            .ThenBy(x => x.TemperatureLocation!.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         return orderedReadings.ConvertAll(x => new TemperatureReadingResponse(
@@ -134,6 +138,7 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
     /// Pull a time series of readings for multiple locations. Averages readings to reduce granularity at large scales.
     /// </summary>
     /// <param name="request">TemperatureTimeSeriesRequest</param>
+    /// <param name="cancellationToken">A cancellation token</param>
     private async Task<List<TemperatureTimeSeriesLocationData>> GetTimeSeriesAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
     {
         if (request.LocationIds.Count == 0)
@@ -161,7 +166,19 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
         // Depending on the total span of data returned, we will create averages over intervals to prevent overloading the client with too many data points.
         var dbSpanHours = (dbReadings.Max(x => x.Time) - dbReadings.Min(x => x.Time)).TotalHours;
 
-        var intervalMinutes = dbSpanHours switch
+        var intervalMinutes = GetIntervalMinutes(dbSpanHours);
+
+        return dbReadings
+            .OrderBy(x => x.TemperatureLocation!.Category!.Order)
+            .ThenBy(x => x.TemperatureLocation!.Name, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(x => x.TemperatureLocation!.Name, StringComparer.Ordinal)
+            .ToList()
+            .ConvertAll(readingsForLocation => ToLocationData(readingsForLocation, intervalMinutes));
+    }
+
+    private static int GetIntervalMinutes(double dbSpanHours)
+    {
+        return dbSpanHours switch
         {
             > 3 * 24 => 60,
             > 2 * 24 => 30,
@@ -171,37 +188,32 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
             > 3 => 1,
             _ => 0,
         };
+    }
 
-        return dbReadings
-            .OrderBy(x => x.TemperatureLocation!.Category!.Order)
-            .ThenBy(x => x.TemperatureLocation!.Name)
-            .GroupBy(x => x.TemperatureLocation!.Name)
-            .ToList()
-            .ConvertAll(readingsForLocation =>
-            {
-                var avgGraphPoints = readingsForLocation.GetIntervalAverages(intervalMinutes);
+    private static TemperatureTimeSeriesLocationData ToLocationData(IGrouping<string, TemperatureReading> readingsForLocation, int intervalMinutes)
+    {
+        var avgGraphPoints = readingsForLocation.GetIntervalAverages(intervalMinutes);
 
-                var allTemps = readingsForLocation.Select(x => x.TemperatureCelsius);
+        var allTemps = readingsForLocation.Select(x => x.TemperatureCelsius);
 
-                var tempAgg = new TemperatureTimeSeriesAggregate(
-                    minimum: allTemps.Min(),
-                    maximum: allTemps.Max(),
-                    average: allTemps.Average());
+        var tempAgg = new TemperatureTimeSeriesAggregate(
+            minimum: allTemps.Min(),
+            maximum: allTemps.Max(),
+            average: allTemps.Average());
 
-                var allHumidity = readingsForLocation.Select(x => x.Humidity);
+        var allHumidity = readingsForLocation.Select(x => x.Humidity);
 
-                var humidityAgg = new TemperatureTimeSeriesAggregate(
-                    minimum: allHumidity.Min(),
-                    maximum: allHumidity.Max(),
-                    average: allHumidity.Average());
+        var humidityAgg = new TemperatureTimeSeriesAggregate(
+            minimum: allHumidity.Min(),
+            maximum: allHumidity.Max(),
+            average: allHumidity.Average());
 
-                return new TemperatureTimeSeriesLocationData(
-                    location: readingsForLocation.First().TemperatureLocation!.ToApiResponse(),
-                    tempAgg,
-                    humidityAgg,
-                    points: avgGraphPoints
-                );
-            });
+        return new TemperatureTimeSeriesLocationData(
+            location: readingsForLocation.First().TemperatureLocation!.ToApiResponse(),
+            tempAgg,
+            humidityAgg,
+            points: avgGraphPoints
+        );
     }
 
     private async Task<List<TemperatureTimeSeriesHvacAction>> GetHvacActionsAsync(TemperatureTimeSeriesRequest request, CancellationToken cancellationToken)
@@ -246,11 +258,17 @@ public class TemperatureReadingRepository(IDbContextFactory<HomeSensorsContext> 
             return [];
         }
 
-        var result = new List<TemperatureTimeSeriesHvacAction>();
-
         // If last extra action exists, then we are likely in the past, so we'll treat it as a possible end to our last action.
         // Else we might be at the end of our data, so we'll stop a last action at the end of of the queried period.
         var hasLastExtraAction = lastExtraAction is not null;
+
+        return BuildHvacActionPeriods(dbReadings, hasLastExtraAction, request);
+    }
+
+    private List<TemperatureTimeSeriesHvacAction> BuildHvacActionPeriods(List<HvacAction> dbReadings, bool hasLastExtraAction, TemperatureTimeSeriesRequest request)
+    {
+        var result = new List<TemperatureTimeSeriesHvacAction>();
+
         var count = hasLastExtraAction ? dbReadings.Count - 1 : dbReadings.Count;
 
         // Iterate through the actions and build the time series.

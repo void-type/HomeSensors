@@ -6,12 +6,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Globalization;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace HomeSensors.Model.Hvac.Workers;
 
-public class HvacActionsWorker : BackgroundService
+public partial class HvacActionsWorker : BackgroundService
 {
     private readonly ILogger<HvacActionsWorker> _logger;
     private readonly HvacActionsSettings _hvacWorkerSettings;
@@ -32,9 +34,7 @@ public class HvacActionsWorker : BackgroundService
         _timeProvider = timeProvider;
         _httpClientFactory = httpClientFactory;
 
-        logger.LogInformation("Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.",
-            nameof(HvacActionsWorker),
-            _hvacWorkerSettings.BetweenTicksMinutes);
+        EnablingBackgroundJob(logger, nameof(HvacActionsWorker), _hvacWorkerSettings.BetweenTicksMinutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -50,17 +50,18 @@ public class HvacActionsWorker : BackgroundService
 
             try
             {
-                _logger.LogInformation("{JobName} job is starting.", nameof(HvacActionsWorker));
+                JobStarting(_logger, nameof(HvacActionsWorker));
 
                 await SyncActionsAsync(cursor, stoppingToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(HvacActionsWorker));
+                WorkerFailed(_logger, ex, nameof(HvacActionsWorker));
             }
             finally
             {
-                _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(HvacActionsWorker), Stopwatch.GetElapsedTime(startTime));
+                var elapsed = Stopwatch.GetElapsedTime(startTime);
+                JobFinished(_logger, nameof(HvacActionsWorker), elapsed);
             }
         }
     }
@@ -125,18 +126,15 @@ public class HvacActionsWorker : BackgroundService
     {
         using var httpClient = _httpClientFactory.CreateClient("HomeAssistant");
 
-        var startTimestamp = Uri.EscapeDataString(cursor.LastChanged.ToString("yyyy-MM-ddTHH:mm:ssZ"));
-        var endTimestamp = Uri.EscapeDataString(_timeProvider.GetUtcNow().AddMinutes(5).ToString("yyyy-MM-ddTHH:mm:ssZ"));
+        var startTimestamp = Uri.EscapeDataString(cursor.LastChanged.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+        var endTimestamp = Uri.EscapeDataString(_timeProvider.GetUtcNow().AddMinutes(5).ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
         var apiUrl = $"/api/history/period/{startTimestamp}?end_time={endTimestamp}&filter_entity_id={Uri.EscapeDataString(_hvacWorkerSettings.EntityId)}";
 
         var response = await httpClient.GetAsync(apiUrl, stoppingToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning(
-                "Failed to retrieve state history. Status: {StatusCode}, Reason: {ReasonPhrase}",
-                response.StatusCode,
-                response.ReasonPhrase);
+            FailedToRetrieveStateHistory(_logger, response.StatusCode, response.ReasonPhrase);
 
             return [];
         }
@@ -191,13 +189,13 @@ public class HvacActionsWorker : BackgroundService
         // Skip duplicate states
         if (state == cursor.LastState)
         {
-            _logger.LogDebug("Skipping duplicate state {State} for entity {EntityId} at {LastUpdated}.", state, stateEntry.EntityId, stateEntry.LastUpdated);
+            SkippingDuplicateState(_logger, state, stateEntry.EntityId, stateEntry.LastUpdated);
             return null;
         }
 
         if (state is null || stateEntry.EntityId is null || stateEntry.LastChanged is null || stateEntry.LastUpdated is null)
         {
-            _logger.LogWarning("Skipping state entry due to null values. {Json}", JsonSerializer.Serialize(stateEntry));
+            SkippingNullStateEntry(_logger, JsonSerializer.Serialize(stateEntry));
             return null;
         }
 
@@ -211,6 +209,27 @@ public class HvacActionsWorker : BackgroundService
             LastUpdated = stateEntry.LastUpdated.Value
         };
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Enabling background job: {JobName} every {BetweenTicksMinutes} minutes.")]
+    private static partial void EnablingBackgroundJob(ILogger logger, string jobName, int betweenTicksMinutes);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is starting.")]
+    private static partial void JobStarting(ILogger logger, string jobName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception thrown in {WorkerName}.")]
+    private static partial void WorkerFailed(ILogger logger, Exception exception, string workerName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is finished in {ElapsedTime}.")]
+    private static partial void JobFinished(ILogger logger, string jobName, TimeSpan elapsedTime);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to retrieve state history. Status: {StatusCode}, Reason: {ReasonPhrase}")]
+    private static partial void FailedToRetrieveStateHistory(ILogger logger, HttpStatusCode statusCode, string? reasonPhrase);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Skipping duplicate state {State} for entity {EntityId} at {LastUpdated}.")]
+    private static partial void SkippingDuplicateState(ILogger logger, string? state, string? entityId, DateTimeOffset? lastUpdated);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Skipping state entry due to null values. {Json}")]
+    private static partial void SkippingNullStateEntry(ILogger logger, string json);
 
     private sealed class HvacCursor
     {

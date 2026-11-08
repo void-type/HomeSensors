@@ -5,13 +5,13 @@ namespace HomeSensors.Model.Categories.Entities;
 
 public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 {
-    public void Configure(EntityTypeBuilder<Category> entity)
+    public void Configure(EntityTypeBuilder<Category> builder)
     {
-        entity.ToTable(nameof(Category));
+        builder.ToTable(nameof(Category));
 
-        entity.HasIndex(c => c.Order);
+        builder.HasIndex(c => c.Order);
 
-        entity.HasIndex(si => si.Name)
+        builder.HasIndex(si => si.Name)
             .IsUnique();
     }
 }

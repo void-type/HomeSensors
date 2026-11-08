@@ -17,7 +17,7 @@ using VoidCore.Model.Guards;
 
 namespace HomeSensors.Model.WaterLeak.Workers;
 
-public class MqttWaterLeaksWorker : BackgroundService
+public partial class MqttWaterLeaksWorker : BackgroundService
 {
     private readonly ILogger<MqttWaterLeaksWorker> _logger;
     private readonly MqttSettings _configuration;
@@ -37,8 +37,7 @@ public class MqttWaterLeaksWorker : BackgroundService
         _mqttFactory = mqttFactory;
         _betweenTicks = TimeSpan.FromMinutes(workerSettings.BetweenTicksMinutes);
 
-        logger.LogInformation("Enabling background job: {JobName}.",
-            nameof(MqttWaterLeaksWorker));
+        EnablingBackgroundJob(logger, nameof(MqttWaterLeaksWorker));
     }
 
     public async Task RefreshTopicSubscriptionsAsync()
@@ -49,10 +48,10 @@ public class MqttWaterLeaksWorker : BackgroundService
         {
             var newTopics = await GetTopicsAsync();
 
-            var topicsToUnsubscribe = _currentTopics.Except(newTopics).ToList();
+            var topicsToUnsubscribe = _currentTopics.Except(newTopics, StringComparer.Ordinal).ToList();
             await UnsubscribeFromTopicsAsync(topicsToUnsubscribe);
 
-            var topicsToSubscribe = newTopics.Except(_currentTopics).ToList();
+            var topicsToSubscribe = newTopics.Except(_currentTopics, StringComparer.Ordinal).ToList();
             await SubscribeToTopicsAsync(topicsToSubscribe);
 
             _currentTopics = newTopics;
@@ -69,7 +68,7 @@ public class MqttWaterLeaksWorker : BackgroundService
         {
             _mqttClient = _mqttFactory.CreateManagedMqttClient();
 
-            _logger.LogInformation("Connecting Managed MQTT client.");
+            ConnectingClient(_logger);
 
             _mqttClient.ConnectingFailedAsync += LogConnectionFailureAsync;
             _mqttClient.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLoggingAsync;
@@ -87,17 +86,18 @@ public class MqttWaterLeaksWorker : BackgroundService
 
                 try
                 {
-                    _logger.LogInformation("{JobName} job is starting.", nameof(MqttWaterLeaksWorker));
+                    JobStarting(_logger, nameof(MqttWaterLeaksWorker));
 
                     await CheckInactiveDevicesAsync();
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttWaterLeaksWorker));
+                    WorkerFailed(_logger, ex, nameof(MqttWaterLeaksWorker));
                 }
                 finally
                 {
-                    _logger.LogInformation("{JobName} job is finished in {ElapsedTime}.", nameof(MqttWaterLeaksWorker), Stopwatch.GetElapsedTime(startTime));
+                    var elapsed = Stopwatch.GetElapsedTime(startTime);
+                    JobFinished(_logger, nameof(MqttWaterLeaksWorker), elapsed);
                 }
             }
         }
@@ -119,7 +119,7 @@ public class MqttWaterLeaksWorker : BackgroundService
 
     private async Task LogConnectionFailureAsync(ConnectingFailedEventArgs e)
     {
-        _logger.LogError(e.Exception, "MQTT client failed to connect.");
+        ClientFailedToConnect(_logger, e.Exception);
         await Task.CompletedTask;
     }
 
@@ -131,7 +131,7 @@ public class MqttWaterLeaksWorker : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttWaterLeaksWorker));
+            WorkerFailed(_logger, ex, nameof(MqttWaterLeaksWorker));
 
             using var scope = _scopeFactory.CreateScope();
             var emailNotificationService = scope.ServiceProvider.GetRequiredService<EmailNotificationService>();
@@ -196,7 +196,7 @@ public class MqttWaterLeaksWorker : BackgroundService
 
         foreach (var topic in topics)
         {
-            _logger.LogInformation("Unsubscribing from MQTT topic {Topic}.", topic);
+            UnsubscribingFromTopic(_logger, topic);
         }
 
         await _mqttClient.UnsubscribeAsync(topics);
@@ -218,7 +218,7 @@ public class MqttWaterLeaksWorker : BackgroundService
 
         foreach (var topicFilter in topicFilters)
         {
-            _logger.LogInformation("Subscribing to MQTT topic {Topic}.", topicFilter.Topic);
+            SubscribingToTopic(_logger, topicFilter.Topic);
         }
 
         await _mqttClient.SubscribeAsync(topicFilters);
@@ -234,6 +234,30 @@ public class MqttWaterLeaksWorker : BackgroundService
 
     public static string GetReadableWaterLeakMessage(MqttWaterLeakDeviceMessage message)
     {
-        return $"Location: {message.LocationName} | Water leak: {message.Payload.Water_Leak} | Battery low: {message.Payload.Battery_Low} | Battery: {message.Payload.Battery}%";
+        return $"Location: {message.LocationName} | Water leak: {message.Payload.WaterLeak} | Battery low: {message.Payload.BatteryLow} | Battery: {message.Payload.Battery}%";
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Enabling background job: {JobName}.")]
+    private static partial void EnablingBackgroundJob(ILogger logger, string jobName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Connecting Managed MQTT client.")]
+    private static partial void ConnectingClient(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is starting.")]
+    private static partial void JobStarting(ILogger logger, string jobName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception thrown in {WorkerName}.")]
+    private static partial void WorkerFailed(ILogger logger, Exception exception, string workerName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{JobName} job is finished in {ElapsedTime}.")]
+    private static partial void JobFinished(ILogger logger, string jobName, TimeSpan elapsedTime);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "MQTT client failed to connect.")]
+    private static partial void ClientFailedToConnect(ILogger logger, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Unsubscribing from MQTT topic {Topic}.")]
+    private static partial void UnsubscribingFromTopic(ILogger logger, string topic);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Subscribing to MQTT topic {Topic}.")]
+    private static partial void SubscribingToTopic(ILogger logger, string topic);
 }

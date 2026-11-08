@@ -51,6 +51,16 @@ public class CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService 
 
         var files = CameraHelpers.GetSnapshotFileNames(camera.SnapshotsPath).ToList();
 
+        var items = BuildTimelineItems(camera.Id, files, start, end, baseUrl);
+
+        // Sort oldest first (left = past, right = present)
+        items.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
+
+        return Result.Ok(items);
+    }
+
+    private static List<CameraSnapshot> BuildTimelineItems(long cameraId, List<string> files, DateTimeOffset start, DateTimeOffset end, string baseUrl)
+    {
         var items = new List<CameraSnapshot>();
 
         foreach (var fileName in files)
@@ -67,7 +77,6 @@ public class CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService 
                 continue;
             }
 
-            var cameraId = camera.Id;
             var smallUrl = $"{baseUrl}/api/camera-snapshots/{cameraId}/thumbnail/{Uri.EscapeDataString(fileName)}?size=small";
             var mediumUrl = $"{baseUrl}/api/camera-snapshots/{cameraId}/thumbnail/{Uri.EscapeDataString(fileName)}?size=medium";
             var originalUrl = $"{baseUrl}/api/camera-snapshots/{cameraId}/original/{Uri.EscapeDataString(fileName)}";
@@ -75,10 +84,7 @@ public class CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService 
             items.Add(new CameraSnapshot(fileName, timestamp.Value, smallUrl, mediumUrl, originalUrl));
         }
 
-        // Sort oldest first (left = past, right = present)
-        items.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
-
-        return Result.Ok(items);
+        return items;
     }
 
     /// <summary>
@@ -118,7 +124,7 @@ public class CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService 
         }
 
         // Format using the verbatim date/time components from the parsed value — no timezone conversion.
-        var timestampSegment = parsedTimestamp.ToString("yyyyMMdd_HHmmss");
+        var timestampSegment = parsedTimestamp.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
 
         if (!Directory.Exists(camera.SnapshotsPath))
         {
@@ -128,23 +134,30 @@ public class CameraSnapshotRepository(HomeSensorsContext data, ThumbnailService 
         var slug = camera.SelectSlug();
         var fileName = $"{slug}_{timestampSegment}{extension}";
 
-        // SCS0018: camera.SnapshotsPath is admin-configured in the database, not user input.
+        // camera.SnapshotsPath is admin-configured in the database, not user input.
         // The fileName is built from a validated extension, a parsed timestamp, and a DB-derived slug — none are user-controlled.
-#pragma warning disable SCS0018
         var destPath = Path.Combine(camera.SnapshotsPath, fileName).GetSafeFilePath("_");
 
-        try
-        {
-            await using var stream = new FileStream(destPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-#pragma warning restore SCS0018
-            await request.FileContent.CopyToAsync(stream, cancellationToken);
-        }
-        catch (IOException)
+        if (!await TryCreateFileAsync(destPath, request.FileContent, cancellationToken))
         {
             return Result.Fail<EntityMessage<string>>(new Failure($"A snapshot for this camera at timestamp '{timestampSegment}' already exists.", "timestamp"));
         }
 
         return Result.Ok(EntityMessage.Create("Snapshot uploaded.", fileName));
+    }
+
+    private static async Task<bool> TryCreateFileAsync(string path, Stream content, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            await content.CopyToAsync(stream, cancellationToken);
+            return true;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 ﻿using HomeSensors.Model;
 using Serilog;
+using System.Globalization;
 using VoidCore.Model.Configuration;
 
 try
@@ -26,7 +27,7 @@ try
 
     Log.Logger = new LoggerConfiguration()
         // Set a default logger if none configured or configuration not found.
-        .WriteTo.Console()
+        .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
         .ReadFrom.Configuration(config)
         .CreateLogger();
 

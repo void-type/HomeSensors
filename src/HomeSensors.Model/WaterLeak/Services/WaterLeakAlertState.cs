@@ -7,7 +7,7 @@ public class WaterLeakAlertState
 {
     public ConcurrentDictionary<WaterLeakDeviceAlert, DateTimeOffset> LatchedMessageAlerts { get; } = new();
 
-    public ConcurrentDictionary<string, DateTimeOffset> LastCheckIns { get; } = new();
+    public ConcurrentDictionary<string, DateTimeOffset> LastCheckIns { get; } = new(StringComparer.Ordinal);
 
-    public ConcurrentDictionary<string, DateTimeOffset> LatchedInactiveAlerts { get; } = new();
+    public ConcurrentDictionary<string, DateTimeOffset> LatchedInactiveAlerts { get; } = new(StringComparer.Ordinal);
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace HomeSensors.Model.Infrastructure.Json.Converters;
@@ -8,7 +9,7 @@ public class ConverterString : JsonConverter<string>
     public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => reader.TokenType switch
     {
         // Adds the ability to deserialize from Number to string.
-        JsonTokenType.Number => reader.GetInt64().ToString(),
+        JsonTokenType.Number => reader.GetInt64().ToString(CultureInfo.InvariantCulture),
         _ => reader.GetString(),
     };
 

@@ -5,11 +5,11 @@ namespace HomeSensors.Model.Infrastructure.Emailing.Entities;
 
 public class EmailRecipientConfiguration : IEntityTypeConfiguration<EmailRecipient>
 {
-    public void Configure(EntityTypeBuilder<EmailRecipient> entity)
+    public void Configure(EntityTypeBuilder<EmailRecipient> builder)
     {
-        entity.ToTable(nameof(EmailRecipient));
+        builder.ToTable(nameof(EmailRecipient));
 
-        entity.HasIndex(e => e.Email)
+        builder.HasIndex(e => e.Email)
             .IsUnique();
     }
 }

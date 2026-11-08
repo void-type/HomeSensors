@@ -15,8 +15,7 @@ public class TemperaturesHub(TemperatureReadingRepository readingRepository, Mqt
     public const string UpdateCategoriesMessageName = "updateCategories";
     public const string UpdateDiscoveryStatusMessageName = "updateDiscoveryStatus";
 
-    // Omit async suffix for hub methods
-#pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
+    // Hub method names are part of the client API, so they omit the Async suffix.
 
     public async Task<List<TemperatureReadingResponse>> GetCurrentReadings()
     {

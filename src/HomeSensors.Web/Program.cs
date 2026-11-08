@@ -5,6 +5,7 @@ using HomeSensors.Web.Hubs;
 using HomeSensors.Web.Startup;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Globalization;
 using VoidCore.AspNet.Configuration;
 using VoidCore.AspNet.Health;
 using VoidCore.AspNet.Logging;
@@ -28,7 +29,7 @@ try
 
     Log.Logger = new LoggerConfiguration()
         // Set a default logger if none configured or configuration not found.
-        .WriteTo.Console()
+        .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
         .ReadFrom.Configuration(config)
         .CreateLogger();
 

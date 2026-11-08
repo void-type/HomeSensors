@@ -8,7 +8,7 @@ using VoidCore.Model.Functional;
 
 namespace HomeSensors.Model.Temperature.Services;
 
-public class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService> logger,
+public partial class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService> logger,
     TemperatureLocationRepository locationRepository, TemperatureDeviceRepository deviceRepository,
     EmailNotificationService emailNotificationService, TemperatureAlertsSettings alertSettings)
 {
@@ -41,6 +41,16 @@ public class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService
             .Concat(lowBatteryAlert)
             .ToList();
 
+        await ClearResolvedAlertsAsync(latchedAlerts, currentAlerts, devices, stoppingToken);
+
+        // Remove alerts that need resent. They will be resent when re-added from current.
+        latchedAlerts.RemoveAll(x => x.ResendAfter <= now);
+
+        await SendNewAlertsAsync(latchedAlerts, currentAlerts, stoppingToken);
+    }
+
+    private async Task ClearResolvedAlertsAsync(List<TemperatureDeviceAlert> latchedAlerts, List<TemperatureDeviceAlert> currentAlerts, List<TemperatureDeviceResponse> devices, CancellationToken stoppingToken)
+    {
         var currentAlertSet = currentAlerts.ToHashSet();
 
         // Clear alerts that are no longer current.
@@ -63,10 +73,10 @@ public class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService
 
             latchedAlerts.Remove(alert);
         }
+    }
 
-        // Remove alerts that need resent. They will be resent when re-added from current.
-        latchedAlerts.RemoveAll(x => x.ResendAfter <= now);
-
+    private async Task SendNewAlertsAsync(List<TemperatureDeviceAlert> latchedAlerts, List<TemperatureDeviceAlert> currentAlerts, CancellationToken stoppingToken)
+    {
         var latchedAlertSet = latchedAlerts.ToHashSet();
 
         var alertsToSend = currentAlerts
@@ -97,7 +107,7 @@ public class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService
         var subject = $"{locationName} is inactive";
         var body = $"The temperature sensor in {locationName} hasn't sent a reading in a while.";
 
-        logger.LogWarning("Alert: {Subject}", subject);
+        AlertRaised(logger, subject);
 
         await SendEmailAsync(subject, body, alert.Device, stoppingToken);
     }
@@ -110,7 +120,7 @@ public class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService
         var subject = $"{locationName} is active again";
         var body = $"The temperature sensor in {locationName} is sending readings again.";
 
-        logger.LogWarning("Alert clear: {Subject}", subject);
+        AlertCleared(logger, subject);
 
         await SendEmailAsync(subject, body, device, stoppingToken);
     }
@@ -122,7 +132,7 @@ public class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService
         var subject = $"{locationName} has a low battery";
         var body = $"The temperature sensor in {locationName} has a low battery.";
 
-        logger.LogWarning("Alert: {Subject}", subject);
+        AlertRaised(logger, subject);
 
         await SendEmailAsync(subject, body, alert.Device, stoppingToken);
     }
@@ -135,7 +145,7 @@ public class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService
         var subject = $"{locationName} no longer has a low battery";
         var body = $"The temperature sensor in {locationName} no longer has a low battery.";
 
-        logger.LogWarning("Alert clear: {Subject}", subject);
+        AlertCleared(logger, subject);
 
         await SendEmailAsync(subject, body, device, stoppingToken);
     }
@@ -161,4 +171,10 @@ public class TemperatureDeviceAlertService(ILogger<TemperatureDeviceAlertService
             e.AddLine($"{indent}{indent}Time: {readingTime}");
         }, stoppingToken);
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Alert: {Subject}")]
+    private static partial void AlertRaised(ILogger logger, string subject);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Alert clear: {Subject}")]
+    private static partial void AlertCleared(ILogger logger, string subject);
 }

@@ -10,7 +10,7 @@ namespace HomeSensors.Model.Infrastructure.Emailing;
 /// <summary>
 /// Send emails using SMTP. Users can be overridden in sub-prod using the Notifications.OverrideEmailRecipients configuration item.
 /// </summary>
-public class SmtpEmailer(ILogger<SmtpEmailer> logger, NotificationsSettings notificationsSettings, ApplicationSettings applicationSettings) : IEmailSender
+public partial class SmtpEmailer(ILogger<SmtpEmailer> logger, NotificationsSettings notificationsSettings, ApplicationSettings applicationSettings) : IEmailSender
 {
     private readonly ILogger _logger = logger;
 
@@ -23,9 +23,7 @@ public class SmtpEmailer(ILogger<SmtpEmailer> logger, NotificationsSettings noti
     {
         if (!notificationsSettings.IsEnabled)
         {
-            _logger.LogWarning("Notifications are disabled. Not sending email \"{Subject}\" to {Recipients}",
-                email.Subject,
-                email.Recipients);
+            NotificationsDisabled(_logger, email.Subject, email.Recipients);
 
             return;
         }
@@ -60,16 +58,14 @@ public class SmtpEmailer(ILogger<SmtpEmailer> logger, NotificationsSettings noti
                     cancellationToken);
             }
 
-            _logger.LogInformation("Sending email \"{Subject}\" to {Recipients}",
-                message.Subject,
-                message.To);
+            SendingEmail(_logger, message.Subject, message.To);
 
             await client.SendAsync(message, cancellationToken);
             await client.DisconnectAsync(true, cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ClassName} threw an exception while trying to send email.", nameof(SmtpEmailer));
+            SendFailed(_logger, ex, nameof(SmtpEmailer));
         }
     }
 
@@ -82,10 +78,20 @@ public class SmtpEmailer(ILogger<SmtpEmailer> logger, NotificationsSettings noti
             return originalRecipients;
         }
 
-        _logger.LogInformation("Overriding original email recipients {OriginalRecipients} with {OverrideEmailRecipients}",
-            originalRecipients,
-            overrideRecipients);
+        OverridingRecipients(_logger, originalRecipients, overrideRecipients);
 
         return overrideRecipients;
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Notifications are disabled. Not sending email \"{Subject}\" to {Recipients}")]
+    private static partial void NotificationsDisabled(ILogger logger, string subject, IEnumerable<string> recipients);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Sending email \"{Subject}\" to {Recipients}")]
+    private static partial void SendingEmail(ILogger logger, string subject, InternetAddressList recipients);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "{ClassName} threw an exception while trying to send email.")]
+    private static partial void SendFailed(ILogger logger, Exception exception, string className);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Overriding original email recipients {OriginalRecipients} with {OverrideEmailRecipients}")]
+    private static partial void OverridingRecipients(ILogger logger, IEnumerable<string> originalRecipients, IEnumerable<string> overrideEmailRecipients);
 }

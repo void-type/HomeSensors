@@ -5,11 +5,11 @@ namespace HomeSensors.Model.Temperature.Entities;
 
 public class TemperatureDeviceConfiguration : IEntityTypeConfiguration<TemperatureDevice>
 {
-    public void Configure(EntityTypeBuilder<TemperatureDevice> entity)
+    public void Configure(EntityTypeBuilder<TemperatureDevice> builder)
     {
-        entity.ToTable(nameof(TemperatureDevice));
+        builder.ToTable(nameof(TemperatureDevice));
 
-        entity.HasIndex(d => d.MqttTopic)
+        builder.HasIndex(d => d.MqttTopic)
             .IsUnique();
     }
 }

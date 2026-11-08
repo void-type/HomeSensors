@@ -68,6 +68,38 @@ public class TemperatureDeviceRepository(HomeSensorsContext data, TimeProvider t
 
     public async Task<IResult<EntityMessage<long>>> SaveAsync(TemperatureDeviceSaveRequest request, CancellationToken cancellationToken)
     {
+        var failures = await ValidateSaveAsync(request, cancellationToken);
+
+        if (failures.Count > 0)
+        {
+            return Result.Fail<EntityMessage<long>>(failures);
+        }
+
+        var device = await data.TemperatureDevices
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+
+        if (device is null)
+        {
+            device = new TemperatureDevice();
+            await data.TemperatureDevices.AddAsync(device, cancellationToken);
+        }
+
+        device.Name = request.Name;
+        device.MqttTopic = request.MqttTopic;
+        device.IsRetired = request.IsRetired;
+        device.ExcludeFromInactiveAlerts = request.ExcludeFromInactiveAlerts;
+        device.InactiveLimitMinutes = request.InactiveLimitMinutes;
+        device.TemperatureLocationId = request.LocationId;
+
+        await data.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag, cancellationToken);
+
+        return Result.Ok(EntityMessage.Create("Device saved.", device.Id));
+    }
+
+    private async Task<List<IFailure>> ValidateSaveAsync(TemperatureDeviceSaveRequest request, CancellationToken cancellationToken)
+    {
         var failures = new List<IFailure>();
 
         if (!request.IsRetired)
@@ -105,32 +137,7 @@ public class TemperatureDeviceRepository(HomeSensorsContext data, TimeProvider t
             failures.Add(new Failure("Inactive limit must be 0 or greater.", "inactiveLimitMinutes"));
         }
 
-        if (failures.Count > 0)
-        {
-            return Result.Fail<EntityMessage<long>>(failures);
-        }
-
-        var device = await data.TemperatureDevices
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-
-        if (device is null)
-        {
-            device = new TemperatureDevice();
-            await data.TemperatureDevices.AddAsync(device, cancellationToken);
-        }
-
-        device.Name = request.Name;
-        device.MqttTopic = request.MqttTopic;
-        device.IsRetired = request.IsRetired;
-        device.ExcludeFromInactiveAlerts = request.ExcludeFromInactiveAlerts;
-        device.InactiveLimitMinutes = request.InactiveLimitMinutes;
-        device.TemperatureLocationId = request.LocationId;
-
-        await data.SaveChangesAsync(cancellationToken);
-
-        await cache.RemoveByTagAsync(CacheHelpers.TemperatureDeviceAllCacheTag, cancellationToken);
-
-        return Result.Ok(EntityMessage.Create("Device saved.", device.Id));
+        return failures;
     }
 
     public async Task<IResult<EntityMessage<long>>> DeleteAsync(long id, CancellationToken cancellationToken)

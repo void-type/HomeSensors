@@ -8,7 +8,7 @@ using VoidCore.Model.Text;
 
 namespace HomeSensors.Model.WaterLeak.Services;
 
-public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimeProvider timeProvider, EmailNotificationService emailNotificationService,
+public partial class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimeProvider timeProvider, EmailNotificationService emailNotificationService,
     MqttWaterLeaksSettings mqttWaterLeaksSettings, WaterLeakAlertState state, HomeSensorsContext data)
 {
     public async Task ProcessAsync(MqttWaterLeakDeviceMessage message)
@@ -39,16 +39,16 @@ public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimePr
             state.LastCheckIns.AddOrUpdate(message.LocationName, now, (_, _) => now);
         }
 
-        switch (message.Payload.Water_Leak)
+        switch (message.Payload.WaterLeak)
         {
             case null:
-                throw new InvalidOperationException($"Payload property \"{nameof(MqttWaterLeakDeviceMessagePayload)}.{nameof(MqttWaterLeakDeviceMessagePayload.Water_Leak)}\" not found or was null.");
+                throw new InvalidOperationException($"Payload property \"{nameof(MqttWaterLeakDeviceMessagePayload)}.{nameof(MqttWaterLeakDeviceMessagePayload.WaterLeak)}\" not found or was null.");
             case true:
                 await NotifyLeakAsync(message, now);
                 break;
         }
 
-        if (message.Payload.Battery_Low == true)
+        if (message.Payload.BatteryLow == true)
         {
             await NotifyBatteryLowAsync(message, now);
         }
@@ -65,7 +65,7 @@ public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimePr
             .Select(x => new { x.Name, x.InactiveLimitMinutes })
             .ToListAsync();
 
-        var deviceLimits = devices.ToDictionary(x => x.Name, x => x.InactiveLimitMinutes);
+        var deviceLimits = devices.ToDictionary(x => x.Name, x => x.InactiveLimitMinutes, StringComparer.Ordinal);
 
         foreach (var device in devices)
         {
@@ -118,7 +118,7 @@ public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimePr
 
         state.LatchedMessageAlerts.AddOrUpdate(alert, now, (_, _) => now);
 
-        logger.LogWarning("Water leak detected: {LocationName}", message.LocationName);
+        WaterLeakDetected(logger, message.LocationName);
 
         await emailNotificationService.SendAsync(e =>
         {
@@ -143,7 +143,7 @@ public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimePr
 
         state.LatchedMessageAlerts.AddOrUpdate(alert, now, (_, _) => now);
 
-        logger.LogWarning("Water leak sensor battery low: {LocationName}", message.LocationName);
+        BatteryLow(logger, message.LocationName);
 
         await emailNotificationService.SendAsync(e =>
         {
@@ -160,7 +160,7 @@ public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimePr
     {
         var locationName = inactiveDevice.Key;
 
-        logger.LogWarning("Water leak sensor inactive: {LocationName}", locationName);
+        SensorInactive(logger, locationName);
 
         await emailNotificationService.SendAsync(e =>
         {
@@ -177,7 +177,7 @@ public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimePr
     {
         var locationName = message.LocationName;
 
-        logger.LogWarning("Water leak sensor active again: {LocationName}", locationName);
+        SensorActiveAgain(logger, locationName);
 
         await emailNotificationService.SendAsync(e =>
         {
@@ -188,4 +188,16 @@ public class WaterLeakAlertService(ILogger<WaterLeakAlertService> logger, TimePr
             e.AddLine($"Time: {now}");
         }, default);
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Water leak detected: {LocationName}")]
+    private static partial void WaterLeakDetected(ILogger logger, string locationName);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Water leak sensor battery low: {LocationName}")]
+    private static partial void BatteryLow(ILogger logger, string locationName);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Water leak sensor inactive: {LocationName}")]
+    private static partial void SensorInactive(ILogger logger, string locationName);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Water leak sensor active again: {LocationName}")]
+    private static partial void SensorActiveAgain(ILogger logger, string locationName);
 }

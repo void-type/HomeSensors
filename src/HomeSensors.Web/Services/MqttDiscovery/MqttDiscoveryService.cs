@@ -9,7 +9,7 @@ using VoidCore.Model.Functional;
 
 namespace HomeSensors.Web.Services.MqttDiscovery;
 
-public class MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSettings configuration,
+public partial class MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSettings configuration,
     MqttFactory mqttFactory, IHubContext<TemperaturesHub> tempHubContext, TimeProvider timeProvider)
 {
     private MqttDiscoveryClientState? _clientState;
@@ -33,7 +33,7 @@ public class MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSett
 
         _clientState = new(request.Topics, client);
 
-        logger.LogInformation("Connecting Managed MQTT client.");
+        ConnectingClient(logger);
 
         client.ConnectedAsync += OnStateChangeAsync;
         client.ConnectionStateChangedAsync += OnStateChangeAsync;
@@ -44,7 +44,7 @@ public class MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSett
 
         foreach (var topic in request.Topics)
         {
-            logger.LogInformation("Subscribing MQTT client to topic {Topic}.", topic);
+            SubscribingClientToTopic(logger, topic);
         }
 
         try
@@ -93,20 +93,20 @@ public class MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSett
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttDiscoveryService));
+            WorkerFailed(logger, ex, nameof(MqttDiscoveryService));
         }
     }
 
     private async Task OnStateChangeAsync(EventArgs e)
     {
         var status = GetClientStatus();
-        logger.LogInformation("MQTT client connection state changed to {State}.", status.IsConnected ? "Connected" : "Disconnected");
+        ConnectionStateChanged(logger, status.IsConnected ? "Connected" : "Disconnected");
         await BroadcastStatusAsync(status);
     }
 
     private async Task OnConnectionFailureAsync(ConnectingFailedEventArgs e)
     {
-        logger.LogError(e.Exception, "MQTT client failed to connect.");
+        ClientFailedToConnect(logger, e.Exception);
         await BroadcastStatusAsync();
     }
 
@@ -114,4 +114,19 @@ public class MqttDiscoveryService(ILogger<MqttDiscoveryService> logger, MqttSett
     {
         await tempHubContext.Clients.All.SendAsync(TemperaturesHub.UpdateDiscoveryStatusMessageName, status ?? GetClientStatus());
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Connecting Managed MQTT client.")]
+    private static partial void ConnectingClient(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Subscribing MQTT client to topic {Topic}.")]
+    private static partial void SubscribingClientToTopic(ILogger logger, string topic);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception thrown in {WorkerName}.")]
+    private static partial void WorkerFailed(ILogger logger, Exception exception, string workerName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "MQTT client connection state changed to {State}.")]
+    private static partial void ConnectionStateChanged(ILogger logger, string state);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "MQTT client failed to connect.")]
+    private static partial void ClientFailedToConnect(ILogger logger, Exception exception);
 }

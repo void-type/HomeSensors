@@ -16,7 +16,7 @@ using VoidCore.Model.Guards;
 
 namespace HomeSensors.Model.Temperature.Workers;
 
-public class MqttTemperaturesWorker : BackgroundService
+public partial class MqttTemperaturesWorker : BackgroundService
 {
     private readonly ILogger<MqttTemperaturesWorker> _logger;
     private readonly MqttSettings _configuration;
@@ -34,8 +34,7 @@ public class MqttTemperaturesWorker : BackgroundService
         _scopeFactory = scopeFactory;
         _mqttFactory = mqttFactory;
 
-        logger.LogInformation("Enabling background job: {JobName}.",
-            nameof(MqttTemperaturesWorker));
+        EnablingBackgroundJob(logger, nameof(MqttTemperaturesWorker));
     }
 
     public async Task RefreshTopicSubscriptionsAsync()
@@ -46,10 +45,10 @@ public class MqttTemperaturesWorker : BackgroundService
         {
             var newTopics = await GetTopicsAsync();
 
-            var topicsToUnsubscribe = _currentTopics.Except(newTopics).ToList();
+            var topicsToUnsubscribe = _currentTopics.Except(newTopics, StringComparer.Ordinal).ToList();
             await UnsubscribeFromTopicsAsync(topicsToUnsubscribe);
 
-            var topicsToSubscribe = newTopics.Except(_currentTopics).ToList();
+            var topicsToSubscribe = newTopics.Except(_currentTopics, StringComparer.Ordinal).ToList();
             await SubscribeToTopicsAsync(topicsToSubscribe);
 
             _currentTopics = newTopics;
@@ -66,7 +65,7 @@ public class MqttTemperaturesWorker : BackgroundService
         {
             _mqttClient = _mqttFactory.CreateManagedMqttClient();
 
-            _logger.LogInformation("Connecting Managed MQTT client.");
+            ConnectingClient(_logger);
 
             _mqttClient.ConnectingFailedAsync += LogConnectionFailureAsync;
             _mqttClient.ApplicationMessageReceivedAsync += ProcessMessageWithExceptionLoggingAsync;
@@ -93,7 +92,7 @@ public class MqttTemperaturesWorker : BackgroundService
 
     private async Task LogConnectionFailureAsync(ConnectingFailedEventArgs e)
     {
-        _logger.LogError(e.Exception, "MQTT client failed to connect.");
+        ClientFailedToConnect(_logger, e.Exception);
         await Task.CompletedTask;
     }
 
@@ -105,7 +104,7 @@ public class MqttTemperaturesWorker : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception thrown in {WorkerName}.", nameof(MqttTemperaturesWorker));
+            WorkerFailed(_logger, ex, nameof(MqttTemperaturesWorker));
         }
     }
 
@@ -145,10 +144,10 @@ public class MqttTemperaturesWorker : BackgroundService
             .AddAsync(new TemperatureReading
             {
                 Time = message.Time.ToLocalTime(),
-                DeviceBatteryLevel = message.Battery_Ok,
+                DeviceBatteryLevel = message.BatteryOk,
                 DeviceStatus = message.Status,
                 Humidity = message.Humidity,
-                TemperatureCelsius = message.Temperature_C,
+                TemperatureCelsius = message.TemperatureC,
                 TemperatureDevice = device,
                 TemperatureLocationId = device.TemperatureLocationId.Value
             });
@@ -182,7 +181,7 @@ public class MqttTemperaturesWorker : BackgroundService
 
         foreach (var topic in topics)
         {
-            _logger.LogInformation("Unsubscribing from MQTT topic {Topic}.", topic);
+            UnsubscribingFromTopic(_logger, topic);
         }
 
         await _mqttClient.UnsubscribeAsync(topics);
@@ -204,7 +203,7 @@ public class MqttTemperaturesWorker : BackgroundService
 
         foreach (var topicFilter in topicFilters)
         {
-            _logger.LogInformation("Subscribing to MQTT topic {Topic}.", topicFilter.Topic);
+            SubscribingToTopic(_logger, topicFilter.Topic);
         }
 
         await _mqttClient.SubscribeAsync(topicFilters);
@@ -220,6 +219,24 @@ public class MqttTemperaturesWorker : BackgroundService
 
     public static string GetReadableTemperatureMessage(MqttTemperatureDeviceMessage message)
     {
-        return $"{message.Time.ToLocalTime()} | {message.Model}/{message.Id}/{message.Channel} | {TemperatureHelpers.FormatTemp(message.Temperature_C ?? -1000)} | {message.Humidity}%";
+        return $"{message.Time.ToLocalTime()} | {message.Model}/{message.Id}/{message.Channel} | {TemperatureHelpers.FormatTemp(message.TemperatureC ?? -1000)} | {message.Humidity}%";
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Enabling background job: {JobName}.")]
+    private static partial void EnablingBackgroundJob(ILogger logger, string jobName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Connecting Managed MQTT client.")]
+    private static partial void ConnectingClient(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "MQTT client failed to connect.")]
+    private static partial void ClientFailedToConnect(ILogger logger, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Exception thrown in {WorkerName}.")]
+    private static partial void WorkerFailed(ILogger logger, Exception exception, string workerName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Unsubscribing from MQTT topic {Topic}.")]
+    private static partial void UnsubscribingFromTopic(ILogger logger, string topic);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Subscribing to MQTT topic {Topic}.")]
+    private static partial void SubscribingToTopic(ILogger logger, string topic);
 }

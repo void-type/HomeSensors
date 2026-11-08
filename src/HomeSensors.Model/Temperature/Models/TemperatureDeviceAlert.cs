@@ -14,4 +14,20 @@ public class TemperatureDeviceAlert(TemperatureDeviceAlertType type, Temperature
         yield return Type;
         yield return Device.Id;
     }
+
+    public override bool Equals(object? obj) => base.Equals(obj);
+
+    public override int GetHashCode() => base.GetHashCode();
+
+    public static bool operator ==(TemperatureDeviceAlert? left, TemperatureDeviceAlert? right) => left is null ? right is null : left.Equals(right);
+
+    public static bool operator !=(TemperatureDeviceAlert? left, TemperatureDeviceAlert? right) => !(left == right);
+
+    public static bool operator <(TemperatureDeviceAlert? left, TemperatureDeviceAlert? right) => left is null ? right is not null : left.CompareTo(right) < 0;
+
+    public static bool operator <=(TemperatureDeviceAlert? left, TemperatureDeviceAlert? right) => left is null || left.CompareTo(right) <= 0;
+
+    public static bool operator >(TemperatureDeviceAlert? left, TemperatureDeviceAlert? right) => left is not null && left.CompareTo(right) > 0;
+
+    public static bool operator >=(TemperatureDeviceAlert? left, TemperatureDeviceAlert? right) => left is null ? right is null : left.CompareTo(right) >= 0;
 }

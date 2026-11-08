@@ -5,14 +5,14 @@ namespace HomeSensors.Model.Temperature.Entities;
 
 public class TemperatureLocationConfiguration : IEntityTypeConfiguration<TemperatureLocation>
 {
-    public void Configure(EntityTypeBuilder<TemperatureLocation> entity)
+    public void Configure(EntityTypeBuilder<TemperatureLocation> builder)
     {
-        entity.ToTable(nameof(TemperatureLocation));
+        builder.ToTable(nameof(TemperatureLocation));
 
-        entity.HasIndex(l => l.Name)
+        builder.HasIndex(l => l.Name)
             .IsUnique();
 
-        entity.HasOne(r => r.Category)
+        builder.HasOne(r => r.Category)
             .WithMany(i => i.TemperatureLocations).HasForeignKey("CategoryId");
     }
 }

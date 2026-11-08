@@ -5,11 +5,11 @@ namespace HomeSensors.Model.WaterLeak.Entities;
 
 public class WaterLeakDeviceConfiguration : IEntityTypeConfiguration<WaterLeakDevice>
 {
-    public void Configure(EntityTypeBuilder<WaterLeakDevice> entity)
+    public void Configure(EntityTypeBuilder<WaterLeakDevice> builder)
     {
-        entity.ToTable(nameof(WaterLeakDevice));
+        builder.ToTable(nameof(WaterLeakDevice));
 
-        entity.HasIndex(d => d.MqttTopic)
+        builder.HasIndex(d => d.MqttTopic)
             .IsUnique();
     }
 }

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace HomeSensors.Model.Temperature.Services;
 
-public class TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> logger,
+public partial class TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> logger,
     TemperatureLocationRepository locationRepository, TemperatureReadingRepository readingRepository,
     EmailNotificationService emailNotificationService, TemperatureAlertsSettings alertSettings)
 {
@@ -114,13 +114,7 @@ public class TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> 
 
         var lookBackMinutes = alertSettings.LookBackMinutes;
 
-        logger.LogWarning("Temperature limit exceeded: {LocationName} was as {HotOrCold} as {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.",
-            locationName,
-            hotOrCold,
-            readingTempString,
-            time,
-            limitTempString,
-            lookBackMinutes);
+        LimitExceeded(logger, locationName, hotOrCold, readingTempString, time, limitTempString, lookBackMinutes);
 
         await emailNotificationService.SendAsync(e =>
         {
@@ -147,13 +141,7 @@ public class TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> 
 
         var lookBackMinutes = alertSettings.LookBackMinutes;
 
-        logger.LogWarning("Temperature within limit: {LocationName} is no longer {HotOrCold}. Currently {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.",
-            location.Name,
-            alert.Status,
-            readingTempString,
-            time,
-            limitTempString,
-            lookBackMinutes);
+        LimitCleared(logger, location.Name, alert.Status, readingTempString, time, limitTempString, lookBackMinutes);
 
         await emailNotificationService.SendAsync(e =>
         {
@@ -169,4 +157,10 @@ public class TemperatureLimitAlertService(ILogger<TemperatureLimitAlertService> 
             e.AddLine($"Time: {time}");
         }, stoppingToken);
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Temperature limit exceeded: {LocationName} was as {HotOrCold} as {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.")]
+    private static partial void LimitExceeded(ILogger logger, string locationName, string hotOrCold, string reading, DateTimeOffset time, string limit, int lookBackMinutes);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Temperature within limit: {LocationName} is no longer {HotOrCold}. Currently {Reading} at {Time}. Limit of {Limit}. Look back period: {LookBackMinutes} minutes.")]
+    private static partial void LimitCleared(ILogger logger, string locationName, string hotOrCold, string reading, DateTimeOffset time, string limit, int lookBackMinutes);
 }
