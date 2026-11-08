@@ -2,6 +2,10 @@
   "name": "clientapp",
   "type": "module",
   "version": "1.0.0",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "build": "run-p type-check build-only",
     "build-only": "vite build",
@@ -11,7 +15,7 @@
     "watch-only": "vite build --watch --mode development",
     "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
     "lint": "eslint . --fix",
-    "generate-api-client": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 npx swagger-typescript-api generate -p https://localhost:5003/swagger/v1/swagger.json -o ./src/api/ --modular --responses --extract-request-params && node scripts/fix-api-files.js && node scripts/fix-api-files.js",
+    "generate-api-client": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 sta generate -p https://localhost:5003/swagger/v1/swagger.json -o ./src/api/ --modular --responses --extract-request-params && node scripts/fix-api-files.js && node scripts/fix-api-files.js",
     "clean-api": "node scripts/fix-api-files.js"
   },
   "dependencies": {
@@ -49,22 +53,5 @@
     "typescript": "~6.0.3",
     "vite": "^8.3.5",
     "vue-tsc": "^3.3.14"
-  },
-  "overrides": {
-    "@eslint/config-array": {
-      "minimatch": "^11.0.4"
-    },
-    "@typescript-eslint/typescript-estree": {
-      "minimatch": "^11.0.4"
-    },
-    "eslint": {
-      "minimatch": "^11.0.4"
-    },
-    "micromark-extension-math": {
-      "katex": "^0.19.1"
-    },
-    "oxfmt": {
-      "tinypool": "^2.2.0"
-    }
   }
 }

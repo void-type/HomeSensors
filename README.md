@@ -33,7 +33,9 @@ ClientApp - A browser frontend for HomeSensors.Web.
 
 ## Build tools
 
-You can use the [.NET SDK](https://dot.net/download) and [Node.js LTS](https://nodejs.org/) to build and run the source.
+You can use the [.NET SDK](https://dot.net/download), [Node.js](https://nodejs.org/) 24 or newer and [pnpm](https://pnpm.io/installation) to build and run the source. The pnpm version is pinned in `src/ClientApp/package.json` and pnpm switches to it automatically.
+
+The client app uses pnpm with supply-chain settings in `src/ClientApp/pnpm-workspace.yaml`: new releases wait 3 days before they install, dependency build scripts are blocked unless allowed, and the build fails on known vulnerabilities and bad registry signatures. Run `./build/updateDependencies.ps1` to update dependencies.
 
 ## Database
 
